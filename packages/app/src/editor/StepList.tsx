@@ -38,7 +38,7 @@ const SortableStep = ({ step, index, isSelected, onSelect }: SortableStepProps) 
       onClick={() => onSelect(step.id)}
       className={`w-full rounded-lg border px-3 py-2 text-left transition ${
         isSelected
-          ? 'border-blue-500 bg-blue-50'
+          ? 'border-peacock-500 bg-peacock-50'
           : 'border-slate-200 bg-white hover:border-slate-300'
       }`}
     >

@@ -28,7 +28,7 @@ export const AppHeader = ({
       />
       <div className="min-w-0">
         {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">{eyebrow}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-peacock-600">{eyebrow}</p>
         ) : null}
         <h1 className="truncate text-xl font-semibold text-slate-900">{title}</h1>
         {description ? (
@@ -41,7 +41,7 @@ export const AppHeader = ({
   return (
     <header className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-4">
       {homeLink ? (
-        <Link to="/" className="min-w-0 rounded-lg outline-none ring-blue-500 focus-visible:ring-2">
+        <Link to="/" className="min-w-0 rounded-lg outline-none ring-peacock-500 focus-visible:ring-2">
           {brand}
         </Link>
       ) : (

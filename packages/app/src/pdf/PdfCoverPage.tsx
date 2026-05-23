@@ -1,7 +1,7 @@
 import { Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import type { FlowPayload } from '@peacock/shared';
 import { PdfPageFooter } from './PdfPageChrome';
-import { PDF_FONT_FAMILY } from './pdfTheme';
+import { PDF_COLORS, PDF_FONT_FAMILY } from './pdfTheme';
 
 const styles = StyleSheet.create({
   page: {
@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: 10,
-    color: '#2563eb',
+    color: PDF_COLORS.primary,
     fontWeight: 700,
     letterSpacing: 1.2,
     textTransform: 'uppercase',

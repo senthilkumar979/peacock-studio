@@ -14,7 +14,7 @@ const styles = StyleSheet.create({
   },
   stepBadge: {
     fontSize: 9,
-    color: '#2563eb',
+    color: PDF_COLORS.primary,
     fontWeight: 700,
     letterSpacing: 1,
     textTransform: 'uppercase',

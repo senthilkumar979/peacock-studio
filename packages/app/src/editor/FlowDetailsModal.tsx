@@ -66,7 +66,7 @@ export const FlowDetailsModal = ({
         aria-labelledby={titleId}
         className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-900/5"
       >
-        <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Flow details</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-peacock-600">Flow details</p>
         <h2 id={titleId} className="mt-1 text-xl font-semibold text-slate-900">
           Document your flow
         </h2>
@@ -84,7 +84,7 @@ export const FlowDetailsModal = ({
                 setError(null);
               }}
               placeholder="e.g. Create a new order"
-              className="rounded-lg border border-slate-300 px-3 py-2 outline-none ring-blue-500 focus:ring-2"
+              className="rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2"
             />
           </label>
 
@@ -95,7 +95,7 @@ export const FlowDetailsModal = ({
               onChange={(event) => setDescription(event.target.value)}
               rows={4}
               placeholder="What does this flow help someone accomplish?"
-              className="resize-none rounded-lg border border-slate-300 px-3 py-2 outline-none ring-blue-500 focus:ring-2"
+              className="resize-none rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2"
             />
           </label>
 
@@ -113,7 +113,7 @@ export const FlowDetailsModal = ({
           <button
             type="button"
             onClick={handleSubmit}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="btn-peacock"
           >
             {confirmLabel}
           </button>

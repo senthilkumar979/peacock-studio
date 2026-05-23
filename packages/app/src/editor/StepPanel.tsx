@@ -37,7 +37,7 @@ export const StepPanel = ({ step }: StepPanelProps) => {
           <input
             value={step.title}
             onChange={(event) => updateStepTitle(step.id, event.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 outline-none ring-blue-500 focus:ring-2"
+            className="rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2"
           />
         </label>
 
@@ -47,7 +47,7 @@ export const StepPanel = ({ step }: StepPanelProps) => {
             value={step.notes}
             onChange={(event) => updateStepNotes(step.id, event.target.value)}
             rows={6}
-            className="resize-none rounded-lg border border-slate-300 px-3 py-2 outline-none ring-blue-500 focus:ring-2"
+            className="resize-none rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2"
           />
         </label>
 

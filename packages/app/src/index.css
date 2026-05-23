@@ -2,6 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply m-0 min-h-screen bg-slate-50 text-slate-900 antialiased;
+@layer base {
+  button,
+  [type='button'],
+  [type='submit'],
+  [type='reset'] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+@layer components {
+  .btn-peacock {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    border: 0;
+    background-color: #2563eb;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    color: #ffffff;
+    transition: background-color 0.15s ease;
+  }
+
+  .btn-peacock:hover:not(:disabled) {
+    background-color: #1d4ed8;
+  }
+
+  .btn-peacock:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #3b82f6;
+  }
+
+  .btn-peacock:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .btn-peacock--sm {
+    padding: 0.5rem 0.75rem;
+  }
 }

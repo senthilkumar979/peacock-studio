@@ -19,7 +19,7 @@ export const Dashboard = () => (
       </ol>
       <Link
         to="/editor"
-        className="mt-5 mr-3 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        className="btn-peacock mt-5 mr-3"
       >
         Open editor
       </Link>
