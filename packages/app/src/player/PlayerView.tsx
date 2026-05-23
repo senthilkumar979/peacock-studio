@@ -8,7 +8,11 @@ import { PlayerStep } from './PlayerStep'
 
 const AUTO_PLAY_MS = 2500
 
-export const PlayerView = () => {
+interface PlayerViewProps {
+  documentId: string;
+}
+
+export const PlayerView = ({ documentId }: PlayerViewProps) => {
   const flow = useFlowStore((state) => state.flow)
   const steps = useFlowStore((state) => state.steps)
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls)
@@ -61,8 +65,8 @@ export const PlayerView = () => {
         homeLink
       >
         <Link
-          to="/editor"
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          to={`/docs/${documentId}/edit`}
+          className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800 hover:bg-peacock-100"
         >
           Edit flow
         </Link>

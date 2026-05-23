@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { createId, type FlowPayload, type FlowStep } from '@peacock/shared';
+import type { SavedFlowDocument } from '@/types/savedFlow';
 
 interface FlowStore {
+  documentId: string | null;
   flow: FlowPayload | null;
   screenshotUrls: Record<string, string>;
   steps: FlowStep[];
@@ -10,6 +12,9 @@ interface FlowStore {
   isLoaded: boolean;
 
   setFlow: (flow: FlowPayload, screenshotUrls: Record<string, string>) => void;
+  setDocumentId: (id: string | null) => void;
+  hydrateFromDocument: (doc: SavedFlowDocument) => void;
+  resetFlow: () => void;
   selectStep: (id: string) => void;
   reorderSteps: (from: number, to: number) => void;
   deleteStep: (id: string) => void;
@@ -20,17 +25,22 @@ interface FlowStore {
   updateFlowDetails: (title: string, description: string) => void;
 }
 
+const initialState = {
+  documentId: null,
+  flow: null,
+  screenshotUrls: {} as Record<string, string>,
+  steps: [] as FlowStep[],
+  selectedStepId: null as string | null,
+  isLoaded: false,
+};
+
 function removeCustomScreenshot(state: { screenshotUrls: Record<string, string> }, customId: string): void {
   delete state.screenshotUrls[customId];
 }
 
 export const useFlowStore = create<FlowStore>()(
   immer((set) => ({
-    flow: null,
-    screenshotUrls: {},
-    steps: [],
-    selectedStepId: null,
-    isLoaded: false,
+    ...initialState,
 
     setFlow: (flow, screenshotUrls) =>
       set({
@@ -40,6 +50,20 @@ export const useFlowStore = create<FlowStore>()(
         selectedStepId: flow.steps[0]?.id ?? null,
         isLoaded: true,
       }),
+
+    setDocumentId: (id) => set({ documentId: id }),
+
+    hydrateFromDocument: (doc) =>
+      set({
+        documentId: doc.id,
+        flow: doc.flow,
+        screenshotUrls: doc.screenshotUrls,
+        steps: doc.steps,
+        selectedStepId: doc.steps[0]?.id ?? null,
+        isLoaded: true,
+      }),
+
+    resetFlow: () => set({ ...initialState }),
 
     selectStep: (id) => set({ selectedStepId: id }),
 

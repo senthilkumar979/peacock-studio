@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AppHeader } from '@/components/AppHeader';
+import { persistCurrentFlow } from '@/services/flowLibraryService';
 import { useFlowStore } from '@/store/flowStore';
 import { FlowDetailsModal } from './FlowDetailsModal';
 
@@ -8,10 +9,14 @@ function getFlowDetailsPromptKey(createdAt: number): string {
   return `peacock-flow-details-prompted-${createdAt}`;
 }
 
-export const Toolbar = () => {
+interface ToolbarProps {
+  documentId?: string;
+}
+
+export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
   const flow = useFlowStore((state) => state.flow);
   const steps = useFlowStore((state) => state.steps);
-  const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
+  const documentId = useFlowStore((state) => state.documentId) ?? routeDocumentId;
   const isLoaded = useFlowStore((state) => state.isLoaded);
   const updateFlowDetails = useFlowStore((state) => state.updateFlowDetails);
 
@@ -33,6 +38,10 @@ export const Toolbar = () => {
 
     if (flow) {
       sessionStorage.setItem(getFlowDetailsPromptKey(flow.metadata.createdAt), '1');
+    }
+
+    if (documentId) {
+      await persistCurrentFlow(documentId);
     }
 
     const shouldExport = exportAfterSave;
@@ -59,6 +68,7 @@ export const Toolbar = () => {
 
   const flowTitle = flow?.flow.title ?? 'Untitled Flow';
   const flowDescription = flow?.flow.description ?? '';
+  const playerPath = documentId ? `/docs/${documentId}` : '/';
 
   return (
     <>
@@ -81,12 +91,14 @@ export const Toolbar = () => {
             >
               Flow details
             </button>
-            <Link
-              to="/player"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              Play
-            </Link>
+            {documentId ? (
+              <Link
+                to={playerPath}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Play
+              </Link>
+            ) : null}
             <button
               type="button"
               onClick={() => {

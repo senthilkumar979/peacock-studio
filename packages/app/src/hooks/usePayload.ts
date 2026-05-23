@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   HANDOFF_REQUEST,
   HANDOFF_RESPONSE,
   type HandoffBridgeMessage,
   type HandoffResponse,
 } from '@peacock/shared';
+import { saveNewFlowFromStore } from '@/services/flowLibraryService';
 import { useFlowStore } from '@/store/flowStore';
 
 function getExtensionId(): string | null {
@@ -16,17 +18,13 @@ function requestHandoffViaBridge(timeoutMs = 12000): Promise<HandoffResponse | n
   return new Promise((resolve) => {
     let settled = false;
 
-    const finish = (result: HandoffResponse | null, bridgeError?: string | null) => {
+    const finish = (result: HandoffResponse | null) => {
       if (settled) return;
       settled = true;
       window.clearTimeout(timer);
       window.clearInterval(retryTimer);
       window.removeEventListener('message', onMessage);
-      if (result) {
-        resolve(result);
-        return;
-      }
-      resolve(bridgeError ? null : null);
+      resolve(result);
     };
 
     let lastBridgeError: string | null = null;
@@ -38,9 +36,7 @@ function requestHandoffViaBridge(timeoutMs = 12000): Promise<HandoffResponse | n
       const data = event.data as HandoffBridgeMessage | undefined;
       if (data?.type !== HANDOFF_RESPONSE) return;
 
-      if (data.error) {
-        lastBridgeError = data.error;
-      }
+      if (data.error) lastBridgeError = data.error;
 
       if (data.ok && data.payload) {
         finish({ payload: data.payload, screenshotUrls: data.screenshotUrls ?? {} });
@@ -59,7 +55,7 @@ function requestHandoffViaBridge(timeoutMs = 12000): Promise<HandoffResponse | n
       if (lastBridgeError) {
         console.error('[Peacock] Bridge handoff error:', lastBridgeError);
       }
-      finish(null, lastBridgeError);
+      finish(null);
     }, timeoutMs);
   });
 }
@@ -86,14 +82,19 @@ function requestHandoffViaExtensionId(extensionId: string): Promise<HandoffRespo
   });
 }
 
-export function usePayload() {
+interface UsePayloadOptions {
+  enabled?: boolean;
+}
+
+export function usePayload({ enabled = true }: UsePayloadOptions = {}) {
+  const navigate = useNavigate();
   const setFlow = useFlowStore((state) => state.setFlow);
   const isLoaded = useFlowStore((state) => state.isLoaded);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isLoaded) return;
+    if (!enabled || isLoaded) return;
 
     setIsLoading(true);
     setError(null);
@@ -107,14 +108,20 @@ export function usePayload() {
 
       if (!handoff?.payload) {
         setError(
-          'No pending flow from the extension. After recording, open DevTools on the extension service worker (chrome://extensions → Peacock → Service worker) and check the PeacockDB IndexedDB under the extension origin—not localhost. Reload the extension, record on a normal website (e.g. example.com), then Stop.'
+          'No pending flow from the extension. Record on a website, then stop recording to open the editor.'
         );
         return;
       }
 
+      useFlowStore.getState().resetFlow();
       setFlow(handoff.payload, handoff.screenshotUrls ?? {});
+
+      const documentId = await saveNewFlowFromStore();
+      if (documentId) {
+        navigate(`/docs/${documentId}/edit`, { replace: true });
+      }
     })();
-  }, [isLoaded, setFlow]);
+  }, [enabled, isLoaded, setFlow, navigate]);
 
   return { isLoading, isLoaded, error };
 }

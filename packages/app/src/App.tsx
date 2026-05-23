@@ -8,7 +8,9 @@ export const App = () => (
     <Routes>
       <Route path="/" element={<Dashboard />} />
       <Route path="/editor" element={<Editor />} />
-      <Route path="/player" element={<Player />} />
+      <Route path="/docs/:documentId" element={<Player />} />
+      <Route path="/docs/:documentId/edit" element={<Editor />} />
+      <Route path="/player" element={<Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   </BrowserRouter>
