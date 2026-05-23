@@ -1,0 +1,9 @@
+- TypeScript strict mode everywhere
+- Tailwind CSS for all styling, no inline styles
+- Zustand for state management, no Redux
+- All coordinates stored as normalized floats (0–1), never raw pixels
+- Never store base64 screenshots in memory; always use IndexedDB via Dexie
+- Event types are defined in packages/shared/src/types/events.ts
+- Element snapshots use packages/shared/src/utils/extractElementSnapshot.ts
+- Step descriptions use packages/shared/src/utils/stepDescription.ts
+- Never log passwords, tokens, or sensitive field values

@@ -1,0 +1,21 @@
+{
+  "name": "@peacock/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm build --watch",
+    "build": "vite build && vite build -c vite.content.config.ts && vite build -c vite.bridge.config.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@peacock/shared": "workspace:*",
+    "dexie": "^4.0.11"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.304",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-static-copy": "^2.3.0"
+  }
+}

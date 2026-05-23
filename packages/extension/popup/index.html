@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Peacock</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="popup__header">
+        <img id="logo" alt="Peacock" class="popup__logo" width="32" height="32" />
+        <h1 class="popup__title">Peacock</h1>
+        <p class="popup__subtitle">Flow recorder</p>
+      </header>
+
+      <div id="status" class="popup__status">Idle</div>
+
+      <div id="controls" class="popup__controls">
+        <button id="start-btn" type="button" class="btn btn--primary">Start Recording</button>
+        <button id="pause-btn" type="button" class="btn btn--secondary" hidden>Pause</button>
+        <button id="resume-btn" type="button" class="btn btn--secondary" hidden>Resume</button>
+        <button id="stop-btn" type="button" class="btn btn--danger" hidden>Stop</button>
+      </div>
+
+      <p id="event-count" class="popup__meta">0 steps captured</p>
+    </main>
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>
