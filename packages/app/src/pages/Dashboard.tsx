@@ -1,19 +1,38 @@
-import { useState } from 'react';
-import { AppHeader } from '@/components/AppHeader';
+import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { DashboardEmptyState } from '@/components/dashboard/DashboardEmptyState';
+import { DashboardFeaturedDoc } from '@/components/dashboard/DashboardFeaturedDoc';
+import { DashboardHero } from '@/components/dashboard/DashboardHero';
+import { DashboardLibraryToolbar } from '@/components/dashboard/DashboardLibraryToolbar';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { FlowLibrarySection } from '@/components/dashboard/FlowLibrarySection';
-import { ViewModeToggle } from '@/components/dashboard/ViewModeToggle';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
-import { PEACOCK_APP_NAME } from '@/constants/branding';
 import { readDashboardViewMode, writeDashboardViewMode } from '@/constants/dashboard';
 import { useFlowLibrary } from '@/hooks/useFlowLibrary';
 import type { DashboardViewMode, SavedFlowSummary } from '@/types/savedFlow';
+import {
+  filterSummaries,
+  sortSummaries,
+  type DashboardSortMode,
+} from '@/utils/dashboardLibrary';
 
 export const Dashboard = () => {
   const { summaries, stats, isLoading, error, deleteDocument } = useFlowLibrary();
   const [viewMode, setViewMode] = useState<DashboardViewMode>(readDashboardViewMode);
+  const [sortMode, setSortMode] = useState<DashboardSortMode>('newest');
+  const [searchQuery, setSearchQuery] = useState('');
   const [pendingDelete, setPendingDelete] = useState<SavedFlowSummary | null>(null);
+
+  const displayedSummaries = useMemo(
+    () => sortSummaries(filterSummaries(summaries, searchQuery), sortMode),
+    [summaries, searchQuery, sortMode]
+  );
+
+  const latestSummary = useMemo(() => {
+    if (summaries.length === 0) return null;
+    return sortSummaries(summaries, 'newest')[0] ?? null;
+  }, [summaries]);
 
   const handleViewChange = (mode: DashboardViewMode) => {
     setViewMode(mode);
@@ -26,59 +45,77 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <AppHeader
-        eyebrow={PEACOCK_APP_NAME}
-        title="Documentation library"
-        description="Saved flows are stored on this device. Open to play, edit to refine steps."
-      />
+    <div className="min-h-screen bg-slate-100/80">
+      <DashboardHero stats={stats} documentCount={summaries.length} />
 
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-6 py-8">
-        <DashboardStats stats={stats} />
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-12">
+        <div className="-mt-14 space-y-8">
+          <DashboardStats stats={stats} />
 
-        <section className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">Your documentations</h2>
-              <p className="text-sm text-slate-500">
-                Record with the extension — new flows are saved here automatically.
-              </p>
-            </div>
-            <ViewModeToggle value={viewMode} onChange={handleViewChange} />
-          </div>
-
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-16">
-              <PeacockStudioLoader size={120} />
-              <p className="text-sm text-slate-500">Loading library…</p>
-            </div>
+          {!isLoading && !error && latestSummary ? (
+            <DashboardFeaturedDoc summary={latestSummary} />
           ) : null}
 
-          {error ? (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              {error}
-            </div>
-          ) : null}
-
-          {!isLoading && !error && summaries.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
-              <h3 className="text-lg font-semibold text-slate-900">No documentation yet</h3>
-              <p className="mx-auto mt-2 max-w-md text-sm text-slate-600">
-                Install the Peacock extension, record a flow on any site, and stop recording. Your
-                documentation will appear here.
-              </p>
-            </div>
-          ) : null}
-
-          {!isLoading && !error && summaries.length > 0 ? (
-            <FlowLibrarySection
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.3 }}
+            className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl shadow-slate-200/60"
+          >
+            <DashboardLibraryToolbar
+              searchQuery={searchQuery}
+              sortMode={sortMode}
               viewMode={viewMode}
-              summaries={summaries}
-              onRequestDelete={setPendingDelete}
+              resultCount={displayedSummaries.length}
+              totalCount={summaries.length}
+              onSearchChange={setSearchQuery}
+              onSortChange={setSortMode}
+              onViewChange={handleViewChange}
             />
-          ) : null}
-        </section>
-      </main>
+
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center gap-4 px-6 py-20">
+                <PeacockStudioLoader size={120} />
+                <p className="text-sm font-medium text-slate-500">Loading your library…</p>
+              </div>
+            ) : null}
+
+            {error ? (
+              <div className="mx-6 mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                {error}
+              </div>
+            ) : null}
+
+            {!isLoading && !error && summaries.length === 0 ? <DashboardEmptyState /> : null}
+
+            {!isLoading && !error && summaries.length > 0 && displayedSummaries.length === 0 ? (
+              <div className="mx-6 mb-6 rounded-xl border border-slate-200 bg-slate-50 px-6 py-10 text-center">
+                <p className="font-semibold text-slate-900">No matches found</p>
+                <p className="mt-2 text-sm text-slate-600">
+                  Try a different search term or clear the filter to see all documentations.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="mt-4 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Clear search
+                </button>
+              </div>
+            ) : null}
+
+            {!isLoading && !error && displayedSummaries.length > 0 ? (
+              <div className="p-6 pt-2">
+                <FlowLibrarySection
+                  viewMode={viewMode}
+                  summaries={displayedSummaries}
+                  onRequestDelete={setPendingDelete}
+                />
+              </div>
+            ) : null}
+          </motion.section>
+        </div>
+      </div>
 
       <ConfirmDialog
         isOpen={Boolean(pendingDelete)}
