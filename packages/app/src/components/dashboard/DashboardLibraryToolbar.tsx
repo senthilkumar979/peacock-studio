@@ -1,3 +1,4 @@
+import { ArrowDownUp, FolderOpen, Search } from 'lucide-react';
 import type { DashboardSortMode } from '@/utils/dashboardLibrary';
 import type { DashboardViewMode } from '@/types/savedFlow';
 import { ViewModeToggle } from './ViewModeToggle';
@@ -33,7 +34,10 @@ export const DashboardLibraryToolbar = ({
   <div className="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 lg:flex-row lg:items-end lg:justify-between">
     <div className="min-w-0">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-lg font-bold text-slate-900">Your documentations</h2>
+        <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+          <FolderOpen className="h-5 w-5 text-peacock-600" aria-hidden />
+          Your documentations
+        </h2>
         <span className="rounded-full bg-peacock-50 px-2.5 py-0.5 text-xs font-semibold text-peacock-700 ring-1 ring-peacock-100">
           {resultCount === totalCount ? `${totalCount} total` : `${resultCount} of ${totalCount}`}
         </span>
@@ -46,7 +50,10 @@ export const DashboardLibraryToolbar = ({
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
       <label className="relative block min-w-[220px]">
         <span className="sr-only">Search documentations</span>
-        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+          aria-hidden
+        />
         <input
           type="search"
           value={searchQuery}
@@ -56,12 +63,16 @@ export const DashboardLibraryToolbar = ({
         />
       </label>
 
-      <label className="block">
+      <label className="relative block">
         <span className="sr-only">Sort documentations</span>
+        <ArrowDownUp
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+          aria-hidden
+        />
         <select
           value={sortMode}
           onChange={(event) => onSortChange(event.target.value as DashboardSortMode)}
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-700 outline-none ring-peacock-500 focus:border-peacock-300 focus:bg-white focus:ring-2 sm:w-auto"
+          className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-8 text-sm font-medium text-slate-700 outline-none ring-peacock-500 focus:border-peacock-300 focus:bg-white focus:ring-2 sm:w-auto"
         >
           {SORT_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -75,12 +86,3 @@ export const DashboardLibraryToolbar = ({
     </div>
   </div>
 );
-
-function SearchIcon({ className }: { className?: string }) {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.75" />
-      <path d="M20 20l-3-3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    </svg>
-  );
-}

@@ -1,3 +1,4 @@
+import { SearchX } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -90,7 +91,8 @@ export const Dashboard = () => {
 
             {!isLoading && !error && summaries.length > 0 && displayedSummaries.length === 0 ? (
               <div className="mx-6 mb-6 rounded-xl border border-slate-200 bg-slate-50 px-6 py-10 text-center">
-                <p className="font-semibold text-slate-900">No matches found</p>
+                <SearchX className="mx-auto h-10 w-10 text-slate-300" aria-hidden />
+                <p className="mt-3 font-semibold text-slate-900">No matches found</p>
                 <p className="mt-2 text-sm text-slate-600">
                   Try a different search term or clear the filter to see all documentations.
                 </p>

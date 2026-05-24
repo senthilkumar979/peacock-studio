@@ -1,3 +1,4 @@
+import { Calendar, Hash, Type } from 'lucide-react';
 import type { SavedFlowSummary } from '@/types/savedFlow';
 import { formatFlowDate } from '@/utils/formatFlowDate';
 import { FlowDocumentActions } from './FlowDocumentActions';
@@ -12,9 +13,24 @@ export const FlowLibraryTable = ({ summaries, onRequestDelete }: FlowLibraryTabl
     <table className="min-w-full divide-y divide-slate-200 text-sm">
       <thead className="bg-slate-50">
         <tr>
-          <th className="px-4 py-3 text-left font-semibold text-slate-700">Title</th>
-          <th className="px-4 py-3 text-left font-semibold text-slate-700">Generated</th>
-          <th className="px-4 py-3 text-left font-semibold text-slate-700">Steps</th>
+          <th className="px-4 py-3 text-left font-semibold text-slate-700">
+            <span className="inline-flex items-center gap-1.5">
+              <Type className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              Title
+            </span>
+          </th>
+          <th className="px-4 py-3 text-left font-semibold text-slate-700">
+            <span className="inline-flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              Generated
+            </span>
+          </th>
+          <th className="px-4 py-3 text-left font-semibold text-slate-700">
+            <span className="inline-flex items-center gap-1.5">
+              <Hash className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              Steps
+            </span>
+          </th>
           <th className="px-4 py-3 text-right font-semibold text-slate-700">Actions</th>
         </tr>
       </thead>

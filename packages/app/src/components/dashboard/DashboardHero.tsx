@@ -1,11 +1,11 @@
-import { motion } from 'framer-motion';
-import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
-import { getGreeting } from '@/utils/dashboardLibrary';
-import type { DashboardStats as DashboardStatsModel } from '@/utils/dashboardStats';
+import { motion } from 'framer-motion'
+import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding'
+import { getGreeting } from '@/utils/dashboardLibrary'
+import type { DashboardStats as DashboardStatsModel } from '@/utils/dashboardStats'
 
 interface DashboardHeroProps {
-  stats: DashboardStatsModel;
-  documentCount: number;
+  stats: DashboardStatsModel
+  documentCount: number
 }
 
 export const DashboardHero = ({ stats, documentCount }: DashboardHeroProps) => (
@@ -36,17 +36,22 @@ export const DashboardHero = ({ stats, documentCount }: DashboardHeroProps) => (
           transition={{ delay: 0.05 }}
           className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm"
         >
-          <img src={PEACOCK_LOGO_SRC} alt="" width={18} height={18} className="h-[18px] w-[18px] object-contain" />
+          <img
+            src={PEACOCK_LOGO_SRC}
+            alt=""
+            width={18}
+            height={18}
+            className="h-[56px] w-[56px] object-contain"
+          />
           {PEACOCK_APP_NAME}
         </motion.div>
-
-        <p className="text-sm font-medium text-peacock-100">{getGreeting()}</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
           Documentation workspace
         </h1>
         <p className="mt-3 max-w-xl text-base leading-relaxed text-peacock-100/90">
-          Capture flows with the browser extension, refine them in the editor, and share polished
-          step-by-step guides — all stored locally on this device.
+          Capture flows with the browser extension, refine them in the editor,
+          and share polished step-by-step guides — all stored locally on this
+          device.
         </p>
       </motion.div>
 
@@ -62,11 +67,11 @@ export const DashboardHero = ({ stats, documentCount }: DashboardHeroProps) => (
       </motion.div>
     </div>
   </section>
-);
+)
 
 interface HeroChipProps {
-  label: string;
-  value: number;
+  label: string
+  value: number
 }
 
 const HeroChip = ({ label, value }: HeroChipProps) => (
@@ -74,7 +79,11 @@ const HeroChip = ({ label, value }: HeroChipProps) => (
     whileHover={{ y: -2 }}
     className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md"
   >
-    <p className="text-xs font-medium uppercase tracking-wide text-peacock-100/80">{label}</p>
-    <p className="mt-1 text-2xl font-semibold tabular-nums text-white">{value}</p>
+    <p className="text-xs font-medium uppercase tracking-wide text-peacock-100/80">
+      {label}
+    </p>
+    <p className="mt-1 text-2xl font-semibold tabular-nums text-white">
+      {value}
+    </p>
   </motion.div>
-);
+)
