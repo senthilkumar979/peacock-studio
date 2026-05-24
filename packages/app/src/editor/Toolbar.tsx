@@ -20,9 +20,7 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
   const isLoaded = useFlowStore((state) => state.isLoaded);
   const updateFlowDetails = useFlowStore((state) => state.updateFlowDetails);
 
-  const [isExporting, setIsExporting] = useState(false);
   const [isFlowDetailsOpen, setIsFlowDetailsOpen] = useState(false);
-  const [exportAfterSave, setExportAfterSave] = useState(false);
 
   useEffect(() => {
     if (!isLoaded || !flow) return;
@@ -44,26 +42,7 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
       await persistCurrentFlow(documentId);
     }
 
-    const shouldExport = exportAfterSave;
     setIsFlowDetailsOpen(false);
-    setExportAfterSave(false);
-
-    if (!shouldExport) return;
-
-    const state = useFlowStore.getState();
-    if (!state.flow || !state.steps.length) return;
-
-    setIsExporting(true);
-    try {
-      const { exportFlowPdf } = await import('@/pdf/exportFlowPdf');
-      await exportFlowPdf({
-        flow: state.flow,
-        steps: state.steps,
-        screenshotUrls: state.screenshotUrls,
-      });
-    } finally {
-      setIsExporting(false);
-    }
   };
 
   const flowTitle = flow?.flow.title ?? 'Untitled Flow';
@@ -77,16 +56,14 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
         title={flowTitle}
         description={flowDescription || undefined}
         homeLink
+        documentId={documentId}
       >
         <p className="text-sm text-slate-500">{steps.length} steps</p>
         {isLoaded && steps.length > 0 && (
           <>
             <button
               type="button"
-              onClick={() => {
-                setExportAfterSave(false);
-                setIsFlowDetailsOpen(true);
-              }}
+              onClick={() => setIsFlowDetailsOpen(true)}
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               Flow details
@@ -99,17 +76,6 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
                 Play
               </Link>
             ) : null}
-            <button
-              type="button"
-              onClick={() => {
-                setExportAfterSave(true);
-                setIsFlowDetailsOpen(true);
-              }}
-              disabled={isExporting}
-              className="btn-peacock btn-peacock--sm"
-            >
-              {isExporting ? 'Exporting…' : 'Export PDF'}
-            </button>
           </>
         )}
       </AppHeader>
@@ -118,14 +84,11 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
         isOpen={isFlowDetailsOpen}
         initialTitle={flowTitle}
         initialDescription={flowDescription}
-        confirmLabel={exportAfterSave ? 'Save & export PDF' : 'Save'}
+        confirmLabel="Save"
         onSave={(title, description) => {
           void handleFlowDetailsSave(title, description);
         }}
-        onClose={() => {
-          setIsFlowDetailsOpen(false);
-          setExportAfterSave(false);
-        }}
+        onClose={() => setIsFlowDetailsOpen(false)}
       />
     </>
   );

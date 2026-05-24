@@ -17,12 +17,20 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "exclude_matches": ["http://localhost:5173/*", "http://127.0.0.1:5173/*"],
+      "exclude_matches": [
+        "http://localhost:5173/*",
+        "http://127.0.0.1:5173/*",
+        "https://peacock-studio.vercel.app/*"
+      ],
       "js": ["content/index.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": ["http://localhost:5173/*", "http://127.0.0.1:5173/*"],
+      "matches": [
+        "http://localhost:5173/*",
+        "http://127.0.0.1:5173/*",
+        "https://peacock-studio.vercel.app/*"
+      ],
       "js": ["bridge/index.js"],
       "run_at": "document_start"
     }
@@ -32,6 +40,10 @@
     "default_title": "Peacock Recorder"
   },
   "externally_connectable": {
-    "matches": ["http://localhost:5173/*", "http://127.0.0.1:5173/*"]
+    "matches": [
+      "http://localhost:5173/*",
+      "http://127.0.0.1:5173/*",
+      "https://peacock-studio.vercel.app/*"
+    ]
   }
 }

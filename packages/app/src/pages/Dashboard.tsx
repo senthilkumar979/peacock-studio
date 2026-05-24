@@ -1,6 +1,7 @@
 import { SearchX } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { AppFooter } from '@/components/AppFooter';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DashboardEmptyState } from '@/components/dashboard/DashboardEmptyState';
 import { DashboardFeaturedDoc } from '@/components/dashboard/DashboardFeaturedDoc';
@@ -46,10 +47,11 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100/80">
-      <DashboardHero stats={stats} documentCount={summaries.length} />
+    <div className="flex min-h-screen flex-col bg-slate-100/80">
+      <div className="flex-1">
+        <DashboardHero stats={stats} documentCount={summaries.length} />
 
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-12">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-12">
         <div className="-mt-14 space-y-8">
           <DashboardStats stats={stats} />
 
@@ -117,7 +119,10 @@ export const Dashboard = () => {
             ) : null}
           </motion.section>
         </div>
+        </div>
       </div>
+
+      <AppFooter />
 
       <ConfirmDialog
         isOpen={Boolean(pendingDelete)}

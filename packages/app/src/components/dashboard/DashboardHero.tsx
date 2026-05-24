@@ -34,7 +34,7 @@ export const DashboardHero = ({ stats, documentCount }: DashboardHeroProps) => (
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.05 }}
-          className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm"
+          className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-lg font-medium text-white/90 backdrop-blur-sm"
         >
           <img
             src={PEACOCK_LOGO_SRC}
@@ -55,7 +55,7 @@ export const DashboardHero = ({ stats, documentCount }: DashboardHeroProps) => (
         </p>
       </motion.div>
 
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.1 }}
@@ -64,7 +64,7 @@ export const DashboardHero = ({ stats, documentCount }: DashboardHeroProps) => (
         <HeroChip label="Documentations" value={documentCount} />
         <HeroChip label="This week" value={stats.totalThisWeek} />
         <HeroChip label="Steps captured" value={stats.totalStepsDocumented} />
-      </motion.div>
+      </motion.div> */}
     </div>
   </section>
 )

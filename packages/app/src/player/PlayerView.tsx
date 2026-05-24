@@ -63,6 +63,7 @@ export const PlayerView = ({ documentId }: PlayerViewProps) => {
         eyebrow="Peacock Studio Player"
         title={flow?.flow.title ?? 'Untitled Flow'}
         homeLink
+        documentId={documentId}
       >
         <Link
           to={`/docs/${documentId}/edit`}
