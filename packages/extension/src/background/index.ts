@@ -75,10 +75,33 @@ async function handleStartRecording(): Promise<void> {
   await broadcastRecordingState();
 }
 
-async function handleStopRecording(): Promise<void> {
-  const eventCount = await getEventCount();
+async function captureFinalPageBeforeStop(tab?: chrome.tabs.Tab): Promise<boolean> {
+  const targetTab =
+    tab ??
+    (await chrome.tabs.query({ active: true, currentWindow: true })).find((candidate) =>
+      canInjectIntoUrl(candidate.url)
+    );
 
-  if (eventCount > 0) {
+  if (!targetTab?.id || !canInjectIntoUrl(targetTab.url)) return false;
+
+  const isReady = await ensureContentScript(targetTab.id);
+  if (!isReady) return false;
+
+  try {
+    await chrome.tabs.sendMessage(targetTab.id, { type: 'CAPTURE_FINAL_PAGE' });
+    return true;
+  } catch (error) {
+    console.warn('[Peacock] Could not capture final page view before stop', error);
+    return false;
+  }
+}
+
+async function handleStopRecording(tab?: chrome.tabs.Tab): Promise<void> {
+  const eventCount = await getEventCount();
+  const capturedFinalPage = await captureFinalPageBeforeStop(tab);
+  const finalEventCount = capturedFinalPage ? await getEventCount() : eventCount;
+
+  if (finalEventCount > 0) {
     await markHandoffPending();
   }
 
@@ -175,7 +198,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
         }
 
         case 'STOP_RECORDING':
-          await handleStopRecording();
+          await handleStopRecording(sender.tab);
           sendResponse({ success: true });
           break;
 

@@ -239,6 +239,24 @@ async function captureInitialPageView(): Promise<void> {
   await storeEvent(pageViewEvent);
 }
 
+async function captureFinalPageView(): Promise<void> {
+  const state = await refreshRecordingState();
+  if (state.status === 'idle') return;
+
+  const screenshotId = await tryCaptureScreenshotId();
+  const pageViewEvent: PageViewEvent = {
+    id: createId(),
+    type: 'page-view',
+    timestamp: Date.now(),
+    url: location.href,
+    title: document.title,
+    viewport: getViewport(),
+    screenshotId,
+  };
+
+  await storeEvent(pageViewEvent);
+}
+
 async function handleRecordingStarted(): Promise<void> {
   await refreshRecordingState();
   if (!isRecordingActiveSync()) return;
@@ -293,7 +311,7 @@ function initEventListeners(): void {
 }
 
 function registerRuntimeListeners(): void {
-  chrome.runtime.onMessage.addListener((message: ExtensionMessage) => {
+  chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendResponse) => {
     if (message.type === 'RECORDING_STATE') {
       recordingState = message.state;
       updateRecordingUi(recordingState);
@@ -304,6 +322,17 @@ function registerRuntimeListeners(): void {
       void handleRecordingStarted().catch((error) => {
         console.error('[Peacock] Failed to capture initial page view', error);
       });
+      return;
+    }
+
+    if (message.type === 'CAPTURE_FINAL_PAGE') {
+      void captureFinalPageView()
+        .then(() => sendResponse({ success: true }))
+        .catch((error) => {
+          console.error('[Peacock] Failed to capture final page view', error);
+          sendResponse({ error: error instanceof Error ? error.message : 'Unknown error' });
+        });
+      return true;
     }
   });
 }

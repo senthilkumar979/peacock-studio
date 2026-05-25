@@ -5,7 +5,7 @@ import { getRecordingStatus } from './recordingState';
 
 export async function captureScreenshot(tabId: number, windowId?: number): Promise<string> {
   const status = await getRecordingStatus();
-  if (status !== 'recording') {
+  if (status !== 'recording' && status !== 'paused') {
     throw new Error('Recording is not active');
   }
 

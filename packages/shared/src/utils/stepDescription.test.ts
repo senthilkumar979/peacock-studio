@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ClickEvent, InputEvent } from '../types/events';
+import type { ClickEvent, InputEvent, PageViewEvent } from '../types/events';
 import { extractElementSnapshot } from './extractElementSnapshot';
 import { generateStepDescription, generateStepTitle } from './stepDescription';
 
@@ -26,7 +26,7 @@ describe('stepDescription', () => {
     };
 
     expect(generateStepDescription(snapshot, event)).toBe(
-      'Click on Save and Close button to save the form.'
+      'On the Order page, click the Save and Close button to save the form.'
     );
     expect(generateStepTitle(snapshot, event)).toBe('Click Save and Close');
   });
@@ -53,8 +53,9 @@ describe('stepDescription', () => {
     };
 
     expect(generateStepDescription(snapshot, event)).toBe(
-      'Enter "Tamil Nadu" for State inside the provided country India.'
+      'On the Address page, enter "Tamil Nadu" in the State field for country India.'
     );
+    expect(generateStepTitle(snapshot, event)).toBe('Enter State: Tamil Nadu');
     expect(snapshot.valuePreview).toBe('Tamil Nadu');
     expect(snapshot.label.text).toBe('State');
     expect(snapshot.parent?.dataAttributes.country).toBe('India');
@@ -81,8 +82,10 @@ describe('stepDescription', () => {
       screenshotId: 'shot-3',
     };
 
-    expect(generateStepTitle(snapshot, event)).toBe('Select Country');
-    expect(generateStepDescription(snapshot, event)).toBe('Select "India" for Country.');
+    expect(generateStepTitle(snapshot, event)).toBe('Select Country: India');
+    expect(generateStepDescription(snapshot, event)).toBe(
+      'On the Form page, select "India" in the Country field.'
+    );
   });
 
   it('describes a radio option with Choose wording', () => {
@@ -104,6 +107,25 @@ describe('stepDescription', () => {
     };
 
     expect(generateStepTitle(snapshot, event)).toBe('Choose Pro plan');
-    expect(generateStepDescription(snapshot, event)).toContain('Choose');
+    expect(generateStepDescription(snapshot, event)).toBe(
+      'On the Plans page, choose the Pro plan option (pro).'
+    );
+  });
+
+  it('describes a page view with title and url', () => {
+    const event: PageViewEvent = {
+      id: '5',
+      type: 'page-view',
+      timestamp: Date.now(),
+      url: 'https://example.com/checkout/review',
+      title: 'Checkout Review',
+      viewport: { width: 1440, height: 900, scrollX: 0, scrollY: 0, dpr: 1 },
+      screenshotId: 'shot-5',
+    };
+
+    expect(generateStepTitle({} as never, event)).toBe('Open Checkout Review');
+    expect(generateStepDescription({} as never, event)).toBe(
+      'Open Checkout Review at https://example.com/checkout/review.'
+    );
   });
 });
