@@ -8,22 +8,57 @@
   </head>
   <body>
     <main class="popup">
-      <header class="popup__header">
-        <img id="logo" alt="Peacock" class="popup__logo" width="32" height="32" />
-        <h1 class="popup__title">Peacock</h1>
-        <p class="popup__subtitle">Flow recorder</p>
-      </header>
+      <section class="popup__hero">
+        <div class="popup__brand">
+          <img id="logo" alt="Peacock" class="popup__logo" width="44" height="44" />
+          <div class="popup__brand-copy">
+            <p class="popup__eyebrow">Peacock Recorder</p>
+            <h1 class="popup__title">Capture clean product flows</h1>
+            <p id="status-detail" class="popup__subtitle">
+              Records the current tab without reloading the page.
+            </p>
+          </div>
+        </div>
+        <div id="status-badge" class="status-badge status-badge--idle">Idle</div>
+      </section>
 
-      <div id="status" class="popup__status">Idle</div>
+      <section class="popup__stats" aria-label="Recording details">
+        <article class="stat-card">
+          <p class="stat-card__label">Current page</p>
+          <p id="page-host" class="stat-card__value">Detecting…</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-card__label">Steps captured</p>
+          <p id="event-count" class="stat-card__value">0</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-card__label">Session time</p>
+          <p id="elapsed" class="stat-card__value">Ready</p>
+        </article>
+      </section>
+
+      <section class="popup__panel">
+        <p id="status" class="popup__status">Ready to record this tab.</p>
+        <p class="popup__hint">Stop recording to open the editor automatically.</p>
+      </section>
 
       <div id="controls" class="popup__controls">
-        <button id="start-btn" type="button" class="btn btn--primary">Start Recording</button>
+        <button id="start-btn" type="button" class="btn btn--primary">Start recording</button>
         <button id="pause-btn" type="button" class="btn btn--secondary" hidden>Pause</button>
         <button id="resume-btn" type="button" class="btn btn--secondary" hidden>Resume</button>
-        <button id="stop-btn" type="button" class="btn btn--danger" hidden>Stop</button>
+        <button id="stop-btn" type="button" class="btn btn--danger" hidden>
+          Stop and open editor
+        </button>
       </div>
 
-      <p id="event-count" class="popup__meta">0 steps captured</p>
+      <div class="popup__secondary-actions">
+        <button id="open-dashboard-btn" type="button" class="btn btn--ghost">Open dashboard</button>
+        <button id="open-editor-btn" type="button" class="btn btn--ghost">Open editor</button>
+      </div>
+
+      <footer class="popup__footer">
+        Screenshots and flow steps stay in your browser until you export or share them.
+      </footer>
     </main>
     <script type="module" src="./popup.ts"></script>
   </body>
