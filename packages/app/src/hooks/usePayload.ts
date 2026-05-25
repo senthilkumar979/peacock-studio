@@ -14,6 +14,15 @@ function getExtensionId(): string | null {
   return fromEnv || null;
 }
 
+function notifyExtensionAppReady(extensionId: string): void {
+  const runtime = window.chrome?.runtime;
+  if (!runtime?.sendMessage) return;
+
+  runtime.sendMessage(extensionId, { type: 'APP_READY' }, () => {
+    void runtime.lastError;
+  });
+}
+
 function requestHandoffViaBridge(timeoutMs = 12000): Promise<HandoffResponse | null> {
   return new Promise((resolve) => {
     let settled = false;
@@ -72,7 +81,12 @@ function requestHandoffViaExtensionId(extensionId: string): Promise<HandoffRespo
       extensionId,
       { type: 'GET_PENDING_HANDOFF' },
       (response) => {
-        if (runtime.lastError || !response?.payload) {
+        if (runtime.lastError) {
+          console.error('[Peacock] Extension handoff error:', runtime.lastError.message);
+          resolve(null);
+          return;
+        }
+        if (!response?.payload) {
           resolve(null);
           return;
         }
@@ -80,6 +94,13 @@ function requestHandoffViaExtensionId(extensionId: string): Promise<HandoffRespo
       }
     );
   });
+}
+
+function formatSaveError(error: unknown): string {
+  if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+    return 'Could not save: browser storage is full. Try fewer steps or smaller screenshots.';
+  }
+  return 'Could not save documentation to this browser. Check storage permissions and try again.';
 }
 
 interface UsePayloadOptions {
@@ -99,16 +120,20 @@ export function usePayload({ enabled = true }: UsePayloadOptions = {}) {
     setIsLoading(true);
     setError(null);
 
+    const extensionId = getExtensionId();
+    if (extensionId) notifyExtensionAppReady(extensionId);
+
     void (async () => {
       const handoff =
-        (await requestHandoffViaBridge()) ??
-        (getExtensionId() ? await requestHandoffViaExtensionId(getExtensionId()!) : null);
-
-      setIsLoading(false);
+        (extensionId ? await requestHandoffViaExtensionId(extensionId) : null) ??
+        (await requestHandoffViaBridge());
 
       if (!handoff?.payload) {
+        setIsLoading(false);
         setError(
-          'No pending flow from the extension. Record on a website, then stop recording to open the editor.'
+          extensionId
+            ? 'No pending flow from the extension. Record on a website, stop recording, and wait for the editor to open.'
+            : 'No pending flow from the extension. Rebuild the app with VITE_EXTENSION_ID set, or reload the extension after setting VITE_APP_URL to this site.'
         );
         return;
       }
@@ -116,9 +141,20 @@ export function usePayload({ enabled = true }: UsePayloadOptions = {}) {
       useFlowStore.getState().resetFlow();
       setFlow(handoff.payload, handoff.screenshotUrls ?? {});
 
-      const documentId = await saveNewFlowFromStore();
-      if (documentId) {
+      try {
+        const documentId = await saveNewFlowFromStore();
+        setIsLoading(false);
+
+        if (!documentId) {
+          setError('Recording had no steps to save.');
+          return;
+        }
+
         navigate(`/docs/${documentId}/edit`, { replace: true });
+      } catch (saveError) {
+        console.error('[Peacock] Failed to save flow after handoff', saveError);
+        setIsLoading(false);
+        setError(formatSaveError(saveError));
       }
     })();
   }, [enabled, isLoaded, setFlow, navigate]);
