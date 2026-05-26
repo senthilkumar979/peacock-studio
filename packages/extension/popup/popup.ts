@@ -12,6 +12,7 @@ const startBtn = document.getElementById('start-btn') as HTMLButtonElement | nul
 const pauseBtn = document.getElementById('pause-btn') as HTMLButtonElement | null;
 const resumeBtn = document.getElementById('resume-btn') as HTMLButtonElement | null;
 const stopBtn = document.getElementById('stop-btn') as HTMLButtonElement | null;
+const quickScreenshotsPanel = document.getElementById('quick-screenshots-panel') as HTMLElement | null;
 const screenshotModeEl = document.getElementById('screenshot-mode') as HTMLSelectElement | null;
 const openDashboardBtn = document.getElementById('open-dashboard-btn') as HTMLButtonElement | null;
 const openEditorBtn = document.getElementById('open-editor-btn') as HTMLButtonElement | null;
@@ -61,6 +62,12 @@ function setButtonsDisabled(disabled: boolean): void {
   if (screenshotModeEl) screenshotModeEl.disabled = disabled;
 }
 
+function setQuickScreenshotsVisible(visible: boolean): void {
+  if (!quickScreenshotsPanel) return;
+  quickScreenshotsPanel.hidden = !visible;
+  quickScreenshotsPanel.style.display = visible ? '' : 'none';
+}
+
 function renderState(state: RecordingStateSnapshot): void {
   lastState = state;
   if (eventCountEl) eventCountEl.textContent = String(state.eventCount);
@@ -70,6 +77,7 @@ function renderState(state: RecordingStateSnapshot): void {
   if (pauseBtn) pauseBtn.hidden = state.status !== 'recording';
   if (resumeBtn) resumeBtn.hidden = state.status !== 'paused';
   if (stopBtn) stopBtn.hidden = state.status === 'idle';
+  setQuickScreenshotsVisible(state.status === 'idle');
   setButtonsDisabled(isBusy);
 
   if (statusBadgeEl) {
@@ -119,6 +127,10 @@ async function runAction(
 ): Promise<void> {
   isBusy = true;
   setButtonsDisabled(true);
+  if (message === 'START_RECORDING' || message === 'PAUSE_RECORDING' || message === 'RESUME_RECORDING') {
+    setQuickScreenshotsVisible(false);
+  }
+
   try {
     await sendExtensionMessage({ type: message });
     await refreshState();
