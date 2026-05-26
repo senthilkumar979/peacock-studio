@@ -76,12 +76,21 @@ export const DocumentStepCard = ({
         </div>
       </div>
 
-      <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.9fr)] lg:items-start">
+      <div className="space-y-5 p-5">
+        <div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Instructions</p>
+            <p className="mt-2 text-sm leading-6 text-slate-700">
+              {description || 'No additional instructions were added for this step.'}
+            </p>
+          </div>
+        </div>
+
         <div className="min-w-0">
-          <BrowserMockup url={stepUrl}>
+          <BrowserMockup url={stepUrl} isFluid>
             {screenshotUrl ? (
-              <div className="relative inline-block p-3 sm:p-4">
-                <img src={screenshotUrl} alt={step.title} className="block h-auto w-full max-w-full object-contain" />
+              <div className="relative p-3 sm:p-4">
+                <img src={screenshotUrl} alt={step.title} className="block h-auto w-full object-contain" />
                 {markerPosition ? (
                   <PlayerClickMarker
                     step={step}
@@ -97,20 +106,6 @@ export const DocumentStepCard = ({
               </div>
             )}
           </BrowserMockup>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">What to do</p>
-            <p className="mt-2 text-sm leading-6 text-slate-700">
-              {description || 'No additional instructions were added for this step.'}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Page</p>
-            <p className="mt-2 break-all text-sm text-slate-600">{stepUrl}</p>
-          </div>
         </div>
       </div>
     </article>

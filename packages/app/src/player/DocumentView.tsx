@@ -1,19 +1,25 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { AppHeader } from '@/components/AppHeader';
-import { formatFlowDate } from '@/utils/formatFlowDate';
-import { getDocumentStepAnchor, type SharedDocumentViewMode } from '@/utils/shareLink';
-import { useFlowStore } from '@/store/flowStore';
-import { DocumentStepIndex } from './DocumentStepIndex';
-import { DocumentStepCard } from './DocumentStepCard';
-import { SharedViewToggle } from './SharedViewToggle';
+import { AppHeader } from "@/components/AppHeader";
+import { useFlowStore } from "@/store/flowStore";
+import { formatFlowDate } from "@/utils/formatFlowDate";
+import {
+  getDocumentStepAnchor,
+  type SharedDocumentViewMode,
+} from "@/utils/shareLink";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { DocumentStepCard } from "./DocumentStepCard";
+import { DocumentStepIndex } from "./DocumentStepIndex";
+import { SharedViewToggle } from "./SharedViewToggle";
 
 interface DocumentViewProps {
   documentId: string;
   onModeChange: (mode: SharedDocumentViewMode) => void;
 }
 
-export const DocumentView = ({ documentId, onModeChange }: DocumentViewProps) => {
+export const DocumentView = ({
+  documentId,
+  onModeChange,
+}: DocumentViewProps) => {
   const flow = useFlowStore((state) => state.flow);
   const steps = useFlowStore((state) => state.steps);
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
@@ -25,9 +31,41 @@ export const DocumentView = ({ documentId, onModeChange }: DocumentViewProps) =>
         title: step.title,
         anchorId: getDocumentStepAnchor(step.id),
       })),
-    [steps]
+    [steps],
   );
-  const [activeStepId, setActiveStepId] = useState<string | null>(steps[0]?.id ?? null);
+  const [activeStepId, setActiveStepId] = useState<string | null>(
+    steps[0]?.id ?? null,
+  );
+  const [desktopPaneHeight, setDesktopPaneHeight] = useState<number | null>(
+    null,
+  );
+  const layoutRef = useRef<HTMLDivElement | null>(null);
+  const stepsScrollRef = useRef<HTMLDivElement | null>(null);
+  const isDesktopPane = desktopPaneHeight !== null;
+
+  const scrollStepsPaneToAnchor = (
+    anchorId: string,
+    behavior: ScrollBehavior = "smooth",
+  ) => {
+    const stepsPane = stepsScrollRef.current;
+    const target = document.getElementById(anchorId);
+    if (!target) return;
+
+    if (!stepsPane || !isDesktopPane || !stepsPane.contains(target)) {
+      target.scrollIntoView({ block: "start", behavior });
+      return;
+    }
+
+    target.scrollIntoView({ block: "start", behavior, inline: "nearest" });
+  };
+
+  const scrollToStep = (anchorId: string, stepId: string) => {
+    setActiveStepId(stepId);
+    window.history.replaceState(null, "", `#${anchorId}`);
+    window.requestAnimationFrame(() => {
+      scrollStepsPaneToAnchor(anchorId);
+    });
+  };
 
   useEffect(() => {
     setActiveStepId((current) => {
@@ -37,21 +75,44 @@ export const DocumentView = ({ documentId, onModeChange }: DocumentViewProps) =>
   }, [steps]);
 
   useEffect(() => {
+    const updateDesktopPaneHeight = () => {
+      if (window.innerWidth < 1024) {
+        setDesktopPaneHeight(null);
+        return;
+      }
+
+      const layout = layoutRef.current;
+      if (!layout) {
+        setDesktopPaneHeight(null);
+        return;
+      }
+
+      const rect = layout.getBoundingClientRect();
+      const availableHeight = Math.floor(window.innerHeight - rect.top - 24);
+      setDesktopPaneHeight(Math.max(320, availableHeight));
+    };
+
+    updateDesktopPaneHeight();
+    window.addEventListener("resize", updateDesktopPaneHeight);
+    return () => window.removeEventListener("resize", updateDesktopPaneHeight);
+  }, [steps.length]);
+
+  useEffect(() => {
     const syncFromHash = () => {
-      const hash = window.location.hash.replace(/^#/, '');
+      const hash = window.location.hash.replace(/^#/, "");
       if (!hash) return;
       const target = stepItems.find((item) => item.anchorId === hash);
       if (!target) return;
 
       setActiveStepId(target.stepId);
       window.requestAnimationFrame(() => {
-        document.getElementById(hash)?.scrollIntoView({ block: 'start' });
+        scrollStepsPaneToAnchor(hash, "auto");
       });
     };
 
     syncFromHash();
-    window.addEventListener('hashchange', syncFromHash);
-    return () => window.removeEventListener('hashchange', syncFromHash);
+    window.addEventListener("hashchange", syncFromHash);
+    return () => window.removeEventListener("hashchange", syncFromHash);
   }, [stepItems]);
 
   useEffect(() => {
@@ -65,24 +126,26 @@ export const DocumentView = ({ documentId, onModeChange }: DocumentViewProps) =>
         const visibleEntries = entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        const nextStepId = visibleEntries[0]?.target.getAttribute('data-step-id');
+        const nextStepId =
+          visibleEntries[0]?.target.getAttribute("data-step-id");
         if (nextStepId) setActiveStepId(nextStepId);
       },
       {
-        rootMargin: '-18% 0px -55% 0px',
+        root: isDesktopPane ? stepsScrollRef.current : null,
+        rootMargin: "-18% 0px -55% 0px",
         threshold: [0.15, 0.35, 0.6],
-      }
+      },
     );
 
     elements.forEach((element) => observer.observe(element));
     return () => observer.disconnect();
-  }, [stepItems]);
+  }, [isDesktopPane, stepItems]);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <AppHeader
         eyebrow="Peacock Shared Guide"
-        title={flow?.flow.title ?? 'Untitled Flow'}
+        title={flow?.flow.title ?? "Untitled Flow"}
         description={flow?.flow.description || undefined}
         homeLink
         documentId={documentId}
@@ -97,10 +160,10 @@ export const DocumentView = ({ documentId, onModeChange }: DocumentViewProps) =>
       </AppHeader>
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="shrink-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap gap-3 text-sm text-slate-600">
             <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 font-medium">
-              {steps.length} {steps.length === 1 ? 'step' : 'steps'}
+              {steps.length} {steps.length === 1 ? "step" : "steps"}
             </span>
             {flow ? (
               <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 font-medium">
@@ -109,21 +172,39 @@ export const DocumentView = ({ documentId, onModeChange }: DocumentViewProps) =>
             ) : null}
           </div>
           <p className="mt-4 text-sm leading-6 text-slate-600">
-            Follow the documented steps below, or switch to player mode for a guided walkthrough.
+            Follow the documented steps below, or switch to player mode for a
+            guided walkthrough.
           </p>
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start">
-          <DocumentStepIndex items={stepItems} activeStepId={activeStepId} />
+        <div
+          ref={layoutRef}
+          className={`grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)] ${isDesktopPane ? "" : ""}`}
+          style={desktopPaneHeight ? { height: desktopPaneHeight } : undefined}
+        >
+          <div className="sticky">
+            <DocumentStepIndex
+              items={stepItems}
+              activeStepId={activeStepId}
+              onSelect={scrollToStep}
+            />
+          </div>
 
-          <div className="flex min-w-0 flex-col gap-5">
+          <div
+            ref={stepsScrollRef}
+            className={`flex min-w-0 flex-col gap-5 pr-1 ${
+              isDesktopPane ? "" : ""
+            }`}
+          >
             {steps.map((step, index) => (
               <DocumentStepCard
                 key={step.id}
                 documentId={documentId}
                 step={step}
                 stepNumber={index + 1}
-                anchorId={stepItems[index]?.anchorId ?? getDocumentStepAnchor(step.id)}
+                anchorId={
+                  stepItems[index]?.anchorId ?? getDocumentStepAnchor(step.id)
+                }
                 isActive={step.id === activeStepId}
                 screenshotUrls={screenshotUrls}
               />

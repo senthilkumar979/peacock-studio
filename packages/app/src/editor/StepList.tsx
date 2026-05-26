@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import {
   DndContext,
   KeyboardSensor,
@@ -32,6 +33,7 @@ const SortableStep = ({ step, index, isSelected, onSelect }: SortableStepProps) 
   return (
     <div
       ref={setNodeRef}
+      data-step-id={step.id}
       style={style}
       className={`flex items-stretch gap-2 rounded-lg border bg-white p-2 transition ${
         isSelected
@@ -66,6 +68,7 @@ export const StepList = () => {
   const selectedStepId = useFlowStore((state) => state.selectedStepId);
   const selectStep = useFlowStore((state) => state.selectStep);
   const reorderSteps = useFlowStore((state) => state.reorderSteps);
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -81,6 +84,15 @@ export const StepList = () => {
     if (from >= 0 && to >= 0) reorderSteps(from, to);
   };
 
+  useEffect(() => {
+    if (!selectedStepId || !listRef.current) return;
+
+    const selectedStep = listRef.current.querySelector<HTMLElement>(
+      `[data-step-id="${selectedStepId}"]`
+    );
+    selectedStep?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [selectedStepId]);
+
   if (!steps.length) {
     return (
       <div className="rounded-lg border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
@@ -95,7 +107,10 @@ export const StepList = () => {
       <div className="flex min-h-0 flex-1 flex-col">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={steps.map((step) => step.id)} strategy={verticalListSortingStrategy}>
-            <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
+            <div
+              ref={listRef}
+              className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-1"
+            >
               {steps.map((step, index) => (
                 <SortableStep
                   key={step.id}

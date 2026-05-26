@@ -8,21 +8,23 @@ interface DocumentStepIndexItem {
 interface DocumentStepIndexProps {
   items: DocumentStepIndexItem[];
   activeStepId: string | null;
+  onSelect: (anchorId: string, stepId: string) => void;
 }
 
-export const DocumentStepIndex = ({ items, activeStepId }: DocumentStepIndexProps) => (
-  <aside className="hidden lg:block">
-    <div className="sticky top-24 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+export const DocumentStepIndex = ({ items, activeStepId, onSelect }: DocumentStepIndexProps) => (
+  <aside className="hidden min-h-0 lg:block">
+    <div className="h-full rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Step index</p>
-      <nav className="mt-4">
+      <nav className="mt-4 pr-1">
         <ol className="space-y-2">
           {items.map((item) => {
             const isActive = item.stepId === activeStepId;
 
             return (
               <li key={item.stepId}>
-                <a
-                  href={`#${item.anchorId}`}
+                <button
+                  type="button"
+                  onClick={() => onSelect(item.anchorId, item.stepId)}
                   className={`flex items-start gap-3 rounded-xl px-3 py-2 text-sm transition ${
                     isActive
                       ? 'bg-peacock-50 text-peacock-800 ring-1 ring-peacock-200'
@@ -37,7 +39,7 @@ export const DocumentStepIndex = ({ items, activeStepId }: DocumentStepIndexProp
                     {item.stepNumber}
                   </span>
                   <span className="line-clamp-2 leading-5">{item.title}</span>
-                </a>
+                </button>
               </li>
             );
           })}

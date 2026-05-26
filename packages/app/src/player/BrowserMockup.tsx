@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 interface BrowserMockupProps {
   url: string;
   children: ReactNode;
+  isFluid?: boolean;
 }
 
 function formatAddressBarUrl(url: string): string {
@@ -19,11 +20,17 @@ function formatAddressBarUrl(url: string): string {
   }
 }
 
-export const BrowserMockup = ({ url, children }: BrowserMockupProps) => {
+export const BrowserMockup = ({ url, children, isFluid = false }: BrowserMockupProps) => {
   const address = formatAddressBarUrl(url);
 
   return (
-    <div className="mx-auto flex w-fit max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl bg-slate-800 shadow-2xl ring-1 ring-slate-900/10">
+    <div
+      className={`flex flex-col overflow-hidden rounded-xl bg-slate-800 ring-1 ring-slate-900/10 ${
+        isFluid
+          ? 'w-full max-w-full shadow-xl'
+          : 'mx-auto w-fit max-w-[calc(100vw-2rem)] shadow-2xl'
+      }`}
+    >
       <div className="flex shrink-0 items-center gap-3 border-b border-slate-700/80 bg-slate-800 px-4 py-3">
         <div className="flex shrink-0 items-center gap-1.5" aria-hidden>
           <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
@@ -53,7 +60,7 @@ export const BrowserMockup = ({ url, children }: BrowserMockupProps) => {
           </motion.span>
         </div>
       </div>
-      <div className="relative bg-slate-100">{children}</div>
+      <div className={`relative bg-slate-100 ${isFluid ? 'w-full' : ''}`}>{children}</div>
     </div>
   );
 };
