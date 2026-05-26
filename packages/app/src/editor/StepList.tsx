@@ -14,6 +14,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
 import type { FlowStep } from '@peacock/shared';
 import { useFlowStore } from '@/store/flowStore';
 
@@ -29,22 +30,34 @@ const SortableStep = ({ step, index, isSelected, onSelect }: SortableStepProps) 
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   return (
-    <button
+    <div
       ref={setNodeRef}
-      type="button"
       style={style}
-      {...attributes}
-      {...listeners}
-      onClick={() => onSelect(step.id)}
-      className={`w-full rounded-lg border px-3 py-2 text-left transition ${
+      className={`flex items-stretch gap-2 rounded-lg border bg-white p-2 transition ${
         isSelected
           ? 'border-peacock-500 bg-peacock-50'
           : 'border-slate-200 bg-white hover:border-slate-300'
       }`}
     >
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Step {index + 1}</p>
-      <p className="mt-1 text-sm font-medium text-slate-900">{step.title}</p>
-    </button>
+      <button
+        type="button"
+        aria-label={`Drag step ${index + 1} to reorder`}
+        title="Drag to reorder"
+        className="flex shrink-0 cursor-grab items-center rounded-md px-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={() => onSelect(step.id)}
+        className="min-w-0 flex-1 text-left"
+      >
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Step {index + 1}</p>
+        <p className="mt-1 text-sm font-medium text-slate-900">{step.title}</p>
+      </button>
+    </div>
   );
 };
 
@@ -83,15 +96,15 @@ export const StepList = () => {
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={steps.map((step) => step.id)} strategy={verticalListSortingStrategy}>
             <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
-            {steps.map((step, index) => (
-              <SortableStep
-                key={step.id}
-                step={step}
-                index={index}
-                isSelected={step.id === selectedStepId}
-                onSelect={selectStep}
-              />
-            ))}
+              {steps.map((step, index) => (
+                <SortableStep
+                  key={step.id}
+                  step={step}
+                  index={index}
+                  isSelected={step.id === selectedStepId}
+                  onSelect={selectStep}
+                />
+              ))}
             </div>
           </SortableContext>
         </DndContext>
