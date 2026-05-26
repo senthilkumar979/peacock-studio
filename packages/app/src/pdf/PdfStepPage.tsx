@@ -4,6 +4,10 @@ import { getStepScreenshotUrl, getStepUrl } from '@peacock/shared';
 import { PdfPageFooter, PdfPageHeader } from './PdfPageChrome';
 import { PDF_COLORS, PDF_FONT_FAMILY } from './pdfTheme';
 
+const PDF_IMAGE_MAX_WIDTH = 503;
+const PDF_IMAGE_MAX_HEIGHT = 360;
+const PDF_MARKER_SIZE = 18;
+
 const styles = StyleSheet.create({
   page: {
     paddingTop: 68,
@@ -59,10 +63,37 @@ const styles = StyleSheet.create({
     padding: 6,
     backgroundColor: PDF_COLORS.imageFrameBackground,
   },
+  imageStage: {
+    position: 'relative',
+    alignSelf: 'center',
+  },
   image: {
-    width: '100%',
-    maxHeight: 360,
     objectFit: 'contain',
+  },
+  markerWrap: {
+    position: 'absolute',
+    marginLeft: -PDF_MARKER_SIZE / 2,
+    marginTop: -PDF_MARKER_SIZE / 2,
+    width: PDF_MARKER_SIZE,
+    height: PDF_MARKER_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  markerPulse: {
+    position: 'absolute',
+    width: PDF_MARKER_SIZE,
+    height: PDF_MARKER_SIZE,
+    borderRadius: PDF_MARKER_SIZE / 2,
+    backgroundColor: '#93c5fd',
+    opacity: 0.55,
+  },
+  markerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ffffff',
+    borderWidth: 2,
+    borderColor: PDF_COLORS.primary,
   },
   noImage: {
     height: 120,
@@ -97,6 +128,15 @@ export const PdfStepPage = ({
   const screenshotSrc = getStepScreenshotUrl(step, screenshotUrls);
   const stepUrl = getStepUrl(step);
   const description = step.notes || step.generatedDescription;
+  const screenshotLayout = getPdfScreenshotLayout(step);
+  const clickEvent = step.event.type === 'click' ? step.event : null;
+  const markerPosition =
+    clickEvent && screenshotLayout
+      ? {
+          left: clickEvent.position.xPercent * screenshotLayout.width,
+          top: clickEvent.position.yPercent * screenshotLayout.height,
+        }
+      : null;
 
   return (
     <Page size="A4" style={styles.page}>
@@ -116,7 +156,32 @@ export const PdfStepPage = ({
 
       {screenshotSrc ? (
         <View style={styles.imageFrame}>
-          <Image style={styles.image} src={screenshotSrc} />
+          {screenshotLayout ? (
+            <View
+              style={[
+                styles.imageStage,
+                { width: screenshotLayout.width, height: screenshotLayout.height },
+              ]}
+            >
+              <Image
+                style={[styles.image, { width: screenshotLayout.width, height: screenshotLayout.height }]}
+                src={screenshotSrc}
+              />
+              {markerPosition ? (
+                <View
+                  style={[
+                    styles.markerWrap,
+                    { left: markerPosition.left, top: markerPosition.top },
+                  ]}
+                >
+                  <View style={styles.markerPulse} />
+                  <View style={styles.markerDot} />
+                </View>
+              ) : null}
+            </View>
+          ) : (
+            <Image style={styles.image} src={screenshotSrc} />
+          )}
         </View>
       ) : (
         <View style={styles.noImage}>
@@ -126,3 +191,20 @@ export const PdfStepPage = ({
     </Page>
   );
 };
+
+function getPdfScreenshotLayout(step: FlowStep): { width: number; height: number } | null {
+  const viewport =
+    step.event.type === 'click' || step.event.type === 'page-view' ? step.event.viewport : null;
+
+  if (!viewport?.width || !viewport.height) return null;
+
+  const scale = Math.min(
+    PDF_IMAGE_MAX_WIDTH / viewport.width,
+    PDF_IMAGE_MAX_HEIGHT / viewport.height
+  );
+
+  return {
+    width: Math.round(viewport.width * scale),
+    height: Math.round(viewport.height * scale),
+  };
+}
