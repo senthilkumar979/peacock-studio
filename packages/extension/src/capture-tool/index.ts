@@ -20,6 +20,18 @@ interface CaptureMetrics {
   scrollY: number;
 }
 
+interface TopOverlayResponse {
+  count: number;
+}
+
+interface TrackedTopOverlay {
+  element: HTMLElement;
+  position: 'fixed' | 'sticky';
+}
+
+const trackedTopOverlays: TrackedTopOverlay[] = [];
+const suppressedTopOverlayStyles = new Map<HTMLElement, string | null>();
+
 function waitForPaint(frames = 2): Promise<void> {
   return new Promise((resolve) => {
     let remaining = frames;
@@ -64,6 +76,100 @@ function getCaptureMetrics(): CaptureMetrics {
   };
 }
 
+function isElementVisible(element: HTMLElement, rect: DOMRect): boolean {
+  const style = window.getComputedStyle(element);
+  const maxTopOffset = Math.min(96, window.innerHeight * 0.15);
+  if (style.display === 'none') return false;
+  if (style.visibility === 'hidden') return false;
+  if (Number(style.opacity || '1') === 0) return false;
+  if (rect.width < window.innerWidth * 0.3) return false;
+  if (rect.height <= 0) return false;
+  if (rect.height > Math.min(220, window.innerHeight * 0.35)) return false;
+  if (rect.bottom <= 0) return false;
+  if (rect.top > maxTopOffset) return false;
+  return true;
+}
+
+function isPeacockManagedElement(element: HTMLElement): boolean {
+  if (element.id === SELECTION_OVERLAY_ID) return true;
+  if (element.id.startsWith('peacock')) return true;
+  return Boolean(element.closest('[id^="peacock"]'));
+}
+
+function discoverTopOverlays(): TopOverlayResponse {
+  trackedTopOverlays.length = 0;
+
+  const candidates = Array.from(document.querySelectorAll<HTMLElement>('body *'))
+    .map((element) => {
+      if (isPeacockManagedElement(element)) return null;
+
+      const style = window.getComputedStyle(element);
+      if (style.position !== 'fixed' && style.position !== 'sticky') return null;
+
+      const rect = element.getBoundingClientRect();
+      if (!isElementVisible(element, rect)) return null;
+
+      return {
+        element,
+        position: style.position as 'fixed' | 'sticky',
+      };
+    })
+    .filter((candidate): candidate is TrackedTopOverlay => Boolean(candidate));
+
+  const outermostCandidates = candidates.filter(
+    (candidate) =>
+      !candidates.some(
+        (other) => other !== candidate && other.element.contains(candidate.element)
+      )
+  );
+
+  trackedTopOverlays.push(...outermostCandidates);
+  return { count: trackedTopOverlays.length };
+}
+
+async function setTopOverlaysSuppressed(suppressed: boolean): Promise<TopOverlayResponse> {
+  if (suppressed) {
+    for (const overlay of trackedTopOverlays) {
+      const { element, position } = overlay;
+      if (!suppressedTopOverlayStyles.has(element)) {
+        suppressedTopOverlayStyles.set(element, element.getAttribute('style'));
+      }
+
+      element.style.setProperty('pointer-events', 'none', 'important');
+      element.style.setProperty('transition', 'none', 'important');
+      element.style.setProperty('animation', 'none', 'important');
+
+      if (position === 'sticky') {
+        element.style.setProperty('position', 'relative', 'important');
+        element.style.setProperty('top', 'auto', 'important');
+        element.style.setProperty('bottom', 'auto', 'important');
+        element.style.setProperty('left', 'auto', 'important');
+        element.style.setProperty('right', 'auto', 'important');
+        element.style.setProperty('inset', 'auto', 'important');
+        continue;
+      }
+
+      element.style.setProperty('opacity', '0', 'important');
+    }
+
+    await waitForPaint(2);
+    return { count: trackedTopOverlays.length };
+  }
+
+  for (const [element, previousStyle] of suppressedTopOverlayStyles.entries()) {
+    if (previousStyle === null) {
+      element.removeAttribute('style');
+      continue;
+    }
+
+    element.setAttribute('style', previousStyle);
+  }
+
+  suppressedTopOverlayStyles.clear();
+  await waitForPaint(2);
+  return { count: trackedTopOverlays.length };
+}
+
 async function scrollToCapturePosition(top: number): Promise<{ scrollY: number }> {
   ensureCapturePrepStyle();
   window.scrollTo({ left: 0, top, behavior: 'auto' });
@@ -73,6 +179,8 @@ async function scrollToCapturePosition(top: number): Promise<{ scrollY: number }
 }
 
 async function restorePagePosition(scrollX: number, scrollY: number): Promise<void> {
+  await setTopOverlaysSuppressed(false);
+  trackedTopOverlays.length = 0;
   window.scrollTo({ left: scrollX, top: scrollY, behavior: 'auto' });
   await waitForPaint(2);
 }
@@ -210,6 +318,20 @@ if (!captureToolWindow[CAPTURE_TOOL_KEY]) {
 
     if (message?.type === 'PEACOCK_SCROLL_CAPTURE_PAGE') {
       void scrollToCapturePosition(message.top)
+        .then(sendResponse)
+        .catch((error) => {
+          sendResponse({ error: error instanceof Error ? error.message : 'Unknown error' });
+        });
+      return true;
+    }
+
+    if (message?.type === 'PEACOCK_DISCOVER_TOP_OVERLAYS') {
+      sendResponse(discoverTopOverlays());
+      return;
+    }
+
+    if (message?.type === 'PEACOCK_SET_TOP_OVERLAYS_SUPPRESSED') {
+      void setTopOverlaysSuppressed(Boolean(message.suppressed))
         .then(sendResponse)
         .catch((error) => {
           sendResponse({ error: error instanceof Error ? error.message : 'Unknown error' });

@@ -53,6 +53,11 @@ interface CaptureToolScrollResponse {
   error?: string;
 }
 
+interface CaptureToolOverlayResponse {
+  count: number;
+  error?: string;
+}
+
 interface SelectionCaptureArea {
   left: number;
   top: number;
@@ -145,19 +150,43 @@ async function handleFullPageScreenshotTool(tab: chrome.tabs.Tab): Promise<void>
   });
   const scrollStops = buildScrollStops(metrics.fullHeight, metrics.viewportHeight);
   const slices: Array<{ blob: Blob; scrollY: number }> = [];
+  let overlaysSuppressed = false;
 
   try {
-    for (const top of scrollStops) {
+    for (const [index, top] of scrollStops.entries()) {
       const response = await sendCaptureToolMessage<CaptureToolScrollResponse>(tabId, {
         type: 'PEACOCK_SCROLL_CAPTURE_PAGE',
         top,
       });
       if (response.error) throw new Error(response.error);
 
+      if (index > 0 && !overlaysSuppressed) {
+        const discovery = await sendCaptureToolMessage<CaptureToolOverlayResponse>(tabId, {
+          type: 'PEACOCK_DISCOVER_TOP_OVERLAYS',
+        });
+        if (discovery.error) throw new Error(discovery.error);
+
+        if (discovery.count > 0) {
+          const suppression = await sendCaptureToolMessage<CaptureToolOverlayResponse>(tabId, {
+            type: 'PEACOCK_SET_TOP_OVERLAYS_SUPPRESSED',
+            suppressed: true,
+          });
+          if (suppression.error) throw new Error(suppression.error);
+          overlaysSuppressed = suppression.count > 0;
+        }
+      }
+
       const blob = await captureVisibleScreenshotBlob(tabId, tab.windowId);
       slices.push({ blob, scrollY: response.scrollY });
     }
   } finally {
+    if (overlaysSuppressed) {
+      await sendCaptureToolMessage<CaptureToolOverlayResponse>(tabId, {
+        type: 'PEACOCK_SET_TOP_OVERLAYS_SUPPRESSED',
+        suppressed: false,
+      }).catch(() => undefined);
+    }
+
     await sendCaptureToolMessage<{ success?: boolean; error?: string }>(tabId, {
       type: 'PEACOCK_RESTORE_CAPTURE_PAGE',
       scrollX: metrics.scrollX,
