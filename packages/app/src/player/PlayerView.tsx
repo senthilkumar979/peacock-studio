@@ -3,16 +3,19 @@ import { Link } from 'react-router-dom'
 import { AppHeader } from '@/components/AppHeader'
 import { useKeyboard } from '@/hooks/useKeyboard'
 import { useFlowStore } from '@/store/flowStore'
+import type { SharedDocumentViewMode } from '@/utils/shareLink'
 import { PlayerControls } from './PlayerControls'
 import { PlayerStep } from './PlayerStep'
+import { SharedViewToggle } from './SharedViewToggle'
 
 const AUTO_PLAY_MS = 2500
 
 interface PlayerViewProps {
   documentId: string;
+  onModeChange: (mode: SharedDocumentViewMode) => void;
 }
 
-export const PlayerView = ({ documentId }: PlayerViewProps) => {
+export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
   const flow = useFlowStore((state) => state.flow)
   const steps = useFlowStore((state) => state.steps)
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls)
@@ -62,9 +65,11 @@ export const PlayerView = ({ documentId }: PlayerViewProps) => {
       <AppHeader
         eyebrow="Peacock Studio Player"
         title={flow?.flow.title ?? 'Untitled Flow'}
+        description={flow?.flow.description || undefined}
         homeLink
         documentId={documentId}
       >
+        <SharedViewToggle mode="player" onChange={onModeChange} />
         <Link
           to={`/docs/${documentId}/edit`}
           className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800 hover:bg-peacock-100"

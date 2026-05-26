@@ -1,14 +1,28 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { EmptyFlowState } from '@/components/EmptyFlowState';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { useSavedDocument } from '@/hooks/useSavedDocument';
+import { DocumentView } from '@/player/DocumentView';
 import { PlayerView } from '@/player/PlayerView';
 import { useFlowStore } from '@/store/flowStore';
+import type { SharedDocumentViewMode } from '@/utils/shareLink';
 
 export const Player = () => {
   const { documentId } = useParams<{ documentId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isLoading, isLoaded, error } = useSavedDocument(documentId);
   const steps = useFlowStore((state) => state.steps);
+  const viewMode: SharedDocumentViewMode =
+    searchParams.get('view') === 'player' ? 'player' : 'doc';
+
+  const handleModeChange = (mode: SharedDocumentViewMode) => {
+    if (mode === 'doc') {
+      setSearchParams({}, { replace: true });
+      return;
+    }
+
+    setSearchParams({ view: 'player' }, { replace: true });
+  };
 
   if (!documentId) {
     return (
@@ -56,5 +70,9 @@ export const Player = () => {
     );
   }
 
-  return <PlayerView documentId={documentId} />;
+  if (viewMode === 'player') {
+    return <PlayerView documentId={documentId} onModeChange={handleModeChange} />;
+  }
+
+  return <DocumentView documentId={documentId} onModeChange={handleModeChange} />;
 };

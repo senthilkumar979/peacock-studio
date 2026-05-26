@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { FileDown, Link2, Loader2, Pencil, Play, Trash2 } from 'lucide-react'
 import { exportFlowPdf } from '@/pdf/exportFlowPdf'
 import { getFlowDocument } from '@/services/flowLibraryService'
-import { copyDocumentShareLink } from '@/utils/shareLink'
+import { copyDocumentShareLink, getDocumentPath } from '@/utils/shareLink'
 
 interface FlowDocumentActionsProps {
   documentId: string
@@ -57,7 +57,7 @@ export const FlowDocumentActions = ({
   return (
     <div className={containerClass}>
       <Link
-        to={`/docs/${documentId}`}
+        to={getDocumentPath(documentId, 'player')}
         className={`${actionClass} border-slate-300 text-slate-700 hover:bg-white`}
       >
         <Play className={ICON_CLASS} aria-hidden />

@@ -1,0 +1,136 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { AppHeader } from '@/components/AppHeader';
+import { formatFlowDate } from '@/utils/formatFlowDate';
+import { getDocumentStepAnchor, type SharedDocumentViewMode } from '@/utils/shareLink';
+import { useFlowStore } from '@/store/flowStore';
+import { DocumentStepIndex } from './DocumentStepIndex';
+import { DocumentStepCard } from './DocumentStepCard';
+import { SharedViewToggle } from './SharedViewToggle';
+
+interface DocumentViewProps {
+  documentId: string;
+  onModeChange: (mode: SharedDocumentViewMode) => void;
+}
+
+export const DocumentView = ({ documentId, onModeChange }: DocumentViewProps) => {
+  const flow = useFlowStore((state) => state.flow);
+  const steps = useFlowStore((state) => state.steps);
+  const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
+  const stepItems = useMemo(
+    () =>
+      steps.map((step, index) => ({
+        stepId: step.id,
+        stepNumber: index + 1,
+        title: step.title,
+        anchorId: getDocumentStepAnchor(step.id),
+      })),
+    [steps]
+  );
+  const [activeStepId, setActiveStepId] = useState<string | null>(steps[0]?.id ?? null);
+
+  useEffect(() => {
+    setActiveStepId((current) => {
+      if (current && steps.some((step) => step.id === current)) return current;
+      return steps[0]?.id ?? null;
+    });
+  }, [steps]);
+
+  useEffect(() => {
+    const syncFromHash = () => {
+      const hash = window.location.hash.replace(/^#/, '');
+      if (!hash) return;
+      const target = stepItems.find((item) => item.anchorId === hash);
+      if (!target) return;
+
+      setActiveStepId(target.stepId);
+      window.requestAnimationFrame(() => {
+        document.getElementById(hash)?.scrollIntoView({ block: 'start' });
+      });
+    };
+
+    syncFromHash();
+    window.addEventListener('hashchange', syncFromHash);
+    return () => window.removeEventListener('hashchange', syncFromHash);
+  }, [stepItems]);
+
+  useEffect(() => {
+    const elements = stepItems
+      .map((item) => document.getElementById(item.anchorId))
+      .filter((element): element is HTMLElement => Boolean(element));
+    if (!elements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        const nextStepId = visibleEntries[0]?.target.getAttribute('data-step-id');
+        if (nextStepId) setActiveStepId(nextStepId);
+      },
+      {
+        rootMargin: '-18% 0px -55% 0px',
+        threshold: [0.15, 0.35, 0.6],
+      }
+    );
+
+    elements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, [stepItems]);
+
+  return (
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <AppHeader
+        eyebrow="Peacock Shared Guide"
+        title={flow?.flow.title ?? 'Untitled Flow'}
+        description={flow?.flow.description || undefined}
+        homeLink
+        documentId={documentId}
+      >
+        <SharedViewToggle mode="doc" onChange={onModeChange} />
+        <Link
+          to={`/docs/${documentId}/edit`}
+          className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800 hover:bg-peacock-100"
+        >
+          Edit flow
+        </Link>
+      </AppHeader>
+
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap gap-3 text-sm text-slate-600">
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 font-medium">
+              {steps.length} {steps.length === 1 ? 'step' : 'steps'}
+            </span>
+            {flow ? (
+              <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 font-medium">
+                Created {formatFlowDate(flow.metadata.createdAt)}
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-4 text-sm leading-6 text-slate-600">
+            Follow the documented steps below, or switch to player mode for a guided walkthrough.
+          </p>
+        </section>
+
+        <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start">
+          <DocumentStepIndex items={stepItems} activeStepId={activeStepId} />
+
+          <div className="flex min-w-0 flex-col gap-5">
+            {steps.map((step, index) => (
+              <DocumentStepCard
+                key={step.id}
+                documentId={documentId}
+                step={step}
+                stepNumber={index + 1}
+                anchorId={stepItems[index]?.anchorId ?? getDocumentStepAnchor(step.id)}
+                isActive={step.id === activeStepId}
+                screenshotUrls={screenshotUrls}
+              />
+            ))}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};

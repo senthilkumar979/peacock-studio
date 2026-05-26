@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Layers, Pencil, Play, Sparkles } from 'lucide-react';
 import type { SavedFlowSummary } from '@/types/savedFlow';
 import { formatFlowDate } from '@/utils/formatFlowDate';
+import { getDocumentPath } from '@/utils/shareLink';
 
 interface DashboardFeaturedDocProps {
   summary: SavedFlowSummary;
@@ -62,7 +63,7 @@ export const DashboardFeaturedDoc = ({ summary }: DashboardFeaturedDocProps) => 
 
       <div className="flex shrink-0 flex-wrap gap-2">
         <Link
-          to={`/docs/${summary.id}`}
+          to={getDocumentPath(summary.id, 'player')}
           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
         >
           <Play className="h-4 w-4" aria-hidden />

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { AppHeader } from '@/components/AppHeader';
 import { persistCurrentFlow } from '@/services/flowLibraryService';
 import { useFlowStore } from '@/store/flowStore';
+import { getDocumentPath } from '@/utils/shareLink';
 import { FlowDetailsModal } from './FlowDetailsModal';
 
 function getFlowDetailsPromptKey(createdAt: number): string {
@@ -47,7 +48,7 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
 
   const flowTitle = flow?.flow.title ?? 'Untitled Flow';
   const flowDescription = flow?.flow.description ?? '';
-  const playerPath = documentId ? `/docs/${documentId}` : '/';
+  const playerPath = documentId ? getDocumentPath(documentId, 'player') : '/';
 
   return (
     <>
