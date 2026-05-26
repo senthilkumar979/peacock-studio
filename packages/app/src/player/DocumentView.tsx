@@ -190,25 +190,25 @@ export const DocumentView = ({
             />
           </div>
 
-          <div
-            ref={stepsScrollRef}
-            className={`flex min-w-0 flex-col gap-5 pr-1 ${
-              isDesktopPane ? "" : ""
-            }`}
-          >
-            {steps.map((step, index) => (
-              <DocumentStepCard
-                key={step.id}
-                documentId={documentId}
-                step={step}
-                stepNumber={index + 1}
-                anchorId={
-                  stepItems[index]?.anchorId ?? getDocumentStepAnchor(step.id)
-                }
-                isActive={step.id === activeStepId}
-                screenshotUrls={screenshotUrls}
-              />
-            ))}
+          <div className="max-h-screen overflow-y-auto">
+            <div
+              ref={stepsScrollRef}
+              className="flex min-w-0 flex-col gap-5 pr-1 "
+            >
+              {steps.map((step, index) => (
+                <DocumentStepCard
+                  key={step.id}
+                  documentId={documentId}
+                  step={step}
+                  stepNumber={index + 1}
+                  anchorId={
+                    stepItems[index]?.anchorId ?? getDocumentStepAnchor(step.id)
+                  }
+                  isActive={step.id === activeStepId}
+                  screenshotUrls={screenshotUrls}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </main>
