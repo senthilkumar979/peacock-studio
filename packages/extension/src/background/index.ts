@@ -162,13 +162,13 @@ async function handleFullPageScreenshotTool(tab: chrome.tabs.Tab): Promise<void>
 
       if (index > 0 && !overlaysSuppressed) {
         const discovery = await sendCaptureToolMessage<CaptureToolOverlayResponse>(tabId, {
-          type: 'PEACOCK_DISCOVER_TOP_OVERLAYS',
+          type: 'PEACOCK_DISCOVER_VIEWPORT_OVERLAYS',
         });
         if (discovery.error) throw new Error(discovery.error);
 
         if (discovery.count > 0) {
           const suppression = await sendCaptureToolMessage<CaptureToolOverlayResponse>(tabId, {
-            type: 'PEACOCK_SET_TOP_OVERLAYS_SUPPRESSED',
+            type: 'PEACOCK_SET_VIEWPORT_OVERLAYS_SUPPRESSED',
             suppressed: true,
           });
           if (suppression.error) throw new Error(suppression.error);
@@ -182,7 +182,7 @@ async function handleFullPageScreenshotTool(tab: chrome.tabs.Tab): Promise<void>
   } finally {
     if (overlaysSuppressed) {
       await sendCaptureToolMessage<CaptureToolOverlayResponse>(tabId, {
-        type: 'PEACOCK_SET_TOP_OVERLAYS_SUPPRESSED',
+        type: 'PEACOCK_SET_VIEWPORT_OVERLAYS_SUPPRESSED',
         suppressed: false,
       }).catch(() => undefined);
     }

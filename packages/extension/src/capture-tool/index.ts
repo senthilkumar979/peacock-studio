@@ -1,6 +1,7 @@
 const CAPTURE_TOOL_KEY = '__peacockCaptureToolInitialized';
 const SELECTION_OVERLAY_ID = 'peacock-selection-overlay';
 const CAPTURE_PREP_STYLE_ID = 'peacock-capture-style';
+const SCROLL_SETTLE_DELAY_MS = 1000;
 
 interface SelectionArea {
   left: number;
@@ -20,17 +21,17 @@ interface CaptureMetrics {
   scrollY: number;
 }
 
-interface TopOverlayResponse {
+interface ViewportOverlayResponse {
   count: number;
 }
 
-interface TrackedTopOverlay {
+interface TrackedViewportOverlay {
   element: HTMLElement;
   position: 'fixed' | 'sticky';
 }
 
-const trackedTopOverlays: TrackedTopOverlay[] = [];
-const suppressedTopOverlayStyles = new Map<HTMLElement, string | null>();
+const trackedViewportOverlays: TrackedViewportOverlay[] = [];
+const suppressedViewportOverlayStyles = new Map<HTMLElement, string | null>();
 
 function waitForPaint(frames = 2): Promise<void> {
   return new Promise((resolve) => {
@@ -78,15 +79,15 @@ function getCaptureMetrics(): CaptureMetrics {
 
 function isElementVisible(element: HTMLElement, rect: DOMRect): boolean {
   const style = window.getComputedStyle(element);
-  const maxTopOffset = Math.min(96, window.innerHeight * 0.15);
   if (style.display === 'none') return false;
   if (style.visibility === 'hidden') return false;
   if (Number(style.opacity || '1') === 0) return false;
-  if (rect.width < window.innerWidth * 0.3) return false;
   if (rect.height <= 0) return false;
-  if (rect.height > Math.min(220, window.innerHeight * 0.35)) return false;
+  if (rect.width <= 0) return false;
   if (rect.bottom <= 0) return false;
-  if (rect.top > maxTopOffset) return false;
+  if (rect.right <= 0) return false;
+  if (rect.top >= window.innerHeight) return false;
+  if (rect.left >= window.innerWidth) return false;
   return true;
 }
 
@@ -96,8 +97,60 @@ function isPeacockManagedElement(element: HTMLElement): boolean {
   return Boolean(element.closest('[id^="peacock"]'));
 }
 
-function discoverTopOverlays(): TopOverlayResponse {
-  trackedTopOverlays.length = 0;
+function shouldTrackViewportOverlay(element: HTMLElement, rect: DOMRect): boolean {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const maxEdgeOffsetX = Math.min(96, viewportWidth * 0.12);
+  const maxEdgeOffsetY = Math.min(96, viewportHeight * 0.15);
+  const topGap = rect.top;
+  const bottomGap = viewportHeight - rect.bottom;
+  const leftGap = rect.left;
+  const rightGap = viewportWidth - rect.right;
+  const isTopAnchored = topGap <= maxEdgeOffsetY;
+  const isBottomAnchored = bottomGap <= maxEdgeOffsetY;
+  const isLeftAnchored = leftGap <= maxEdgeOffsetX;
+  const isRightAnchored = rightGap <= maxEdgeOffsetX;
+  const widthRatio = rect.width / viewportWidth;
+  const heightRatio = rect.height / viewportHeight;
+  const isAlmostFullscreen = widthRatio > 0.85 && heightRatio > 0.85;
+
+  if (isAlmostFullscreen) return false;
+
+  const isTopOrBottomBar =
+    (isTopAnchored || isBottomAnchored) &&
+    widthRatio >= 0.3 &&
+    rect.height <= Math.min(260, viewportHeight * 0.4);
+
+  const isSidePanel =
+    (isLeftAnchored || isRightAnchored) &&
+    heightRatio >= 0.25 &&
+    rect.width <= Math.min(420, viewportWidth * 0.45);
+
+  const isCornerWidget =
+    ((isBottomAnchored && isRightAnchored) || (isBottomAnchored && isLeftAnchored)) &&
+    rect.width <= Math.min(220, viewportWidth * 0.35) &&
+    rect.height <= Math.min(220, viewportHeight * 0.35);
+
+  const isFloatingTopWidget =
+    ((isTopAnchored && isRightAnchored) || (isTopAnchored && isLeftAnchored)) &&
+    rect.width <= Math.min(220, viewportWidth * 0.35) &&
+    rect.height <= Math.min(220, viewportHeight * 0.35);
+
+  const isAnchoredStrip =
+    (isTopAnchored || isBottomAnchored) &&
+    widthRatio >= 0.45 &&
+    heightRatio <= 0.45;
+
+  if (!isTopOrBottomBar && !isSidePanel && !isCornerWidget && !isFloatingTopWidget && !isAnchoredStrip) {
+    return false;
+  }
+
+  if (element.tagName === 'BODY' || element.tagName === 'HTML') return false;
+  return true;
+}
+
+function discoverViewportOverlays(): ViewportOverlayResponse {
+  trackedViewportOverlays.length = 0;
 
   const candidates = Array.from(document.querySelectorAll<HTMLElement>('body *'))
     .map((element) => {
@@ -108,13 +161,14 @@ function discoverTopOverlays(): TopOverlayResponse {
 
       const rect = element.getBoundingClientRect();
       if (!isElementVisible(element, rect)) return null;
+      if (!shouldTrackViewportOverlay(element, rect)) return null;
 
       return {
         element,
         position: style.position as 'fixed' | 'sticky',
       };
     })
-    .filter((candidate): candidate is TrackedTopOverlay => Boolean(candidate));
+    .filter((candidate): candidate is TrackedViewportOverlay => Boolean(candidate));
 
   const outermostCandidates = candidates.filter(
     (candidate) =>
@@ -123,16 +177,16 @@ function discoverTopOverlays(): TopOverlayResponse {
       )
   );
 
-  trackedTopOverlays.push(...outermostCandidates);
-  return { count: trackedTopOverlays.length };
+  trackedViewportOverlays.push(...outermostCandidates);
+  return { count: trackedViewportOverlays.length };
 }
 
-async function setTopOverlaysSuppressed(suppressed: boolean): Promise<TopOverlayResponse> {
+async function setViewportOverlaysSuppressed(suppressed: boolean): Promise<ViewportOverlayResponse> {
   if (suppressed) {
-    for (const overlay of trackedTopOverlays) {
+    for (const overlay of trackedViewportOverlays) {
       const { element, position } = overlay;
-      if (!suppressedTopOverlayStyles.has(element)) {
-        suppressedTopOverlayStyles.set(element, element.getAttribute('style'));
+      if (!suppressedViewportOverlayStyles.has(element)) {
+        suppressedViewportOverlayStyles.set(element, element.getAttribute('style'));
       }
 
       element.style.setProperty('pointer-events', 'none', 'important');
@@ -153,10 +207,10 @@ async function setTopOverlaysSuppressed(suppressed: boolean): Promise<TopOverlay
     }
 
     await waitForPaint(2);
-    return { count: trackedTopOverlays.length };
+    return { count: trackedViewportOverlays.length };
   }
 
-  for (const [element, previousStyle] of suppressedTopOverlayStyles.entries()) {
+  for (const [element, previousStyle] of suppressedViewportOverlayStyles.entries()) {
     if (previousStyle === null) {
       element.removeAttribute('style');
       continue;
@@ -165,22 +219,22 @@ async function setTopOverlaysSuppressed(suppressed: boolean): Promise<TopOverlay
     element.setAttribute('style', previousStyle);
   }
 
-  suppressedTopOverlayStyles.clear();
+  suppressedViewportOverlayStyles.clear();
   await waitForPaint(2);
-  return { count: trackedTopOverlays.length };
+  return { count: trackedViewportOverlays.length };
 }
 
 async function scrollToCapturePosition(top: number): Promise<{ scrollY: number }> {
   ensureCapturePrepStyle();
   window.scrollTo({ left: 0, top, behavior: 'auto' });
   await waitForPaint(3);
-  await new Promise((resolve) => window.setTimeout(resolve, 80));
+  await new Promise((resolve) => window.setTimeout(resolve, SCROLL_SETTLE_DELAY_MS));
   return { scrollY: window.scrollY };
 }
 
 async function restorePagePosition(scrollX: number, scrollY: number): Promise<void> {
-  await setTopOverlaysSuppressed(false);
-  trackedTopOverlays.length = 0;
+  await setViewportOverlaysSuppressed(false);
+  trackedViewportOverlays.length = 0;
   window.scrollTo({ left: scrollX, top: scrollY, behavior: 'auto' });
   await waitForPaint(2);
 }
@@ -325,13 +379,13 @@ if (!captureToolWindow[CAPTURE_TOOL_KEY]) {
       return true;
     }
 
-    if (message?.type === 'PEACOCK_DISCOVER_TOP_OVERLAYS') {
-      sendResponse(discoverTopOverlays());
+    if (message?.type === 'PEACOCK_DISCOVER_VIEWPORT_OVERLAYS') {
+      sendResponse(discoverViewportOverlays());
       return;
     }
 
-    if (message?.type === 'PEACOCK_SET_TOP_OVERLAYS_SUPPRESSED') {
-      void setTopOverlaysSuppressed(Boolean(message.suppressed))
+    if (message?.type === 'PEACOCK_SET_VIEWPORT_OVERLAYS_SUPPRESSED') {
+      void setViewportOverlaysSuppressed(Boolean(message.suppressed))
         .then(sendResponse)
         .catch((error) => {
           sendResponse({ error: error instanceof Error ? error.message : 'Unknown error' });
