@@ -9,10 +9,10 @@ const statusEl = document.getElementById('status') as HTMLParagraphElement;
 const statusDetailEl = document.getElementById('status-detail') as HTMLParagraphElement;
 const statusBadgeEl = document.getElementById('status-badge') as HTMLDivElement;
 const startBtn = document.getElementById('start-btn') as HTMLButtonElement;
-const captureBtn = document.getElementById('capture-btn') as HTMLButtonElement;
 const pauseBtn = document.getElementById('pause-btn') as HTMLButtonElement;
 const resumeBtn = document.getElementById('resume-btn') as HTMLButtonElement;
 const stopBtn = document.getElementById('stop-btn') as HTMLButtonElement;
+const screenshotModeEl = document.getElementById('screenshot-mode') as HTMLSelectElement;
 const openDashboardBtn = document.getElementById('open-dashboard-btn') as HTMLButtonElement;
 const openEditorBtn = document.getElementById('open-editor-btn') as HTMLButtonElement;
 
@@ -20,6 +20,8 @@ logoEl.src = chrome.runtime.getURL('logo.png');
 
 let lastState: RecordingStateSnapshot | null = null;
 let isBusy = false;
+
+type ScreenshotMode = 'full-page' | 'selection' | 'visible';
 
 const editorUrl = import.meta.env.VITE_APP_URL;
 const dashboardUrl = (() => {
@@ -53,10 +55,10 @@ async function getCurrentPageLabel(): Promise<string> {
 
 function setButtonsDisabled(disabled: boolean): void {
   startBtn.disabled = disabled;
-  captureBtn.disabled = disabled;
   pauseBtn.disabled = disabled;
   resumeBtn.disabled = disabled;
   stopBtn.disabled = disabled;
+  screenshotModeEl.disabled = disabled;
 }
 
 function renderState(state: RecordingStateSnapshot): void {
@@ -65,7 +67,6 @@ function renderState(state: RecordingStateSnapshot): void {
   elapsedEl.textContent = formatElapsed(state.startedAt);
 
   startBtn.hidden = state.status !== 'idle';
-  captureBtn.hidden = state.status === 'idle';
   pauseBtn.hidden = state.status !== 'recording';
   resumeBtn.hidden = state.status !== 'paused';
   stopBtn.hidden = state.status === 'idle';
@@ -111,12 +112,7 @@ async function refreshState(): Promise<void> {
 }
 
 async function runAction(
-  message:
-    | 'START_RECORDING'
-    | 'PAUSE_RECORDING'
-    | 'RESUME_RECORDING'
-    | 'STOP_RECORDING'
-    | 'CAPTURE_PAGE_SNAPSHOT'
+  message: 'START_RECORDING' | 'PAUSE_RECORDING' | 'RESUME_RECORDING' | 'STOP_RECORDING'
 ): Promise<void> {
   isBusy = true;
   setButtonsDisabled(true);
@@ -133,11 +129,52 @@ async function openUrl(url: string): Promise<void> {
   await chrome.tabs.create({ url });
 }
 
+function setPopupFeedback(title: string, detail: string): void {
+  statusEl.textContent = title;
+  statusDetailEl.textContent = detail;
+}
+
+async function runScreenshotTool(mode: ScreenshotMode): Promise<void> {
+  screenshotModeEl.value = '';
+
+  if (mode === 'selection') {
+    chrome.runtime.sendMessage({ type: 'START_SCREENSHOT_TOOL', mode });
+    window.close();
+    return;
+  }
+
+  isBusy = true;
+  setButtonsDisabled(true);
+  setPopupFeedback(
+    mode === 'full-page' ? 'Capturing the full page…' : 'Capturing the visible area…',
+    mode === 'full-page'
+      ? 'Keep this popup open while Peacock scrolls and stitches the page.'
+      : 'Peacock is saving the current viewport.'
+  );
+
+  try {
+    await sendExtensionMessage({ type: 'START_SCREENSHOT_TOOL', mode });
+    window.close();
+  } catch (error) {
+    setPopupFeedback(
+      'Screenshot capture failed.',
+      error instanceof Error ? error.message : 'Please try again on this page.'
+    );
+  } finally {
+    isBusy = false;
+    if (lastState) setButtonsDisabled(false);
+  }
+}
+
 startBtn.addEventListener('click', () => void runAction('START_RECORDING'));
-captureBtn.addEventListener('click', () => void runAction('CAPTURE_PAGE_SNAPSHOT'));
 pauseBtn.addEventListener('click', () => void runAction('PAUSE_RECORDING'));
 resumeBtn.addEventListener('click', () => void runAction('RESUME_RECORDING'));
 stopBtn.addEventListener('click', () => void runAction('STOP_RECORDING'));
+screenshotModeEl.addEventListener('change', () => {
+  const mode = screenshotModeEl.value as ScreenshotMode | '';
+  if (!mode) return;
+  void runScreenshotTool(mode);
+});
 openDashboardBtn.addEventListener('click', () => void openUrl(dashboardUrl));
 openEditorBtn.addEventListener('click', () => void openUrl(editorUrl));
 

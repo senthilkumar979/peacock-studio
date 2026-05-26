@@ -3,7 +3,7 @@
   "name": "Peacock",
   "version": "0.1.0",
   "description": "Browser flow recorder",
-  "permissions": ["activeTab", "scripting", "storage", "tabs"],
+  "permissions": ["activeTab", "clipboardWrite", "scripting", "storage", "tabs"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background/index.js",

@@ -11,7 +11,11 @@ body {
   margin: 0;
   min-width: 340px;
   background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 38%),
+    radial-gradient(
+      circle at top right,
+      rgba(59, 130, 246, 0.16),
+      transparent 38%
+    ),
     linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
   color: #0f172a;
 }
@@ -61,7 +65,7 @@ select {
 
 .popup__eyebrow {
   margin: 0 0 4px;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -110,7 +114,7 @@ select {
 
 .popup__stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -142,6 +146,11 @@ select {
   padding: 14px;
 }
 
+.popup__panel--compact {
+  display: grid;
+  gap: 10px;
+}
+
 .popup__status {
   margin: 0 0 4px;
   font-size: 14px;
@@ -157,6 +166,25 @@ select {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.popup__select-shell {
+  display: block;
+}
+
+.popup__select {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  padding: 12px 14px;
+  color: #0f172a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.popup__select:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .btn {
@@ -205,4 +233,16 @@ select {
 
 .popup__footer {
   text-align: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

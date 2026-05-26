@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => {
         input: {
           background: resolve(__dirname, 'src/background/index.ts'),
           popup: resolve(__dirname, 'popup/index.html'),
+          screenshot: resolve(__dirname, 'screenshot/index.html'),
         },
         output: {
           entryFileNames: (chunkInfo) => {

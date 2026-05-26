@@ -1,5 +1,11 @@
 import { createId, type ExtensionMessage, type FlowEvent, type PageViewEvent, type Viewport } from '@peacock/shared';
 import {
+  cropVisibleCapture,
+  openCaptureResult,
+  stitchFullPageCaptures,
+  type ScreenshotToolMode,
+} from './captureResult';
+import {
   addStoredEvent,
   clearRecordingData,
   getEventCount,
@@ -13,7 +19,7 @@ import {
   setRecordingStatus,
 } from './recordingState';
 import { canInjectIntoUrl, ensureContentScript } from './injectContentScript';
-import { captureScreenshot } from './screenshot';
+import { captureScreenshot, captureVisibleScreenshotBlob } from './screenshot';
 
 const APP_URL = import.meta.env.VITE_APP_URL ?? 'http://localhost:5173/editor';
 const HANDOFF_PENDING_KEY = 'peacockHandoffPending';
@@ -33,6 +39,30 @@ interface FinalPageCapture {
   viewport: Viewport;
 }
 
+interface CaptureToolMetrics {
+  fullWidth: number;
+  fullHeight: number;
+  viewportWidth: number;
+  viewportHeight: number;
+  scrollX: number;
+  scrollY: number;
+}
+
+interface CaptureToolScrollResponse {
+  scrollY: number;
+  error?: string;
+}
+
+interface SelectionCaptureArea {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  viewportWidth: number;
+  viewportHeight: number;
+  error?: string;
+}
+
 async function broadcastRecordingState(): Promise<void> {
   const state = await getRecordingState(await getEventCount());
   const tabs = await chrome.tabs.query({});
@@ -45,6 +75,118 @@ async function broadcastRecordingState(): Promise<void> {
       // Tab may not have the content script loaded.
     }
   }
+}
+
+async function getActiveTab(): Promise<chrome.tabs.Tab> {
+  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!activeTab?.id || !activeTab.url || activeTab.windowId === undefined) {
+    throw new Error('Could not find the active tab');
+  }
+  return activeTab;
+}
+
+async function ensureCaptureTool(tabId: number): Promise<void> {
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ['capture-tool/index.js'],
+  });
+}
+
+async function sendCaptureToolMessage<T>(tabId: number, message: object): Promise<T> {
+  return chrome.tabs.sendMessage(tabId, message) as Promise<T>;
+}
+
+function buildScrollStops(fullHeight: number, viewportHeight: number): number[] {
+  const maxScroll = Math.max(0, fullHeight - viewportHeight);
+  if (maxScroll === 0) return [0];
+
+  const stops: number[] = [];
+  for (let top = 0; top < maxScroll; top += viewportHeight) {
+    stops.push(top);
+  }
+  stops.push(maxScroll);
+  return [...new Set(stops)];
+}
+
+async function handleVisibleScreenshotTool(tab: chrome.tabs.Tab): Promise<void> {
+  const blob = await captureVisibleScreenshotBlob(tab.id as number, tab.windowId);
+  await openCaptureResult(blob, 'visible');
+}
+
+async function handleSelectionScreenshotTool(tab: chrome.tabs.Tab): Promise<void> {
+  if (!canInjectIntoUrl(tab.url)) {
+    throw new Error('Selection capture is not available on this page');
+  }
+
+  await ensureCaptureTool(tab.id as number);
+  const selection = await sendCaptureToolMessage<SelectionCaptureArea | null>(
+    tab.id as number,
+    { type: 'PEACOCK_START_SELECTION_CAPTURE' }
+  );
+
+  if (!selection) return;
+  if (selection.error) throw new Error(selection.error);
+
+  const visibleBlob = await captureVisibleScreenshotBlob(tab.id as number, tab.windowId);
+  const croppedBlob = await cropVisibleCapture(visibleBlob, selection);
+  await openCaptureResult(croppedBlob, 'selection');
+}
+
+async function handleFullPageScreenshotTool(tab: chrome.tabs.Tab): Promise<void> {
+  if (!canInjectIntoUrl(tab.url)) {
+    throw new Error('Full-page capture is not available on this page');
+  }
+
+  const tabId = tab.id as number;
+  await ensureCaptureTool(tabId);
+
+  const metrics = await sendCaptureToolMessage<CaptureToolMetrics>(tabId, {
+    type: 'PEACOCK_GET_CAPTURE_METRICS',
+  });
+  const scrollStops = buildScrollStops(metrics.fullHeight, metrics.viewportHeight);
+  const slices: Array<{ blob: Blob; scrollY: number }> = [];
+
+  try {
+    for (const top of scrollStops) {
+      const response = await sendCaptureToolMessage<CaptureToolScrollResponse>(tabId, {
+        type: 'PEACOCK_SCROLL_CAPTURE_PAGE',
+        top,
+      });
+      if (response.error) throw new Error(response.error);
+
+      const blob = await captureVisibleScreenshotBlob(tabId, tab.windowId);
+      slices.push({ blob, scrollY: response.scrollY });
+    }
+  } finally {
+    await sendCaptureToolMessage<{ success?: boolean; error?: string }>(tabId, {
+      type: 'PEACOCK_RESTORE_CAPTURE_PAGE',
+      scrollX: metrics.scrollX,
+      scrollY: metrics.scrollY,
+    }).catch(() => undefined);
+  }
+
+  const stitchedBlob = await stitchFullPageCaptures(
+    slices,
+    metrics.fullHeight,
+    metrics.viewportWidth
+  );
+  await openCaptureResult(stitchedBlob, 'full-page');
+}
+
+async function handleScreenshotTool(mode: ScreenshotToolMode): Promise<void> {
+  const activeTab = await getActiveTab();
+
+  if (mode === 'visible') {
+    await handleVisibleScreenshotTool(activeTab);
+    return;
+  }
+
+  if (mode === 'selection') {
+    await handleSelectionScreenshotTool(activeTab);
+    return;
+  }
+
+  await handleFullPageScreenshotTool(activeTab);
 }
 
 async function markHandoffPending(): Promise<void> {
@@ -291,6 +433,11 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
 
         case 'CAPTURE_PAGE_SNAPSHOT':
           await handleCapturePageSnapshot(sender.tab);
+          sendResponse({ success: true });
+          break;
+
+        case 'START_SCREENSHOT_TOOL':
+          await handleScreenshotTool(message.mode);
           sendResponse({ success: true });
           break;
 

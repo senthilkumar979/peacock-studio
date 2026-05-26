@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Peacock Screenshot</title>
+    <link rel="stylesheet" href="./screenshot.css" />
+  </head>
+  <body>
+    <main class="capture-page">
+      <header class="capture-header">
+        <div class="capture-brand">
+          <img id="logo" alt="Peacock" class="capture-brand__logo" width="44" height="44" />
+          <div>
+            <p class="capture-brand__eyebrow">Peacock Screenshot</p>
+            <h1 id="capture-title" class="capture-brand__title">Preparing capture…</h1>
+            <p id="capture-subtitle" class="capture-brand__subtitle">
+              Your screenshot will appear here when ready.
+            </p>
+          </div>
+        </div>
+        <div class="capture-actions">
+          <button id="download-btn" type="button" class="btn btn--primary" disabled>Download</button>
+          <button id="copy-btn" type="button" class="btn btn--secondary" disabled>
+            Copy to clipboard
+          </button>
+        </div>
+      </header>
+
+      <section class="capture-stage">
+        <p id="capture-status" class="capture-status">Loading screenshot…</p>
+        <img id="capture-image" alt="Captured screenshot" class="capture-image" hidden />
+      </section>
+    </main>
+    <script type="module" src="./screenshot.ts"></script>
+  </body>
+</html>

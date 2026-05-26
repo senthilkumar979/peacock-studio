@@ -8,6 +8,13 @@ export interface StoredScreenshot {
   timestamp: number;
 }
 
+export interface StoredCaptureResult {
+  id: string;
+  blob: Blob;
+  mode: 'full-page' | 'visible' | 'selection';
+  createdAt: number;
+}
+
 export interface StoredEvent {
   id: string;
   data: FlowEvent;
@@ -17,12 +24,18 @@ export interface StoredEvent {
 class PeacockDB extends Dexie {
   screenshots!: Table<StoredScreenshot>;
   events!: Table<StoredEvent>;
+  captures!: Table<StoredCaptureResult>;
 
   constructor() {
     super('PeacockDB');
     this.version(1).stores({
       screenshots: 'id, tabId, timestamp',
       events: 'id, timestamp',
+    });
+    this.version(2).stores({
+      screenshots: 'id, tabId, timestamp',
+      events: 'id, timestamp',
+      captures: 'id, createdAt, mode',
     });
   }
 }
@@ -68,4 +81,19 @@ export async function clearRecordingData(): Promise<void> {
 export async function getEventCount(): Promise<number> {
   await ensureDbOpen();
   return db.events.count();
+}
+
+export async function saveCaptureResult(capture: StoredCaptureResult): Promise<void> {
+  await ensureDbOpen();
+  await db.captures.put(capture);
+}
+
+export async function getCaptureResult(id: string): Promise<StoredCaptureResult | undefined> {
+  await ensureDbOpen();
+  return db.captures.get(id);
+}
+
+export async function deleteCaptureResult(id: string): Promise<void> {
+  await ensureDbOpen();
+  await db.captures.delete(id);
 }
