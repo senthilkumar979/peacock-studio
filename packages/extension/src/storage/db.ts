@@ -44,6 +44,21 @@ export async function addStoredEvent(event: FlowEvent): Promise<void> {
   });
 }
 
+export async function getLatestStoredEvent(): Promise<FlowEvent | null> {
+  await ensureDbOpen();
+  const latest = await db.events.orderBy('timestamp').last();
+  return latest?.data ?? null;
+}
+
+export async function putStoredEvent(event: FlowEvent): Promise<void> {
+  await ensureDbOpen();
+  await db.events.put({
+    id: event.id,
+    data: event,
+    timestamp: event.timestamp,
+  });
+}
+
 export async function clearRecordingData(): Promise<void> {
   await ensureDbOpen();
   await db.events.clear();

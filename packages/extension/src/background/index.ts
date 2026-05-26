@@ -1,5 +1,11 @@
-import type { ExtensionMessage } from '@peacock/shared';
-import { addStoredEvent, clearRecordingData, getEventCount } from '../storage/db';
+import { createId, type ExtensionMessage, type FlowEvent, type PageViewEvent, type Viewport } from '@peacock/shared';
+import {
+  addStoredEvent,
+  clearRecordingData,
+  getEventCount,
+  getLatestStoredEvent,
+  putStoredEvent,
+} from '../storage/db';
 import { buildPayloadFromRecording, type PendingHandoff } from '../utils/payload';
 import {
   getRecordingState,
@@ -19,6 +25,13 @@ interface HandoffPendingFlag {
 
 let handoffBuildPromise: Promise<PendingHandoff | null> | null = null;
 let cachedHandoff: PendingHandoff | null | undefined;
+
+interface FinalPageCapture {
+  screenshotId: string;
+  url: string;
+  title: string;
+  viewport: Viewport;
+}
 
 async function broadcastRecordingState(): Promise<void> {
   const state = await getRecordingState(await getEventCount());
@@ -75,6 +88,56 @@ async function handleStartRecording(): Promise<void> {
   await broadcastRecordingState();
 }
 
+async function applyFinalPageCapture(finalPage: FinalPageCapture): Promise<void> {
+  const latestEvent = await getLatestStoredEvent();
+  if (!latestEvent) return;
+
+  if (latestEvent.type === 'navigation') {
+    const pageViewEvent: PageViewEvent = {
+      id: createId(),
+      type: 'page-view',
+      timestamp: Date.now(),
+      url: finalPage.url,
+      title: finalPage.title,
+      viewport: finalPage.viewport,
+      screenshotId: finalPage.screenshotId,
+    };
+    await addStoredEvent(pageViewEvent);
+    return;
+  }
+
+  if (latestEvent.type === 'page-view' && latestEvent.url === finalPage.url) {
+    await putStoredEvent({
+      ...latestEvent,
+      url: finalPage.url,
+      title: finalPage.title,
+      viewport: finalPage.viewport,
+      screenshotId: finalPage.screenshotId,
+    });
+    return;
+  }
+
+  if (latestEvent.url === finalPage.url) {
+    await putStoredEvent({
+      ...latestEvent,
+      title: finalPage.title,
+      screenshotId: finalPage.screenshotId,
+    } satisfies FlowEvent);
+    return;
+  }
+
+  const pageViewEvent: PageViewEvent = {
+    id: createId(),
+    type: 'page-view',
+    timestamp: Date.now(),
+    url: finalPage.url,
+    title: finalPage.title,
+    viewport: finalPage.viewport,
+    screenshotId: finalPage.screenshotId,
+  };
+  await addStoredEvent(pageViewEvent);
+}
+
 async function captureFinalPageBeforeStop(tab?: chrome.tabs.Tab): Promise<boolean> {
   const targetTab =
     tab ??
@@ -88,7 +151,11 @@ async function captureFinalPageBeforeStop(tab?: chrome.tabs.Tab): Promise<boolea
   if (!isReady) return false;
 
   try {
-    await chrome.tabs.sendMessage(targetTab.id, { type: 'CAPTURE_FINAL_PAGE' });
+    const finalPage = (await chrome.tabs.sendMessage(targetTab.id, {
+      type: 'CAPTURE_FINAL_PAGE',
+    })) as FinalPageCapture | undefined;
+    if (!finalPage?.url) return false;
+    await applyFinalPageCapture(finalPage);
     return true;
   } catch (error) {
     console.warn('[Peacock] Could not capture final page view before stop', error);

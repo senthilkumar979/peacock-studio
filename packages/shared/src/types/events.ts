@@ -80,6 +80,8 @@ export interface InputEvent {
   timestamp: number;
   url: string;
   title: string;
+  viewport?: Viewport;
+  position?: NormalizedPosition;
   element: ElementSnapshot;
   valuePreview: string;
   screenshotId: string;

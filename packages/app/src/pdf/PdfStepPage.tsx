@@ -1,6 +1,6 @@
 import { Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import type { FlowStep } from '@peacock/shared';
-import { getStepScreenshotUrl, getStepUrl } from '@peacock/shared';
+import { getStepMarkerPosition, getStepScreenshotUrl, getStepUrl, getStepViewport } from '@peacock/shared';
 import { PdfPageFooter, PdfPageHeader } from './PdfPageChrome';
 import { PDF_COLORS, PDF_FONT_FAMILY } from './pdfTheme';
 
@@ -129,12 +129,12 @@ export const PdfStepPage = ({
   const stepUrl = getStepUrl(step);
   const description = step.notes || step.generatedDescription;
   const screenshotLayout = getPdfScreenshotLayout(step);
-  const clickEvent = step.event.type === 'click' ? step.event : null;
+  const marker = getStepMarkerPosition(step);
   const markerPosition =
-    clickEvent && screenshotLayout
+    marker && screenshotLayout
       ? {
-          left: clickEvent.position.xPercent * screenshotLayout.width,
-          top: clickEvent.position.yPercent * screenshotLayout.height,
+          left: marker.xPercent * screenshotLayout.width,
+          top: marker.yPercent * screenshotLayout.height,
         }
       : null;
 
@@ -193,8 +193,7 @@ export const PdfStepPage = ({
 };
 
 function getPdfScreenshotLayout(step: FlowStep): { width: number; height: number } | null {
-  const viewport =
-    step.event.type === 'click' || step.event.type === 'page-view' ? step.event.viewport : null;
+  const viewport = getStepViewport(step);
 
   if (!viewport?.width || !viewport.height) return null;
 

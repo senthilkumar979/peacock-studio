@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import type { FlowStep } from '@peacock/shared';
-import { getStepUrl } from '@peacock/shared';
+import { getStepMarkerPosition, getStepUrl } from '@peacock/shared';
 import { getStepScreenshotUrl } from '@/store/flowStore';
 import { BrowserMockup } from './BrowserMockup';
 import { PlayerClickMarker } from './PlayerClickMarker';
@@ -14,7 +14,7 @@ interface PlayerStageProps {
 
 export const PlayerStage = ({ step, stepNumber, screenshotUrls }: PlayerStageProps) => {
   const screenshotUrl = getStepScreenshotUrl(step, screenshotUrls);
-  const clickEvent = step.event.type === 'click' ? step.event : null;
+  const markerPosition = getStepMarkerPosition(step);
   const stepUrl = getStepUrl(step);
   const description = step.notes || step.generatedDescription;
 
@@ -32,12 +32,12 @@ export const PlayerStage = ({ step, stepNumber, screenshotUrls }: PlayerStagePro
               transition={{ duration: 0.2 }}
               className="block max-h-[min(65vh,800px)] w-auto max-w-[calc(100vw-2.5rem)] object-contain"
             />
-            {clickEvent && (
+            {markerPosition && (
               <PlayerClickMarker
                 step={step}
                 stepNumber={stepNumber}
-                xPercent={clickEvent.position.xPercent}
-                yPercent={clickEvent.position.yPercent}
+                xPercent={markerPosition.xPercent}
+                yPercent={markerPosition.yPercent}
               />
             )}
           </div>
@@ -50,7 +50,7 @@ export const PlayerStage = ({ step, stepNumber, screenshotUrls }: PlayerStagePro
         )}
       </BrowserMockup>
 
-      {!clickEvent && (
+      {!markerPosition && (
         <AnimatePresence mode="wait">
           <motion.div
             key={step.id}

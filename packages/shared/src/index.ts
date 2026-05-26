@@ -13,4 +13,5 @@ export * from './utils/extractElementSnapshot';
 export * from './utils/stepDescription';
 export * from './utils/createFlowStep';
 export * from './utils/stepScreenshot';
+export * from './utils/stepMarker';
 export * from './utils/stepUrl';

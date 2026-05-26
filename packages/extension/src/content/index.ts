@@ -169,6 +169,10 @@ async function flushInput(target: HTMLInputElement | HTMLTextAreaElement | HTMLS
   if (isSensitiveField(target)) return;
 
   const screenshotId = await tryCaptureScreenshotId();
+  const viewport = getViewport();
+  const rect = target.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
   const element = extractElementSnapshot(target);
   const valuePreview = element.valuePreview ?? target.value ?? '';
 
@@ -178,6 +182,12 @@ async function flushInput(target: HTMLInputElement | HTMLTextAreaElement | HTMLS
     timestamp: Date.now(),
     url: location.href,
     title: document.title,
+    viewport,
+    position: {
+      x: centerX,
+      y: centerY,
+      ...normalizePosition(centerX, centerY, viewport),
+    },
     element,
     valuePreview,
     screenshotId,
@@ -239,22 +249,24 @@ async function captureInitialPageView(): Promise<void> {
   await storeEvent(pageViewEvent);
 }
 
-async function captureFinalPageView(): Promise<void> {
+async function captureFinalPageSnapshot(): Promise<{
+  screenshotId: string;
+  url: string;
+  title: string;
+  viewport: ReturnType<typeof getViewport>;
+}> {
   const state = await refreshRecordingState();
-  if (state.status === 'idle') return;
+  if (state.status === 'idle') {
+    throw new Error('Recording is already idle');
+  }
 
   const screenshotId = await tryCaptureScreenshotId();
-  const pageViewEvent: PageViewEvent = {
-    id: createId(),
-    type: 'page-view',
-    timestamp: Date.now(),
+  return {
+    screenshotId,
     url: location.href,
     title: document.title,
     viewport: getViewport(),
-    screenshotId,
   };
-
-  await storeEvent(pageViewEvent);
 }
 
 async function handleRecordingStarted(): Promise<void> {
@@ -326,8 +338,8 @@ function registerRuntimeListeners(): void {
     }
 
     if (message.type === 'CAPTURE_FINAL_PAGE') {
-      void captureFinalPageView()
-        .then(() => sendResponse({ success: true }))
+      void captureFinalPageSnapshot()
+        .then((finalPage) => sendResponse(finalPage))
         .catch((error) => {
           console.error('[Peacock] Failed to capture final page view', error);
           sendResponse({ error: error instanceof Error ? error.message : 'Unknown error' });

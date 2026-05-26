@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import type { FlowStep } from '@peacock/shared';
-import { getStepUrl } from '@peacock/shared';
+import { getStepMarkerPosition, getStepUrl } from '@peacock/shared';
 import { getStepScreenshotUrl, useFlowStore } from '@/store/flowStore';
 import { ClickMarker } from './ClickMarker';
 
@@ -21,7 +21,7 @@ export const Canvas = ({ step }: CanvasProps) => {
   }
 
   const screenshotUrl = getStepScreenshotUrl(step, screenshotUrls);
-  const clickEvent = step.event.type === 'click' ? step.event : null;
+  const markerPosition = getStepMarkerPosition(step);
   const stepUrl = getStepUrl(step);
 
   return (
@@ -43,10 +43,10 @@ export const Canvas = ({ step }: CanvasProps) => {
               alt={step.title}
               className="max-h-[70vh] w-auto max-w-full rounded-lg shadow-md"
             />
-            {clickEvent && (
+            {markerPosition && (
               <ClickMarker
-                xPercent={clickEvent.position.xPercent}
-                yPercent={clickEvent.position.yPercent}
+                xPercent={markerPosition.xPercent}
+                yPercent={markerPosition.yPercent}
                 imageRef={imageRef}
               />
             )}
