@@ -53,9 +53,9 @@ describe('stepDescription', () => {
     };
 
     expect(generateStepDescription(snapshot, event)).toBe(
-      'On the Address page, enter "Tamil Nadu" in the State field for country India.'
+      'On the Address page, enter value Tamil Nadu in the input field "State" for country India.'
     );
-    expect(generateStepTitle(snapshot, event)).toBe('Enter State: Tamil Nadu');
+    expect(generateStepTitle(snapshot, event)).toBe('Enter Tamil Nadu in State');
     expect(snapshot.valuePreview).toBe('Tamil Nadu');
     expect(snapshot.label.text).toBe('State');
     expect(snapshot.parent?.dataAttributes.country).toBe('India');
@@ -82,9 +82,9 @@ describe('stepDescription', () => {
       screenshotId: 'shot-3',
     };
 
-    expect(generateStepTitle(snapshot, event)).toBe('Select Country: India');
+    expect(generateStepTitle(snapshot, event)).toBe('Select India in Country');
     expect(generateStepDescription(snapshot, event)).toBe(
-      'On the Form page, select "India" in the Country field.'
+      'On the Form page, select India in the dropdown field "Country".'
     );
   });
 
@@ -108,19 +108,70 @@ describe('stepDescription', () => {
 
     expect(generateStepTitle(snapshot, event)).toBe('Choose Pro plan');
     expect(generateStepDescription(snapshot, event)).toBe(
-      'On the Plans page, choose the Pro plan option (pro).'
+      'On the Plans page, select the option with label "Pro plan".'
+    );
+  });
+
+  it('describes a short input label with clearer field wording', () => {
+    document.body.innerHTML = `
+      <label for="to-field">To</label>
+      <input id="to-field" type="text" value="62" />
+    `;
+
+    const input = document.querySelector('input') as HTMLInputElement;
+    const snapshot = extractElementSnapshot(input);
+    const event: InputEvent = {
+      id: '5',
+      type: 'input',
+      timestamp: Date.now(),
+      url: 'https://example.com',
+      title: 'Filters',
+      element: snapshot,
+      valuePreview: '62',
+      screenshotId: 'shot-5',
+    };
+
+    expect(generateStepDescription(snapshot, event)).toBe(
+      'On the Filters page, enter value 62 in the input field "To".'
+    );
+  });
+
+  it('describes a checkbox using the label text only once', () => {
+    document.body.innerHTML = `
+      <label>
+        <input type="checkbox" checked value="Furniture 24" />
+        Furniture 24
+      </label>
+    `;
+
+    const checkbox = document.querySelector('input') as HTMLInputElement;
+    const snapshot = extractElementSnapshot(checkbox);
+    const event: InputEvent = {
+      id: '6',
+      type: 'input',
+      timestamp: Date.now(),
+      url: 'https://example.com',
+      title: 'Inventory',
+      element: snapshot,
+      valuePreview: 'Furniture 24',
+      screenshotId: 'shot-6',
+    };
+
+    expect(generateStepTitle(snapshot, event)).toBe('Mark Furniture 24');
+    expect(generateStepDescription(snapshot, event)).toBe(
+      'On the Inventory page, mark the checkbox with label "Furniture 24".'
     );
   });
 
   it('describes a page view with title and url', () => {
     const event: PageViewEvent = {
-      id: '5',
+      id: '7',
       type: 'page-view',
       timestamp: Date.now(),
       url: 'https://example.com/checkout/review',
       title: 'Checkout Review',
       viewport: { width: 1440, height: 900, scrollX: 0, scrollY: 0, dpr: 1 },
-      screenshotId: 'shot-5',
+      screenshotId: 'shot-7',
     };
 
     expect(generateStepTitle({} as never, event)).toBe('Open Checkout Review');

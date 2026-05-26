@@ -68,6 +68,44 @@ function formatValuePhrase(value: string | null): string {
   return ` "${value}"`;
 }
 
+function normalizeText(value: string | null | undefined): string {
+  if (!value) return '';
+  return formatVisibleLabel(value);
+}
+
+function getControlContextLabel(snapshot: ElementSnapshot): string {
+  const candidates = [
+    snapshot.label.text,
+    snapshot.parent?.text,
+    snapshot.grandparent?.text,
+    snapshot.innerText,
+    snapshot.valuePreview,
+    snapshot.name,
+    snapshot.id,
+  ]
+    .map(normalizeText)
+    .filter(Boolean);
+
+  const seen = new Set<string>();
+  const unique = candidates.filter((candidate) => {
+    const key = candidate.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return unique[0] || getVisibleLabel(snapshot);
+}
+
+function formatFieldLabel(snapshot: ElementSnapshot): string {
+  return `"${getFieldName(snapshot)}"`;
+}
+
+function formatValueLabel(value: string | null): string {
+  if (!value) return 'a value';
+  return `value ${normalizeText(value)}`;
+}
+
 function getPageContext(event: FlowEvent): string {
   if (event.type === 'navigation' || event.type === 'page-view') return '';
   const title = formatVisibleLabel(event.title);
@@ -100,15 +138,21 @@ export function generateStepTitle(snapshot: ElementSnapshot, event: FlowEvent): 
   }
 
   if (snapshot.isSelect) {
-    return value ? `Select ${getFieldName(snapshot)}: ${value}` : `Select ${getFieldName(snapshot)}`;
+    return value
+      ? `Select ${normalizeText(value)} in ${getFieldName(snapshot)}`
+      : `Select ${getFieldName(snapshot)}`;
   }
 
   if (snapshot.isCheckbox || snapshot.isRadio) {
-    return `Choose ${sentenceCase(label)}`;
+    return snapshot.isCheckbox
+      ? `Mark ${sentenceCase(getControlContextLabel(snapshot))}`
+      : `Choose ${sentenceCase(getControlContextLabel(snapshot))}`;
   }
 
   if (snapshot.isInput) {
-    return value ? `Enter ${getFieldName(snapshot)}: ${value}` : `Enter ${getFieldName(snapshot)}`;
+    return value
+      ? `Enter ${normalizeText(value)} in ${getFieldName(snapshot)}`
+      : `Enter ${getFieldName(snapshot)}`;
   }
 
   return `Click ${sentenceCase(label)}`;
@@ -137,62 +181,54 @@ export function generateStepDescription(snapshot: ElementSnapshot, event: FlowEv
   }
 
   if (snapshot.isSelect) {
-    const fieldName = getFieldName(snapshot);
+    const fieldLabel = formatFieldLabel(snapshot);
     const value = getRecordedValue(snapshot, event);
     const country = findDataAttribute(snapshot, 'country');
 
     if (value && country) {
-      return `${pageContext}select${formatValuePhrase(value)} in the ${fieldName} field for country ${country}.`;
+      return `${pageContext}select ${normalizeText(value)} in the dropdown field ${fieldLabel} for country ${country}.`;
     }
 
     if (value) {
-      return `${pageContext}select${formatValuePhrase(value)} in the ${fieldName} field.`;
+      return `${pageContext}select ${normalizeText(value)} in the dropdown field ${fieldLabel}.`;
     }
 
     if (country) {
-      return `${pageContext}select a value in the ${fieldName} field for country ${country}.`;
+      return `${pageContext}select a value in the dropdown field ${fieldLabel} for country ${country}.`;
     }
 
-    return `${pageContext}select a value in the ${fieldName} field.`;
+    return `${pageContext}select a value in the dropdown field ${fieldLabel}.`;
   }
 
   if (snapshot.isInput || snapshot.tagName === 'textarea') {
-    const fieldName = getFieldName(snapshot);
+    const fieldLabel = formatFieldLabel(snapshot);
     const value = getRecordedValue(snapshot, event);
     const country = findDataAttribute(snapshot, 'country');
-    const valuePhrase = formatValuePhrase(value);
+    const valueLabel = formatValueLabel(value);
 
     if (country && value) {
-      return `${pageContext}enter${valuePhrase} in the ${fieldName} field for country ${country}.`;
+      return `${pageContext}enter ${valueLabel} in the input field ${fieldLabel} for country ${country}.`;
     }
 
     if (country) {
-      return `${pageContext}enter a value in the ${fieldName} field for country ${country}.`;
+      return `${pageContext}enter a value in the input field ${fieldLabel} for country ${country}.`;
     }
 
     if (value) {
-      return `${pageContext}enter${valuePhrase} in the ${fieldName} field.`;
+      return `${pageContext}enter ${valueLabel} in the input field ${fieldLabel}.`;
     }
 
-    return `${pageContext}enter a value in the ${fieldName} field.`;
+    return `${pageContext}enter a value in the input field ${fieldLabel}.`;
   }
 
   if (snapshot.isCheckbox) {
-    const label = sentenceCase(getVisibleLabel(snapshot));
-    const value = getRecordedValue(snapshot, event);
-    if (value) {
-      return `${pageContext}choose the ${label} checkbox (${value}).`;
-    }
-    return `${pageContext}choose the ${label} checkbox.`;
+    const label = normalizeText(getControlContextLabel(snapshot));
+    return `${pageContext}mark the checkbox with label "${label}".`;
   }
 
   if (snapshot.isRadio) {
-    const label = sentenceCase(getVisibleLabel(snapshot));
-    const value = getRecordedValue(snapshot, event);
-    if (value) {
-      return `${pageContext}choose the ${label} option (${value}).`;
-    }
-    return `${pageContext}choose the ${label} option.`;
+    const label = normalizeText(getControlContextLabel(snapshot));
+    return `${pageContext}select the option with label "${label}".`;
   }
 
   const label = sentenceCase(getVisibleLabel(snapshot));
