@@ -9,6 +9,7 @@ const statusEl = document.getElementById('status') as HTMLParagraphElement;
 const statusDetailEl = document.getElementById('status-detail') as HTMLParagraphElement;
 const statusBadgeEl = document.getElementById('status-badge') as HTMLDivElement;
 const startBtn = document.getElementById('start-btn') as HTMLButtonElement;
+const captureBtn = document.getElementById('capture-btn') as HTMLButtonElement;
 const pauseBtn = document.getElementById('pause-btn') as HTMLButtonElement;
 const resumeBtn = document.getElementById('resume-btn') as HTMLButtonElement;
 const stopBtn = document.getElementById('stop-btn') as HTMLButtonElement;
@@ -52,6 +53,7 @@ async function getCurrentPageLabel(): Promise<string> {
 
 function setButtonsDisabled(disabled: boolean): void {
   startBtn.disabled = disabled;
+  captureBtn.disabled = disabled;
   pauseBtn.disabled = disabled;
   resumeBtn.disabled = disabled;
   stopBtn.disabled = disabled;
@@ -63,6 +65,7 @@ function renderState(state: RecordingStateSnapshot): void {
   elapsedEl.textContent = formatElapsed(state.startedAt);
 
   startBtn.hidden = state.status !== 'idle';
+  captureBtn.hidden = state.status === 'idle';
   pauseBtn.hidden = state.status !== 'recording';
   resumeBtn.hidden = state.status !== 'paused';
   stopBtn.hidden = state.status === 'idle';
@@ -108,7 +111,12 @@ async function refreshState(): Promise<void> {
 }
 
 async function runAction(
-  message: 'START_RECORDING' | 'PAUSE_RECORDING' | 'RESUME_RECORDING' | 'STOP_RECORDING'
+  message:
+    | 'START_RECORDING'
+    | 'PAUSE_RECORDING'
+    | 'RESUME_RECORDING'
+    | 'STOP_RECORDING'
+    | 'CAPTURE_PAGE_SNAPSHOT'
 ): Promise<void> {
   isBusy = true;
   setButtonsDisabled(true);
@@ -126,6 +134,7 @@ async function openUrl(url: string): Promise<void> {
 }
 
 startBtn.addEventListener('click', () => void runAction('START_RECORDING'));
+captureBtn.addEventListener('click', () => void runAction('CAPTURE_PAGE_SNAPSHOT'));
 pauseBtn.addEventListener('click', () => void runAction('PAUSE_RECORDING'));
 resumeBtn.addEventListener('click', () => void runAction('RESUME_RECORDING'));
 stopBtn.addEventListener('click', () => void runAction('STOP_RECORDING'));

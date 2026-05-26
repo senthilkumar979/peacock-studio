@@ -5,7 +5,27 @@ export const UI_HOST_ID = 'peacock-recording-ui';
 let badgeEl: HTMLDivElement | null = null;
 let captureHideDepth = 0;
 
-function ensureUi(onStop: () => void): HTMLDivElement {
+function createBadgeButton(label: string, background: string, onClick: () => void): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = label;
+  button.style.cssText = [
+    'border: 0',
+    'border-radius: 999px',
+    'padding: 6px 10px',
+    `background: ${background}`,
+    'color: #fff',
+    'cursor: pointer',
+    'font: inherit',
+  ].join(';');
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    onClick();
+  });
+  return button;
+}
+
+function ensureUi(onStop: () => void, onCaptureScreenshot: () => void): HTMLDivElement {
   const existing = document.getElementById(UI_HOST_ID) as HTMLDivElement | null;
   if (existing) return existing;
 
@@ -30,32 +50,19 @@ function ensureUi(onStop: () => void): HTMLDivElement {
   badgeEl = document.createElement('div');
   badgeEl.textContent = 'Recording';
 
-  const stopButton = document.createElement('button');
-  stopButton.type = 'button';
-  stopButton.textContent = 'Stop';
-  stopButton.style.cssText = [
-    'border: 0',
-    'border-radius: 999px',
-    'padding: 6px 10px',
-    'background: #ef4444',
-    'color: #fff',
-    'cursor: pointer',
-    'font: inherit',
-  ].join(';');
-  stopButton.addEventListener('click', (event) => {
-    event.stopPropagation();
-    onStop();
-  });
+  const captureButton = createBadgeButton('Capture Screenshot', '#2563eb', onCaptureScreenshot);
+  const stopButton = createBadgeButton('Stop', '#ef4444', onStop);
 
   host.appendChild(badgeEl);
+  host.appendChild(captureButton);
   host.appendChild(stopButton);
   document.body.appendChild(host);
 
   return host;
 }
 
-export function initRecordingUi(onStop: () => void): void {
-  ensureUi(onStop);
+export function initRecordingUi(onStop: () => void, onCaptureScreenshot: () => void): void {
+  ensureUi(onStop, onCaptureScreenshot);
 }
 
 export function hideRecordingUiForCapture(): void {

@@ -10,6 +10,7 @@ export interface RecordingStateSnapshot {
 
 export type ExtensionMessage =
   | { type: 'CAPTURE_SCREENSHOT'; tabId?: number }
+  | { type: 'CAPTURE_PAGE_SNAPSHOT' }
   | { type: 'CAPTURE_FINAL_PAGE' }
   | { type: 'STORE_EVENT'; event: import('./events').FlowEvent }
   | { type: 'START_RECORDING' }

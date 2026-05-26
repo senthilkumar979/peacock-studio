@@ -163,6 +163,26 @@ async function captureFinalPageBeforeStop(tab?: chrome.tabs.Tab): Promise<boolea
   }
 }
 
+async function handleCapturePageSnapshot(tab?: chrome.tabs.Tab): Promise<void> {
+  const targetTab =
+    tab ??
+    (await chrome.tabs.query({ active: true, currentWindow: true })).find((candidate) =>
+      canInjectIntoUrl(candidate.url)
+    );
+
+  if (!targetTab?.id || !canInjectIntoUrl(targetTab.url)) {
+    throw new Error('Current tab does not support screenshot capture');
+  }
+
+  const isReady = await ensureContentScript(targetTab.id);
+  if (!isReady) {
+    throw new Error('Could not connect to the current page');
+  }
+
+  await chrome.tabs.sendMessage(targetTab.id, { type: 'CAPTURE_PAGE_SNAPSHOT' });
+  await broadcastRecordingState();
+}
+
 async function handleStopRecording(tab?: chrome.tabs.Tab): Promise<void> {
   const eventCount = await getEventCount();
   const capturedFinalPage = await captureFinalPageBeforeStop(tab);
@@ -266,6 +286,11 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
 
         case 'STOP_RECORDING':
           await handleStopRecording(sender.tab);
+          sendResponse({ success: true });
+          break;
+
+        case 'CAPTURE_PAGE_SNAPSHOT':
+          await handleCapturePageSnapshot(sender.tab);
           sendResponse({ success: true });
           break;
 

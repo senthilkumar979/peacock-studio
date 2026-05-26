@@ -292,6 +292,24 @@ async function captureInitialPageView(): Promise<void> {
   await storeEvent(pageViewEvent);
 }
 
+async function captureManualPageSnapshot(): Promise<void> {
+  const state = await refreshRecordingState();
+  if (state.status === 'idle') return;
+
+  const screenshotId = await tryCaptureScreenshotId();
+  const pageViewEvent: PageViewEvent = {
+    id: createId(),
+    type: 'page-view',
+    timestamp: Date.now(),
+    url: location.href,
+    title: document.title,
+    viewport: getViewport(),
+    screenshotId,
+  };
+
+  await storeEvent(pageViewEvent);
+}
+
 async function captureFinalPageSnapshot(): Promise<{
   screenshotId: string;
   url: string;
@@ -389,6 +407,16 @@ function registerRuntimeListeners(): void {
         });
       return true;
     }
+
+    if (message.type === 'CAPTURE_PAGE_SNAPSHOT') {
+      void captureManualPageSnapshot()
+        .then(() => sendResponse({ success: true }))
+        .catch((error) => {
+          console.error('[Peacock] Failed to capture manual page snapshot', error);
+          sendResponse({ error: error instanceof Error ? error.message : 'Unknown error' });
+        });
+      return true;
+    }
   });
 }
 
@@ -401,9 +429,16 @@ function bootstrapContentScript(): void {
     () => recordingState
   );
 
-  initRecordingUi(() => {
-    void stopRecordingFromUi();
-  });
+  initRecordingUi(
+    () => {
+      void stopRecordingFromUi();
+    },
+    () => {
+      void captureManualPageSnapshot().catch((error) => {
+        console.error('[Peacock] Failed to capture page snapshot from badge', error);
+      });
+    }
+  );
   initEventListeners();
 
   void refreshRecordingState().catch((error) => {
