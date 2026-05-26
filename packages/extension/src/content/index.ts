@@ -71,6 +71,47 @@ function isSameClickInteraction(pendingTarget: EventTarget, clickTarget: EventTa
   return pendingTarget.contains(clickTarget) || clickTarget.contains(pendingTarget);
 }
 
+function isRecordableFormControl(
+  target: Element | null
+): target is HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement {
+  if (
+    !(target instanceof HTMLInputElement) &&
+    !(target instanceof HTMLSelectElement) &&
+    !(target instanceof HTMLTextAreaElement)
+  ) {
+    return false;
+  }
+
+  if (target instanceof HTMLInputElement) {
+    const inputType = target.type.toLowerCase();
+    return !['button', 'submit', 'reset', 'hidden'].includes(inputType);
+  }
+
+  return true;
+}
+
+function getAssociatedFormControl(
+  target: HTMLElement
+): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null {
+  if (isRecordableFormControl(target)) return target;
+
+  const label = target.closest('label');
+  if (!label) return null;
+
+  const nestedControl = label.querySelector('input, select, textarea');
+  if (isRecordableFormControl(nestedControl)) return nestedControl;
+
+  const htmlFor = label.getAttribute('for');
+  if (!htmlFor) return null;
+
+  const referenced = document.getElementById(htmlFor);
+  return isRecordableFormControl(referenced) ? referenced : null;
+}
+
+function shouldDeferClickToInputEvent(target: HTMLElement): boolean {
+  return Boolean(getAssociatedFormControl(target));
+}
+
 function beginPointerScreenshot(target: EventTarget): void {
   pendingPointerCapture = {
     promise: tryCaptureScreenshotId(),
@@ -130,6 +171,7 @@ function handlePointerDown(event: PointerEvent): void {
   if (!isRecordingActiveSync()) return;
   if (event.button !== 0) return;
   if (!isValidClickTarget(event.target)) return;
+  if (shouldDeferClickToInputEvent(event.target)) return;
 
   beginPointerScreenshot(event.target);
 }
@@ -139,6 +181,7 @@ async function handleClick(event: MouseEvent): Promise<void> {
 
   const target = event.target;
   if (!isValidClickTarget(target)) return;
+  if (shouldDeferClickToInputEvent(target)) return;
 
   const screenshotId = await screenshotIdForClick(target);
   const viewport = getViewport();
