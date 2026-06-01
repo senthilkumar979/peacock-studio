@@ -1,9 +1,9 @@
-import { createId, type FlowPayload, type FlowStep } from '@peacock/shared';
+import { createId, getPlayableSteps, type FlowOutlineItem, type FlowPayload } from '@peacock/shared';
 import type { SavedFlowDocument } from '@/types/savedFlow';
 
 interface FlowSnapshotSource {
   flow: FlowPayload | null;
-  steps: FlowStep[];
+  steps: FlowOutlineItem[];
   screenshotUrls: Record<string, string>;
 }
 
@@ -33,4 +33,8 @@ export function buildSavedFlowDocument(
 
 export function createNewDocumentId(): string {
   return createId();
+}
+
+export function countPlayableSteps(steps: FlowOutlineItem[]): number {
+  return getPlayableSteps(steps).length;
 }

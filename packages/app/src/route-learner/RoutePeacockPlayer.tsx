@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getPlayableSteps } from '@peacock/shared';
 import { getFlowDocument } from '@/services/flowLibraryService';
 import { PlayerStep } from '@/player/PlayerStep';
 import type { SavedFlowDocument } from '@/types/savedFlow';
@@ -33,7 +34,7 @@ export const RoutePeacockPlayer = ({
           return;
         }
         setDocument(doc);
-        onDocumentLoaded(doc.steps.length);
+        onDocumentLoaded(getPlayableSteps(doc.steps).length);
       })
       .catch(() => {
         if (!cancelled) setError('Could not load this demo.');
@@ -63,7 +64,7 @@ export const RoutePeacockPlayer = ({
     );
   }
 
-  const step = document.steps[stepIndex];
+  const step = getPlayableSteps(document.steps)[stepIndex];
 
   if (!step) {
     return (

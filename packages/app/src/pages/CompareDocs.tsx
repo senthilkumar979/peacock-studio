@@ -6,6 +6,7 @@ import { EmptyFlowState } from '@/components/EmptyFlowState';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { useKeyboard } from '@/hooks/useKeyboard';
 import { getFlowDocument, listFlowSummaries } from '@/services/flowLibraryService';
+import { getPlayableSteps } from '@peacock/shared';
 import type { SavedFlowDocument, SavedFlowSummary } from '@/types/savedFlow';
 import { CompareDocumentPane } from '@/player/CompareDocumentPane';
 
@@ -73,10 +74,11 @@ export const CompareDocs = () => {
     setCurrentIndex(0);
   }, [leftId, rightId]);
 
-  const totalSteps = useMemo(
-    () => Math.max(leftDoc.document?.steps.length ?? 0, rightDoc.document?.steps.length ?? 0),
-    [leftDoc.document, rightDoc.document]
-  );
+  const totalSteps = useMemo(() => {
+    const leftCount = leftDoc.document ? getPlayableSteps(leftDoc.document.steps).length : 0;
+    const rightCount = rightDoc.document ? getPlayableSteps(rightDoc.document.steps).length : 0;
+    return Math.max(leftCount, rightCount);
+  }, [leftDoc.document, rightDoc.document]);
 
   useEffect(() => {
     setCurrentIndex((index) => Math.min(index, Math.max(totalSteps - 1, 0)));

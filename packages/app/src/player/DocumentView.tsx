@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/AppHeader";
+import { getPlayableSteps, isFlowSection, isFlowStep } from "@peacock/shared";
 import { useFlowStore } from "@/store/flowStore";
 import { formatFlowDate } from "@/utils/formatFlowDate";
 import {
@@ -7,8 +8,9 @@ import {
 } from "@/utils/shareLink";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { DocumentSectionCard } from "./DocumentSectionCard";
 import { DocumentStepCard } from "./DocumentStepCard";
-import { DocumentStepIndex } from "./DocumentStepIndex";
+import { DocumentStepIndex, type DocumentStepIndexItem } from "./DocumentStepIndex";
 import { SharedViewToggle } from "./SharedViewToggle";
 
 interface DocumentViewProps {
@@ -23,19 +25,32 @@ export const DocumentView = ({
   const flow = useFlowStore((state) => state.flow);
   const steps = useFlowStore((state) => state.steps);
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
-  const stepItems = useMemo(
-    () =>
-      steps.map((step, index) => ({
-        stepId: step.id,
-        stepNumber: index + 1,
-        title: step.title,
-        anchorId: getDocumentStepAnchor(step.id),
-      })),
-    [steps],
-  );
-  const [activeStepId, setActiveStepId] = useState<string | null>(
-    steps[0]?.id ?? null,
-  );
+  const playableStepCount = useMemo(() => getPlayableSteps(steps).length, [steps]);
+
+  const indexItems = useMemo((): DocumentStepIndexItem[] => {
+    let stepNumber = 0;
+    return steps.map((item) => {
+      const anchorId = getDocumentStepAnchor(item.id);
+      if (isFlowSection(item)) {
+        return {
+          type: 'section' as const,
+          anchorId,
+          sectionId: item.id,
+          title: item.title,
+        };
+      }
+      stepNumber += 1;
+      return {
+        type: 'step' as const,
+        anchorId,
+        stepId: item.id,
+        stepNumber,
+        title: item.title,
+      };
+    });
+  }, [steps]);
+
+  const [activeItemId, setActiveItemId] = useState<string | null>(steps[0]?.id ?? null);
   const [desktopPaneHeight, setDesktopPaneHeight] = useState<number | null>(
     null,
   );
@@ -59,8 +74,8 @@ export const DocumentView = ({
     target.scrollIntoView({ block: "start", behavior, inline: "nearest" });
   };
 
-  const scrollToStep = (anchorId: string, stepId: string) => {
-    setActiveStepId(stepId);
+  const scrollToAnchor = (anchorId: string, itemId: string) => {
+    setActiveItemId(itemId);
     window.history.replaceState(null, "", `#${anchorId}`);
     window.requestAnimationFrame(() => {
       scrollStepsPaneToAnchor(anchorId);
@@ -68,8 +83,8 @@ export const DocumentView = ({
   };
 
   useEffect(() => {
-    setActiveStepId((current) => {
-      if (current && steps.some((step) => step.id === current)) return current;
+    setActiveItemId((current) => {
+      if (current && steps.some((item) => item.id === current)) return current;
       return steps[0]?.id ?? null;
     });
   }, [steps]);
@@ -101,10 +116,10 @@ export const DocumentView = ({
     const syncFromHash = () => {
       const hash = window.location.hash.replace(/^#/, "");
       if (!hash) return;
-      const target = stepItems.find((item) => item.anchorId === hash);
+      const target = indexItems.find((item) => item.anchorId === hash);
       if (!target) return;
 
-      setActiveStepId(target.stepId);
+      setActiveItemId(target.type === 'step' ? target.stepId : target.sectionId);
       window.requestAnimationFrame(() => {
         scrollStepsPaneToAnchor(hash, "auto");
       });
@@ -113,10 +128,10 @@ export const DocumentView = ({
     syncFromHash();
     window.addEventListener("hashchange", syncFromHash);
     return () => window.removeEventListener("hashchange", syncFromHash);
-  }, [stepItems]);
+  }, [indexItems]);
 
   useEffect(() => {
-    const elements = stepItems
+    const elements = indexItems
       .map((item) => document.getElementById(item.anchorId))
       .filter((element): element is HTMLElement => Boolean(element));
     if (!elements.length) return;
@@ -126,9 +141,8 @@ export const DocumentView = ({
         const visibleEntries = entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        const nextStepId =
-          visibleEntries[0]?.target.getAttribute("data-step-id");
-        if (nextStepId) setActiveStepId(nextStepId);
+        const nextItemId = visibleEntries[0]?.target.getAttribute("data-outline-id");
+        if (nextItemId) setActiveItemId(nextItemId);
       },
       {
         root: isDesktopPane ? stepsScrollRef.current : null,
@@ -139,7 +153,7 @@ export const DocumentView = ({
 
     elements.forEach((element) => observer.observe(element));
     return () => observer.disconnect();
-  }, [isDesktopPane, stepItems]);
+  }, [isDesktopPane, indexItems]);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
@@ -163,7 +177,7 @@ export const DocumentView = ({
         <section className="shrink-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap gap-3 text-sm text-slate-600">
             <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 font-medium">
-              {steps.length} {steps.length === 1 ? "step" : "steps"}
+              {playableStepCount} {playableStepCount === 1 ? "step" : "steps"}
             </span>
             {flow ? (
               <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 font-medium">
@@ -184,9 +198,10 @@ export const DocumentView = ({
         >
           <div className="sticky">
             <DocumentStepIndex
-              items={stepItems}
-              activeStepId={activeStepId}
-              onSelect={scrollToStep}
+              items={indexItems}
+              activeItemId={activeItemId}
+              onSelectStep={(anchorId, stepId) => scrollToAnchor(anchorId, stepId)}
+              onSelectSection={(anchorId, sectionId) => scrollToAnchor(anchorId, sectionId)}
             />
           </div>
 
@@ -195,19 +210,44 @@ export const DocumentView = ({
               ref={stepsScrollRef}
               className="flex min-w-0 flex-col gap-5 pr-1 "
             >
-              {steps.map((step, index) => (
-                <DocumentStepCard
-                  key={step.id}
-                  documentId={documentId}
-                  step={step}
-                  stepNumber={index + 1}
-                  anchorId={
-                    stepItems[index]?.anchorId ?? getDocumentStepAnchor(step.id)
+              {(() => {
+                let stepNumber = 0;
+                let sectionIndex = 0;
+                return steps.map((item) => {
+                  const anchorId = getDocumentStepAnchor(item.id);
+
+                  if (isFlowSection(item)) {
+                    const currentSectionIndex = sectionIndex;
+                    sectionIndex += 1;
+                    return (
+                      <div key={item.id} data-outline-id={item.id}>
+                        <DocumentSectionCard
+                          section={item}
+                          anchorId={anchorId}
+                          isActive={item.id === activeItemId}
+                          sectionIndex={currentSectionIndex}
+                        />
+                      </div>
+                    );
                   }
-                  isActive={step.id === activeStepId}
-                  screenshotUrls={screenshotUrls}
-                />
-              ))}
+
+                  if (!isFlowStep(item)) return null;
+
+                  stepNumber += 1;
+                  return (
+                    <div key={item.id} data-outline-id={item.id}>
+                      <DocumentStepCard
+                        documentId={documentId}
+                        step={item}
+                        stepNumber={stepNumber}
+                        anchorId={anchorId}
+                        isActive={item.id === activeItemId}
+                        screenshotUrls={screenshotUrls}
+                      />
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
         </div>

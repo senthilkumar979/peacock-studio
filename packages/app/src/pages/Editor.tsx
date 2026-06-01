@@ -6,7 +6,9 @@ import { Toolbar } from '@/editor/Toolbar';
 import { usePayload } from '@/hooks/usePayload';
 import { usePersistDocument } from '@/hooks/usePersistDocument';
 import { useSavedDocument } from '@/hooks/useSavedDocument';
-import { useSelectedStep } from '@/store/flowStore';
+import { useSelectedSection, useSelectedStep } from '@/store/flowStore';
+import { SectionPanel } from '@/editor/SectionPanel';
+import { FlowSectionCard } from '@/components/FlowSectionCard';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 
 export const Editor = () => {
@@ -20,6 +22,7 @@ export const Editor = () => {
   usePersistDocument(Boolean(documentId && isLoaded));
 
   const selectedStep = useSelectedStep();
+  const selectedSection = useSelectedSection();
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
@@ -63,10 +66,24 @@ export const Editor = () => {
             <StepList />
           </aside>
           <main className="min-h-0 overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-            <Canvas step={selectedStep} />
+            {selectedSection ? (
+              <div className="flex h-full flex-col items-center justify-center overflow-auto p-6">
+                <FlowSectionCard section={selectedSection} variant="editor" />
+                <p className="mt-6 max-w-md text-center text-sm text-slate-500">
+                  Edit title and description in the panel on the right. This card appears in
+                  document and player views.
+                </p>
+              </div>
+            ) : (
+              <Canvas step={selectedStep} />
+            )}
           </main>
           <aside className="min-h-0 overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-            <StepPanel step={selectedStep} />
+            {selectedSection ? (
+              <SectionPanel section={selectedSection} />
+            ) : (
+              <StepPanel step={selectedStep} />
+            )}
           </aside>
         </div>
       )}

@@ -1,4 +1,9 @@
-import { getStepMarkerPosition, getStepScreenshotUrl, getStepUrl } from '@peacock/shared';
+import {
+  getPlayableSteps,
+  getStepMarkerPosition,
+  getStepScreenshotUrl,
+  getStepUrl,
+} from '@peacock/shared';
 import type { SavedFlowDocument, SavedFlowSummary } from '@/types/savedFlow';
 import { BrowserMockup } from './BrowserMockup';
 import { PlayerClickMarker } from './PlayerClickMarker';
@@ -22,7 +27,8 @@ export const CompareDocumentPane = ({
   isLoading,
   currentIndex,
 }: CompareDocumentPaneProps) => {
-  const step = document?.steps[currentIndex] ?? null;
+  const playableSteps = document ? getPlayableSteps(document.steps) : [];
+  const step = playableSteps[currentIndex] ?? null;
   const screenshotUrl = step ? getStepScreenshotUrl(step, document?.screenshotUrls ?? {}) : null;
   const markerPosition = step ? getStepMarkerPosition(step) : null;
   const stepUrl = step ? getStepUrl(step) : '';
@@ -76,7 +82,7 @@ export const CompareDocumentPane = ({
           <>
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Step {currentIndex + 1} of {document.steps.length}
+                Step {currentIndex + 1} of {playableSteps.length}
               </p>
               <h3 className="text-lg font-semibold text-slate-900">{step.title}</h3>
               <p className="text-sm leading-6 text-slate-600">

@@ -1,12 +1,12 @@
 import { pdf } from '@react-pdf/renderer';
-import type { FlowPayload, FlowStep } from '@peacock/shared';
+import { getPlayableSteps, type FlowOutlineItem, type FlowPayload } from '@peacock/shared';
 import { FlowDocument } from './FlowDocument';
 import { getPdfLogoUrl } from './pdfConstants';
 import { registerPdfFonts } from './registerPdfFonts';
 
 interface ExportFlowPdfParams {
   flow: FlowPayload;
-  steps: FlowStep[];
+  steps: FlowOutlineItem[];
   screenshotUrls: Record<string, string>;
 }
 
@@ -21,11 +21,17 @@ export async function exportFlowPdf({
 }: ExportFlowPdfParams): Promise<void> {
   registerPdfFonts();
 
+  const playableSteps = getPlayableSteps(steps);
   const payload: FlowPayload = { ...flow, steps };
   const logoSrc = getPdfLogoUrl();
 
   const blob = await pdf(
-    <FlowDocument flow={payload} steps={steps} screenshotUrls={screenshotUrls} logoSrc={logoSrc} />
+    <FlowDocument
+      flow={payload}
+      steps={playableSteps}
+      screenshotUrls={screenshotUrls}
+      logoSrc={logoSrc}
+    />
   ).toBlob();
 
   const url = URL.createObjectURL(blob);

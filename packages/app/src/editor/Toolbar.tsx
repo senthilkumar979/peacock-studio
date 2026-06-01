@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AppHeader } from '@/components/AppHeader';
 import { persistCurrentFlow } from '@/services/flowLibraryService';
-import { useFlowStore } from '@/store/flowStore';
+import { useFlowStore, usePlayableSteps } from '@/store/flowStore';
 import { getDocumentPath } from '@/utils/shareLink';
 import { FlowDetailsModal } from './FlowDetailsModal';
 
@@ -16,7 +16,7 @@ interface ToolbarProps {
 
 export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
   const flow = useFlowStore((state) => state.flow);
-  const steps = useFlowStore((state) => state.steps);
+  const playableSteps = usePlayableSteps();
   const documentId = useFlowStore((state) => state.documentId) ?? routeDocumentId;
   const isLoaded = useFlowStore((state) => state.isLoaded);
   const updateFlowDetails = useFlowStore((state) => state.updateFlowDetails);
@@ -59,8 +59,10 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
         homeLink
         documentId={documentId}
       >
-        <p className="text-sm text-slate-500">{steps.length} steps</p>
-        {isLoaded && steps.length > 0 && (
+        <p className="text-sm text-slate-500">
+          {playableSteps.length} {playableSteps.length === 1 ? 'step' : 'steps'}
+        </p>
+        {isLoaded && playableSteps.length > 0 && (
           <>
             <button
               type="button"

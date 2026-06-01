@@ -1,25 +1,40 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { createId, type FlowPayload, type FlowStep } from '@peacock/shared';
+import {
+  createId,
+  createFlowSection,
+  createManualFlowStep,
+  getPlayableSteps,
+  isFlowSection,
+  isFlowStep,
+  MANUAL_STEP_PLACEHOLDER_SCREENSHOT,
+  type FlowOutlineItem,
+  type FlowPayload,
+  type FlowStep,
+} from '@peacock/shared';
 import type { SavedFlowDocument } from '@/types/savedFlow';
 
 interface FlowStore {
   documentId: string | null;
   flow: FlowPayload | null;
   screenshotUrls: Record<string, string>;
-  steps: FlowStep[];
-  selectedStepId: string | null;
+  steps: FlowOutlineItem[];
+  selectedOutlineId: string | null;
   isLoaded: boolean;
 
   setFlow: (flow: FlowPayload, screenshotUrls: Record<string, string>) => void;
   setDocumentId: (id: string | null) => void;
   hydrateFromDocument: (doc: SavedFlowDocument) => void;
   resetFlow: () => void;
-  selectStep: (id: string) => void;
+  selectOutlineItem: (id: string) => void;
   reorderSteps: (from: number, to: number) => void;
-  deleteStep: (id: string) => void;
+  addManualStep: (afterItemId?: string | null) => void;
+  addSection: (afterItemId?: string | null) => void;
+  deleteOutlineItem: (id: string) => void;
   updateStepTitle: (id: string, title: string) => void;
   updateStepNotes: (id: string, notes: string) => void;
+  updateSectionTitle: (id: string, title: string) => void;
+  updateSectionDescription: (id: string, description: string) => void;
   setStepCustomScreenshot: (id: string, dataUrl: string) => void;
   resetStepScreenshot: (id: string) => void;
   updateFlowDetails: (title: string, description: string) => void;
@@ -29,13 +44,30 @@ const initialState = {
   documentId: null,
   flow: null,
   screenshotUrls: {} as Record<string, string>,
-  steps: [] as FlowStep[],
-  selectedStepId: null as string | null,
+  steps: [] as FlowOutlineItem[],
+  selectedOutlineId: null as string | null,
   isLoaded: false,
 };
 
-function removeCustomScreenshot(state: { screenshotUrls: Record<string, string> }, customId: string): void {
+function removeCustomScreenshot(
+  state: { screenshotUrls: Record<string, string> },
+  customId: string
+): void {
   delete state.screenshotUrls[customId];
+}
+
+function syncFlowSteps(state: { flow: FlowPayload | null; steps: FlowOutlineItem[] }): void {
+  if (state.flow) state.flow.steps = state.steps;
+}
+
+function resolveInsertIndex(items: FlowOutlineItem[], afterItemId?: string | null): number {
+  if (!afterItemId) return items.length;
+  const index = items.findIndex((item) => item.id === afterItemId);
+  return index >= 0 ? index + 1 : items.length;
+}
+
+function pickInitialSelection(items: FlowOutlineItem[]): string | null {
+  return getPlayableSteps(items)[0]?.id ?? items[0]?.id ?? null;
 }
 
 export const useFlowStore = create<FlowStore>()(
@@ -47,7 +79,7 @@ export const useFlowStore = create<FlowStore>()(
         flow,
         screenshotUrls,
         steps: flow.steps,
-        selectedStepId: flow.steps[0]?.id ?? null,
+        selectedOutlineId: pickInitialSelection(flow.steps),
         isLoaded: true,
       }),
 
@@ -59,48 +91,81 @@ export const useFlowStore = create<FlowStore>()(
         flow: doc.flow,
         screenshotUrls: doc.screenshotUrls,
         steps: doc.steps,
-        selectedStepId: doc.steps[0]?.id ?? null,
+        selectedOutlineId: pickInitialSelection(doc.steps),
         isLoaded: true,
       }),
 
     resetFlow: () => set({ ...initialState }),
 
-    selectStep: (id) => set({ selectedStepId: id }),
+    selectOutlineItem: (id) => set({ selectedOutlineId: id }),
 
     reorderSteps: (from, to) =>
       set((state) => {
-        const [step] = state.steps.splice(from, 1);
-        if (step) state.steps.splice(to, 0, step);
+        const [item] = state.steps.splice(from, 1);
+        if (item) state.steps.splice(to, 0, item);
+        syncFlowSteps(state);
       }),
 
-    deleteStep: (id) =>
+    addManualStep: (afterItemId) =>
       set((state) => {
-        const removed = state.steps.find((step) => step.id === id);
-        if (removed?.customScreenshotId) {
+        const step = createManualFlowStep();
+        state.screenshotUrls[step.screenshotId] = MANUAL_STEP_PLACEHOLDER_SCREENSHOT;
+        const index = resolveInsertIndex(state.steps, afterItemId ?? state.selectedOutlineId);
+        state.steps.splice(index, 0, step);
+        state.selectedOutlineId = step.id;
+        syncFlowSteps(state);
+      }),
+
+    addSection: (afterItemId) =>
+      set((state) => {
+        const section = createFlowSection();
+        const index = resolveInsertIndex(state.steps, afterItemId ?? state.selectedOutlineId);
+        state.steps.splice(index, 0, section);
+        state.selectedOutlineId = section.id;
+        syncFlowSteps(state);
+      }),
+
+    deleteOutlineItem: (id) =>
+      set((state) => {
+        const removed = state.steps.find((item) => item.id === id);
+        if (removed && isFlowStep(removed) && removed.customScreenshotId) {
           removeCustomScreenshot(state, removed.customScreenshotId);
         }
-        state.steps = state.steps.filter((step) => step.id !== id);
-        if (state.selectedStepId === id) {
-          state.selectedStepId = state.steps[0]?.id ?? null;
+        state.steps = state.steps.filter((item) => item.id !== id);
+        if (state.selectedOutlineId === id) {
+          state.selectedOutlineId = pickInitialSelection(state.steps);
         }
+        syncFlowSteps(state);
       }),
 
     updateStepTitle: (id, title) =>
       set((state) => {
         const step = state.steps.find((item) => item.id === id);
-        if (step) step.title = title;
+        if (step && isFlowStep(step)) step.title = title;
       }),
 
     updateStepNotes: (id, notes) =>
       set((state) => {
         const step = state.steps.find((item) => item.id === id);
-        if (step) step.notes = notes;
+        if (step && isFlowStep(step)) step.notes = notes;
+      }),
+
+    updateSectionTitle: (id, title) =>
+      set((state) => {
+        const section = state.steps.find((item) => item.id === id);
+        if (section && isFlowSection(section)) section.title = title;
+      }),
+
+    updateSectionDescription: (id, description) =>
+      set((state) => {
+        const section = state.steps.find((item) => item.id === id);
+        if (section && isFlowSection(section)) section.description = description;
       }),
 
     setStepCustomScreenshot: (id, dataUrl) =>
       set((state) => {
         const step = state.steps.find((item) => item.id === id);
-        if (!step) return;
+        if (!step || !isFlowStep(step)) return;
 
         if (step.customScreenshotId) {
           removeCustomScreenshot(state, step.customScreenshotId);
@@ -114,7 +179,7 @@ export const useFlowStore = create<FlowStore>()(
     resetStepScreenshot: (id) =>
       set((state) => {
         const step = state.steps.find((item) => item.id === id);
-        if (!step?.customScreenshotId) return;
+        if (!step || !isFlowStep(step) || !step.customScreenshotId) return;
 
         removeCustomScreenshot(state, step.customScreenshotId);
         delete step.customScreenshotId;
@@ -131,8 +196,21 @@ export const useFlowStore = create<FlowStore>()(
 
 export function useSelectedStep(): FlowStep | null {
   const steps = useFlowStore((state) => state.steps);
-  const selectedStepId = useFlowStore((state) => state.selectedStepId);
-  return steps.find((step) => step.id === selectedStepId) ?? null;
+  const selectedOutlineId = useFlowStore((state) => state.selectedOutlineId);
+  const item = steps.find((step) => step.id === selectedOutlineId);
+  return item && isFlowStep(item) ? item : null;
+}
+
+export function useSelectedSection() {
+  const steps = useFlowStore((state) => state.steps);
+  const selectedOutlineId = useFlowStore((state) => state.selectedOutlineId);
+  const item = steps.find((step) => step.id === selectedOutlineId);
+  return item && isFlowSection(item) ? item : null;
+}
+
+export function usePlayableSteps(): FlowStep[] {
+  const steps = useFlowStore((state) => state.steps);
+  return getPlayableSteps(steps);
 }
 
 export { getStepScreenshotUrl } from '@peacock/shared';

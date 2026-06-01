@@ -1,11 +1,11 @@
-import type { FlowPayload, FlowStep } from '@peacock/shared';
+import type { FlowOutlineItem, FlowPayload } from '@peacock/shared';
 
 export interface SavedFlowDocument {
   id: string;
   savedAt: number;
   updatedAt: number;
   flow: FlowPayload;
-  steps: FlowStep[];
+  steps: FlowOutlineItem[];
   screenshotUrls: Record<string, string>;
 }
 

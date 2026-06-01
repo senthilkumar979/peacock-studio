@@ -5,7 +5,7 @@ import { ArrowLeft, ChevronRight, FileDown, Link2, Loader2 } from 'lucide-react'
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
 import { exportFlowPdf } from '@/pdf/exportFlowPdf';
 import { getFlowDocument } from '@/services/flowLibraryService';
-import { useFlowStore } from '@/store/flowStore';
+import { useFlowStore, usePlayableSteps } from '@/store/flowStore';
 import { copyDocumentShareLink } from '@/utils/shareLink';
 
 interface AppHeaderProps {
@@ -29,22 +29,23 @@ export const AppHeader = ({
   children,
 }: AppHeaderProps) => {
   const flow = useFlowStore((state) => state.flow);
-  const steps = useFlowStore((state) => state.steps);
+  const outline = useFlowStore((state) => state.steps);
+  const playableSteps = usePlayableSteps();
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
   const isLoaded = useFlowStore((state) => state.isLoaded);
 
   const [isExporting, setIsExporting] = useState(false);
   const [shareMessage, setShareMessage] = useState<string | null>(null);
 
-  const canExport = isLoaded && steps.length > 0;
+  const canExport = isLoaded && playableSteps.length > 0;
   const canShare = Boolean(documentId);
   const hasActions = Boolean(children) || canExport || canShare;
 
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      if (flow && steps.length > 0) {
-        await exportFlowPdf({ flow, steps, screenshotUrls });
+      if (flow && outline.length > 0) {
+        await exportFlowPdf({ flow, steps: outline, screenshotUrls });
         return;
       }
       if (!documentId) return;

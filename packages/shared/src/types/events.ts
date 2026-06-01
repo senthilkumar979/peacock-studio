@@ -119,6 +119,27 @@ export interface FlowStep {
   customScreenshotId?: string;
 }
 
+export interface FlowSection {
+  id: string;
+  kind: 'section';
+  title: string;
+  description: string;
+}
+
+export type FlowOutlineItem = FlowStep | FlowSection;
+
+export function isFlowSection(item: FlowOutlineItem): item is FlowSection {
+  return 'kind' in item && item.kind === 'section';
+}
+
+export function isFlowStep(item: FlowOutlineItem): item is FlowStep {
+  return !isFlowSection(item);
+}
+
+export function getPlayableSteps(items: FlowOutlineItem[]): FlowStep[] {
+  return items.filter(isFlowStep);
+}
+
 export interface FlowPayload {
   flow: {
     title: string;
@@ -132,5 +153,5 @@ export interface FlowPayload {
     platform: string;
     screen: { width: number; height: number };
   };
-  steps: FlowStep[];
+  steps: FlowOutlineItem[];
 }

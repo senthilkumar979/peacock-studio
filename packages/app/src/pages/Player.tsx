@@ -4,14 +4,15 @@ import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { useSavedDocument } from '@/hooks/useSavedDocument';
 import { DocumentView } from '@/player/DocumentView';
 import { PlayerView } from '@/player/PlayerView';
-import { useFlowStore } from '@/store/flowStore';
+import { useFlowStore, usePlayableSteps } from '@/store/flowStore';
 import type { SharedDocumentViewMode } from '@/utils/shareLink';
 
 export const Player = () => {
   const { documentId } = useParams<{ documentId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isLoading, isLoaded, error } = useSavedDocument(documentId);
-  const steps = useFlowStore((state) => state.steps);
+  const outline = useFlowStore((state) => state.steps);
+  const playableSteps = usePlayableSteps();
   const viewMode: SharedDocumentViewMode =
     searchParams.get('view') === 'player' ? 'player' : 'doc';
 
@@ -64,9 +65,18 @@ export const Player = () => {
     );
   }
 
-  if (!steps.length) {
+  if (!outline.length) {
     return (
-      <EmptyFlowState title="No steps to play" description="This documentation has no steps yet." />
+      <EmptyFlowState title="No content yet" description="This documentation has no steps or sections yet." />
+    );
+  }
+
+  if (viewMode === 'player' && playableSteps.length === 0) {
+    return (
+      <EmptyFlowState
+        title="No steps to play"
+        description="Add steps in the editor. Chapter sections can display in player mode once steps exist below them."
+      />
     );
   }
 

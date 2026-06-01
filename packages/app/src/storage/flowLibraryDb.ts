@@ -2,6 +2,7 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { SavedRoute, SavedRouteSummary } from '@/types/route';
 import { countRouteBranches, countRoutePeacocks, getChapterNodes, migrateSavedRoute, needsRouteMigration } from '@/utils/routeGraph';
 import type { SavedFlowDocument, SavedFlowSummary } from '@/types/savedFlow';
+import { countPlayableSteps } from '@/utils/flowDocumentSnapshot';
 
 interface FlowLibrarySchema extends DBSchema {
   documents: {
@@ -47,7 +48,7 @@ export function toFlowSummary(doc: SavedFlowDocument): SavedFlowSummary {
     description: doc.flow.flow.description.trim(),
     generatedAt: doc.flow.metadata.createdAt,
     updatedAt: doc.updatedAt,
-    stepCount: doc.steps.length,
+    stepCount: countPlayableSteps(doc.steps),
   };
 }
 

@@ -18,7 +18,7 @@ export async function persistCurrentFlow(documentId: string): Promise<void> {
 
 export async function saveNewFlowFromStore(): Promise<string | null> {
   const state = useFlowStore.getState();
-  if (!state.flow || !state.steps.length) return null;
+  if (!state.flow || !state.steps.some((item) => 'event' in item)) return null;
 
   const documentId = createNewDocumentId();
   const doc = buildSavedFlowDocument(state, documentId);

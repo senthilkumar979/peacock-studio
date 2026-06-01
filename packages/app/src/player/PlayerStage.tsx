@@ -1,9 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import type { FlowStep } from '@peacock/shared';
 import { getStepMarkerPosition, getStepUrl } from '@peacock/shared';
+import { usePlayerStepDetailsVisibility } from '@/hooks/usePlayerStepDetailsVisibility';
 import { getStepScreenshotUrl } from '@/store/flowStore';
 import { BrowserMockup } from './BrowserMockup';
 import { PlayerClickMarker } from './PlayerClickMarker';
+import { PlayerStepDetailsToggle } from './PlayerStepDetailsToggle';
 import { StepDetailPopover } from './StepDetailPopover';
 
 interface PlayerStageProps {
@@ -17,6 +19,7 @@ export const PlayerStage = ({ step, stepNumber, screenshotUrls }: PlayerStagePro
   const markerPosition = getStepMarkerPosition(step);
   const stepUrl = getStepUrl(step);
   const description = step.notes || step.generatedDescription;
+  const { isDetailsVisible, toggleDetails } = usePlayerStepDetailsVisibility(step.id);
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-5">
@@ -32,13 +35,51 @@ export const PlayerStage = ({ step, stepNumber, screenshotUrls }: PlayerStagePro
               transition={{ duration: 0.2 }}
               className="block max-h-[min(65vh,800px)] w-auto max-w-[calc(100vw-2.5rem)] object-contain"
             />
-            {markerPosition && (
+            {markerPosition ? (
               <PlayerClickMarker
                 step={step}
                 stepNumber={stepNumber}
                 xPercent={markerPosition.xPercent}
                 yPercent={markerPosition.yPercent}
+                isDetailsVisible={isDetailsVisible}
+                onToggle={toggleDetails}
               />
+            ) : (
+              <>
+                <PlayerStepDetailsToggle
+                  isVisible={isDetailsVisible}
+                  onToggle={toggleDetails}
+                  className="pointer-events-auto absolute bottom-2 right-2 z-30 sm:bottom-3 sm:right-3"
+                />
+                <AnimatePresence mode="wait">
+                  {isDetailsVisible ? (
+                    <motion.div
+                      key={step.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      transition={{ duration: 0.22 }}
+                      className="pointer-events-none absolute inset-x-2 bottom-2 z-20 sm:inset-x-3 sm:bottom-3"
+                    >
+                      <div
+                        className="pointer-events-auto pr-11"
+                        aria-label={`Step ${stepNumber}: ${step.title}`}
+                      >
+                        <div
+                          className="pointer-events-none absolute inset-x-0 bottom-full mb-1.5 h-12 bg-gradient-to-t from-slate-900/20 to-transparent"
+                          aria-hidden
+                        />
+                        <StepDetailPopover
+                          stepNumber={stepNumber}
+                          title={step.title}
+                          description={description}
+                          appearance="glass"
+                        />
+                      </div>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+              </>
             )}
           </div>
         ) : (
@@ -50,23 +91,31 @@ export const PlayerStage = ({ step, stepNumber, screenshotUrls }: PlayerStagePro
         )}
       </BrowserMockup>
 
-      {!markerPosition && (
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step.id}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.2 }}
-          >
-            <StepDetailPopover
-              stepNumber={stepNumber}
-              title={step.title}
-              description={description}
-            />
-          </motion.div>
-        </AnimatePresence>
-      )}
+      {!markerPosition && !screenshotUrl ? (
+        <div className="flex flex-col items-end gap-2">
+          <PlayerStepDetailsToggle
+            isVisible={isDetailsVisible}
+            onToggle={toggleDetails}
+          />
+          <AnimatePresence mode="wait">
+            {isDetailsVisible ? (
+              <motion.div
+                key={step.id}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <StepDetailPopover
+                  stepNumber={stepNumber}
+                  title={step.title}
+                  description={description}
+                />
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
+      ) : null}
     </div>
   );
 };

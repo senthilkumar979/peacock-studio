@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import {
   DndContext,
   KeyboardSensor,
@@ -15,35 +15,51 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
-import type { FlowStep } from '@peacock/shared';
+import { BookMarked, GripVertical, Plus } from 'lucide-react';
+import { isFlowSection, isFlowStep, type FlowOutlineItem, type FlowStep } from '@peacock/shared';
 import { useFlowStore } from '@/store/flowStore';
 
-interface SortableStepProps {
-  step: FlowStep;
-  index: number;
-  isSelected: boolean;
-  onSelect: (id: string) => void;
+function getStepDisplayNumber(items: FlowOutlineItem[], index: number): number {
+  let count = 0;
+  for (let i = 0; i <= index; i += 1) {
+    const item = items[i];
+    if (item && isFlowStep(item)) count += 1;
+  }
+  return count;
 }
 
-const SortableStep = ({ step, index, isSelected, onSelect }: SortableStepProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: step.id });
+interface SortableOutlineItemProps {
+  id: string;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+  children: ReactNode;
+  className?: string;
+}
+
+const SortableOutlineItem = ({
+  id,
+  isSelected,
+  onSelect,
+  children,
+  className = '',
+}: SortableOutlineItemProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   return (
     <div
       ref={setNodeRef}
-      data-step-id={step.id}
+      data-outline-id={id}
       style={style}
-      className={`flex items-stretch gap-2 rounded-lg border bg-white p-2 transition ${
+      className={`flex items-stretch gap-2 rounded-lg border bg-white p-2 transition ${className} ${
         isSelected
           ? 'border-peacock-500 bg-peacock-50'
-          : 'border-slate-200 bg-white hover:border-slate-300'
+          : 'border-slate-200 hover:border-slate-300'
       }`}
     >
       <button
         type="button"
-        aria-label={`Drag step ${index + 1} to reorder`}
+        aria-label="Drag to reorder"
         title="Drag to reorder"
         className="flex shrink-0 cursor-grab items-center rounded-md px-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 active:cursor-grabbing"
         {...attributes}
@@ -51,23 +67,59 @@ const SortableStep = ({ step, index, isSelected, onSelect }: SortableStepProps) 
       >
         <GripVertical className="h-4 w-4" />
       </button>
-      <button
-        type="button"
-        onClick={() => onSelect(step.id)}
-        className="min-w-0 flex-1 text-left"
-      >
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Step {index + 1}</p>
-        <p className="mt-1 text-sm font-medium text-slate-900">{step.title}</p>
+      <button type="button" onClick={() => onSelect(id)} className="min-w-0 flex-1 text-left">
+        {children}
       </button>
     </div>
   );
 };
 
+interface SortableStepProps {
+  step: FlowStep;
+  stepNumber: number;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}
+
+const SortableStep = ({ step, stepNumber, isSelected, onSelect }: SortableStepProps) => (
+  <SortableOutlineItem id={step.id} isSelected={isSelected} onSelect={onSelect}>
+    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      Step {stepNumber}
+    </p>
+    <p className="mt-1 text-sm font-medium text-slate-900">{step.title}</p>
+  </SortableOutlineItem>
+);
+
+interface SortableSectionProps {
+  section: { id: string; title: string };
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}
+
+const SortableSection = ({ section, isSelected, onSelect }: SortableSectionProps) => (
+  <SortableOutlineItem
+    id={section.id}
+    isSelected={isSelected}
+    onSelect={onSelect}
+    className="border-brand-violet/30 bg-brand-violet/5"
+  >
+    <div className="flex items-center gap-2">
+      <BookMarked className="h-4 w-4 shrink-0 text-brand-violet" aria-hidden />
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-violet">Section</p>
+        <p className="mt-0.5 text-sm font-semibold text-slate-900">{section.title}</p>
+      </div>
+    </div>
+  </SortableOutlineItem>
+);
+
 export const StepList = () => {
   const steps = useFlowStore((state) => state.steps);
-  const selectedStepId = useFlowStore((state) => state.selectedStepId);
-  const selectStep = useFlowStore((state) => state.selectStep);
+  const selectedOutlineId = useFlowStore((state) => state.selectedOutlineId);
+  const selectOutlineItem = useFlowStore((state) => state.selectOutlineItem);
   const reorderSteps = useFlowStore((state) => state.reorderSteps);
+  const addManualStep = useFlowStore((state) => state.addManualStep);
+  const addSection = useFlowStore((state) => state.addSection);
   const listRef = useRef<HTMLDivElement | null>(null);
 
   const sensors = useSensors(
@@ -79,51 +131,86 @@ export const StepList = () => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const from = steps.findIndex((step) => step.id === active.id);
-    const to = steps.findIndex((step) => step.id === over.id);
+    const from = steps.findIndex((item) => item.id === active.id);
+    const to = steps.findIndex((item) => item.id === over.id);
     if (from >= 0 && to >= 0) reorderSteps(from, to);
   };
 
   useEffect(() => {
-    if (!selectedStepId || !listRef.current) return;
+    if (!selectedOutlineId || !listRef.current) return;
 
-    const selectedStep = listRef.current.querySelector<HTMLElement>(
-      `[data-step-id="${selectedStepId}"]`
+    const selected = listRef.current.querySelector<HTMLElement>(
+      `[data-outline-id="${selectedOutlineId}"]`
     );
-    selectedStep?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [selectedStepId]);
-
-  if (!steps.length) {
-    return (
-      <div className="rounded-lg border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
-        No steps yet. Record a flow with the Peacock extension.
-      </div>
-    );
-  }
+    selected?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [selectedOutlineId]);
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      <h2 className="shrink-0 text-sm font-semibold uppercase tracking-wide text-slate-500">Steps</h2>
-      <div className="flex min-h-0 flex-1 flex-col">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={steps.map((step) => step.id)} strategy={verticalListSortingStrategy}>
-            <div
-              ref={listRef}
-              className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-1"
-            >
-              {steps.map((step, index) => (
-                <SortableStep
-                  key={step.id}
-                  step={step}
-                  index={index}
-                  isSelected={step.id === selectedStepId}
-                  onSelect={selectStep}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+      <div className="flex shrink-0 items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Outline</h2>
       </div>
+
+      <div className="flex shrink-0 gap-2">
+        <button
+          type="button"
+          onClick={() => addManualStep()}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-peacock-200 bg-peacock-50 px-2 py-2 text-xs font-medium text-peacock-800 hover:bg-peacock-100"
+        >
+          <Plus className="h-3.5 w-3.5" aria-hidden />
+          Add step
+        </button>
+        <button
+          type="button"
+          onClick={() => addSection()}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-brand-violet/30 bg-brand-violet/10 px-2 py-2 text-xs font-medium text-brand-violet hover:bg-brand-violet/15"
+        >
+          <BookMarked className="h-3.5 w-3.5" aria-hidden />
+          Add section
+        </button>
+      </div>
+
+      {!steps.length ? (
+        <div className="rounded-lg border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
+          No steps yet. Record with the extension or add a step manually.
+        </div>
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={steps.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+              <div
+                ref={listRef}
+                className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-1"
+              >
+                {steps.map((item, index) => {
+                  if (isFlowSection(item)) {
+                    return (
+                      <SortableSection
+                        key={item.id}
+                        section={item}
+                        isSelected={item.id === selectedOutlineId}
+                        onSelect={selectOutlineItem}
+                      />
+                    );
+                  }
+
+                  if (!isFlowStep(item)) return null;
+
+                  return (
+                    <SortableStep
+                      key={item.id}
+                      step={item}
+                      stepNumber={getStepDisplayNumber(steps, index)}
+                      isSelected={item.id === selectedOutlineId}
+                      onSelect={selectOutlineItem}
+                    />
+                  );
+                })}
+              </div>
+            </SortableContext>
+          </DndContext>
+        </div>
+      )}
     </div>
   );
 };
