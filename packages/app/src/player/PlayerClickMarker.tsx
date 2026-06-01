@@ -38,18 +38,9 @@ export const PlayerClickMarker = ({
           onClick={onToggle}
           className="pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-peacock-500 focus-visible:ring-offset-2"
           aria-expanded={isDetailsVisible}
-          aria-label={
-            isDetailsVisible ? 'Hide marker and step details' : 'Show marker and step details'
-          }
+          aria-label={isDetailsVisible ? 'Hide step details' : 'Show step details'}
         >
-          {isDetailsVisible ? (
-            <PulseMarker />
-          ) : (
-            <span
-              className="block h-3.5 w-3.5 rounded-full bg-peacock-500/80 shadow-md ring-2 ring-white"
-              aria-hidden
-            />
-          )}
+          <PulseMarker />
         </button>
       ) : (
         <div className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2">

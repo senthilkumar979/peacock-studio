@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check, Link2 } from 'lucide-react';
 import type { FlowStep } from '@peacock/shared';
 import { getStepMarkerPosition, getStepUrl } from '@peacock/shared';
+import { usePlayerStepDetailsVisibility } from '@/hooks/usePlayerStepDetailsVisibility';
 import { getDocumentStepShareUrl } from '@/utils/shareLink';
 import { BrowserMockup } from './BrowserMockup';
 import { PlayerClickMarker } from './PlayerClickMarker';
@@ -33,6 +34,7 @@ export const DocumentStepCard = ({
   const markerPosition = getStepMarkerPosition(step);
   const stepUrl = getStepUrl(step);
   const description = step.notes || step.generatedDescription;
+  const { isDetailsVisible, toggleDetails } = usePlayerStepDetailsVisibility(step.id);
   const [copyMessage, setCopyMessage] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   const handleCopyStepLink = async () => {
@@ -97,6 +99,8 @@ export const DocumentStepCard = ({
                     stepNumber={stepNumber}
                     xPercent={markerPosition.xPercent}
                     yPercent={markerPosition.yPercent}
+                    isDetailsVisible={isDetailsVisible}
+                    onToggle={toggleDetails}
                   />
                 ) : null}
               </div>
