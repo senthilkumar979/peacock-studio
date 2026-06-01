@@ -7,12 +7,15 @@ import { DashboardEmptyState } from '@/components/dashboard/DashboardEmptyState'
 import { DashboardFeaturedDoc } from '@/components/dashboard/DashboardFeaturedDoc';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { DashboardLibraryToolbar } from '@/components/dashboard/DashboardLibraryToolbar';
+import { DashboardRoutesSection } from '@/components/dashboard/DashboardRoutesSection';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { FlowLibrarySection } from '@/components/dashboard/FlowLibrarySection';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { readDashboardViewMode, writeDashboardViewMode } from '@/constants/dashboard';
 import { useFlowLibrary } from '@/hooks/useFlowLibrary';
+import { useRouteLibrary } from '@/hooks/useRouteLibrary';
 import type { DashboardViewMode, SavedFlowSummary } from '@/types/savedFlow';
+import type { SavedRouteSummary } from '@/types/route';
 import {
   filterSummaries,
   sortSummaries,
@@ -21,10 +24,17 @@ import {
 
 export const Dashboard = () => {
   const { summaries, stats, isLoading, error, deleteDocument } = useFlowLibrary();
+  const {
+    summaries: routeSummaries,
+    isLoading: isRoutesLoading,
+    error: routesError,
+    deleteRouteById,
+  } = useRouteLibrary();
   const [viewMode, setViewMode] = useState<DashboardViewMode>(readDashboardViewMode);
   const [sortMode, setSortMode] = useState<DashboardSortMode>('newest');
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingDelete, setPendingDelete] = useState<SavedFlowSummary | null>(null);
+  const [pendingRouteDelete, setPendingRouteDelete] = useState<SavedRouteSummary | null>(null);
 
   const displayedSummaries = useMemo(
     () => sortSummaries(filterSummaries(summaries, searchQuery), sortMode),
@@ -46,6 +56,11 @@ export const Dashboard = () => {
     void deleteDocument(pendingDelete.id).finally(() => setPendingDelete(null));
   };
 
+  const handleConfirmRouteDelete = () => {
+    if (!pendingRouteDelete) return;
+    void deleteRouteById(pendingRouteDelete.id).finally(() => setPendingRouteDelete(null));
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-100/80">
       <div className="flex-1">
@@ -54,6 +69,19 @@ export const Dashboard = () => {
         <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-12">
         <div className="-mt-14 space-y-8">
           <DashboardStats stats={stats} />
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.15 }}
+          >
+            <DashboardRoutesSection
+              summaries={routeSummaries}
+              isLoading={isRoutesLoading}
+              error={routesError}
+              onRequestDelete={setPendingRouteDelete}
+            />
+          </motion.div>
 
           {!isLoading && !error && latestSummary ? (
             <DashboardFeaturedDoc summary={latestSummary} />
@@ -136,6 +164,19 @@ export const Dashboard = () => {
         isDestructive
         onConfirm={handleConfirmDelete}
         onCancel={() => setPendingDelete(null)}
+      />
+      <ConfirmDialog
+        isOpen={Boolean(pendingRouteDelete)}
+        title="Delete route?"
+        description={
+          pendingRouteDelete
+            ? `"${pendingRouteDelete.title}" and its ${pendingRouteDelete.chapterCount} chapters will be removed from this device. This cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        isDestructive
+        onConfirm={handleConfirmRouteDelete}
+        onCancel={() => setPendingRouteDelete(null)}
       />
     </div>
   );
