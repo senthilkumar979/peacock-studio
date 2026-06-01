@@ -1,5 +1,9 @@
 import type { RecordingStateSnapshot } from '@peacock/shared';
 import { sendExtensionMessage } from '../src/messaging/sendExtensionMessage';
+import {
+  runStartRecordingCountdown,
+  type StartRecordingCountdownUi,
+} from './startRecordingCountdown';
 
 const logoEl = document.getElementById('logo') as HTMLImageElement | null;
 const pageHostEl = document.getElementById('page-host') as HTMLParagraphElement | null;
@@ -16,11 +20,15 @@ const quickScreenshotsPanel = document.getElementById('quick-screenshots-panel')
 const screenshotModeEl = document.getElementById('screenshot-mode') as HTMLSelectElement | null;
 const openDashboardBtn = document.getElementById('open-dashboard-btn') as HTMLButtonElement | null;
 const openEditorBtn = document.getElementById('open-editor-btn') as HTMLButtonElement | null;
+const countdownPanel = document.getElementById('countdown-panel') as HTMLElement | null;
+const countdownValueEl = document.getElementById('countdown-value') as HTMLParagraphElement | null;
+const popupRoot = document.querySelector('.popup') as HTMLElement | null;
 
 if (logoEl) logoEl.src = chrome.runtime.getURL('logo.png');
 
 let lastState: RecordingStateSnapshot | null = null;
 let isBusy = false;
+let isCountdownActive = false;
 
 type ScreenshotMode = 'full-page' | 'selection' | 'visible';
 
@@ -68,7 +76,51 @@ function setQuickScreenshotsVisible(visible: boolean): void {
   quickScreenshotsPanel.style.display = visible ? '' : 'none';
 }
 
+const countdownUi: StartRecordingCountdownUi = {
+  setCountdownVisible(visible) {
+    if (countdownPanel) countdownPanel.hidden = !visible;
+    popupRoot?.classList.toggle('popup--countdown', visible);
+    if (startBtn) startBtn.hidden = visible;
+  },
+  setCountdownValue(value) {
+    if (countdownValueEl) countdownValueEl.textContent = String(value);
+    setPopupFeedback('Get ready to record', `Starting in ${value}…`);
+  },
+  setStatusBadgeCountdown(value) {
+    if (!statusBadgeEl) return;
+    statusBadgeEl.textContent = String(value);
+    statusBadgeEl.className = 'status-badge status-badge--countdown';
+  },
+};
+
+async function startRecordingWithCountdown(): Promise<void> {
+  if (isBusy || isCountdownActive || lastState?.status !== 'idle') return;
+
+  isBusy = true;
+  isCountdownActive = true;
+  setButtonsDisabled(true);
+  setQuickScreenshotsVisible(false);
+
+  try {
+    await runStartRecordingCountdown(countdownUi, async () => {
+      await sendExtensionMessage({ type: 'START_RECORDING' });
+      window.close();
+    });
+  } catch (error) {
+    isCountdownActive = false;
+    countdownUi.setCountdownVisible(false);
+    setPopupFeedback(
+      'Could not start recording.',
+      error instanceof Error ? error.message : 'Please try again.',
+    );
+    isBusy = false;
+    await refreshState();
+  }
+}
+
 function renderState(state: RecordingStateSnapshot): void {
+  if (isCountdownActive) return;
+
   lastState = state;
   if (eventCountEl) eventCountEl.textContent = String(state.eventCount);
   if (elapsedEl) elapsedEl.textContent = formatElapsed(state.startedAt);
@@ -181,7 +233,7 @@ async function runScreenshotTool(mode: ScreenshotMode): Promise<void> {
   }
 }
 
-startBtn?.addEventListener('click', () => void runAction('START_RECORDING'));
+startBtn?.addEventListener('click', () => void startRecordingWithCountdown());
 pauseBtn?.addEventListener('click', () => void runAction('PAUSE_RECORDING'));
 resumeBtn?.addEventListener('click', () => void runAction('RESUME_RECORDING'));
 stopBtn?.addEventListener('click', () => void runAction('STOP_RECORDING'));
