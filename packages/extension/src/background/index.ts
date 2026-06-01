@@ -19,6 +19,7 @@ import {
   setRecordingStatus,
 } from './recordingState';
 import { canInjectIntoUrl, ensureContentScript } from './injectContentScript';
+import { buildCaptureResultHandoff } from './captureHandoff';
 import { captureScreenshot, captureVisibleScreenshotBlob } from './screenshot';
 
 const APP_URL = import.meta.env.VITE_APP_URL ?? 'http://localhost:5173/editor';
@@ -478,6 +479,12 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
           console.info('[Peacock] Content script ready on', message.url);
           sendResponse({ success: true });
           break;
+
+        case 'GET_CAPTURE_RESULT': {
+          const handoff = await buildCaptureResultHandoff(message.captureId);
+          sendResponse(handoff);
+          break;
+        }
 
         case 'APP_READY':
         case 'GET_PENDING_HANDOFF': {

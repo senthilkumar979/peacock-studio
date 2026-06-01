@@ -22,6 +22,7 @@ export type ExtensionMessage =
   | { type: 'RECORDING_STATE'; state: RecordingStateSnapshot }
   | { type: 'APP_READY'; tabId?: number }
   | { type: 'GET_PENDING_HANDOFF' }
+  | { type: 'GET_CAPTURE_RESULT'; captureId: string }
   | { type: 'CONTENT_SCRIPT_READY'; url: string }
   | { type: 'PING' }
   | { type: 'RECORDING_STARTED' }

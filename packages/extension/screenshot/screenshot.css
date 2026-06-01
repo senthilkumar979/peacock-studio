@@ -121,6 +121,12 @@ button {
   transform: translateY(-1px);
 }
 
+.btn--accent {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(109, 40, 217, 0.24);
+}
+
 .btn--primary {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #ffffff;

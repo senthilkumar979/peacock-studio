@@ -6,6 +6,8 @@ import { NewRoute } from '@/pages/NewRoute';
 import { Player } from '@/pages/Player';
 import { RouteBuilder } from '@/pages/RouteBuilder';
 import { RouteLearner } from '@/pages/RouteLearner';
+import { CaptureEditor } from '@/pages/CaptureEditor';
+import { CaptureEditorLegacyRedirect } from '@/pages/CaptureEditorLegacyRedirect';
 
 export const App = () => (
   <BrowserRouter>
@@ -18,6 +20,11 @@ export const App = () => (
       <Route path="/routes/:routeId" element={<RouteLearner />} />
       <Route path="/docs/:documentId" element={<Player />} />
       <Route path="/docs/:documentId/edit" element={<Editor />} />
+      <Route path="/capture/:captureId/edit" element={<CaptureEditor />} />
+      <Route
+        path="/editor/capture/:captureId/edit"
+        element={<CaptureEditorLegacyRedirect />}
+      />
       <Route path="/player" element={<Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

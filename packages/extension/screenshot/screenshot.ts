@@ -1,10 +1,12 @@
-import { deleteCaptureResult, getCaptureResult } from '../src/storage/db';
+import { getCaptureResult } from '../src/storage/db';
+import { getCaptureEditorPageUrl } from '../src/utils/appUrl';
 
 const logoEl = document.getElementById('logo') as HTMLImageElement;
 const titleEl = document.getElementById('capture-title') as HTMLHeadingElement;
 const subtitleEl = document.getElementById('capture-subtitle') as HTMLParagraphElement;
 const statusEl = document.getElementById('capture-status') as HTMLParagraphElement;
 const imageEl = document.getElementById('capture-image') as HTMLImageElement;
+const editBtn = document.getElementById('edit-btn') as HTMLButtonElement;
 const downloadBtn = document.getElementById('download-btn') as HTMLButtonElement;
 const copyBtn = document.getElementById('copy-btn') as HTMLButtonElement;
 
@@ -21,8 +23,14 @@ function getModeLabel(mode: string): string {
 }
 
 function setButtonsEnabled(enabled: boolean): void {
+  if (editBtn) editBtn.disabled = !enabled;
   downloadBtn.disabled = !enabled;
   copyBtn.disabled = !enabled;
+}
+
+function openCaptureEditor(): void {
+  if (!captureId) return;
+  void chrome.tabs.create({ url: getCaptureEditorPageUrl(captureId) });
 }
 
 async function loadCapture(): Promise<void> {
@@ -47,11 +55,10 @@ async function loadCapture(): Promise<void> {
   imageEl.hidden = false;
 
   titleEl.textContent = getModeLabel(capture.mode);
-  subtitleEl.textContent = 'Review the screenshot below, then download it or copy it to your clipboard.';
+  subtitleEl.textContent =
+    'Download the original capture here, or open the editor for backgrounds, padding, and more.';
   statusEl.textContent = 'Screenshot ready.';
   setButtonsEnabled(true);
-
-  await deleteCaptureResult(capture.id).catch(() => {});
 }
 
 downloadBtn.addEventListener('click', () => {
@@ -77,6 +84,8 @@ copyBtn.addEventListener('click', async () => {
       error instanceof Error ? `Copy failed: ${error.message}` : 'Copy failed.';
   }
 });
+
+editBtn?.addEventListener('click', () => openCaptureEditor());
 
 window.addEventListener('beforeunload', () => {
   if (imageUrl) URL.revokeObjectURL(imageUrl);
