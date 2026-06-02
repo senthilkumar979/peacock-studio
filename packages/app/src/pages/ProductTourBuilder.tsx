@@ -62,9 +62,12 @@ export const ProductTourBuilder = () => {
             <ProductTourOverviewCanvas tour={builderTour} />
           ) : null}
           {builderTour ? (
-            <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                 Completion CTA
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                Optional action shown on the final completion slide.
               </p>
               <input
                 value={builderTour.completionCta?.label ?? ""}
@@ -75,7 +78,7 @@ export const ProductTourBuilder = () => {
                   })
                 }
                 placeholder="Button label"
-                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                className="mt-3 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500/30"
               />
               <input
                 value={builderTour.completionCta?.url ?? ""}
@@ -86,7 +89,7 @@ export const ProductTourBuilder = () => {
                   })
                 }
                 placeholder="https://"
-                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500/30"
               />
             </section>
           ) : null}

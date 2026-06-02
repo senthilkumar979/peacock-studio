@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { AlignLeft, Layers3, Plus, Trash2 } from 'lucide-react';
 import { AddPeacockModal } from '@/route-builder/AddPeacockModal';
 import { RoutePeacockList } from '@/route-builder/RoutePeacockList';
 import { useProductTourBuilderStore } from '@/store/productTourBuilderStore';
@@ -29,40 +29,70 @@ export const TourFeatureCard = ({
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   return (
-    <article className="relative z-10 rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex gap-3 border-b border-slate-100 p-4 sm:p-5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-peacock-500 to-brand-violet text-sm font-bold text-white">
-          {featureNumber}
+    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md shadow-slate-200/60">
+      <div className="border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-peacock-50/40 px-4 py-4 sm:px-5">
+        <div className="flex gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-peacock-500 to-brand-violet text-sm font-bold text-white shadow-sm">
+            {featureNumber}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Feature {featureNumber}
+            </p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Define what users should learn in this part.
+            </p>
+          </div>
+          {canDelete ? (
+            <button
+              type="button"
+              onClick={() => deleteFeature(feature.id)}
+              className="h-fit rounded-lg border border-red-200 bg-white p-2 text-red-600 transition hover:bg-red-50"
+              aria-label={`Delete feature ${featureNumber}`}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          ) : null}
         </div>
-        <div className="min-w-0 flex-1 space-y-2">
+      </div>
+
+      <div className="space-y-4 p-4 sm:p-5">
+        <label className="block text-sm">
+          <span className="inline-flex items-center gap-1.5 font-semibold text-slate-700">
+            <Layers3 className="h-4 w-4 text-slate-400" aria-hidden />
+            Feature title
+          </span>
           <input
             value={feature.title}
             onChange={(event) => updateFeature(feature.id, event.target.value, feature.description)}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500"
+            className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500/30"
             aria-label={`Feature ${featureNumber} title`}
+            placeholder="e.g. Onboarding & first workspace setup"
           />
+        </label>
+
+        <label className="block text-sm">
+          <span className="inline-flex items-center gap-1.5 font-semibold text-slate-700">
+            <AlignLeft className="h-4 w-4 text-slate-400" aria-hidden />
+            Feature details
+          </span>
           <textarea
             value={feature.description}
             onChange={(event) => updateFeature(feature.id, feature.title, event.target.value)}
             rows={4}
-            placeholder="Feature description (optional)"
-            className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 outline-none focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500"
+            placeholder="What should users understand after this feature?"
+            className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 outline-none transition focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500/30"
           />
-        </div>
-        {canDelete ? (
-          <button
-            type="button"
-            onClick={() => deleteFeature(feature.id)}
-            className="h-fit rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50"
-            aria-label={`Delete feature ${featureNumber}`}
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        ) : null}
+        </label>
       </div>
 
-      <div className="space-y-3 p-4 sm:p-5">
-        <p className="text-xs font-medium text-slate-500">Demos ({feature.demos.length})</p>
+      <div className="border-t border-slate-100 bg-slate-50/40 p-4 sm:p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Linked demos ({feature.demos.length})
+          </p>
+          <p className="text-xs text-slate-500">Order matters in learner playback</p>
+        </div>
         <RoutePeacockList
           peacocks={feature.demos}
           summariesById={summariesById}
@@ -72,7 +102,7 @@ export const TourFeatureCard = ({
         <button
           type="button"
           onClick={() => setIsPickerOpen(true)}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-peacock-200 bg-peacock-50/30 px-3 py-2.5 text-sm font-medium text-peacock-800 hover:bg-peacock-50"
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-peacock-300 bg-white px-3 py-2.5 text-sm font-semibold text-peacock-800 transition hover:bg-peacock-50"
         >
           <Plus className="h-4 w-4" aria-hidden />
           Add demo
