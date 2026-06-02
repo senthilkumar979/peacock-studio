@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import type { ReactNode } from 'react';
+import { motion } from "framer-motion";
+import type { ReactNode } from "react";
 
 interface BrowserMockupProps {
   url: string;
@@ -7,28 +7,29 @@ interface BrowserMockupProps {
   isFluid?: boolean;
 }
 
-function formatAddressBarUrl(url: string): string {
+function getDisplayUrl(url: string): string {
   if (!url) return 'about:blank';
 
   try {
-    const parsed = new URL(url);
-    const display = parsed.href;
-    if (display.length <= 52) return display;
-    return `${display.slice(0, 49)}…`;
+    return new URL(url).href;
   } catch {
-    return url.length > 52 ? `${url.slice(0, 49)}…` : url;
+    return url;
   }
 }
 
-export const BrowserMockup = ({ url, children, isFluid = false }: BrowserMockupProps) => {
-  const address = formatAddressBarUrl(url);
+export const BrowserMockup = ({
+  url,
+  children,
+  isFluid = false,
+}: BrowserMockupProps) => {
+  const displayUrl = getDisplayUrl(url);
 
   return (
     <div
       className={`flex flex-col overflow-hidden rounded-xl bg-slate-800 ring-1 ring-slate-900/10 ${
         isFluid
-          ? 'w-full max-w-full shadow-xl'
-          : 'mx-auto w-fit max-w-[calc(100vw-2rem)] shadow-2xl'
+          ? "w-full max-w-full shadow-xl"
+          : "mx-auto w-fit max-w-[calc(100vw-2rem)] shadow-2xl"
       }`}
     >
       <div className="flex shrink-0 items-center gap-3 border-b border-slate-700/80 bg-slate-800 px-4 py-3">
@@ -54,13 +55,15 @@ export const BrowserMockup = ({ url, children, isFluid = false }: BrowserMockupP
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
-            className="truncate font-medium"
+            className="min-w-0 max-w-[85%] truncate font-medium"
           >
-            {address}
+            {displayUrl}
           </motion.span>
         </div>
       </div>
-      <div className={`relative bg-slate-100 ${isFluid ? 'w-full' : ''}`}>{children}</div>
+      <div className={`relative bg-slate-100 ${isFluid ? "w-full" : ""}`}>
+        {children}
+      </div>
     </div>
   );
 };

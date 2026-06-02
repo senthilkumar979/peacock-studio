@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -7,17 +7,23 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { BookMarked, GitBranch, GripVertical, Link2, Plus } from 'lucide-react';
-import { isFlowBranch, isFlowSection, isFlowStep, type FlowOutlineItem, type FlowStep } from '@peacock/shared';
-import { useFlowStore } from '@/store/flowStore';
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { BookMarked, GitBranch, GripVertical, Link2, Plus } from "lucide-react";
+import {
+  isFlowBranch,
+  isFlowSection,
+  isFlowStep,
+  type FlowOutlineItem,
+  type FlowStep,
+} from "@peacock/shared";
+import { useFlowStore } from "@/store/flowStore";
 
 function getStepDisplayNumber(items: FlowOutlineItem[], index: number): number {
   let count = 0;
@@ -41,9 +47,10 @@ const SortableOutlineItem = ({
   isSelected,
   onSelect,
   children,
-  className = '',
+  className = "",
 }: SortableOutlineItemProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   return (
@@ -53,8 +60,8 @@ const SortableOutlineItem = ({
       style={style}
       className={`flex items-stretch gap-2 rounded-lg border bg-white p-2 transition ${className} ${
         isSelected
-          ? 'border-peacock-500 bg-peacock-50'
-          : 'border-slate-200 hover:border-slate-300'
+          ? "border-peacock-500 bg-peacock-50"
+          : "border-slate-200 hover:border-slate-300"
       }`}
     >
       <button
@@ -67,7 +74,11 @@ const SortableOutlineItem = ({
       >
         <GripVertical className="h-4 w-4" />
       </button>
-      <button type="button" onClick={() => onSelect(id)} className="min-w-0 flex-1 text-left">
+      <button
+        type="button"
+        onClick={() => onSelect(id)}
+        className="min-w-0 flex-1 text-left"
+      >
         {children}
       </button>
     </div>
@@ -81,7 +92,12 @@ interface SortableStepProps {
   onSelect: (id: string) => void;
 }
 
-const SortableStep = ({ step, stepNumber, isSelected, onSelect }: SortableStepProps) => (
+const SortableStep = ({
+  step,
+  stepNumber,
+  isSelected,
+  onSelect,
+}: SortableStepProps) => (
   <SortableOutlineItem id={step.id} isSelected={isSelected} onSelect={onSelect}>
     <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
       Step {stepNumber}
@@ -102,7 +118,11 @@ interface SortableBranchProps {
   onSelect: (id: string) => void;
 }
 
-const SortableBranch = ({ branch, isSelected, onSelect }: SortableBranchProps) => (
+const SortableBranch = ({
+  branch,
+  isSelected,
+  onSelect,
+}: SortableBranchProps) => (
   <SortableOutlineItem
     id={branch.id}
     isSelected={isSelected}
@@ -112,17 +132,25 @@ const SortableBranch = ({ branch, isSelected, onSelect }: SortableBranchProps) =
     <div className="flex items-center gap-2">
       <GitBranch className="h-4 w-4 shrink-0 text-brand-violet" aria-hidden />
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-violet">Branch</p>
-        <p className="mt-0.5 text-sm font-semibold text-slate-900">{branch.title}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-violet">
+          Branch
+        </p>
+        <p className="mt-0.5 text-sm font-semibold text-slate-900">
+          {branch.title}
+        </p>
         <p className="text-xs text-slate-500">
-          {branch.pathCount} {branch.pathCount === 1 ? 'path' : 'paths'}
+          {branch.pathCount} {branch.pathCount === 1 ? "path" : "paths"}
         </p>
       </div>
     </div>
   </SortableOutlineItem>
 );
 
-const SortableSection = ({ section, isSelected, onSelect }: SortableSectionProps) => (
+const SortableSection = ({
+  section,
+  isSelected,
+  onSelect,
+}: SortableSectionProps) => (
   <SortableOutlineItem
     id={section.id}
     isSelected={isSelected}
@@ -132,8 +160,12 @@ const SortableSection = ({ section, isSelected, onSelect }: SortableSectionProps
     <div className="flex items-center gap-2">
       <BookMarked className="h-4 w-4 shrink-0 text-brand-violet" aria-hidden />
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-violet">Section</p>
-        <p className="mt-0.5 text-sm font-semibold text-slate-900">{section.title}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-violet">
+          Section
+        </p>
+        <p className="mt-0.5 text-sm font-semibold text-slate-900">
+          {section.title}
+        </p>
       </div>
     </div>
   </SortableOutlineItem>
@@ -154,7 +186,9 @@ export const StepList = ({ onLinkPeacockDoc }: StepListProps) => {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -170,15 +204,17 @@ export const StepList = ({ onLinkPeacockDoc }: StepListProps) => {
     if (!selectedOutlineId || !listRef.current) return;
 
     const selected = listRef.current.querySelector<HTMLElement>(
-      `[data-outline-id="${selectedOutlineId}"]`
+      `[data-outline-id="${selectedOutlineId}"]`,
     );
-    selected?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    selected?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [selectedOutlineId]);
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
       <div className="flex shrink-0 items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Outline</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Outline
+        </h2>
       </div>
 
       <div className="flex shrink-0 flex-col gap-2">
@@ -207,7 +243,7 @@ export const StepList = ({ onLinkPeacockDoc }: StepListProps) => {
             className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-brand-violet/40 bg-white px-2 py-2 text-xs font-medium text-brand-violet hover:bg-brand-violet/5"
           >
             <Link2 className="h-3.5 w-3.5" aria-hidden />
-            Link peacock doc
+            Create a branching point
           </button>
         ) : null}
       </div>
@@ -218,8 +254,15 @@ export const StepList = ({ onLinkPeacockDoc }: StepListProps) => {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={steps.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={steps.map((item) => item.id)}
+              strategy={verticalListSortingStrategy}
+            >
               <div
                 ref={listRef}
                 className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-1"

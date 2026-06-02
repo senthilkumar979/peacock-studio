@@ -22,7 +22,7 @@ export const FlowBranchCard = ({ branch }: FlowBranchCardProps) => {
 
       {paths.length === 0 ? (
         <p className="mt-6 rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-          No paths linked yet. Use &quot;Link peacock doc&quot; or &quot;Add path&quot; in the panel.
+          No paths linked yet. Use &quot;Create a branching point&quot; or &quot;Add path&quot; in the panel.
         </p>
       ) : (
         <ul

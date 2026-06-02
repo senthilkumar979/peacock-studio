@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, X } from 'lucide-react';
-import { formatPathStepRange, getPlayableSteps } from '@peacock/shared';
-import { AddPeacockModal } from '@/route-builder/AddPeacockModal';
-import { getFlowDocument, listFlowSummaries } from '@/services/flowLibraryService';
-import type { SavedFlowSummary } from '@/types/savedFlow';
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, X } from "lucide-react";
+import { formatPathStepRange, getPlayableSteps } from "@peacock/shared";
+import { AddPeacockModal } from "@/route-builder/AddPeacockModal";
+import {
+  getFlowDocument,
+  listFlowSummaries,
+} from "@/services/flowLibraryService";
+import type { SavedFlowSummary } from "@/types/savedFlow";
 
 interface LinkPeacockDocModalProps {
   isOpen: boolean;
@@ -28,21 +31,21 @@ export const LinkPeacockDocModal = ({
   const [summaries, setSummaries] = useState<SavedFlowSummary[]>([]);
   const [isPickerOpen, setIsPickerOpen] = useState(true);
   const [targetDocumentId, setTargetDocumentId] = useState<string | null>(null);
-  const [targetTitle, setTargetTitle] = useState('');
-  const [fromStepId, setFromStepId] = useState('');
-  const [toStepId, setToStepId] = useState('');
-  const [label, setLabel] = useState('');
+  const [targetTitle, setTargetTitle] = useState("");
+  const [fromStepId, setFromStepId] = useState("");
+  const [toStepId, setToStepId] = useState("");
+  const [label, setLabel] = useState("");
   const [playableStepIds, setPlayableStepIds] = useState<string[]>([]);
-  const [rangeLabel, setRangeLabel] = useState('');
+  const [rangeLabel, setRangeLabel] = useState("");
 
   useEffect(() => {
     if (!isOpen) return;
     void listFlowSummaries().then(setSummaries);
     setIsPickerOpen(true);
     setTargetDocumentId(null);
-    setFromStepId('');
-    setToStepId('');
-    setLabel('');
+    setFromStepId("");
+    setToStepId("");
+    setLabel("");
   }, [isOpen]);
 
   useEffect(() => {
@@ -76,7 +79,9 @@ export const LinkPeacockDocModal = ({
     [hostDocumentId],
   );
 
-  const canConfirm = Boolean(targetDocumentId && fromStepId && toStepId && label.trim());
+  const canConfirm = Boolean(
+    targetDocumentId && fromStepId && toStepId && label.trim(),
+  );
 
   if (!isOpen) return null;
 
@@ -86,14 +91,14 @@ export const LinkPeacockDocModal = ({
         isOpen
         summaries={summaries}
         excludedDocumentIds={excludedIds}
-        title="Link peacock doc"
+        title="Create a branching point"
         closeOnSelect={false}
         onClose={onClose}
         onSelect={(documentId) => {
           const summary = summaries.find((item) => item.id === documentId);
           setTargetDocumentId(documentId);
-          setTargetTitle(summary?.title ?? 'Linked demo');
-          setLabel(summary?.title ?? 'Path');
+          setTargetTitle(summary?.title ?? "Linked demo");
+          setLabel(summary?.title ?? "Path");
           setIsPickerOpen(false);
         }}
       />
@@ -116,12 +121,18 @@ export const LinkPeacockDocModal = ({
             <ChevronLeft className="h-4 w-4" aria-hidden />
             Change demo
           </button>
-          <button type="button" onClick={onClose} className="rounded-lg p-2 hover:bg-slate-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-2 hover:bg-slate-100"
+          >
             <X className="h-4 w-4" aria-hidden />
           </button>
         </div>
 
-        <h2 className="mt-2 text-lg font-bold text-slate-900">Link peacock doc</h2>
+        <h2 className="mt-2 text-lg font-bold text-slate-900">
+          Create a branching point
+        </h2>
         <p className="mt-1 text-sm text-slate-600">{targetTitle}</p>
 
         <label className="mt-5 block text-sm font-medium text-slate-700">
@@ -168,7 +179,11 @@ export const LinkPeacockDocModal = ({
         <p className="mt-2 text-xs text-slate-500">{rangeLabel}</p>
 
         <div className="mt-6 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2 text-sm">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border px-4 py-2 text-sm"
+          >
             Cancel
           </button>
           <button
@@ -179,8 +194,9 @@ export const LinkPeacockDocModal = ({
               onConfirm({
                 targetDocumentId,
                 targetTitle,
-                targetDescription: summaries.find((item) => item.id === targetDocumentId)
-                  ?.description ?? '',
+                targetDescription:
+                  summaries.find((item) => item.id === targetDocumentId)
+                    ?.description ?? "",
                 fromStepId,
                 toStepId,
                 label: label.trim(),
