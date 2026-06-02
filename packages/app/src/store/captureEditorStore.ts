@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import {
-  CUSTOM_CAPTURE_BACKGROUND_ID,
   DEFAULT_CAPTURE_EDITOR_SETTINGS,
   type CaptureEditorSettings,
   type CaptureEditorTool,
@@ -23,8 +22,6 @@ interface CaptureEditorState {
   commitSettings: (next: CaptureEditorSettings) => void;
   patchSettings: (patch: Partial<CaptureEditorSettings>, commit?: boolean) => void;
   setBackgroundPresetId: (backgroundPresetId: string) => void;
-  setCustomBackground: (objectUrl: string) => void;
-  clearCustomBackground: () => void;
   setPadding: (padding: number) => void;
   setCornerRadius: (cornerRadius: number) => void;
   setTitle: (title: string) => void;
@@ -83,26 +80,6 @@ export const useCaptureEditorStore = create<CaptureEditorState>((set, get) => ({
 
   setBackgroundPresetId: (backgroundPresetId) => {
     get().commitSettings({ ...get().settings, backgroundPresetId });
-  },
-
-  setCustomBackground: (objectUrl) => {
-    const previous = get().settings.customBackgroundUrl;
-    if (previous) URL.revokeObjectURL(previous);
-    get().commitSettings({
-      ...get().settings,
-      backgroundPresetId: CUSTOM_CAPTURE_BACKGROUND_ID,
-      customBackgroundUrl: objectUrl,
-    });
-  },
-
-  clearCustomBackground: () => {
-    const previous = get().settings.customBackgroundUrl;
-    if (previous) URL.revokeObjectURL(previous);
-    get().commitSettings({
-      ...get().settings,
-      customBackgroundUrl: null,
-      backgroundPresetId: 'rose-gold',
-    });
   },
 
   setPadding: (padding) => {
@@ -180,8 +157,6 @@ export const useCaptureEditorStore = create<CaptureEditorState>((set, get) => ({
   setStatusMessage: (statusMessage) => set({ statusMessage }),
 
   resetSettings: () => {
-    const previous = get().settings.customBackgroundUrl;
-    if (previous) URL.revokeObjectURL(previous);
     const initial = cloneCaptureSettings(DEFAULT_CAPTURE_EDITOR_SETTINGS);
     set({
       settings: initial,

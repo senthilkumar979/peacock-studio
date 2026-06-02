@@ -11,6 +11,7 @@ import {
 import { drawCaptureOverlay } from './drawCaptureOverlay';
 import { hitTestCaptureSelection } from './captureHitTest';
 import { paintCaptureComposite } from './paintCaptureComposite';
+import { computeCanvasDisplayScale } from './computeCanvasDisplayScale';
 import {
   getPrivacyRegionHandleCursor,
   hitTestPrivacyRegionHandle,
@@ -24,8 +25,6 @@ interface CaptureEditorCanvasProps {
   naturalHeight: number;
 }
 
-const PREVIEW_MAX_EDGE = 1200;
-
 type RegionDragState =
   | { kind: 'move'; startX: number; startY: number; origin: NormalizedRect }
   | { kind: 'resize'; handle: PrivacyRegionHandle; origin: NormalizedRect };
@@ -35,6 +34,7 @@ export const CaptureEditorCanvas = ({
   naturalWidth,
   naturalHeight,
 }: CaptureEditorCanvasProps) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const layoutRef = useRef<ReturnType<typeof computeCaptureLayout> | null>(null);
@@ -48,8 +48,23 @@ export const CaptureEditorCanvas = ({
   const activeTool = useCaptureEditorStore((state) => state.activeTool);
   const selectedId = useCaptureEditorStore((state) => state.selectedId);
   const [draftRect, setDraftRect] = useState<NormalizedRect | null>(null);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
   const isCropPreview = activeTool === 'crop';
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
+
+    const updateSize = () => {
+      setContainerSize({ width: node.clientWidth, height: node.clientHeight });
+    };
+
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   const redraw = useCallback(async () => {
     const canvas = canvasRef.current;
@@ -60,16 +75,26 @@ export const CaptureEditorCanvas = ({
       cropPreview: isCropPreview,
     });
     layoutRef.current = layout;
-    const scale = Math.min(1, PREVIEW_MAX_EDGE / Math.max(layout.canvasWidth, layout.canvasHeight));
-    scaleRef.current = scale;
 
-    canvas.width = Math.max(1, Math.round(layout.canvasWidth * scale));
-    canvas.height = Math.max(1, Math.round(layout.canvasHeight * scale));
+    const { bitmapScale, fitScale } = computeCanvasDisplayScale(
+      layout.canvasWidth,
+      layout.canvasHeight,
+      containerSize.width || layout.canvasWidth,
+      containerSize.height || layout.canvasHeight,
+    );
+    scaleRef.current = bitmapScale;
+
+    canvas.width = Math.max(1, Math.round(layout.canvasWidth * bitmapScale));
+    canvas.height = Math.max(1, Math.round(layout.canvasHeight * bitmapScale));
+    canvas.style.width = `${layout.canvasWidth * fitScale}px`;
+    canvas.style.height = `${layout.canvasHeight * fitScale}px`;
 
     const context = canvas.getContext('2d');
     if (!context) return;
 
-    context.setTransform(scale, 0, 0, scale, 0, 0);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.setTransform(bitmapScale, 0, 0, bitmapScale, 0, 0);
     await paintCaptureComposite(context, {
       image,
       naturalWidth,
@@ -79,7 +104,7 @@ export const CaptureEditorCanvas = ({
     });
     drawCaptureOverlay(context, layout, settings, selectedId, draftRef.current, activeTool);
     context.setTransform(1, 0, 0, 1, 0, 0);
-  }, [activeTool, isCropPreview, naturalHeight, naturalWidth, selectedId, settings]);
+  }, [activeTool, containerSize.height, containerSize.width, isCropPreview, naturalHeight, naturalWidth, selectedId, settings]);
 
   useEffect(() => {
     const image = new Image();
@@ -300,11 +325,14 @@ export const CaptureEditorCanvas = ({
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-100/80">
+    <div
+      ref={containerRef}
+      className="flex min-h-0 flex-1 items-center justify-center overflow-auto rounded-2xl border border-slate-200 bg-slate-100/80 p-4"
+    >
       <canvas
         ref={canvasRef}
         tabIndex={0}
-        className="mx-auto max-h-full w-full touch-none outline-none focus-visible:ring-2 focus-visible:ring-peacock-500 focus-visible:ring-offset-2"
+        className="max-h-full max-w-full touch-none outline-none focus-visible:ring-2 focus-visible:ring-peacock-500 focus-visible:ring-offset-2"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -314,3 +342,4 @@ export const CaptureEditorCanvas = ({
     </div>
   );
 };
+

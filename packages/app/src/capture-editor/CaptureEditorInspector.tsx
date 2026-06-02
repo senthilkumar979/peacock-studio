@@ -20,7 +20,7 @@ export const CaptureEditorInspector = () => {
   if (region.mode === 'redact') {
     return (
       <p className="text-xs leading-relaxed text-slate-500">
-        Redact fills the region with solid white so underlying content is hidden.
+        Redact covers the region with a soft white overlay to hide underlying content.
       </p>
     );
   }

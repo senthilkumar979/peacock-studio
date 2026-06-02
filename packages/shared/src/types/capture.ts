@@ -26,8 +26,6 @@ export interface CaptureBackgroundPreset {
   imageShadow?: boolean;
 }
 
-export const CUSTOM_CAPTURE_BACKGROUND_ID = 'custom';
-
 export interface CapturePrivacyRegion {
   id: string;
   rect: NormalizedRect;
@@ -38,7 +36,6 @@ export interface CapturePrivacyRegion {
 
 export interface CaptureEditorSettings {
   backgroundPresetId: string;
-  customBackgroundUrl: string | null;
   padding: number;
   cornerRadius: number;
   crop: NormalizedRect;
@@ -57,7 +54,6 @@ export const DEFAULT_CAPTURE_CROP: NormalizedRect = {
 
 export const DEFAULT_CAPTURE_EDITOR_SETTINGS: CaptureEditorSettings = {
   backgroundPresetId: 'rose-gold',
-  customBackgroundUrl: null,
   padding: 60,
   cornerRadius: 48,
   crop: { ...DEFAULT_CAPTURE_CROP },

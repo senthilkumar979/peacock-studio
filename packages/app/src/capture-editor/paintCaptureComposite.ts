@@ -1,11 +1,7 @@
-import {
-  CUSTOM_CAPTURE_BACKGROUND_ID,
-  getCaptureBackgroundPreset,
-  type CaptureEditorSettings,
-} from '@peacock/shared';
+import { getCaptureBackgroundPreset, type CaptureEditorSettings } from '@peacock/shared';
 import { applyPrivacyRegions } from './applyPrivacyRegions';
 import { computeCaptureLayout } from './computeCaptureLayout';
-import { drawCaptureBackground, drawCustomCaptureBackground } from './drawCaptureBackground';
+import { drawCaptureBackground } from './drawCaptureBackground';
 import { drawCaptureHeader } from './drawCaptureHeader';
 
 export interface PaintCaptureInput {
@@ -95,27 +91,13 @@ export async function paintCaptureComposite(
   const layout = computeCaptureLayout(input.naturalWidth, input.naturalHeight, input.settings, {
     cropPreview: input.cropPreview,
   });
-  const useCustom =
-    input.settings.backgroundPresetId === CUSTOM_CAPTURE_BACKGROUND_ID &&
-    input.settings.customBackgroundUrl;
-
-  if (useCustom) {
-    await drawCustomCaptureBackground(
-      context,
-      layout.canvasWidth,
-      layout.canvasHeight,
-      input.settings.customBackgroundUrl!,
-    );
-  } else {
-    const preset =
-      getCaptureBackgroundPreset(input.settings.backgroundPresetId) ??
-      getCaptureBackgroundPreset('rose-gold')!;
-    drawCaptureBackground(context, layout.canvasWidth, layout.canvasHeight, preset);
-  }
+  const preset =
+    getCaptureBackgroundPreset(input.settings.backgroundPresetId) ??
+    getCaptureBackgroundPreset('rose-gold')!;
+  drawCaptureBackground(context, layout.canvasWidth, layout.canvasHeight, preset);
 
   drawCaptureHeader(context, layout, input.settings);
 
-  const preset = getCaptureBackgroundPreset(input.settings.backgroundPresetId);
-  await paintScreenshot(context, input, layout, Boolean(preset?.imageShadow && !useCustom));
+  await paintScreenshot(context, input, layout, Boolean(preset.imageShadow));
   return layout;
 }

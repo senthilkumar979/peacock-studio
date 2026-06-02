@@ -27,25 +27,3 @@ export function drawCaptureBackground(
   context.fillStyle = gradient;
   context.fillRect(0, 0, width, height);
 }
-
-export async function drawCustomCaptureBackground(
-  context: PaintContext,
-  width: number,
-  height: number,
-  imageUrl: string,
-): Promise<void> {
-  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Could not load custom background'));
-    img.src = imageUrl;
-  });
-
-  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-  const drawWidth = image.naturalWidth * scale;
-  const drawHeight = image.naturalHeight * scale;
-  const offsetX = (width - drawWidth) / 2;
-  const offsetY = (height - drawHeight) / 2;
-
-  context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
-}

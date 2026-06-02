@@ -1,6 +1,5 @@
 import {
   CAPTURE_BACKGROUND_PRESETS,
-  CUSTOM_CAPTURE_BACKGROUND_ID,
   getPresetSwatchCss,
 } from "@peacock/shared";
 import { useCaptureEditorStore } from "@/store/captureEditorStore";
@@ -11,12 +10,6 @@ export const CaptureEditorSidebar = () => {
   const setBackgroundPresetId = useCaptureEditorStore(
     (state) => state.setBackgroundPresetId,
   );
-  const setCustomBackground = useCaptureEditorStore(
-    (state) => state.setCustomBackground,
-  );
-  const clearCustomBackground = useCaptureEditorStore(
-    (state) => state.clearCustomBackground,
-  );
   const setPadding = useCaptureEditorStore((state) => state.setPadding);
   const setCornerRadius = useCaptureEditorStore(
     (state) => state.setCornerRadius,
@@ -24,9 +17,6 @@ export const CaptureEditorSidebar = () => {
   const setTitle = useCaptureEditorStore((state) => state.setTitle);
   const setDescription = useCaptureEditorStore((state) => state.setDescription);
   const commitSettings = useCaptureEditorStore((state) => state.commitSettings);
-
-  const isCustomActive =
-    settings.backgroundPresetId === CUSTOM_CAPTURE_BACKGROUND_ID;
 
   return (
     <aside className="flex w-72 shrink-0 flex-col gap-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -40,7 +30,9 @@ export const CaptureEditorSidebar = () => {
             type="text"
             value={settings.title}
             onChange={(event) => setTitle(event.target.value)}
-            onBlur={() => commitSettings(useCaptureEditorStore.getState().settings)}
+            onBlur={() =>
+              commitSettings(useCaptureEditorStore.getState().settings)
+            }
             placeholder="Add a title"
             className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-900"
           />
@@ -50,7 +42,9 @@ export const CaptureEditorSidebar = () => {
           <textarea
             value={settings.description}
             onChange={(event) => setDescription(event.target.value)}
-            onBlur={() => commitSettings(useCaptureEditorStore.getState().settings)}
+            onBlur={() =>
+              commitSettings(useCaptureEditorStore.getState().settings)
+            }
             placeholder="Add a short description"
             rows={3}
             className="mt-1 w-full resize-y rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-900"
@@ -58,7 +52,7 @@ export const CaptureEditorSidebar = () => {
         </label>
       </div>
 
-      <div className="flex min-h-0 flex-col gap-3 p-4">
+      <div className="flex min-h-0 flex-col gap-3 p-4 py-1">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
           Backgrounds
         </p>
@@ -90,32 +84,6 @@ export const CaptureEditorSidebar = () => {
             })}
           </div>
         </div>
-
-        <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-            Custom image
-          </span>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="mt-2 w-full text-xs text-slate-600"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (!file) return;
-              setCustomBackground(URL.createObjectURL(file));
-              event.target.value = "";
-            }}
-          />
-          {isCustomActive ? (
-            <button
-              type="button"
-              onClick={() => clearCustomBackground()}
-              className="mt-2 text-xs font-medium text-peacock-700 underline"
-            >
-              Remove custom background
-            </button>
-          ) : null}
-        </label>
       </div>
 
       <div className="space-y-4 border-t border-slate-100 px-4 py-4">

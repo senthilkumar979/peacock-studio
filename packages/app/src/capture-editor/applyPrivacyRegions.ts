@@ -98,8 +98,11 @@ function blurRegionFromImage(
   context.restore();
 }
 
+/** White overlay — below 1 so redact is visible but still obscures content. */
+const REDACT_FILL_OPACITY = 0.99;
+
 function redactRegion(context: PaintContext, rect: DeviceRect): void {
-  context.fillStyle = '#ffffff';
+  context.fillStyle = `rgba(255, 255, 255, ${REDACT_FILL_OPACITY})`;
   context.fillRect(rect.x, rect.y, rect.width, rect.height);
 }
 
