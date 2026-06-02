@@ -7,15 +7,15 @@ import { DashboardEmptyState } from '@/components/dashboard/DashboardEmptyState'
 import { DashboardFeaturedDoc } from '@/components/dashboard/DashboardFeaturedDoc';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { DashboardLibraryToolbar } from '@/components/dashboard/DashboardLibraryToolbar';
-import { DashboardRoutesSection } from '@/components/dashboard/DashboardRoutesSection';
+import { DashboardProductToursSection } from '@/components/dashboard/DashboardProductToursSection';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { FlowLibrarySection } from '@/components/dashboard/FlowLibrarySection';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { readDashboardViewMode, writeDashboardViewMode } from '@/constants/dashboard';
 import { useFlowLibrary } from '@/hooks/useFlowLibrary';
-import { useRouteLibrary } from '@/hooks/useRouteLibrary';
+import { useProductTourLibrary } from '@/hooks/useProductTourLibrary';
 import type { DashboardViewMode, SavedFlowSummary } from '@/types/savedFlow';
-import type { SavedRouteSummary } from '@/types/route';
+import type { ProductTourSummary } from '@/types/productTour';
 import {
   filterSummaries,
   sortSummaries,
@@ -25,16 +25,16 @@ import {
 export const Dashboard = () => {
   const { summaries, stats, isLoading, error, deleteDocument } = useFlowLibrary();
   const {
-    summaries: routeSummaries,
-    isLoading: isRoutesLoading,
-    error: routesError,
-    deleteRouteById,
-  } = useRouteLibrary();
+    summaries: tourSummaries,
+    isLoading: isToursLoading,
+    error: toursError,
+    deleteTourById,
+  } = useProductTourLibrary();
   const [viewMode, setViewMode] = useState<DashboardViewMode>(readDashboardViewMode);
   const [sortMode, setSortMode] = useState<DashboardSortMode>('newest');
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingDelete, setPendingDelete] = useState<SavedFlowSummary | null>(null);
-  const [pendingRouteDelete, setPendingRouteDelete] = useState<SavedRouteSummary | null>(null);
+  const [pendingTourDelete, setPendingTourDelete] = useState<ProductTourSummary | null>(null);
 
   const displayedSummaries = useMemo(
     () => sortSummaries(filterSummaries(summaries, searchQuery), sortMode),
@@ -56,9 +56,9 @@ export const Dashboard = () => {
     void deleteDocument(pendingDelete.id).finally(() => setPendingDelete(null));
   };
 
-  const handleConfirmRouteDelete = () => {
-    if (!pendingRouteDelete) return;
-    void deleteRouteById(pendingRouteDelete.id).finally(() => setPendingRouteDelete(null));
+  const handleConfirmTourDelete = () => {
+    if (!pendingTourDelete) return;
+    void deleteTourById(pendingTourDelete.id).finally(() => setPendingTourDelete(null));
   };
 
   return (
@@ -75,11 +75,11 @@ export const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.15 }}
           >
-            <DashboardRoutesSection
-              summaries={routeSummaries}
-              isLoading={isRoutesLoading}
-              error={routesError}
-              onRequestDelete={setPendingRouteDelete}
+            <DashboardProductToursSection
+              summaries={tourSummaries}
+              isLoading={isToursLoading}
+              error={toursError}
+              onRequestDelete={setPendingTourDelete}
             />
           </motion.div>
 
@@ -166,17 +166,17 @@ export const Dashboard = () => {
         onCancel={() => setPendingDelete(null)}
       />
       <ConfirmDialog
-        isOpen={Boolean(pendingRouteDelete)}
-        title="Delete route?"
+        isOpen={Boolean(pendingTourDelete)}
+        title="Delete product tour?"
         description={
-          pendingRouteDelete
-            ? `"${pendingRouteDelete.title}" and its ${pendingRouteDelete.chapterCount} chapters will be removed from this device. This cannot be undone.`
+          pendingTourDelete
+            ? `"${pendingTourDelete.title}" and its ${pendingTourDelete.featureCount} features will be removed from this device. This cannot be undone.`
             : ''
         }
         confirmLabel="Delete"
         isDestructive
-        onConfirm={handleConfirmRouteDelete}
-        onCancel={() => setPendingRouteDelete(null)}
+        onConfirm={handleConfirmTourDelete}
+        onCancel={() => setPendingTourDelete(null)}
       />
     </div>
   );

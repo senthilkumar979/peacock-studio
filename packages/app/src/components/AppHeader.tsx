@@ -5,8 +5,10 @@ import { ArrowLeft, ChevronRight, Link2 } from 'lucide-react';
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
 import { ShareDocumentModal } from '@/components/share/ShareDocumentModal';
 import { ShareRouteModal } from '@/components/share/ShareRouteModal';
+import { ShareProductTourModal } from '@/components/share/ShareProductTourModal';
 import { persistCurrentFlow } from '@/services/flowLibraryService';
 import { useFlowStore } from '@/store/flowStore';
+import type { ProductTour } from '@/types/productTour';
 import type { SavedRoute } from '@/types/route';
 
 interface AppHeaderProps {
@@ -17,6 +19,8 @@ interface AppHeaderProps {
   documentId?: string;
   routeId?: string;
   route?: SavedRoute | null;
+  tourId?: string;
+  tour?: ProductTour | null;
   children?: ReactNode;
 }
 
@@ -31,6 +35,8 @@ export const AppHeader = ({
   documentId,
   routeId,
   route,
+  tourId,
+  tour,
   children,
 }: AppHeaderProps) => {
   const flow = useFlowStore((state) => state.flow);
@@ -41,7 +47,7 @@ export const AppHeader = ({
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-  const canShare = Boolean(documentId || routeId);
+  const canShare = Boolean(documentId || routeId || tourId);
   const hasActions = Boolean(children) || canShare;
 
   const logoMark = (
@@ -156,6 +162,14 @@ export const AppHeader = ({
           isOpen={isShareModalOpen}
           routeId={routeId}
           route={route}
+          onClose={() => setIsShareModalOpen(false)}
+        />
+      ) : null}
+      {tourId ? (
+        <ShareProductTourModal
+          isOpen={isShareModalOpen}
+          tourId={tourId}
+          tour={tour}
           onClose={() => setIsShareModalOpen(false)}
         />
       ) : null}

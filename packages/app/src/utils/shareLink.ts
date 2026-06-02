@@ -68,6 +68,23 @@ export function buildSharedRouteUrl(
   return `${window.location.origin}${path}`;
 }
 
+export function buildSharedProductTourUrl(
+  tourId: string,
+  accessMode: ShareLinkAccessMode = 'readonly',
+  options: { presenter?: boolean } = {},
+): string {
+  const base =
+    accessMode === 'editable' ? `/tours/${tourId}/edit` : `/tours/${tourId}`;
+  const params = new URLSearchParams();
+  if (options.presenter) params.set('presenter', '1');
+  const query = params.toString();
+  return `${window.location.origin}${base}${query ? `?${query}` : ''}`;
+}
+
+export function getProductTourEmbedCodePlaceholder(tourId: string): string {
+  return `<!-- Peacock product tour embed — coming soon -->\n<div data-peacock-tour="${tourId}"></div>`;
+}
+
 export async function copyTextToClipboard(text: string): Promise<void> {
   await navigator.clipboard.writeText(text);
 }
