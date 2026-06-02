@@ -1,6 +1,6 @@
-import { Sparkles } from 'lucide-react';
-import { PersonaAvatar } from '@/components/persona/PersonaAvatar';
-import type { Persona } from '@/types/persona';
+import { PersonaAvatar } from "@/components/persona/PersonaAvatar";
+import type { Persona } from "@/types/persona";
+import { Sparkles } from "lucide-react";
 
 interface TourPersonaIntroPanelProps {
   persona: Persona;
@@ -12,7 +12,10 @@ export const TourPersonaIntroPanel = ({
   onContinue,
 }: TourPersonaIntroPanelProps) => (
   <article className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-xl sm:p-10">
-    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-peacock-50 via-white to-brand-violet/5" aria-hidden />
+    <div
+      className="pointer-events-none absolute inset-0 bg-gradient-to-br from-peacock-50 via-white to-brand-violet/5"
+      aria-hidden
+    />
     <div className="relative z-10">
       <div className="flex flex-col items-center text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/70 text-peacock-700 shadow-sm ring-1 ring-peacock-200/70">
@@ -31,20 +34,22 @@ export const TourPersonaIntroPanel = ({
         </h2>
 
         {persona.role ? (
-          <p className="mt-2 text-base font-semibold text-slate-700">{persona.role}</p>
+          <p className="mt-2 text-base font-semibold text-slate-700">
+            {persona.role}
+          </p>
         ) : null}
         <p className="mt-1 text-sm text-slate-500">
-          {persona.gender === 'female'
-            ? 'Female'
-            : persona.gender === 'male'
-              ? 'Male'
-              : 'Neutral'}
+          {persona.gender === "female"
+            ? "Female"
+            : persona.gender === "male"
+              ? "Male"
+              : "Neutral"}
         </p>
         {persona.company ? (
           <p className="mt-1 text-sm text-slate-500">{persona.company}</p>
         ) : null}
         {persona.tagline ? (
-          <p className="mt-3 rounded-xl bg-peacock-50 px-4 py-2 text-sm font-semibold text-peacock-800">
+          <p className="mt-3 rounded-xl bg-peacock-50 px-4 py-2 text-sm font-semibold text-peacock-800 w-fit">
             {persona.tagline}
           </p>
         ) : null}
@@ -55,7 +60,9 @@ export const TourPersonaIntroPanel = ({
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Quick intro
           </p>
-          <p className="mt-2 text-base leading-relaxed text-slate-700">{persona.shortDescription}</p>
+          <p className="mt-2 text-base leading-relaxed text-slate-700">
+            {persona.shortDescription}
+          </p>
         </div>
       ) : null}
 
@@ -80,4 +87,3 @@ export const TourPersonaIntroPanel = ({
     </div>
   </article>
 );
-
