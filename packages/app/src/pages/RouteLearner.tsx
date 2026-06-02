@@ -47,6 +47,8 @@ export const RouteLearner = () => {
           title={learner.route.title}
           description={learner.route.description || undefined}
           homeLink
+          routeId={learner.routeId}
+          route={learner.route}
         />
         <EmptyFlowState
           title="No demos in this route"
@@ -65,6 +67,8 @@ export const RouteLearner = () => {
         title={route.title}
         description={route.description || undefined}
         homeLink
+        routeId={routeId}
+        route={route}
       >
         <Link
           to={`/routes/${routeId}/edit`}

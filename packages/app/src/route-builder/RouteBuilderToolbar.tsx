@@ -29,6 +29,8 @@ export const RouteBuilderToolbar = ({
       title={route.title}
       description={route.description || undefined}
       homeLink
+      routeId={routeId}
+      route={route}
     >
       <div className="inline-flex rounded-lg border border-slate-300 bg-white p-1">
         <button
