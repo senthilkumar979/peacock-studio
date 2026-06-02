@@ -1,10 +1,13 @@
 import { createId, getPlayableSteps, type FlowOutlineItem, type FlowPayload } from '@peacock/shared';
 import type { SavedFlowDocument } from '@/types/savedFlow';
 
+import type { FlowShareSettings } from '@/types/savedFlow';
+
 interface FlowSnapshotSource {
   flow: FlowPayload | null;
   steps: FlowOutlineItem[];
   screenshotUrls: Record<string, string>;
+  shareSettings?: FlowShareSettings | null;
 }
 
 export function buildFlowPayloadWithSteps(source: FlowSnapshotSource): FlowPayload | null {
@@ -28,6 +31,7 @@ export function buildSavedFlowDocument(
     flow,
     steps: source.steps,
     screenshotUrls: source.screenshotUrls,
+    shareSettings: source.shareSettings ?? undefined,
   };
 }
 

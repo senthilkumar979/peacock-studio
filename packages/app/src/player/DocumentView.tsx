@@ -1,6 +1,7 @@
 import { AppHeader } from "@/components/AppHeader";
-import { getPlayableSteps, isFlowSection, isFlowStep } from "@peacock/shared";
-import { useFlowStore } from "@/store/flowStore";
+import { getPlayableSteps, isFlowBranch, isFlowSection, isFlowStep } from "@peacock/shared";
+import { useFlowStore, useViewerOutline } from "@/store/flowStore";
+import { DocumentBranchCard } from "./DocumentBranchCard";
 import { formatFlowDate } from "@/utils/formatFlowDate";
 import {
   getDocumentStepAnchor,
@@ -23,7 +24,7 @@ export const DocumentView = ({
   onModeChange,
 }: DocumentViewProps) => {
   const flow = useFlowStore((state) => state.flow);
-  const steps = useFlowStore((state) => state.steps);
+  const steps = useViewerOutline();
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
   const playableStepCount = useMemo(() => getPlayableSteps(steps).length, [steps]);
 
@@ -36,6 +37,14 @@ export const DocumentView = ({
           type: 'section' as const,
           anchorId,
           sectionId: item.id,
+          title: item.title,
+        };
+      }
+      if (isFlowBranch(item)) {
+        return {
+          type: 'branch' as const,
+          anchorId,
+          branchId: item.id,
           title: item.title,
         };
       }
@@ -119,7 +128,13 @@ export const DocumentView = ({
       const target = indexItems.find((item) => item.anchorId === hash);
       if (!target) return;
 
-      setActiveItemId(target.type === 'step' ? target.stepId : target.sectionId);
+      setActiveItemId(
+        target.type === 'step'
+          ? target.stepId
+          : target.type === 'branch'
+            ? target.branchId
+            : target.sectionId,
+      );
       window.requestAnimationFrame(() => {
         scrollStepsPaneToAnchor(hash, "auto");
       });
@@ -202,6 +217,7 @@ export const DocumentView = ({
               activeItemId={activeItemId}
               onSelectStep={(anchorId, stepId) => scrollToAnchor(anchorId, stepId)}
               onSelectSection={(anchorId, sectionId) => scrollToAnchor(anchorId, sectionId)}
+              onSelectBranch={(anchorId, branchId) => scrollToAnchor(anchorId, branchId)}
             />
           </div>
 
@@ -226,6 +242,18 @@ export const DocumentView = ({
                           anchorId={anchorId}
                           isActive={item.id === activeItemId}
                           sectionIndex={currentSectionIndex}
+                        />
+                      </div>
+                    );
+                  }
+
+                  if (isFlowBranch(item)) {
+                    return (
+                      <div key={item.id} data-outline-id={item.id}>
+                        <DocumentBranchCard
+                          branch={item}
+                          anchorId={anchorId}
+                          isActive={item.id === activeItemId}
                         />
                       </div>
                     );

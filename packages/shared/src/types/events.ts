@@ -126,14 +126,40 @@ export interface FlowSection {
   description: string;
 }
 
-export type FlowOutlineItem = FlowStep | FlowSection;
+export type FlowBranchPresentation = 'list' | 'grid';
+
+export interface LinkedPeacockPath {
+  id: string;
+  label: string;
+  targetDocumentId: string;
+  targetTitle: string;
+  targetDescription: string;
+  fromStepId: string;
+  toStepId: string;
+  order: number;
+}
+
+export interface FlowBranch {
+  id: string;
+  kind: 'branch';
+  title: string;
+  description: string;
+  paths: LinkedPeacockPath[];
+  presentation?: FlowBranchPresentation;
+}
+
+export type FlowOutlineItem = FlowStep | FlowSection | FlowBranch;
 
 export function isFlowSection(item: FlowOutlineItem): item is FlowSection {
   return 'kind' in item && item.kind === 'section';
 }
 
+export function isFlowBranch(item: FlowOutlineItem): item is FlowBranch {
+  return 'kind' in item && item.kind === 'branch';
+}
+
 export function isFlowStep(item: FlowOutlineItem): item is FlowStep {
-  return !isFlowSection(item);
+  return !isFlowSection(item) && !isFlowBranch(item);
 }
 
 export function getPlayableSteps(items: FlowOutlineItem[]): FlowStep[] {

@@ -1,9 +1,10 @@
-import type { FlowOutlineItem, FlowSection, FlowStep } from '../types/events';
-import { isFlowSection, isFlowStep } from '../types/events';
+import type { FlowBranch, FlowOutlineItem, FlowSection, FlowStep } from '../types/events';
+import { isFlowBranch, isFlowSection, isFlowStep } from '../types/events';
 
 export type PlayerOutlineSegment =
   | { type: 'section'; section: FlowSection }
-  | { type: 'step'; step: FlowStep; stepNumber: number };
+  | { type: 'step'; step: FlowStep; stepNumber: number }
+  | { type: 'branch'; branch: FlowBranch };
 
 export function getPlayerOutlineSegments(items: FlowOutlineItem[]): PlayerOutlineSegment[] {
   const segments: PlayerOutlineSegment[] = [];
@@ -12,6 +13,10 @@ export function getPlayerOutlineSegments(items: FlowOutlineItem[]): PlayerOutlin
   for (const item of items) {
     if (isFlowSection(item)) {
       segments.push({ type: 'section', section: item });
+      continue;
+    }
+    if (isFlowBranch(item)) {
+      segments.push({ type: 'branch', branch: item });
       continue;
     }
     if (isFlowStep(item)) {

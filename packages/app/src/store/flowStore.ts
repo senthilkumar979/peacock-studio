@@ -2,17 +2,28 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import {
   createId,
+  createFlowBranch,
   createFlowSection,
   createManualFlowStep,
   getPlayableSteps,
+  isFlowBranch,
   isFlowSection,
   isFlowStep,
   MANUAL_STEP_PLACEHOLDER_SCREENSHOT,
+  sortBranchPaths,
+  type FlowBranch,
+  type FlowBranchPresentation,
   type FlowOutlineItem,
   type FlowPayload,
   type FlowStep,
+  type LinkedPeacockPath,
 } from '@peacock/shared';
-import type { SavedFlowDocument } from '@/types/savedFlow';
+import type { FlowShareSettings, SavedFlowDocument } from '@/types/savedFlow';
+import {
+  buildDefaultShareSettings,
+  filterOutlineForViewer,
+  type FlowViewerFilter,
+} from '@/utils/flowShareSettings';
 
 interface FlowStore {
   documentId: string | null;
@@ -21,6 +32,8 @@ interface FlowStore {
   steps: FlowOutlineItem[];
   selectedOutlineId: string | null;
   isLoaded: boolean;
+  shareSettings: FlowShareSettings | null;
+  viewerFilter: FlowViewerFilter | null;
 
   setFlow: (flow: FlowPayload, screenshotUrls: Record<string, string>) => void;
   setDocumentId: (id: string | null) => void;
@@ -38,6 +51,23 @@ interface FlowStore {
   setStepCustomScreenshot: (id: string, dataUrl: string) => void;
   resetStepScreenshot: (id: string) => void;
   updateFlowDetails: (title: string, description: string) => void;
+  addBranch: (afterItemId?: string | null) => void;
+  addBranchWithPath: (
+    path: Omit<LinkedPeacockPath, 'id' | 'order'>,
+    afterItemId?: string | null,
+  ) => void;
+  addPathToBranch: (
+    branchId: string,
+    path: Omit<LinkedPeacockPath, 'id' | 'order'> & { order?: number },
+  ) => void;
+  updateBranchTitle: (id: string, title: string) => void;
+  updateBranchDescription: (id: string, description: string) => void;
+  updateBranchPresentation: (id: string, presentation: FlowBranchPresentation) => void;
+  updatePathLabel: (branchId: string, pathId: string, label: string) => void;
+  removePathFromBranch: (branchId: string, pathId: string) => void;
+  reorderBranchPaths: (branchId: string, from: number, to: number) => void;
+  updateShareSettings: (settings: FlowShareSettings) => void;
+  setViewerFilter: (filter: FlowViewerFilter | null) => void;
 }
 
 const initialState = {
@@ -47,6 +77,8 @@ const initialState = {
   steps: [] as FlowOutlineItem[],
   selectedOutlineId: null as string | null,
   isLoaded: false,
+  shareSettings: null as FlowShareSettings | null,
+  viewerFilter: null as FlowViewerFilter | null,
 };
 
 function removeCustomScreenshot(
@@ -81,6 +113,8 @@ export const useFlowStore = create<FlowStore>()(
         steps: flow.steps,
         selectedOutlineId: pickInitialSelection(flow.steps),
         isLoaded: true,
+        shareSettings: buildDefaultShareSettings(flow.steps),
+        viewerFilter: null,
       }),
 
     setDocumentId: (id) => set({ documentId: id }),
@@ -93,6 +127,8 @@ export const useFlowStore = create<FlowStore>()(
         steps: doc.steps,
         selectedOutlineId: pickInitialSelection(doc.steps),
         isLoaded: true,
+        shareSettings: doc.shareSettings ?? buildDefaultShareSettings(doc.steps),
+        viewerFilter: null,
       }),
 
     resetFlow: () => set({ ...initialState }),
@@ -191,6 +227,106 @@ export const useFlowStore = create<FlowStore>()(
         state.flow.flow.title = title;
         state.flow.flow.description = description;
       }),
+
+    addBranch: (afterItemId) =>
+      set((state) => {
+        const branch = createFlowBranch();
+        const index = resolveInsertIndex(state.steps, afterItemId ?? state.selectedOutlineId);
+        state.steps.splice(index, 0, branch);
+        state.selectedOutlineId = branch.id;
+        syncFlowSteps(state);
+      }),
+
+    addBranchWithPath: (pathInput, afterItemId) =>
+      set((state) => {
+        const branch = createFlowBranch(pathInput.label, '');
+        const path: LinkedPeacockPath = {
+          id: createId(),
+          order: 0,
+          label: pathInput.label,
+          targetDocumentId: pathInput.targetDocumentId,
+          targetTitle: pathInput.targetTitle,
+          targetDescription: pathInput.targetDescription,
+          fromStepId: pathInput.fromStepId,
+          toStepId: pathInput.toStepId,
+        };
+        branch.paths = [path];
+        const index = resolveInsertIndex(state.steps, afterItemId ?? state.selectedOutlineId);
+        state.steps.splice(index, 0, branch);
+        state.selectedOutlineId = branch.id;
+        syncFlowSteps(state);
+      }),
+
+    addPathToBranch: (branchId, pathInput) =>
+      set((state) => {
+        const branch = state.steps.find((item) => item.id === branchId);
+        if (!branch || !isFlowBranch(branch)) return;
+
+        const order =
+          pathInput.order ?? branch.paths.reduce((max, path) => Math.max(max, path.order), -1) + 1;
+        const path: LinkedPeacockPath = {
+          id: createId(),
+          label: pathInput.label,
+          targetDocumentId: pathInput.targetDocumentId,
+          targetTitle: pathInput.targetTitle,
+          targetDescription: pathInput.targetDescription,
+          fromStepId: pathInput.fromStepId,
+          toStepId: pathInput.toStepId,
+          order,
+        };
+        branch.paths.push(path);
+        syncFlowSteps(state);
+      }),
+
+    updateBranchTitle: (id, title) =>
+      set((state) => {
+        const branch = state.steps.find((item) => item.id === id);
+        if (branch && isFlowBranch(branch)) branch.title = title;
+      }),
+
+    updateBranchDescription: (id, description) =>
+      set((state) => {
+        const branch = state.steps.find((item) => item.id === id);
+        if (branch && isFlowBranch(branch)) branch.description = description;
+      }),
+
+    updateBranchPresentation: (id, presentation) =>
+      set((state) => {
+        const branch = state.steps.find((item) => item.id === id);
+        if (branch && isFlowBranch(branch)) branch.presentation = presentation;
+      }),
+
+    updatePathLabel: (branchId, pathId, label) =>
+      set((state) => {
+        const branch = state.steps.find((item) => item.id === branchId);
+        if (!branch || !isFlowBranch(branch)) return;
+        const path = branch.paths.find((item) => item.id === pathId);
+        if (path) path.label = label;
+      }),
+
+    removePathFromBranch: (branchId, pathId) =>
+      set((state) => {
+        const branch = state.steps.find((item) => item.id === branchId);
+        if (!branch || !isFlowBranch(branch)) return;
+        branch.paths = branch.paths.filter((path) => path.id !== pathId);
+        syncFlowSteps(state);
+      }),
+
+    reorderBranchPaths: (branchId, from, to) =>
+      set((state) => {
+        const branch = state.steps.find((item) => item.id === branchId);
+        if (!branch || !isFlowBranch(branch)) return;
+        const sorted = sortBranchPaths(branch.paths);
+        const [item] = sorted.splice(from, 1);
+        if (!item) return;
+        sorted.splice(to, 0, item);
+        branch.paths = sorted.map((path, index) => ({ ...path, order: index }));
+        syncFlowSteps(state);
+      }),
+
+    updateShareSettings: (settings) => set({ shareSettings: settings }),
+
+    setViewerFilter: (filter) => set({ viewerFilter: filter }),
   }))
 );
 
@@ -209,8 +345,26 @@ export function useSelectedSection() {
 }
 
 export function usePlayableSteps(): FlowStep[] {
-  const steps = useFlowStore((state) => state.steps);
+  const steps = useViewerOutline();
   return getPlayableSteps(steps);
+}
+
+export function useSelectedBranch(): FlowBranch | null {
+  const steps = useFlowStore((state) => state.steps);
+  const selectedOutlineId = useFlowStore((state) => state.selectedOutlineId);
+  const item = steps.find((step) => step.id === selectedOutlineId);
+  return item && isFlowBranch(item) ? item : null;
+}
+
+export function useViewerOutline(): FlowOutlineItem[] {
+  const steps = useFlowStore((state) => state.steps);
+  const viewerFilter = useFlowStore((state) => state.viewerFilter);
+  return filterOutlineForViewer(steps, viewerFilter);
+}
+
+export function useHasBranches(): boolean {
+  const steps = useFlowStore((state) => state.steps);
+  return steps.some(isFlowBranch);
 }
 
 export { getStepScreenshotUrl } from '@peacock/shared';

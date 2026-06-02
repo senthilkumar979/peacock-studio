@@ -13,9 +13,11 @@ export function getDocumentPath(
 
 export function getDocumentShareUrl(
   documentId: string,
-  viewMode: SharedDocumentViewMode = 'doc'
+  viewMode: SharedDocumentViewMode = 'doc',
+  query = '',
 ): string {
-  return `${window.location.origin}${getDocumentPath(documentId, viewMode)}`;
+  const path = getDocumentPath(documentId, viewMode);
+  return `${window.location.origin}${path}${query}`;
 }
 
 export function getDocumentStepAnchor(stepId: string): string {

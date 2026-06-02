@@ -1,5 +1,11 @@
 import type { FlowOutlineItem, FlowPayload } from '@peacock/shared';
 
+export interface FlowShareSettings {
+  includeMainFlow: boolean;
+  enabledPathIds: string[];
+  enabledBranchIds: string[];
+}
+
 export interface SavedFlowDocument {
   id: string;
   savedAt: number;
@@ -7,6 +13,7 @@ export interface SavedFlowDocument {
   flow: FlowPayload;
   steps: FlowOutlineItem[];
   screenshotUrls: Record<string, string>;
+  shareSettings?: FlowShareSettings;
 }
 
 export interface SavedFlowSummary {

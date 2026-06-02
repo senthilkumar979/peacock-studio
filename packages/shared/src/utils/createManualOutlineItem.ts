@@ -1,5 +1,5 @@
 import { DEFAULT_MANUAL_VIEWPORT, MANUAL_STEP_PLACEHOLDER_SCREENSHOT } from '../constants/manualStep';
-import type { FlowSection, FlowStep, PageViewEvent } from '../types/events';
+import type { FlowBranch, FlowSection, FlowStep, PageViewEvent } from '../types/events';
 import { createFlowStep } from './createFlowStep';
 import { createId } from './createFlowStep';
 
@@ -28,6 +28,16 @@ export function createFlowSection(title = 'New section', description = ''): Flow
     kind: 'section',
     title,
     description,
+  };
+}
+
+export function createFlowBranch(title = 'Choose a path', description = ''): FlowBranch {
+  return {
+    id: createId(),
+    kind: 'branch',
+    title,
+    description,
+    paths: [],
   };
 }
 

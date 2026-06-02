@@ -1,4 +1,4 @@
-import { BookMarked } from 'lucide-react';
+import { BookMarked, GitBranch } from 'lucide-react';
 
 interface DocumentStepIndexStepItem {
   type: 'step';
@@ -15,15 +15,24 @@ interface DocumentStepIndexSectionItem {
   title: string;
 }
 
+interface DocumentStepIndexBranchItem {
+  type: 'branch';
+  anchorId: string;
+  branchId: string;
+  title: string;
+}
+
 export type DocumentStepIndexItem =
   | DocumentStepIndexStepItem
-  | DocumentStepIndexSectionItem;
+  | DocumentStepIndexSectionItem
+  | DocumentStepIndexBranchItem;
 
 interface DocumentStepIndexProps {
   items: DocumentStepIndexItem[];
   activeItemId: string | null;
   onSelectStep: (anchorId: string, stepId: string) => void;
   onSelectSection: (anchorId: string, sectionId: string) => void;
+  onSelectBranch: (anchorId: string, branchId: string) => void;
 }
 
 export const DocumentStepIndex = ({
@@ -31,6 +40,7 @@ export const DocumentStepIndex = ({
   activeItemId,
   onSelectStep,
   onSelectSection,
+  onSelectBranch,
 }: DocumentStepIndexProps) => (
   <aside className="hidden min-h-0 lg:block">
     <div className="h-full rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -38,6 +48,26 @@ export const DocumentStepIndex = ({
       <nav className="mt-4 pr-1">
         <ol className="space-y-2">
           {items.map((item) => {
+            if (item.type === 'branch') {
+              const isActive = item.branchId === activeItemId;
+              return (
+                <li key={item.branchId}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectBranch(item.anchorId, item.branchId)}
+                    className={`flex w-full items-start gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm transition ${
+                      isActive
+                        ? 'bg-brand-violet/10 font-semibold text-brand-violet ring-1 ring-brand-violet/30'
+                        : 'font-medium text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <GitBranch className="mt-1 h-4 w-4 shrink-0" aria-hidden />
+                    <span className="line-clamp-2 leading-5">{item.title}</span>
+                  </button>
+                </li>
+              );
+            }
+
             if (item.type === 'section') {
               const isActive = item.sectionId === activeItemId;
               return (

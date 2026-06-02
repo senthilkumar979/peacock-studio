@@ -8,6 +8,8 @@ interface AddPeacockModalProps {
   excludedDocumentIds: string[];
   onClose: () => void;
   onSelect: (documentId: string) => void;
+  closeOnSelect?: boolean;
+  title?: string;
 }
 
 export const AddPeacockModal = ({
@@ -16,6 +18,8 @@ export const AddPeacockModal = ({
   excludedDocumentIds,
   onClose,
   onSelect,
+  closeOnSelect = true,
+  title = 'Add demo to chapter',
 }: AddPeacockModalProps) => {
   const [query, setQuery] = useState('');
 
@@ -45,7 +49,7 @@ export const AddPeacockModal = ({
       >
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <h2 id="add-peacock-title" className="text-lg font-bold text-slate-900">
-            Add demo to chapter
+            {title}
           </h2>
           <button
             type="button"
@@ -86,8 +90,8 @@ export const AddPeacockModal = ({
                     type="button"
                     onClick={() => {
                       onSelect(summary.id);
-                      onClose();
                       setQuery('');
+                      if (closeOnSelect) onClose();
                     }}
                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-peacock-200 hover:bg-peacock-50/40"
                   >

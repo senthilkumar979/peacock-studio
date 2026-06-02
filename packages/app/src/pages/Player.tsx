@@ -1,28 +1,43 @@
+import { useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { getPlayerOutlineSegments } from '@peacock/shared';
 import { EmptyFlowState } from '@/components/EmptyFlowState';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { useSavedDocument } from '@/hooks/useSavedDocument';
 import { DocumentView } from '@/player/DocumentView';
 import { PlayerView } from '@/player/PlayerView';
-import { useFlowStore, usePlayableSteps } from '@/store/flowStore';
+import { useFlowStore, usePlayableSteps, useViewerOutline } from '@/store/flowStore';
+import { parseShareSearchParams } from '@/utils/flowShareSettings';
 import type { SharedDocumentViewMode } from '@/utils/shareLink';
 
 export const Player = () => {
   const { documentId } = useParams<{ documentId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isLoading, isLoaded, error } = useSavedDocument(documentId);
-  const outline = useFlowStore((state) => state.steps);
+  const outline = useViewerOutline();
+  const rawSteps = useFlowStore((state) => state.steps);
+  const shareSettings = useFlowStore((state) => state.shareSettings);
+  const setViewerFilter = useFlowStore((state) => state.setViewerFilter);
   const playableSteps = usePlayableSteps();
+  const playerSegments = getPlayerOutlineSegments(outline);
   const viewMode: SharedDocumentViewMode =
     searchParams.get('view') === 'player' ? 'player' : 'doc';
 
-  const handleModeChange = (mode: SharedDocumentViewMode) => {
-    if (mode === 'doc') {
-      setSearchParams({}, { replace: true });
-      return;
-    }
+  useEffect(() => {
+    if (!isLoaded) return;
+    const filter = parseShareSearchParams(searchParams, rawSteps, shareSettings ?? undefined);
+    setViewerFilter(filter);
+    return () => setViewerFilter(null);
+  }, [isLoaded, searchParams, rawSteps, shareSettings, setViewerFilter]);
 
-    setSearchParams({ view: 'player' }, { replace: true });
+  const handleModeChange = (mode: SharedDocumentViewMode) => {
+    const next = new URLSearchParams(searchParams);
+    if (mode === 'doc') {
+      next.delete('view');
+    } else {
+      next.set('view', 'player');
+    }
+    setSearchParams(next, { replace: true });
   };
 
   if (!documentId) {
@@ -71,11 +86,11 @@ export const Player = () => {
     );
   }
 
-  if (viewMode === 'player' && playableSteps.length === 0) {
+  if (viewMode === 'player' && playableSteps.length === 0 && playerSegments.length === 0) {
     return (
       <EmptyFlowState
         title="No steps to play"
-        description="Add steps in the editor. Chapter sections can display in player mode once steps exist below them."
+        description="Add steps in the editor. Chapter sections and branches can display in player mode once content exists."
       />
     );
   }

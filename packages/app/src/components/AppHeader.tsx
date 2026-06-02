@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, FileDown, Link2, Loader2 } from 'lucide-react';
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
+import { ShareBranchingDocModal } from '@/components/ShareBranchingDocModal';
 import { exportFlowPdf } from '@/pdf/exportFlowPdf';
-import { getFlowDocument } from '@/services/flowLibraryService';
-import { useFlowStore, usePlayableSteps } from '@/store/flowStore';
+import { getFlowDocument, persistCurrentFlow } from '@/services/flowLibraryService';
+import { useFlowStore, useHasBranches, usePlayableSteps } from '@/store/flowStore';
 import { copyDocumentShareLink } from '@/utils/shareLink';
 
 interface AppHeaderProps {
@@ -33,9 +34,13 @@ export const AppHeader = ({
   const playableSteps = usePlayableSteps();
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
   const isLoaded = useFlowStore((state) => state.isLoaded);
+  const shareSettings = useFlowStore((state) => state.shareSettings);
+  const updateShareSettings = useFlowStore((state) => state.updateShareSettings);
+  const hasBranches = useHasBranches();
 
   const [isExporting, setIsExporting] = useState(false);
   const [shareMessage, setShareMessage] = useState<string | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const canExport = isLoaded && playableSteps.length > 0;
   const canShare = Boolean(documentId);
@@ -64,6 +69,10 @@ export const AppHeader = ({
 
   const handleShare = async () => {
     if (!documentId) return;
+    if (hasBranches) {
+      setIsShareModalOpen(true);
+      return;
+    }
     try {
       await copyDocumentShareLink(documentId);
       setShareMessage('Link copied');
@@ -179,6 +188,20 @@ export const AppHeader = ({
           </div>
         ) : null}
       </div>
+
+      {documentId ? (
+        <ShareBranchingDocModal
+          isOpen={isShareModalOpen}
+          documentId={documentId}
+          steps={outline}
+          initialSettings={shareSettings ?? undefined}
+          onClose={() => setIsShareModalOpen(false)}
+          onSave={(settings) => {
+            updateShareSettings(settings);
+            void persistCurrentFlow(documentId);
+          }}
+        />
+      ) : null}
     </header>
   );
 };

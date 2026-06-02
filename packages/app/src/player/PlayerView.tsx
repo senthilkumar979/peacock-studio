@@ -1,15 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  countPlayableStepsInSegments,
-  getPlayerOutlineSegments,
-  type PlayerOutlineSegment,
-} from '@peacock/shared';
 import { AppHeader } from '@/components/AppHeader';
 import { FlowSectionCard } from '@/components/FlowSectionCard';
+import { useBranchingPlayback } from '@/hooks/useBranchingPlayback';
 import { useKeyboard } from '@/hooks/useKeyboard';
 import { useFlowStore } from '@/store/flowStore';
 import type { SharedDocumentViewMode } from '@/utils/shareLink';
+import { FlowBranchChoicePanel } from './FlowBranchChoicePanel';
 import { PlayerControls } from './PlayerControls';
 import { PlayerStep } from './PlayerStep';
 import { SharedViewToggle } from './SharedViewToggle';
@@ -22,72 +19,74 @@ interface PlayerViewProps {
 }
 
 function getControlsLabel(
-  segment: PlayerOutlineSegment,
-  playableStepCount: number,
+  playback: ReturnType<typeof useBranchingPlayback>,
 ): string {
-  if (segment.type === 'section') {
-    return `Chapter · ${segment.section.title}`;
+  if (playback.linkedPlayback) {
+    const { path, stepIndex, steps } = playback.linkedPlayback;
+    return `${path.label} · Step ${stepIndex + 1} of ${steps.length}`;
   }
-  return `Step ${segment.stepNumber} of ${playableStepCount}`;
+  const segment = playback.currentSegment;
+  if (!segment) return 'Guide';
+  if (segment.type === 'section') return `Chapter · ${segment.section.title}`;
+  if (segment.type === 'branch') return `Branch · ${segment.branch.title}`;
+  return `Step ${segment.stepNumber} of ${playback.playableStepCount}`;
 }
 
-function getProgressLabel(segmentIndex: number, segmentCount: number): string {
-  return `${segmentIndex + 1} of ${segmentCount} in guide`;
+function getProgressLabel(currentIndex: number, segmentCount: number): string {
+  return `${currentIndex + 1} of ${segmentCount} in guide`;
 }
 
 export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
   const flow = useFlowStore((state) => state.flow);
-  const outline = useFlowStore((state) => state.steps);
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
-  const segments = useMemo(() => getPlayerOutlineSegments(outline), [outline]);
-  const playableStepCount = useMemo(
-    () => countPlayableStepsInSegments(segments),
-    [segments],
-  );
-
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const playback = useBranchingPlayback();
   const [isPlaying, setIsPlaying] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
 
-  const currentSegment = segments[currentIndex] ?? null;
+  const linkedStep = playback.linkedPlayback?.steps[playback.linkedPlayback.stepIndex];
+  const atBranch =
+    !playback.linkedPlayback && playback.currentSegment?.type === 'branch'
+      ? playback.currentSegment.branch
+      : null;
+
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [playback.currentIndex, atBranch?.id, playback.linkedPlayback?.path.id]);
 
   const keyboardHandlers = useMemo(
     () => ({
-      ArrowRight: () =>
-        setCurrentIndex((index) => Math.min(index + 1, segments.length - 1)),
-      ArrowLeft: () => setCurrentIndex((index) => Math.max(index - 1, 0)),
+      ArrowRight: () => playback.goNext(),
+      ArrowLeft: () => playback.goPrevious(),
       Space: () => setIsPlaying((playing) => !playing),
     }),
-    [segments.length],
+    [playback],
   );
 
   useKeyboard(keyboardHandlers);
 
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying || playback.linkedPlayback) return;
+    if (playback.currentSegment?.type === 'branch') return;
 
     const timer = window.setTimeout(() => {
-      if (currentIndex < segments.length - 1) {
-        setCurrentIndex((index) => index + 1);
+      if (playback.currentIndex < playback.segments.length - 1) {
+        playback.goNext();
         return;
       }
       setIsPlaying(false);
     }, AUTO_PLAY_MS);
 
     return () => window.clearTimeout(timer);
-  }, [isPlaying, currentIndex, segments.length]);
+  }, [isPlaying, playback]);
 
-  useEffect(() => {
-    if (currentIndex > segments.length - 1) {
-      setCurrentIndex(Math.max(segments.length - 1, 0));
-    }
-  }, [currentIndex, segments.length]);
-
-  if (!currentSegment) {
+  if (!playback.segments.length && !playback.linkedPlayback) {
     return null;
   }
 
-  const positionLabel = getControlsLabel(currentSegment, playableStepCount);
-  const progressLabel = getProgressLabel(currentIndex, segments.length);
+  const positionLabel = getControlsLabel(playback);
+  const progressLabel = playback.linkedPlayback
+    ? positionLabel
+    : getProgressLabel(playback.currentIndex, playback.segments.length);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
@@ -107,28 +106,45 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
         </Link>
       </AppHeader>
 
-      <main className="flex min-h-0 flex-1 items-center justify-center overflow-hidden px-3 py-4 md:px-6">
-        {currentSegment.type === 'section' ? (
-          <FlowSectionCard section={currentSegment.section} variant="player" />
-        ) : (
+      <main
+        ref={mainRef}
+        className={`flex min-h-0 flex-1 px-3 py-3 md:px-6 md:py-4 ${
+          atBranch
+            ? 'items-start overflow-y-auto overscroll-contain'
+            : 'items-center justify-center overflow-hidden'
+        }`}
+      >
+        {playback.isLoadingLinked ? (
+          <p className="text-sm text-slate-500">Loading linked demo…</p>
+        ) : playback.linkedError ? (
+          <p className="text-sm text-amber-800">{playback.linkedError}</p>
+        ) : linkedStep && playback.linkedPlayback ? (
           <PlayerStep
-            step={currentSegment.step}
-            stepNumber={currentSegment.stepNumber}
+            step={linkedStep}
+            stepNumber={playback.linkedPlayback.stepIndex + 1}
+            screenshotUrls={playback.linkedPlayback.screenshotUrls}
+          />
+        ) : atBranch ? (
+          <FlowBranchChoicePanel branch={atBranch} onSelect={playback.selectBranchPath} />
+        ) : playback.currentSegment?.type === 'section' ? (
+          <FlowSectionCard section={playback.currentSegment.section} variant="player" />
+        ) : playback.currentSegment?.type === 'step' ? (
+          <PlayerStep
+            step={playback.currentSegment.step}
+            stepNumber={playback.currentSegment.stepNumber}
             screenshotUrls={screenshotUrls}
           />
-        )}
+        ) : null}
       </main>
 
       <PlayerControls
         positionLabel={positionLabel}
         progressLabel={progressLabel}
-        currentIndex={currentIndex}
-        totalSegments={segments.length}
+        currentIndex={playback.currentIndex}
+        totalSegments={playback.segments.length}
         isPlaying={isPlaying}
-        onPrevious={() => setCurrentIndex((index) => Math.max(index - 1, 0))}
-        onNext={() =>
-          setCurrentIndex((index) => Math.min(index + 1, segments.length - 1))
-        }
+        onPrevious={playback.goPrevious}
+        onNext={playback.goNext}
         onTogglePlay={() => setIsPlaying((playing) => !playing)}
       />
     </div>

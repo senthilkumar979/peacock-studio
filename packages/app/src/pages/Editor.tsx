@@ -1,12 +1,22 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Canvas } from '@/editor/Canvas';
+import { BranchPanel } from '@/editor/BranchPanel';
+import { FlowBranchCard } from '@/editor/FlowBranchCard';
+import { LinkPeacockDocModal } from '@/editor/LinkPeacockDocModal';
 import { StepList } from '@/editor/StepList';
 import { StepPanel } from '@/editor/StepPanel';
 import { Toolbar } from '@/editor/Toolbar';
 import { usePayload } from '@/hooks/usePayload';
 import { usePersistDocument } from '@/hooks/usePersistDocument';
 import { useSavedDocument } from '@/hooks/useSavedDocument';
-import { useSelectedSection, useSelectedStep } from '@/store/flowStore';
+import { persistCurrentFlow } from '@/services/flowLibraryService';
+import {
+  useFlowStore,
+  useSelectedBranch,
+  useSelectedSection,
+  useSelectedStep,
+} from '@/store/flowStore';
 import { SectionPanel } from '@/editor/SectionPanel';
 import { FlowSectionCard } from '@/components/FlowSectionCard';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
@@ -23,6 +33,34 @@ export const Editor = () => {
 
   const selectedStep = useSelectedStep();
   const selectedSection = useSelectedSection();
+  const selectedBranch = useSelectedBranch();
+  const documentIdFromStore = useFlowStore((state) => state.documentId);
+  const addPathToBranch = useFlowStore((state) => state.addPathToBranch);
+  const addBranchWithPath = useFlowStore((state) => state.addBranchWithPath);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [linkMode, setLinkMode] = useState<'new' | 'add-path'>('new');
+
+  const openLinkModal = (mode: 'new' | 'add-path') => {
+    setLinkMode(mode);
+    setIsLinkModalOpen(true);
+  };
+
+  const handleLinkConfirm = async (input: {
+    targetDocumentId: string;
+    targetTitle: string;
+    targetDescription: string;
+    fromStepId: string;
+    toStepId: string;
+    label: string;
+  }) => {
+    if (linkMode === 'add-path' && selectedBranch) {
+      addPathToBranch(selectedBranch.id, input);
+    } else {
+      addBranchWithPath(input);
+    }
+    const id = documentId ?? documentIdFromStore;
+    if (id) await persistCurrentFlow(id);
+  };
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
@@ -63,10 +101,14 @@ export const Editor = () => {
       {isLoaded && (
         <div className="grid min-h-0 flex-1 grid-cols-[280px_1fr_320px] gap-4 p-4">
           <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-            <StepList />
+            <StepList onLinkPeacockDoc={() => openLinkModal('new')} />
           </aside>
           <main className="min-h-0 overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-            {selectedSection ? (
+            {selectedBranch ? (
+              <div className="flex h-full flex-col items-center justify-center overflow-auto p-6">
+                <FlowBranchCard branch={selectedBranch} />
+              </div>
+            ) : selectedSection ? (
               <div className="flex h-full flex-col items-center justify-center overflow-auto p-6">
                 <FlowSectionCard section={selectedSection} variant="editor" />
                 <p className="mt-6 max-w-md text-center text-sm text-slate-500">
@@ -79,7 +121,9 @@ export const Editor = () => {
             )}
           </main>
           <aside className="min-h-0 overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-            {selectedSection ? (
+            {selectedBranch ? (
+              <BranchPanel branch={selectedBranch} onAddPath={() => openLinkModal('add-path')} />
+            ) : selectedSection ? (
               <SectionPanel section={selectedSection} />
             ) : (
               <StepPanel step={selectedStep} />
@@ -87,6 +131,15 @@ export const Editor = () => {
           </aside>
         </div>
       )}
+
+      <LinkPeacockDocModal
+        isOpen={isLinkModalOpen}
+        hostDocumentId={documentId ?? documentIdFromStore ?? undefined}
+        onClose={() => setIsLinkModalOpen(false)}
+        onConfirm={(input) => {
+          void handleLinkConfirm(input);
+        }}
+      />
     </div>
   );
 };

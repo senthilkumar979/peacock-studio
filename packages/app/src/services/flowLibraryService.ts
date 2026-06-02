@@ -8,10 +8,19 @@ import { buildSavedFlowDocument, createNewDocumentId } from '@/utils/flowDocumen
 import { useFlowStore } from '@/store/flowStore';
 import type { SavedFlowDocument } from '@/types/savedFlow';
 
-export async function persistCurrentFlow(documentId: string): Promise<void> {
+function getSnapshotSource() {
   const state = useFlowStore.getState();
+  return {
+    flow: state.flow,
+    steps: state.steps,
+    screenshotUrls: state.screenshotUrls,
+    shareSettings: state.shareSettings,
+  };
+}
+
+export async function persistCurrentFlow(documentId: string): Promise<void> {
   const existing = await getFlowDocument(documentId);
-  const doc = buildSavedFlowDocument(state, documentId, existing);
+  const doc = buildSavedFlowDocument(getSnapshotSource(), documentId, existing);
   if (!doc) return;
   await saveFlowDocument(doc);
 }
@@ -21,7 +30,7 @@ export async function saveNewFlowFromStore(): Promise<string | null> {
   if (!state.flow || !state.steps.some((item) => 'event' in item)) return null;
 
   const documentId = createNewDocumentId();
-  const doc = buildSavedFlowDocument(state, documentId);
+  const doc = buildSavedFlowDocument(getSnapshotSource(), documentId);
   if (!doc) return null;
 
   await saveFlowDocument(doc);

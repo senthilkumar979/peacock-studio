@@ -15,8 +15,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { BookMarked, GripVertical, Plus } from 'lucide-react';
-import { isFlowSection, isFlowStep, type FlowOutlineItem, type FlowStep } from '@peacock/shared';
+import { BookMarked, GitBranch, GripVertical, Link2, Plus } from 'lucide-react';
+import { isFlowBranch, isFlowSection, isFlowStep, type FlowOutlineItem, type FlowStep } from '@peacock/shared';
 import { useFlowStore } from '@/store/flowStore';
 
 function getStepDisplayNumber(items: FlowOutlineItem[], index: number): number {
@@ -96,6 +96,32 @@ interface SortableSectionProps {
   onSelect: (id: string) => void;
 }
 
+interface SortableBranchProps {
+  branch: { id: string; title: string; pathCount: number };
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}
+
+const SortableBranch = ({ branch, isSelected, onSelect }: SortableBranchProps) => (
+  <SortableOutlineItem
+    id={branch.id}
+    isSelected={isSelected}
+    onSelect={onSelect}
+    className="border-brand-violet/30 bg-brand-violet/5"
+  >
+    <div className="flex items-center gap-2">
+      <GitBranch className="h-4 w-4 shrink-0 text-brand-violet" aria-hidden />
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-violet">Branch</p>
+        <p className="mt-0.5 text-sm font-semibold text-slate-900">{branch.title}</p>
+        <p className="text-xs text-slate-500">
+          {branch.pathCount} {branch.pathCount === 1 ? 'path' : 'paths'}
+        </p>
+      </div>
+    </div>
+  </SortableOutlineItem>
+);
+
 const SortableSection = ({ section, isSelected, onSelect }: SortableSectionProps) => (
   <SortableOutlineItem
     id={section.id}
@@ -113,7 +139,11 @@ const SortableSection = ({ section, isSelected, onSelect }: SortableSectionProps
   </SortableOutlineItem>
 );
 
-export const StepList = () => {
+interface StepListProps {
+  onLinkPeacockDoc?: () => void;
+}
+
+export const StepList = ({ onLinkPeacockDoc }: StepListProps) => {
   const steps = useFlowStore((state) => state.steps);
   const selectedOutlineId = useFlowStore((state) => state.selectedOutlineId);
   const selectOutlineItem = useFlowStore((state) => state.selectOutlineItem);
@@ -151,23 +181,35 @@ export const StepList = () => {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Outline</h2>
       </div>
 
-      <div className="flex shrink-0 gap-2">
-        <button
-          type="button"
-          onClick={() => addManualStep()}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-peacock-200 bg-peacock-50 px-2 py-2 text-xs font-medium text-peacock-800 hover:bg-peacock-100"
-        >
-          <Plus className="h-3.5 w-3.5" aria-hidden />
-          Add step
-        </button>
-        <button
-          type="button"
-          onClick={() => addSection()}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-brand-violet/30 bg-brand-violet/10 px-2 py-2 text-xs font-medium text-brand-violet hover:bg-brand-violet/15"
-        >
-          <BookMarked className="h-3.5 w-3.5" aria-hidden />
-          Add section
-        </button>
+      <div className="flex shrink-0 flex-col gap-2">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => addManualStep()}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-peacock-200 bg-peacock-50 px-2 py-2 text-xs font-medium text-peacock-800 hover:bg-peacock-100"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden />
+            Add step
+          </button>
+          <button
+            type="button"
+            onClick={() => addSection()}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-brand-violet/30 bg-brand-violet/10 px-2 py-2 text-xs font-medium text-brand-violet hover:bg-brand-violet/15"
+          >
+            <BookMarked className="h-3.5 w-3.5" aria-hidden />
+            Add section
+          </button>
+        </div>
+        {onLinkPeacockDoc ? (
+          <button
+            type="button"
+            onClick={onLinkPeacockDoc}
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-brand-violet/40 bg-white px-2 py-2 text-xs font-medium text-brand-violet hover:bg-brand-violet/5"
+          >
+            <Link2 className="h-3.5 w-3.5" aria-hidden />
+            Link peacock doc
+          </button>
+        ) : null}
       </div>
 
       {!steps.length ? (
@@ -188,6 +230,21 @@ export const StepList = () => {
                       <SortableSection
                         key={item.id}
                         section={item}
+                        isSelected={item.id === selectedOutlineId}
+                        onSelect={selectOutlineItem}
+                      />
+                    );
+                  }
+
+                  if (isFlowBranch(item)) {
+                    return (
+                      <SortableBranch
+                        key={item.id}
+                        branch={{
+                          id: item.id,
+                          title: item.title,
+                          pathCount: item.paths.length,
+                        }}
                         isSelected={item.id === selectedOutlineId}
                         onSelect={selectOutlineItem}
                       />
