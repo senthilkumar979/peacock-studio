@@ -8,6 +8,7 @@ import { useFlowStore } from '@/store/flowStore';
 import type { SharedDocumentViewMode } from '@/utils/shareLink';
 import { FlowBranchChoicePanel } from './FlowBranchChoicePanel';
 import { PlayerControls } from './PlayerControls';
+import { PlayerFinale } from './PlayerFinale';
 import { PlayerStep } from './PlayerStep';
 import { SharedViewToggle } from './SharedViewToggle';
 
@@ -21,6 +22,7 @@ interface PlayerViewProps {
 function getControlsLabel(
   playback: ReturnType<typeof useBranchingPlayback>,
 ): string {
+  if (playback.isAtFinale) return 'Guide complete';
   if (playback.linkedPlayback) {
     const { path, stepIndex, steps } = playback.linkedPlayback;
     return `${path.label} · Step ${stepIndex + 1} of ${steps.length}`;
@@ -51,7 +53,7 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
 
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
-  }, [playback.currentIndex, atBranch?.id, playback.linkedPlayback?.path.id]);
+  }, [playback.currentIndex, atBranch?.id, playback.linkedPlayback?.path.id, playback.isAtFinale]);
 
   const keyboardHandlers = useMemo(
     () => ({
@@ -65,11 +67,11 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
   useKeyboard(keyboardHandlers);
 
   useEffect(() => {
-    if (!isPlaying || playback.linkedPlayback) return;
+    if (!isPlaying || playback.linkedPlayback || playback.isAtFinale) return;
     if (playback.currentSegment?.type === 'branch') return;
 
     const timer = window.setTimeout(() => {
-      if (playback.currentIndex < playback.segments.length - 1) {
+      if (playback.currentIndex < playback.segments.length) {
         playback.goNext();
         return;
       }
@@ -86,7 +88,14 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
   const positionLabel = getControlsLabel(playback);
   const progressLabel = playback.linkedPlayback
     ? positionLabel
-    : getProgressLabel(playback.currentIndex, playback.segments.length);
+    : getProgressLabel(playback.currentIndex, playback.totalNavigableSegments);
+
+  const handleReplay = () => {
+    playback.replay();
+    setIsPlaying(false);
+  };
+
+  const isScrollableMain = atBranch || playback.isAtFinale;
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
@@ -109,12 +118,21 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
       <main
         ref={mainRef}
         className={`flex min-h-0 flex-1 px-3 py-3 md:px-6 md:py-4 ${
-          atBranch
+          isScrollableMain
             ? 'items-start overflow-y-auto overscroll-contain'
             : 'items-center justify-center overflow-hidden'
         }`}
       >
-        {playback.isLoadingLinked ? (
+        {playback.isAtFinale ? (
+          <PlayerFinale
+            title={flow?.flow.title ?? 'Untitled Flow'}
+            description={(flow?.flow.description ?? '').trim()}
+            stepCount={playback.playableStepCount}
+            branchCount={playback.branchCount}
+            sectionCount={playback.sectionCount}
+            onReplay={handleReplay}
+          />
+        ) : playback.isLoadingLinked ? (
           <p className="text-sm text-slate-500">Loading linked demo…</p>
         ) : playback.linkedError ? (
           <p className="text-sm text-amber-800">{playback.linkedError}</p>
@@ -141,7 +159,7 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
         positionLabel={positionLabel}
         progressLabel={progressLabel}
         currentIndex={playback.currentIndex}
-        totalSegments={playback.segments.length}
+        totalSegments={playback.totalNavigableSegments}
         isPlaying={isPlaying}
         onPrevious={playback.goPrevious}
         onNext={playback.goNext}

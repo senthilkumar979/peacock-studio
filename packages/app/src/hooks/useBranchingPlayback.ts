@@ -20,13 +20,18 @@ interface UseBranchingPlaybackResult {
   segments: PlayerOutlineSegment[];
   currentSegment: PlayerOutlineSegment | null;
   currentIndex: number;
+  totalNavigableSegments: number;
+  isAtFinale: boolean;
   linkedPlayback: LinkedPlayback | null;
   isLoadingLinked: boolean;
   linkedError: string | null;
   playableStepCount: number;
+  sectionCount: number;
+  branchCount: number;
   selectBranchPath: (path: LinkedPeacockPath) => void;
   goNext: () => void;
   goPrevious: () => void;
+  replay: () => void;
   setCurrentIndex: (index: number) => void;
 }
 
@@ -42,8 +47,18 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
     () => segments.filter((segment) => segment.type === 'step').length,
     [segments],
   );
+  const sectionCount = useMemo(
+    () => segments.filter((segment) => segment.type === 'section').length,
+    [segments],
+  );
+  const branchCount = useMemo(
+    () => segments.filter((segment) => segment.type === 'branch').length,
+    [segments],
+  );
 
-  const currentSegment = linkedPlayback ? null : (segments[currentIndex] ?? null);
+  const totalNavigableSegments = segments.length + 1;
+  const isAtFinale = !linkedPlayback && segments.length > 0 && currentIndex >= segments.length;
+  const currentSegment = linkedPlayback || isAtFinale ? null : (segments[currentIndex] ?? null);
 
   const selectBranchPath = useCallback((path: LinkedPeacockPath) => {
     setIsLoadingLinked(true);
@@ -74,6 +89,11 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
     setLinkedError(null);
   }, []);
 
+  const replay = useCallback(() => {
+    clearLinked();
+    setCurrentIndex(0);
+  }, [clearLinked]);
+
   const goNext = useCallback(() => {
     if (linkedPlayback) {
       if (linkedPlayback.stepIndex < linkedPlayback.steps.length - 1) {
@@ -83,10 +103,10 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
         return;
       }
       clearLinked();
-      setCurrentIndex((index) => Math.min(index + 1, segments.length - 1));
+      setCurrentIndex((index) => Math.min(index + 1, segments.length));
       return;
     }
-    setCurrentIndex((index) => Math.min(index + 1, segments.length - 1));
+    setCurrentIndex((index) => Math.min(index + 1, segments.length));
   }, [linkedPlayback, segments.length, clearLinked]);
 
   const goPrevious = useCallback(() => {
@@ -104,8 +124,8 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
   }, [linkedPlayback, clearLinked]);
 
   useEffect(() => {
-    if (currentIndex > segments.length - 1) {
-      setCurrentIndex(Math.max(segments.length - 1, 0));
+    if (currentIndex > segments.length) {
+      setCurrentIndex(Math.max(segments.length, 0));
     }
   }, [currentIndex, segments.length]);
 
@@ -113,13 +133,18 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
     segments,
     currentSegment,
     currentIndex,
+    totalNavigableSegments,
+    isAtFinale,
     linkedPlayback,
     isLoadingLinked,
     linkedError,
     playableStepCount,
+    sectionCount,
+    branchCount,
     selectBranchPath,
     goNext,
     goPrevious,
+    replay,
     setCurrentIndex,
   };
 }
