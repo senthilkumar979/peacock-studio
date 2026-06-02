@@ -3,14 +3,16 @@ import type { ProductTour, TourLearnerSegment } from '@/types/productTour';
 import { sortTourFeatures } from '@/utils/createProductTour';
 import {
   buildTourLearnerSegments,
-  buildTourStepCounts,
+  buildTourDemoMeta,
 } from '@/utils/productTourLearner';
+import type { DemoPlaybackMeta } from '@/utils/productTourLearner';
 
 interface UseProductTourLearnerResult {
   segments: TourLearnerSegment[];
   currentIndex: number;
   currentSegment: TourLearnerSegment | null;
   stepCounts: number[][];
+  demoMeta: DemoPlaybackMeta[][];
   isLoading: boolean;
   isAtComplete: boolean;
   goNext: () => void;
@@ -21,6 +23,7 @@ interface UseProductTourLearnerResult {
 
 export function useProductTourLearner(tour: ProductTour | null): UseProductTourLearnerResult {
   const [stepCounts, setStepCounts] = useState<number[][]>([]);
+  const [demoMeta, setDemoMeta] = useState<DemoPlaybackMeta[][]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -28,9 +31,11 @@ export function useProductTourLearner(tour: ProductTour | null): UseProductTourL
     if (!tour) return;
     let cancelled = false;
     setIsLoading(true);
-    void buildTourStepCounts(tour)
-      .then((counts) => {
-        if (!cancelled) setStepCounts(counts);
+    void buildTourDemoMeta(tour)
+      .then((meta) => {
+        if (cancelled) return;
+        setDemoMeta(meta);
+        setStepCounts(meta.map((featureMeta) => featureMeta.map((demo) => demo.stepCount)));
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -41,8 +46,8 @@ export function useProductTourLearner(tour: ProductTour | null): UseProductTourL
   }, [tour]);
 
   const segments = useMemo(
-    () => buildTourLearnerSegments(stepCounts),
-    [stepCounts],
+    () => buildTourLearnerSegments(demoMeta),
+    [demoMeta],
   );
 
   const currentSegment = segments[currentIndex] ?? null;
@@ -69,6 +74,7 @@ export function useProductTourLearner(tour: ProductTour | null): UseProductTourL
     currentIndex,
     currentSegment,
     stepCounts,
+    demoMeta,
     isLoading,
     isAtComplete,
     goNext,

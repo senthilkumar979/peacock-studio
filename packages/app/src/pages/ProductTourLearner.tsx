@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { getPlayableStepRange, type FlowStep } from '@peacock/shared';
 import { EmptyFlowState } from '@/components/EmptyFlowState';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { AppHeader } from '@/components/AppHeader';
@@ -8,6 +9,8 @@ import { useProductTourLearner } from '@/hooks/useProductTourLearner';
 import { useSavedProductTour } from '@/hooks/useSavedProductTour';
 import { ProductTourOverviewCanvas } from '@/product-tour-builder/ProductTourOverviewCanvas';
 import { RoutePeacockPlayer } from '@/route-learner/RoutePeacockPlayer';
+import { PlayerStep } from '@/player/PlayerStep';
+import { getFlowDocument } from '@/services/flowLibraryService';
 import { getPersona } from '@/services/productTourLibraryService';
 import { getSortedFeatures } from '@/store/productTourBuilderStore';
 import type { Persona } from '@/types/persona';
@@ -21,6 +24,7 @@ import { TourFeatureIntroPanel } from '@/product-tour-learner/TourFeatureIntroPa
 import { TourPersonaIntroPanel } from '@/product-tour-learner/TourPersonaIntroPanel';
 import { TourDetailsPanel } from '@/product-tour-learner/TourDetailsPanel';
 import { TourDemoIntroPanel } from '@/product-tour-learner/TourDemoIntroPanel';
+import { TourBranchPointPanel } from '@/product-tour-learner/TourBranchPointPanel';
 
 export const ProductTourLearner = () => {
   const { tourId } = useParams<{ tourId: string }>();
@@ -32,6 +36,15 @@ export const ProductTourLearner = () => {
 
   const [persona, setPersona] = useState<Persona | null>(null);
   const [estimatedMinutes, setEstimatedMinutes] = useState<number | null>(null);
+  const [isLoadingLinked, setIsLoadingLinked] = useState(false);
+  const [linkedError, setLinkedError] = useState<string | null>(null);
+  const [linkedPlayback, setLinkedPlayback] = useState<{
+    steps: FlowStep[];
+    screenshotUrls: Record<string, string>;
+    stepIndex: number;
+    branchTitle: string;
+    pathLabel: string;
+  } | null>(null);
 
   const features = useMemo(() => (tour ? getSortedFeatures(tour) : []), [tour]);
 
@@ -41,12 +54,83 @@ export const ProductTourLearner = () => {
     void estimateTourDurationMinutes(tour).then(setEstimatedMinutes);
   }, [tour]);
 
+  const handleNext = useCallback(() => {
+    if (!linkedPlayback) {
+      playback.goNext();
+      return;
+    }
+    if (linkedPlayback.stepIndex < linkedPlayback.steps.length - 1) {
+      setLinkedPlayback((state) =>
+        state ? { ...state, stepIndex: state.stepIndex + 1 } : state,
+      );
+      return;
+    }
+    setLinkedPlayback(null);
+    setLinkedError(null);
+    playback.goNext();
+  }, [linkedPlayback, playback]);
+
+  const handlePrevious = useCallback(() => {
+    if (!linkedPlayback) {
+      playback.goPrevious();
+      return;
+    }
+    if (linkedPlayback.stepIndex > 0) {
+      setLinkedPlayback((state) =>
+        state ? { ...state, stepIndex: state.stepIndex - 1 } : state,
+      );
+      return;
+    }
+    setLinkedPlayback(null);
+    setLinkedError(null);
+  }, [linkedPlayback, playback]);
+
   useKeyboard({
-    ArrowRight: () => playback.goNext(),
-    ArrowLeft: () => playback.goPrevious(),
+    ArrowRight: handleNext,
+    ArrowLeft: handlePrevious,
   });
 
   const onDocumentLoaded = useCallback(() => undefined, []);
+  const segment = playback.currentSegment;
+
+  const handleSelectBranchPath = useCallback(
+    async (pathId: string) => {
+      if (!segment || segment.type !== 'demo-branch') return;
+      const branch = playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex]?.branches?.[
+        segment.branchIndex
+      ];
+      const path = branch?.paths.find((item) => item.id === pathId);
+      if (!path) return;
+
+      setIsLoadingLinked(true);
+      setLinkedError(null);
+
+      try {
+        const doc = await getFlowDocument(path.targetDocumentId);
+        if (!doc) {
+          setLinkedError('This linked demo is no longer available.');
+          return;
+        }
+
+        const slice = getPlayableStepRange(doc.steps, path.fromStepId, path.toStepId);
+        if (!slice?.length) {
+          setLinkedError('The selected path has no playable steps.');
+          return;
+        }
+
+        setLinkedPlayback({
+          steps: slice,
+          screenshotUrls: doc.screenshotUrls,
+          stepIndex: 0,
+          branchTitle: branch?.title || 'Branch decision',
+          pathLabel: path.label || 'Selected path',
+        });
+      } finally {
+        setIsLoadingLinked(false);
+      }
+    },
+    [segment, playback.demoMeta],
+  );
 
   if (!tourId) {
     return (
@@ -74,19 +158,63 @@ export const ProductTourLearner = () => {
     );
   }
 
-  const segment = playback.currentSegment;
-
   const activeFeatureIndex =
-    segment?.type === 'feature-intro' || segment?.type === 'demo-intro' || segment?.type === 'demo-step'
+    segment?.type === 'feature-intro' ||
+    segment?.type === 'demo-intro' ||
+    segment?.type === 'demo-branch' ||
+    segment?.type === 'demo-step'
       ? segment.featureIndex
       : null;
 
   const activeDemoIndex =
-    segment?.type === 'demo-intro' || segment?.type === 'demo-step' ? segment.demoIndex : null;
+    segment?.type === 'demo-intro' ||
+    segment?.type === 'demo-branch' ||
+    segment?.type === 'demo-step'
+      ? segment.demoIndex
+      : null;
+
+  const activeStageLabel = (() => {
+    if (linkedPlayback) return 'Inside selected branch path';
+    if (!segment) return 'Overview';
+    if (segment.type === 'persona-intro') return 'Persona intro';
+    if (segment.type === 'tour-details') return 'Tour details';
+    if (segment.type === 'feature-intro') return `Feature ${segment.featureIndex + 1} intro`;
+    if (segment.type === 'demo-intro') return `Demo ${segment.demoIndex + 1} intro`;
+    if (segment.type === 'demo-branch') return 'Branch point';
+    if (segment.type === 'demo-step') return `Demo step ${segment.stepIndex + 1}`;
+    return 'Tour complete';
+  })();
+
+  const activeBranchTitle =
+    segment?.type === 'demo-branch'
+      ? playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex]?.branches?.[
+          segment.branchIndex
+        ]?.title ?? null
+      : linkedPlayback?.branchTitle ?? null;
+
+  const activePathLabel = linkedPlayback?.pathLabel ?? null;
 
   const stepCount = countTourStepsFromCounts(playback.stepCounts);
 
   const renderStage = () => {
+    if (isLoadingLinked) {
+      return <p className="text-sm text-slate-500">Loading linked branch demo…</p>;
+    }
+    if (linkedError) {
+      return <p className="text-sm text-amber-800">{linkedError}</p>;
+    }
+    if (linkedPlayback) {
+      const linkedStep = linkedPlayback.steps[linkedPlayback.stepIndex];
+      if (!linkedStep) return null;
+      return (
+        <PlayerStep
+          step={linkedStep}
+          stepNumber={linkedPlayback.stepIndex + 1}
+          screenshotUrls={linkedPlayback.screenshotUrls}
+        />
+      );
+    }
+
     if (!segment) return null;
 
     if (segment.type === 'persona-intro') {
@@ -123,6 +251,7 @@ export const ProductTourLearner = () => {
       const feature = features[segment.featureIndex];
       const demo = feature?.demos[segment.demoIndex];
       const demoStepCount = playback.stepCounts?.[segment.featureIndex]?.[segment.demoIndex] ?? 0;
+      const demoMeta = playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex];
       if (!feature || !demo) return null;
       return (
         <TourDemoIntroPanel
@@ -130,6 +259,8 @@ export const ProductTourLearner = () => {
           demo={demo}
           demoNumber={segment.demoIndex + 1}
           stepCount={demoStepCount}
+          branchCount={demoMeta?.branchCount ?? 0}
+          branches={demoMeta?.branches ?? []}
           onContinue={playback.goNext}
         />
       );
@@ -145,6 +276,21 @@ export const ProductTourLearner = () => {
           documentId={demo.documentId}
           stepIndex={segment.stepIndex}
           onDocumentLoaded={onDocumentLoaded}
+        />
+      );
+    }
+
+    if (segment.type === 'demo-branch') {
+      const branch = playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex]?.branches?.[
+        segment.branchIndex
+      ];
+      if (!branch) return null;
+      return (
+        <TourBranchPointPanel
+          featureNumber={segment.featureIndex + 1}
+          demoNumber={segment.demoIndex + 1}
+          branch={branch}
+          onSelectPath={handleSelectBranchPath}
         />
       );
     }
@@ -188,6 +334,10 @@ export const ProductTourLearner = () => {
               tour={tour}
               activeFeatureIndex={activeFeatureIndex}
               activeDemoIndex={activeDemoIndex}
+              demoMeta={playback.demoMeta}
+              activeStageLabel={activeStageLabel}
+              activeBranchTitle={activeBranchTitle}
+              activePathLabel={activePathLabel}
             />
           </aside>
         ) : null}
@@ -204,16 +354,16 @@ export const ProductTourLearner = () => {
           <div className="flex gap-2">
             <button
               type="button"
-              disabled={playback.currentIndex === 0}
-              onClick={playback.goPrevious}
+              disabled={playback.currentIndex === 0 && !linkedPlayback}
+              onClick={handlePrevious}
               className="rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
             >
               Previous
             </button>
             <button
               type="button"
-              disabled={playback.isAtComplete}
-              onClick={playback.goNext}
+              disabled={playback.isAtComplete && !linkedPlayback}
+              onClick={handleNext}
               className="rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
             >
               Next

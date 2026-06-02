@@ -1,20 +1,51 @@
-import { CheckCircle2, Layers3, PlayCircle, Sparkles } from 'lucide-react';
+import { CheckCircle2, GitBranch, Layers3, PlayCircle, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { getSortedFeatures } from '@/store/productTourBuilderStore';
 import type { ProductTour } from '@/types/productTour';
+import type { DemoPlaybackMeta } from '@/utils/productTourLearner';
+import { buildTourDemoMeta } from '@/utils/productTourLearner';
 
 interface ProductTourOverviewCanvasProps {
   tour: ProductTour;
   activeFeatureIndex?: number | null;
   activeDemoIndex?: number | null;
+  demoMeta?: DemoPlaybackMeta[][];
+  activeStageLabel?: string;
+  activeBranchTitle?: string | null;
+  activePathLabel?: string | null;
 }
 
 export const ProductTourOverviewCanvas = ({
   tour,
   activeFeatureIndex = null,
   activeDemoIndex = null,
+  demoMeta = [],
+  activeStageLabel = 'Builder mode',
+  activeBranchTitle = null,
+  activePathLabel = null,
 }: ProductTourOverviewCanvasProps) => {
   const features = getSortedFeatures(tour);
   const totalDemos = features.reduce((sum, feature) => sum + feature.demos.length, 0);
+  const [resolvedDemoMeta, setResolvedDemoMeta] = useState<DemoPlaybackMeta[][]>(demoMeta);
+
+  useEffect(() => {
+    if (demoMeta.length) {
+      setResolvedDemoMeta(demoMeta);
+      return;
+    }
+
+    let cancelled = false;
+    void buildTourDemoMeta(tour).then((nextMeta) => {
+      if (!cancelled) setResolvedDemoMeta(nextMeta);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tour, demoMeta]);
+
+  const activeFeature = activeFeatureIndex !== null ? features[activeFeatureIndex] : null;
+  const activeDemo =
+    activeFeature && activeDemoIndex !== null ? activeFeature.demos[activeDemoIndex] : null;
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60">
@@ -32,6 +63,60 @@ export const ProductTourOverviewCanvas = ({
             <PlayCircle className="h-3.5 w-3.5" aria-hidden />
             {totalDemos} demos
           </span>
+        </div>
+      </div>
+
+      <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          Current location
+        </p>
+        <div className="mt-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+          <p
+            title={activeStageLabel}
+            className="truncate text-sm font-semibold text-slate-900"
+          >
+            {activeStageLabel}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {activeFeature ? (
+              <span
+                title={activeFeature.title}
+                className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-peacock-50 px-2.5 py-1 text-xs font-medium text-peacock-800"
+              >
+                <Layers3 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="max-w-[170px] truncate">{activeFeature.title}</span>
+              </span>
+            ) : null}
+            {activeDemo ? (
+              <span
+                title={activeDemo.label || `Demo ${activeDemoIndex !== null ? activeDemoIndex + 1 : ''}`}
+                className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
+              >
+                <PlayCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="max-w-[170px] truncate">
+                  {activeDemo.label || `Demo ${activeDemoIndex !== null ? activeDemoIndex + 1 : ''}`}
+                </span>
+              </span>
+            ) : null}
+            {activeBranchTitle ? (
+              <span
+                title={activeBranchTitle}
+                className="inline-flex max-w-full items-center gap-1 rounded-full bg-brand-violet/10 px-2.5 py-1 text-xs font-medium text-brand-violet"
+              >
+                <GitBranch className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="max-w-[170px] truncate">{activeBranchTitle}</span>
+              </span>
+            ) : null}
+            {activePathLabel ? (
+              <span
+                title={activePathLabel}
+                className="inline-flex max-w-full items-center gap-1 rounded-full bg-brand-violet/5 px-2.5 py-1 text-xs font-medium text-brand-violet"
+              >
+                <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="max-w-[170px] truncate">{activePathLabel}</span>
+              </span>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -65,7 +150,12 @@ export const ProductTourOverviewCanvas = ({
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                         Feature {index + 1}
                       </p>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">{feature.title}</p>
+                      <p
+                        title={feature.title}
+                        className="mt-1 truncate text-sm font-semibold text-slate-900"
+                      >
+                        {feature.title}
+                      </p>
                     </div>
                     {isActiveFeature ? (
                       <span className="inline-flex shrink-0 items-center rounded-full bg-peacock-100 px-2 py-0.5 text-[11px] font-semibold text-peacock-800">
@@ -78,6 +168,7 @@ export const ProductTourOverviewCanvas = ({
                     <ul className="mt-3 space-y-1.5">
                       {feature.demos.map((demo, demoIndex) => {
                         const isActiveDemo = isActiveFeature && activeDemoIndex === demoIndex;
+                        const branchCount = resolvedDemoMeta[index]?.[demoIndex]?.branchCount ?? 0;
                         return (
                           <li
                             key={demo.id}
@@ -87,13 +178,24 @@ export const ProductTourOverviewCanvas = ({
                                 : 'border-slate-200 bg-white text-slate-600'
                             }`}
                           >
-                            <span className="truncate">
+                            <span
+                              title={demo.label || `Demo ${demoIndex + 1}`}
+                              className="truncate"
+                            >
                               Demo {demoIndex + 1}
                               {demo.label ? ` · ${demo.label}` : ''}
                             </span>
-                            {isActiveDemo ? (
-                              <Sparkles className="h-3.5 w-3.5 shrink-0 text-peacock-700" aria-hidden />
-                            ) : null}
+                            <span className="ml-2 inline-flex shrink-0 items-center gap-1">
+                              {branchCount > 0 ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-brand-violet/10 px-2 py-0.5 text-[10px] font-semibold text-brand-violet">
+                                  <GitBranch className="h-3 w-3" aria-hidden />
+                                  {branchCount}
+                                </span>
+                              ) : null}
+                              {isActiveDemo ? (
+                                <Sparkles className="h-3.5 w-3.5 text-peacock-700" aria-hidden />
+                              ) : null}
+                            </span>
                           </li>
                         );
                       })}

@@ -1,9 +1,38 @@
-import { getPlayableSteps } from '@peacock/shared';
+import {
+  getPlayableStepRange,
+  getPlayableSteps,
+  isFlowBranch,
+  isFlowStep,
+  sortBranchPaths,
+} from '@peacock/shared';
 import type { ProductTour, TourLearnerSegment } from '@/types/productTour';
 import { sortTourFeatures } from '@/utils/createProductTour';
 import { getFlowDocument } from '@/services/flowLibraryService';
 
 const SECONDS_PER_STEP = 30;
+
+export interface DemoBranchMeta {
+  id: string;
+  title: string;
+  pathCount: number;
+  paths: Array<{
+    id: string;
+    label: string;
+    targetDocumentId: string;
+    fromStepId: string;
+    toStepId: string;
+  }>;
+}
+
+export interface DemoPlaybackMeta {
+  stepCount: number;
+  branchCount: number;
+  branches: DemoBranchMeta[];
+  timeline: Array<
+    | { type: 'step'; stepIndex: number }
+    | { type: 'branch'; branchIndex: number }
+  >;
+}
 
 export async function estimateTourDurationMinutes(tour: ProductTour): Promise<number | null> {
   let totalSteps = 0;
@@ -21,37 +50,102 @@ export async function estimateTourDurationMinutes(tour: ProductTour): Promise<nu
   return Math.max(1, Math.ceil((totalSteps * SECONDS_PER_STEP) / 60));
 }
 
-export async function buildTourStepCounts(tour: ProductTour): Promise<number[][]> {
-  const counts: number[][] = [];
+export async function buildTourDemoMeta(tour: ProductTour): Promise<DemoPlaybackMeta[][]> {
+  const meta: DemoPlaybackMeta[][] = [];
 
   for (const feature of sortTourFeatures(tour.features)) {
-    const featureCounts: number[] = [];
+    const featureMeta: DemoPlaybackMeta[] = [];
     for (const demo of feature.demos) {
       const doc = await getFlowDocument(demo.documentId);
-      featureCounts.push(doc ? getPlayableSteps(doc.steps).length : 0);
+      if (!doc) {
+        featureMeta.push({
+          stepCount: 0,
+          branchCount: 0,
+          branches: [],
+          timeline: [],
+        });
+        continue;
+      }
+
+      const branches: DemoBranchMeta[] = [];
+      const timeline: DemoPlaybackMeta['timeline'] = [];
+      let stepIndex = 0;
+
+      for (const item of doc.steps) {
+        if (isFlowBranch(item)) {
+          const branchIndex = branches.length;
+          branches.push({
+            id: item.id,
+            title: item.title,
+            pathCount: item.paths.length,
+            paths: sortBranchPaths(item.paths).map((path) => ({
+              id: path.id,
+              label: path.label,
+              targetDocumentId: path.targetDocumentId,
+              fromStepId: path.fromStepId,
+              toStepId: path.toStepId,
+            })),
+          });
+          timeline.push({ type: 'branch', branchIndex });
+          continue;
+        }
+        if (isFlowStep(item)) {
+          timeline.push({ type: 'step', stepIndex });
+          stepIndex += 1;
+        }
+      }
+
+      featureMeta.push({
+        stepCount: getPlayableSteps(doc.steps).length,
+        branchCount: branches.length,
+        branches,
+        timeline,
+      });
     }
-    counts.push(featureCounts);
+    meta.push(featureMeta);
   }
 
+  return meta;
+}
+
+export async function buildTourStepCounts(tour: ProductTour): Promise<number[][]> {
+  const meta = await buildTourDemoMeta(tour);
+  const counts: number[][] = meta.map((featureMeta) =>
+    featureMeta.map((demoMeta) => demoMeta.stepCount),
+  );
   return counts;
 }
 
-export function buildTourLearnerSegments(stepCounts: number[][]): TourLearnerSegment[] {
+export function buildTourLearnerSegments(demoMeta: DemoPlaybackMeta[][]): TourLearnerSegment[] {
   const segments: TourLearnerSegment[] = [{ type: 'persona-intro' }, { type: 'tour-details' }];
 
-  if (!stepCounts.length) {
+  if (!demoMeta.length) {
     segments.push({ type: 'complete' });
     return segments;
   }
 
-  stepCounts.forEach((featureDemos, featureIndex) => {
+  demoMeta.forEach((featureDemos, featureIndex) => {
     segments.push({ type: 'feature-intro', featureIndex });
 
-    featureDemos.forEach((stepCount, demoIndex) => {
+    featureDemos.forEach((meta, demoIndex) => {
       segments.push({ type: 'demo-intro', featureIndex, demoIndex });
-      for (let stepIndex = 0; stepIndex < stepCount; stepIndex += 1) {
-        segments.push({ type: 'demo-step', featureIndex, demoIndex, stepIndex });
-      }
+      meta.timeline.forEach((item) => {
+        if (item.type === 'branch') {
+          segments.push({
+            type: 'demo-branch',
+            featureIndex,
+            demoIndex,
+            branchIndex: item.branchIndex,
+          });
+          return;
+        }
+        segments.push({
+          type: 'demo-step',
+          featureIndex,
+          demoIndex,
+          stepIndex: item.stepIndex,
+        });
+      });
     });
   });
 

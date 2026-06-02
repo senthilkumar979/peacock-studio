@@ -59,6 +59,12 @@ export type TourDemoIntroSegment = {
   featureIndex: number;
   demoIndex: number;
 };
+export type TourDemoBranchSegment = {
+  type: 'demo-branch';
+  featureIndex: number;
+  demoIndex: number;
+  branchIndex: number;
+};
 export type TourDemoStepSegment = {
   type: 'demo-step';
   featureIndex: number;
@@ -72,5 +78,6 @@ export type TourLearnerSegment =
   | TourDetailsSegment
   | TourFeatureIntroSegment
   | TourDemoIntroSegment
+  | TourDemoBranchSegment
   | TourDemoStepSegment
   | TourCompleteSegment;

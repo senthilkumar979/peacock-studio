@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight, GitBranch, Play } from 'lucide-react';
 import type { SavedFlowDocument } from '@/types/savedFlow';
 import { getFlowDocument } from '@/services/flowLibraryService';
 import type { TourDemoRef } from '@/types/productTour';
+import type { DemoBranchMeta } from '@/utils/productTourLearner';
 
 interface TourDemoIntroPanelProps {
   featureNumber: number;
   demo: TourDemoRef;
   demoNumber: number;
   stepCount: number;
+  branchCount: number;
+  branches: DemoBranchMeta[];
   onContinue: () => void;
 }
 
@@ -17,6 +20,8 @@ export const TourDemoIntroPanel = ({
   demo,
   demoNumber,
   stepCount,
+  branchCount,
+  branches,
   onContinue,
 }: TourDemoIntroPanelProps) => {
   const [doc, setDoc] = useState<SavedFlowDocument | null>(null);
@@ -60,6 +65,12 @@ export const TourDemoIntroPanel = ({
           <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
             {stepCount} steps
           </span>
+          {branchCount > 0 ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-brand-violet/10 px-3 py-1 text-xs font-semibold text-brand-violet">
+              <GitBranch className="h-3.5 w-3.5" aria-hidden />
+              {branchCount} branch{branchCount === 1 ? '' : 'es'}
+            </span>
+          ) : null}
         </div>
 
         <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{title}</h2>
@@ -85,6 +96,27 @@ export const TourDemoIntroPanel = ({
             </div>
           </div>
         </div>
+
+        {branches.length ? (
+          <div className="mt-4 rounded-2xl border border-brand-violet/20 bg-brand-violet/5 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-violet">
+              Branches in this demo
+            </p>
+            <ul className="mt-2 space-y-1.5">
+              {branches.map((branch) => (
+                <li key={branch.id} className="text-sm text-slate-700">
+                  <span className="font-medium">{branch.title || 'Untitled branch'}</span>
+                  <span className="ml-2 text-slate-500">
+                    ({branch.pathCount} path{branch.pathCount === 1 ? '' : 's'})
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-slate-500">
+              Branch choices will appear during this demo where applicable.
+            </p>
+          </div>
+        ) : null}
 
         <button type="button" onClick={onContinue} className="btn-peacock mt-8 w-full sm:w-auto">
           Start demo

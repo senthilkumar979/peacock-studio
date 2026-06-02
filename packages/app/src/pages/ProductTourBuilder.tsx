@@ -59,7 +59,10 @@ export const ProductTourBuilder = () => {
         <ProductTourFeatureList summaries={summaries} />
         <div className="space-y-4">
           {builderTour ? (
-            <ProductTourOverviewCanvas tour={builderTour} />
+            <ProductTourOverviewCanvas
+              tour={builderTour}
+              activeStageLabel="Builder mode · Editing structure"
+            />
           ) : null}
           {builderTour ? (
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60">
