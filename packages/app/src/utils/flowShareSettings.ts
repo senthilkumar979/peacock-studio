@@ -32,7 +32,7 @@ export function resolveShareSettings(
   const branchIds = new Set(defaults.enabledBranchIds);
 
   return {
-    includeMainFlow: stored.includeMainFlow,
+    includeMainFlow: true,
     enabledPathIds: stored.enabledPathIds.filter((id) => pathIds.has(id)),
     enabledBranchIds: stored.enabledBranchIds.filter((id) => branchIds.has(id)),
   };
@@ -45,8 +45,7 @@ export function parseShareSearchParams(
 ): FlowViewerFilter | null {
   const hasPaths = params.has('paths');
   const hasBranches = params.has('branches');
-  const hasIncludeMain = params.has('includeMain');
-  if (!hasPaths && !hasBranches && !hasIncludeMain) return null;
+  if (!hasPaths && !hasBranches) return null;
 
   const defaults = resolveShareSettings(steps, stored);
   const enabledPathIds = hasPaths
@@ -55,16 +54,12 @@ export function parseShareSearchParams(
   const enabledBranchIds = hasBranches
     ? new Set(params.get('branches')?.split(',').filter(Boolean) ?? [])
     : new Set(defaults.enabledBranchIds);
-  const includeMainFlow = hasIncludeMain
-    ? params.get('includeMain') !== '0'
-    : defaults.includeMainFlow;
 
-  return { includeMainFlow, enabledPathIds, enabledBranchIds };
+  return { includeMainFlow: true, enabledPathIds, enabledBranchIds };
 }
 
 export function buildShareQueryString(settings: FlowShareSettings): string {
   const params = new URLSearchParams();
-  if (!settings.includeMainFlow) params.set('includeMain', '0');
   if (settings.enabledPathIds.length) params.set('paths', settings.enabledPathIds.join(','));
   if (settings.enabledBranchIds.length) {
     params.set('branches', settings.enabledBranchIds.join(','));

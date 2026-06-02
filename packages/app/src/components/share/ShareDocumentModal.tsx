@@ -4,10 +4,15 @@ import { Loader2, X } from 'lucide-react';
 import { collectAllBranches, type FlowOutlineItem, type FlowPayload } from '@peacock/shared';
 import { ShareLinkPanel } from '@/components/share/ShareLinkPanel';
 import { ShareMethodPicker, type ShareMethod } from '@/components/share/ShareMethodPicker';
+import { SharePdfPathOptions } from '@/components/share/SharePdfPathOptions';
 import { exportFlowPdf } from '@/pdf/exportFlowPdf';
 import { getFlowDocument } from '@/services/flowLibraryService';
 import type { FlowShareSettings } from '@/types/savedFlow';
 import { buildShareQueryString, resolveShareSettings } from '@/utils/flowShareSettings';
+import {
+  buildDefaultPdfPathSelections,
+  hasCompletePdfPathSelections,
+} from '@/utils/pdfPathSelection';
 import {
   buildSharedDocumentUrl,
   copyTextToClipboard,
@@ -59,12 +64,19 @@ export const ShareDocumentModal = ({
   );
   const [branchSettings, setBranchSettings] = useState(defaultBranchSettings);
 
+  const defaultPdfPathSelections = useMemo(
+    () => buildDefaultPdfPathSelections(branches),
+    [branches],
+  );
+  const [pdfPathSelections, setPdfPathSelections] = useState(defaultPdfPathSelections);
+
   useEffect(() => {
     if (!isOpen) return;
     setMethod('link');
     setAccessMode('readonly');
     setBranchSettings(defaultBranchSettings);
-  }, [isOpen, defaultBranchSettings]);
+    setPdfPathSelections(defaultPdfPathSelections);
+  }, [isOpen, defaultBranchSettings, defaultPdfPathSelections]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -107,14 +119,21 @@ export const ShareDocumentModal = ({
       if (!flow) return;
       setIsExporting(true);
       try {
-        await exportFlowPdf({ flow, steps, screenshotUrls });
+        await exportFlowPdf({
+          flow,
+          steps,
+          screenshotUrls,
+          pathSelections: hasBranches ? pdfPathSelections : undefined,
+        });
         onClose();
       } finally {
         setIsExporting(false);
       }
       return;
     }
-    if (hasBranches && accessMode === 'readonly') onShareSettingsSave?.(branchSettings);
+    if (hasBranches && accessMode === 'readonly') {
+      onShareSettingsSave?.({ ...branchSettings, includeMainFlow: true });
+    }
     await copyTextToClipboard(shareUrl);
     onClose();
   };
@@ -122,7 +141,11 @@ export const ShareDocumentModal = ({
   if (!isOpen) return null;
 
   const primaryDisabled =
-    method === 'embed' || isLoading || isExporting || (method === 'pdf' && !flow);
+    method === 'embed' ||
+    isLoading ||
+    isExporting ||
+    (method === 'pdf' && !flow) ||
+    (method === 'pdf' && hasBranches && !hasCompletePdfPathSelections(branches, pdfPathSelections));
 
   return createPortal(
     <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-slate-900/50 p-4 backdrop-blur-sm sm:p-6">
@@ -173,9 +196,20 @@ export const ShareDocumentModal = ({
                 />
               ) : null}
               {method === 'pdf' ? (
-                <p className="text-sm text-slate-600">
-                  Export this documentation as a PDF with all playable steps and screenshots.
-                </p>
+                <div className="space-y-4">
+                  <p className="text-sm text-slate-600">
+                    {hasBranches
+                      ? 'Export a PDF with main flow steps, branch highlights, and steps from your selected paths.'
+                      : 'Export this documentation as a PDF with all playable steps and screenshots.'}
+                  </p>
+                  {hasBranches ? (
+                    <SharePdfPathOptions
+                      branches={branches}
+                      selections={pdfPathSelections}
+                      onChange={setPdfPathSelections}
+                    />
+                  ) : null}
+                </div>
               ) : null}
             </>
           )}

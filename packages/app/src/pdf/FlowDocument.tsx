@@ -1,31 +1,49 @@
 import { Document } from '@react-pdf/renderer';
-import type { FlowPayload, FlowStep } from '@peacock/shared';
+import type { FlowPayload } from '@peacock/shared';
+import type { PdfExportPage } from './buildPdfExportPages';
+import { PdfBranchPage } from './PdfBranchPage';
 import { PdfCoverPage } from './PdfCoverPage';
 import { PdfStepPage } from './PdfStepPage';
 
 interface FlowDocumentProps {
   flow: FlowPayload;
-  steps: FlowStep[];
-  screenshotUrls: Record<string, string>;
+  pages: PdfExportPage[];
+  stepCount: number;
   logoSrc: string;
 }
 
-export const FlowDocument = ({ flow, steps, screenshotUrls, logoSrc }: FlowDocumentProps) => {
+export const FlowDocument = ({ flow, pages, stepCount, logoSrc }: FlowDocumentProps) => {
   const flowTitle = flow.flow.title || 'Untitled Flow';
+  let stepNumber = 0;
 
   return (
     <Document title={flowTitle} author="Peacock Studio">
-      <PdfCoverPage flow={flow} stepCount={steps.length} logoSrc={logoSrc} />
-      {steps.map((step, index) => (
-        <PdfStepPage
-          key={step.id}
-          step={step}
-          stepNumber={index + 1}
-          flowTitle={flowTitle}
-          screenshotUrls={screenshotUrls}
-          logoSrc={logoSrc}
-        />
-      ))}
+      <PdfCoverPage flow={flow} stepCount={stepCount} logoSrc={logoSrc} />
+      {pages.map((page, index) => {
+        if (page.kind === 'branch') {
+          return (
+            <PdfBranchPage
+              key={`branch-${page.branch.id}`}
+              branch={page.branch}
+              selectedPath={page.selectedPath}
+              flowTitle={flowTitle}
+              logoSrc={logoSrc}
+            />
+          );
+        }
+
+        stepNumber += 1;
+        return (
+          <PdfStepPage
+            key={`${page.step.id}-${index}`}
+            step={page.step}
+            stepNumber={stepNumber}
+            flowTitle={flowTitle}
+            screenshotUrls={page.screenshotUrls}
+            logoSrc={logoSrc}
+          />
+        );
+      })}
     </Document>
   );
 };

@@ -36,14 +36,6 @@ export const ShareBranchingOptions = ({
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         Branching paths
       </p>
-      <label className="flex items-center gap-2 text-sm text-slate-700">
-        <input
-          type="checkbox"
-          checked={settings.includeMainFlow}
-          onChange={(event) => onChange({ ...settings, includeMainFlow: event.target.checked })}
-        />
-        Include main flow steps
-      </label>
       {branches.map((branch) => (
         <div key={branch.id} className="rounded-lg border border-slate-200 bg-white p-3">
           <label className="flex items-center gap-2 text-sm font-semibold text-slate-800">

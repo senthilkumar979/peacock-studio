@@ -1,7 +1,9 @@
+import { collectAllBranches } from '@peacock/shared';
 import { getChapterNodes } from '@/utils/routeGraph';
 import type { SavedRoute } from '@/types/route';
 import { getFlowDocument } from '@/services/flowLibraryService';
 import { exportFlowPdf } from '@/pdf/exportFlowPdf';
+import { buildDefaultPdfPathSelections } from '@/utils/pdfPathSelection';
 
 export function collectRouteDocumentIds(route: SavedRoute): string[] {
   const seen = new Set<string>();
@@ -27,6 +29,7 @@ export async function exportRoutePdf(route: SavedRoute): Promise<void> {
       flow: doc.flow,
       steps: doc.steps,
       screenshotUrls: doc.screenshotUrls,
+      pathSelections: buildDefaultPdfPathSelections(collectAllBranches(doc.steps)),
     });
   }
 }

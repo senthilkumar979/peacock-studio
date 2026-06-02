@@ -1,13 +1,19 @@
 import { pdf } from '@react-pdf/renderer';
-import { getPlayableSteps, type FlowOutlineItem, type FlowPayload } from '@peacock/shared';
+import { collectAllBranches, type FlowOutlineItem, type FlowPayload } from '@peacock/shared';
+import { buildPdfExportPages, countPdfStepPages } from './buildPdfExportPages';
 import { FlowDocument } from './FlowDocument';
 import { getPdfLogoUrl } from './pdfConstants';
 import { registerPdfFonts } from './registerPdfFonts';
+import {
+  buildDefaultPdfPathSelections,
+  type PdfPathSelections,
+} from '@/utils/pdfPathSelection';
 
 interface ExportFlowPdfParams {
   flow: FlowPayload;
   steps: FlowOutlineItem[];
   screenshotUrls: Record<string, string>;
+  pathSelections?: PdfPathSelections;
 }
 
 function sanitizeFilename(title: string): string {
@@ -18,20 +24,28 @@ export async function exportFlowPdf({
   flow,
   steps,
   screenshotUrls,
+  pathSelections: pathSelectionsInput,
 }: ExportFlowPdfParams): Promise<void> {
   registerPdfFonts();
 
-  const playableSteps = getPlayableSteps(steps);
+  const branches = collectAllBranches(steps);
+  const pathSelections =
+    pathSelectionsInput ?? buildDefaultPdfPathSelections(branches);
+  const pages = await buildPdfExportPages(steps, screenshotUrls, pathSelections);
+  const stepCount = countPdfStepPages(pages);
+
+  if (!stepCount) return;
+
   const payload: FlowPayload = { ...flow, steps };
   const logoSrc = getPdfLogoUrl();
 
   const blob = await pdf(
     <FlowDocument
       flow={payload}
-      steps={playableSteps}
-      screenshotUrls={screenshotUrls}
+      pages={pages}
+      stepCount={stepCount}
       logoSrc={logoSrc}
-    />
+    />,
   ).toBlob();
 
   const url = URL.createObjectURL(blob);
