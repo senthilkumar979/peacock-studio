@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Dashboard } from '@/pages/Dashboard';
+import { Landing } from '@/pages/Landing';
 import { CompareDocs } from '@/pages/CompareDocs';
 import { Editor } from '@/pages/Editor';
 import { LegacyRouteRedirect } from '@/pages/LegacyRouteRedirect';
@@ -14,6 +15,7 @@ export const App = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<Dashboard />} />
+      <Route path="/landing" element={<Landing />} />
       <Route path="/compare" element={<CompareDocs />} />
       <Route path="/editor" element={<Editor />} />
       <Route path="/tours/new" element={<NewProductTour />} />
