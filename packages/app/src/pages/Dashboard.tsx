@@ -1,6 +1,7 @@
 import { SearchX } from "lucide-react";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { Navigate } from "react-router-dom";
 import { AppFooter } from "@/components/AppFooter";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
@@ -71,6 +72,15 @@ export const Dashboard = () => {
       setPendingTourDelete(null),
     );
   };
+
+  const isLibraryReady = !isLoading && !isToursLoading;
+  const isLibraryEmpty = summaries.length === 0 && tourSummaries.length === 0;
+  const shouldRedirectToLanding =
+    isLibraryReady && !error && !toursError && isLibraryEmpty;
+
+  if (shouldRedirectToLanding) {
+    return <Navigate to="/landing" replace />;
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100/80">

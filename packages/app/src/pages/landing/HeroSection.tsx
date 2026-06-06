@@ -1,7 +1,7 @@
-import { motion } from 'framer-motion';
-import { ArrowRight, Play } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { HeroWorkflowVisual } from './HeroWorkflowVisual';
+import { motion } from "framer-motion";
+import { ArrowRight, Play } from "lucide-react";
+import { Link } from "react-router-dom";
+import { HeroWorkflowVisual } from "./HeroWorkflowVisual";
 
 export const HeroSection = () => (
   <section className="relative overflow-hidden border-b border-slate-800 bg-slate-950 px-6 pb-24 pt-12 sm:pb-32 sm:pt-16">
@@ -36,36 +36,35 @@ export const HeroSection = () => (
         </h1>
 
         <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
-          Peacock Studio captures real browser workflows and turns them into editable walkthroughs,
-          branching demos, and persona-led product tours — stored locally, shared instantly.
+          Peacock Studio captures real browser workflows and turns them into
+          editable walkthroughs, branching demos, and persona-led product tours
+          — stored locally, shared instantly.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link
-            to="/editor"
+            to="/"
             className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-peacock-800 shadow-lg shadow-peacock-900/30 transition hover:bg-slate-100"
           >
-            Start capturing
+            Build a product tour
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
-          <Link
-            to="/tours/new"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/10"
-          >
-            <Play className="h-4 w-4" aria-hidden />
-            Build a product tour
-          </Link>
         </div>
+        <div className="mt-12 border-t border-white/10 pt-8" />
 
-        <dl className="grid grid-cols-3 gap-4 border-t border-white/10 pt-8">
+        <dl className="grid grid-cols-3 gap-4 pt-8">
           {[
-            ['Capture', 'Chrome extension'],
-            ['Structure', 'Branches & tours'],
-            ['Share', 'Links & PDF'],
+            ["Capture", "Chrome extension"],
+            ["Structure", "Branches & tours"],
+            ["Share", "Links & PDF"],
           ].map(([term, detail]) => (
             <div key={term}>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{term}</dt>
-              <dd className="mt-1 text-sm font-semibold text-white">{detail}</dd>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                {term}
+              </dt>
+              <dd className="mt-1 text-sm font-semibold text-white">
+                {detail}
+              </dd>
             </div>
           ))}
         </dl>
