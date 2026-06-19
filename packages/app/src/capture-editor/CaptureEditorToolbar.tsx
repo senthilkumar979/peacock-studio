@@ -31,7 +31,9 @@ export const CaptureEditorToolbar = () => {
         </button>
       ))}
       {activeTool === 'crop' ? (
-        <p className="ml-auto text-xs text-slate-500">Press Enter to apply crop</p>
+        <p className="ml-auto text-xs text-slate-500">
+          Drag to select — crop applies when you release
+        </p>
       ) : (
         <button
           type="button"

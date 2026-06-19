@@ -301,6 +301,7 @@ export const CaptureEditorCanvas = ({
     if (!drag) return;
 
     if (activeTool === 'crop') {
+      useCaptureEditorStore.getState().finalizeCrop();
       return;
     }
 
