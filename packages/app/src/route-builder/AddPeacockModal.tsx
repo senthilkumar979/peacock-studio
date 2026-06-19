@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
+import { FlowVersionBadge } from '@/components/dashboard/FlowVersionBadge';
 import type { SavedFlowSummary } from '@/types/savedFlow';
 
 interface AddPeacockModalProps {
@@ -32,7 +33,8 @@ export const AddPeacockModal = ({
       if (!normalized) return true;
       return (
         summary.title.toLowerCase().includes(normalized) ||
-        summary.description.toLowerCase().includes(normalized)
+        summary.description.toLowerCase().includes(normalized) ||
+        summary.version.toLowerCase().includes(normalized)
       );
     });
   }, [summaries, excludedDocumentIds, query]);
@@ -45,7 +47,7 @@ export const AddPeacockModal = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-peacock-title"
-        className="flex max-h-[min(80vh,640px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+        className="flex max-h-[min(80vh,800px)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
       >
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <h2 id="add-peacock-title" className="text-lg font-bold text-slate-900">
@@ -95,7 +97,14 @@ export const AddPeacockModal = ({
                     }}
                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-peacock-200 hover:bg-peacock-50/40"
                   >
-                    <p className="font-medium text-slate-900">{summary.title}</p>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="min-w-0 truncate font-medium text-slate-900">
+                        {summary.title}
+                      </p>
+                      <div className="shrink-0">
+                        <FlowVersionBadge version={summary.version} />
+                      </div>
+                    </div>
                     <p className="mt-1 text-xs text-slate-500">
                       {summary.stepCount} {summary.stepCount === 1 ? 'step' : 'steps'}
                     </p>

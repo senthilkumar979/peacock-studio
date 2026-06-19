@@ -1,7 +1,11 @@
-import { useState } from 'react';
-import type { FlowSection } from '@peacock/shared';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { useFlowStore } from '@/store/flowStore';
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useFlowStore } from "@/store/flowStore";
+import type { FlowSection } from "@peacock/shared";
+import { Info } from "lucide-react";
+import { useState } from "react";
+
+const SECTION_INFO_TOOLTIP =
+  "Sections divide your flow into chapters. They appear in the editor, document view, and player as intro cards before the steps in each chapter.";
 
 interface SectionPanelProps {
   section: FlowSection | null;
@@ -9,7 +13,9 @@ interface SectionPanelProps {
 
 export const SectionPanel = ({ section }: SectionPanelProps) => {
   const updateSectionTitle = useFlowStore((state) => state.updateSectionTitle);
-  const updateSectionDescription = useFlowStore((state) => state.updateSectionDescription);
+  const updateSectionDescription = useFlowStore(
+    (state) => state.updateSectionDescription,
+  );
   const deleteOutlineItem = useFlowStore((state) => state.deleteOutlineItem);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -24,15 +30,34 @@ export const SectionPanel = ({ section }: SectionPanelProps) => {
   return (
     <>
       <div className="flex h-full flex-col gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Chapter / section
-        </h2>
+        <div className="flex items-center gap-2 text-brand-violet">
+          <h2 className="text-sm font-semibold uppercase tracking-wide">
+            Chapter / section
+          </h2>
+          <span className="relative inline-flex">
+            <button
+              type="button"
+              className="peer inline-flex rounded-full p-0.5 text-slate-400 transition hover:text-peacock-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-peacock-500 focus-visible:ring-offset-1"
+              aria-label="What is a section?"
+            >
+              <Info className="h-3.5 w-3.5" aria-hidden />
+            </button>
+            <span
+              role="tooltip"
+              className="pointer-events-none absolute left-1/2 top-full z-30 mt-2 hidden w-56 -translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-left text-[13px] font-normal normal-case leading-relaxed text-white shadow-xl peer-hover:block peer-focus:block"
+            >
+              {SECTION_INFO_TOOLTIP}
+            </span>
+          </span>
+        </div>
 
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium text-slate-700">Title</span>
           <input
             value={section.title}
-            onChange={(event) => updateSectionTitle(section.id, event.target.value)}
+            onChange={(event) =>
+              updateSectionTitle(section.id, event.target.value)
+            }
             className="rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2"
           />
         </label>
@@ -41,17 +66,14 @@ export const SectionPanel = ({ section }: SectionPanelProps) => {
           <span className="font-medium text-slate-700">Description</span>
           <textarea
             value={section.description}
-            onChange={(event) => updateSectionDescription(section.id, event.target.value)}
-            rows={6}
+            onChange={(event) =>
+              updateSectionDescription(section.id, event.target.value)
+            }
+            rows={8}
             placeholder="Optional context shown in document view"
             className="resize-none rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2"
           />
         </label>
-
-        <p className="rounded-lg bg-slate-100 p-3 text-xs leading-relaxed text-slate-600">
-          Sections group steps in the editor and shared document view. They are not shown in
-          player mode.
-        </p>
 
         <button
           type="button"
@@ -74,7 +96,15 @@ export const SectionPanel = ({ section }: SectionPanelProps) => {
           setIsDeleteDialogOpen(false);
         }}
         onCancel={() => setIsDeleteDialogOpen(false)}
-      />
+      >
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          The section{" "}
+          <span className="font-semibold text-peacock-800">
+            {section.title.trim() || "Untitled section"}
+          </span>{" "}
+          will be removed from this flow. Steps below it are kept.
+        </p>
+      </ConfirmDialog>
     </>
   );
 };

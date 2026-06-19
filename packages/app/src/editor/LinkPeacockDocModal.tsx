@@ -91,7 +91,7 @@ export const LinkPeacockDocModal = ({
         isOpen
         summaries={summaries}
         excludedDocumentIds={excludedIds}
-        title="Create a branching point"
+        title="Add a path to branch point"
         closeOnSelect={false}
         onClose={onClose}
         onSelect={(documentId) => {

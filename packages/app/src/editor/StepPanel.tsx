@@ -51,7 +51,7 @@ export const StepPanel = ({ step }: StepPanelProps) => {
           <textarea
             value={step.notes}
             onChange={(event) => updateStepNotes(step.id, event.target.value)}
-            rows={4}
+            rows={8}
             placeholder="Add context, tips, or warnings for this step…"
             className="resize-none rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2"
           />
