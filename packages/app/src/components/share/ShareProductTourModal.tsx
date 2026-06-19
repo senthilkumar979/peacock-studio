@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, X } from 'lucide-react';
 import { ShareMethodPicker, type ShareMethod } from '@/components/share/ShareMethodPicker';
+import { PdfExportBlockingOverlay } from '@/components/share/PdfExportBlockingOverlay';
 import { exportProductTourPdf, tourHasExportableDemos } from '@/pdf/exportProductTourPdf';
 import { getProductTour } from '@/storage/flowLibraryDb';
 import type { ProductTour } from '@/types/productTour';
@@ -70,6 +71,11 @@ export const ShareProductTourModal = ({
     };
   }, [isOpen, tourId, tourProp]);
 
+  const handleClose = () => {
+    if (isExporting) return;
+    onClose();
+  };
+
   const handlePrimaryAction = async () => {
     if (method === 'embed') return;
     if (method === 'pdf') {
@@ -77,14 +83,14 @@ export const ShareProductTourModal = ({
       setIsExporting(true);
       try {
         await exportProductTourPdf(tour);
-        onClose();
       } finally {
         setIsExporting(false);
       }
+      onClose();
       return;
     }
     await copyTextToClipboard(shareUrl);
-    onClose();
+    handleClose();
   };
 
   if (!isOpen) return null;
@@ -93,7 +99,9 @@ export const ShareProductTourModal = ({
     method === 'embed' || isLoading || isExporting || (method === 'pdf' && (!tour || !canExportPdf));
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-slate-900/50 p-4 backdrop-blur-sm sm:p-6">
+    <>
+      <PdfExportBlockingOverlay isActive={isExporting} />
+      <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-slate-900/50 p-4 backdrop-blur-sm sm:p-6">
       <div
         role="dialog"
         aria-modal="true"
@@ -104,7 +112,12 @@ export const ShareProductTourModal = ({
           <h2 id="share-tour-title" className="text-lg font-bold text-slate-900">
             Share product tour
           </h2>
-          <button type="button" onClick={onClose} className="rounded-lg p-2 hover:bg-slate-100">
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={isExporting}
+            className="rounded-lg p-2 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
             <X className="h-4 w-4" aria-hidden />
           </button>
         </div>
@@ -117,7 +130,7 @@ export const ShareProductTourModal = ({
             </div>
           ) : (
             <>
-              <ShareMethodPicker value={method} onChange={setMethod} />
+              <ShareMethodPicker value={method} onChange={setMethod} disabled={isExporting} />
               {method === 'embed' ? (
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -184,7 +197,12 @@ export const ShareProductTourModal = ({
         </div>
 
         <div className="flex justify-end gap-2 border-t border-slate-100 p-5">
-          <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2 text-sm">
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={isExporting}
+            className="rounded-lg border px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+          >
             Cancel
           </button>
           {method === 'embed' ? (
@@ -203,7 +221,8 @@ export const ShareProductTourModal = ({
           )}
         </div>
       </div>
-    </div>,
+    </div>
+    </>,
     document.body,
   );
 };

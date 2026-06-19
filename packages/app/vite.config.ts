@@ -9,6 +9,7 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
       '@peacock/shared': resolve(__dirname, '../shared/src'),
     },
+    dedupe: ['react', 'react-dom'],
   },
   server: {
     port: 5173,

@@ -10,6 +10,7 @@ import {
 import type { SavedFlowSummary } from '@/types/savedFlow'
 import { formatFlowDate } from '@/utils/formatFlowDate'
 import { FlowDocumentActions } from './FlowDocumentActions'
+import { FlowVersionBadge } from './FlowVersionBadge'
 
 interface FlowLibraryCardsProps {
   summaries: SavedFlowSummary[]
@@ -88,7 +89,11 @@ const FlowLibraryCard = ({
           )}
         </Link>
 
-        <div className="mt-4 flex flex-col gap-1.5 text-xs text-slate-500">
+        <div className="mt-4">
+          <FlowVersionBadge version={summary.version} />
+        </div>
+
+        <div className="mt-3 flex flex-col gap-1.5 text-xs text-slate-500">
           <span className="inline-flex items-center gap-1.5">
             <Calendar
               className="h-3.5 w-3.5 shrink-0 text-slate-400"

@@ -5,6 +5,7 @@ export type ShareMethod = 'embed' | 'pdf' | 'link';
 interface ShareMethodPickerProps {
   value: ShareMethod;
   onChange: (method: ShareMethod) => void;
+  disabled?: boolean;
 }
 
 const OPTIONS: Array<{
@@ -33,7 +34,7 @@ const OPTIONS: Array<{
   },
 ];
 
-export const ShareMethodPicker = ({ value, onChange }: ShareMethodPickerProps) => (
+export const ShareMethodPicker = ({ value, onChange, disabled = false }: ShareMethodPickerProps) => (
   <div className="grid gap-2 sm:grid-cols-3">
     {OPTIONS.map((option) => {
       const Icon = option.icon;
@@ -42,8 +43,9 @@ export const ShareMethodPicker = ({ value, onChange }: ShareMethodPickerProps) =
         <button
           key={option.id}
           type="button"
+          disabled={disabled}
           onClick={() => onChange(option.id)}
-          className={`rounded-xl border px-3 py-3 text-left transition ${
+          className={`rounded-xl border px-3 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${
             isSelected
               ? 'border-peacock-500 bg-peacock-50 ring-2 ring-peacock-500/20'
               : 'border-slate-200 bg-white hover:border-slate-300'

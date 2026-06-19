@@ -5,6 +5,7 @@ import { collectAllBranches, type FlowOutlineItem, type FlowPayload } from '@pea
 import { ShareLinkPanel } from '@/components/share/ShareLinkPanel';
 import { ShareMethodPicker, type ShareMethod } from '@/components/share/ShareMethodPicker';
 import { SharePdfPathOptions } from '@/components/share/SharePdfPathOptions';
+import { PdfExportBlockingOverlay } from '@/components/share/PdfExportBlockingOverlay';
 import { exportFlowPdf } from '@/pdf/exportFlowPdf';
 import { getFlowDocument } from '@/services/flowLibraryService';
 import type { FlowShareSettings } from '@/types/savedFlow';
@@ -113,6 +114,11 @@ export const ShareDocumentModal = ({
     hasBranches && accessMode === 'readonly' ? buildShareQueryString(branchSettings) : '';
   const shareUrl = buildSharedDocumentUrl(documentId, { accessMode, query: branchingQuery });
 
+  const handleClose = () => {
+    if (isExporting) return;
+    onClose();
+  };
+
   const handlePrimaryAction = async () => {
     if (method === 'embed') return;
     if (method === 'pdf') {
@@ -125,17 +131,17 @@ export const ShareDocumentModal = ({
           screenshotUrls,
           pathSelections: hasBranches ? pdfPathSelections : undefined,
         });
-        onClose();
       } finally {
         setIsExporting(false);
       }
+      onClose();
       return;
     }
     if (hasBranches && accessMode === 'readonly') {
       onShareSettingsSave?.({ ...branchSettings, includeMainFlow: true });
     }
     await copyTextToClipboard(shareUrl);
-    onClose();
+    handleClose();
   };
 
   if (!isOpen) return null;
@@ -148,7 +154,9 @@ export const ShareDocumentModal = ({
     (method === 'pdf' && hasBranches && !hasCompletePdfPathSelections(branches, pdfPathSelections));
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-slate-900/50 p-4 backdrop-blur-sm sm:p-6">
+    <>
+      <PdfExportBlockingOverlay isActive={isExporting} />
+      <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-slate-900/50 p-4 backdrop-blur-sm sm:p-6">
       <div
         role="dialog"
         aria-modal="true"
@@ -159,7 +167,12 @@ export const ShareDocumentModal = ({
           <h2 id="share-document-title" className="text-lg font-bold text-slate-900">
             Share documentation
           </h2>
-          <button type="button" onClick={onClose} className="rounded-lg p-2 hover:bg-slate-100">
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={isExporting}
+            className="rounded-lg p-2 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
             <X className="h-4 w-4" aria-hidden />
           </button>
         </div>
@@ -172,7 +185,7 @@ export const ShareDocumentModal = ({
             </div>
           ) : (
             <>
-              <ShareMethodPicker value={method} onChange={setMethod} />
+              <ShareMethodPicker value={method} onChange={setMethod} disabled={isExporting} />
               {method === 'embed' ? (
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -216,7 +229,12 @@ export const ShareDocumentModal = ({
         </div>
 
         <div className="flex justify-end gap-2 border-t border-slate-100 p-5">
-          <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2 text-sm">
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={isExporting}
+            className="rounded-lg border px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+          >
             Cancel
           </button>
           {method === 'embed' ? (
@@ -239,7 +257,8 @@ export const ShareDocumentModal = ({
           )}
         </div>
       </div>
-    </div>,
+    </div>
+    </>,
     document.body,
   );
 };

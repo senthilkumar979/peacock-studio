@@ -5,6 +5,7 @@ import { formatFlowDate } from '@/utils/formatFlowDate';
 import { getDocumentPath } from '@/utils/shareLink';
 import { FlowDocumentActions } from './FlowDocumentActions';
 import { FlowStepCountBadge } from './FlowStepCountBadge';
+import { FlowVersionBadge } from './FlowVersionBadge';
 
 interface FlowLibraryListProps {
   summaries: SavedFlowSummary[];
@@ -30,6 +31,7 @@ export const FlowLibraryList = ({ summaries, onRequestDelete }: FlowLibraryListP
               {summary.title}
             </p>
             <p className="mt-1.5 flex flex-wrap items-center gap-2">
+              <FlowVersionBadge version={summary.version} />
               <span className="inline-flex items-center gap-1 text-sm text-slate-500">
                 <Calendar className="h-3.5 w-3.5 text-slate-400" aria-hidden />
                 {formatFlowDate(summary.generatedAt)}

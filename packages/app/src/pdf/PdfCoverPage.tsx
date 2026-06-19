@@ -2,6 +2,7 @@ import { Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import type { FlowPayload } from '@peacock/shared';
 import { PdfPageFooter } from './PdfPageChrome';
 import { PDF_COLORS, PDF_FONT_FAMILY } from './pdfTheme';
+import { hasPdfCaptureEnvironment } from './pdfCaptureEnvironment';
 
 const styles = StyleSheet.create({
   page: {
@@ -92,7 +93,6 @@ const styles = StyleSheet.create({
   emptyDescription: {
     fontSize: 11,
     color: '#94a3b8',
-    fontStyle: 'italic',
     marginBottom: 20,
   },
 });
@@ -140,7 +140,7 @@ export const PdfCoverPage = ({ flow, stepCount, logoSrc }: PdfCoverPageProps) =>
             <Text style={styles.metaLabel}>Recorded</Text>
             <Text style={styles.metaValue}>{createdAt}</Text>
           </View>
-          {flow.metadata.captureEnvironment ? (
+          {hasPdfCaptureEnvironment(flow.metadata.captureEnvironment) ? (
             <View style={styles.metaColSpaced}>
               <Text style={styles.metaLabel}>Capture metadata</Text>
               <Text style={styles.metaValue}>Included on next page</Text>

@@ -1,4 +1,4 @@
-import { Calendar, Type } from 'lucide-react';
+import { Calendar, FileText, Settings2, Tag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { SavedFlowSummary } from '@/types/savedFlow';
 import { formatFlowDate } from '@/utils/formatFlowDate';
@@ -19,18 +19,28 @@ export const FlowLibraryTable = ({ summaries, onRequestDelete }: FlowLibraryTabl
         <tr>
           <th className="px-4 py-3 text-left font-semibold text-slate-700">
             <span className="inline-flex items-center gap-1.5">
-              <Type className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              <FileText className="h-3.5 w-3.5 text-slate-400" aria-hidden />
               Title
             </span>
           </th>
-          <th className="px-4 py-3 text-left font-semibold text-slate-700">Version</th>
+          <th className="px-4 py-3 text-left font-semibold text-slate-700">
+            <span className="inline-flex items-center gap-1.5">
+              <Tag className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              Version
+            </span>
+          </th>
           <th className="px-4 py-3 text-left font-semibold text-slate-700">
             <span className="inline-flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5 text-slate-400" aria-hidden />
               Generated
             </span>
           </th>
-          <th className="px-4 py-3 text-right font-semibold text-slate-700">Actions</th>
+          <th className="px-4 py-3 text-right font-semibold text-slate-700">
+            <span className="inline-flex items-center justify-end gap-1.5">
+              <Settings2 className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              Actions
+            </span>
+          </th>
         </tr>
       </thead>
       <tbody className="divide-y divide-slate-100">

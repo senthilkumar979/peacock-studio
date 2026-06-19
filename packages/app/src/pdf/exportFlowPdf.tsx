@@ -1,9 +1,9 @@
-import { pdf } from '@react-pdf/renderer';
 import { collectAllBranches, type FlowOutlineItem, type FlowPayload } from '@peacock/shared';
 import { buildPdfExportPages, countPdfStepPages } from './buildPdfExportPages';
 import { FlowDocument } from './FlowDocument';
 import { getPdfLogoUrl } from './pdfConstants';
 import { registerPdfFonts } from './registerPdfFonts';
+import { renderPdfBlob } from './renderPdfBlob';
 import {
   buildDefaultPdfPathSelections,
   type PdfPathSelections,
@@ -39,14 +39,14 @@ export async function exportFlowPdf({
   const payload: FlowPayload = { ...flow, steps };
   const logoSrc = getPdfLogoUrl();
 
-  const blob = await pdf(
+  const blob = await renderPdfBlob(
     <FlowDocument
       flow={payload}
       pages={pages}
       stepCount={stepCount}
       logoSrc={logoSrc}
     />,
-  ).toBlob();
+  );
 
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

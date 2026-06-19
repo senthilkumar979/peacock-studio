@@ -1,7 +1,8 @@
 import type { DashboardViewMode } from '@/types/savedFlow';
 import type { DashboardSortMode } from '@/utils/dashboardLibrary';
-import { ArrowDownUp, FolderOpen, ScanEye, Search } from 'lucide-react';
+import { ArrowDownUp, FolderOpen, ScanEye } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ExpandableLibrarySearch } from './ExpandableLibrarySearch';
 import { ViewModeToggle } from './ViewModeToggle';
 
 interface DashboardLibraryToolbarProps {
@@ -77,25 +78,12 @@ export const DashboardLibraryToolbar = ({
       </div>
     </div>
 
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <label className="relative block w-full sm:max-w-md">
-        <span className="sr-only">Search documentations</span>
-        <Search
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-          aria-hidden
-        />
-        <input
-          type="search"
-          value={searchQuery}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search by title, description, or version…"
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-sm text-slate-900 outline-none ring-peacock-500 transition placeholder:text-slate-400 focus:border-peacock-300 focus:bg-white focus:ring-2"
-        />
-      </label>
+    <div className="flex items-center justify-between gap-4">
+      <ExpandableLibrarySearch value={searchQuery} onChange={onSearchChange} />
 
       <Link
         to="/compare"
-        className="inline-flex shrink-0 items-center justify-center self-start rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-peacock-200 hover:bg-white hover:text-peacock-700 sm:self-auto"
+        className="inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-peacock-200 hover:bg-white hover:text-peacock-700"
       >
         <ScanEye className="mr-1 h-4 w-4 text-slate-500" aria-hidden />
         Compare
