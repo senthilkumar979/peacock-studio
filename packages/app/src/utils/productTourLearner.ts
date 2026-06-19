@@ -5,7 +5,7 @@ import {
   isFlowStep,
   sortBranchPaths,
 } from '@peacock/shared';
-import type { ProductTour, TourLearnerSegment } from '@/types/productTour';
+import type { ProductTour, TourDemoRef, TourLearnerSegment } from '@/types/productTour';
 import { sortTourFeatures } from '@/utils/createProductTour';
 import { getFlowDocument } from '@/services/flowLibraryService';
 
@@ -25,6 +25,7 @@ export interface DemoBranchMeta {
 }
 
 export interface DemoPlaybackMeta {
+  documentTitle: string;
   stepCount: number;
   branchCount: number;
   branches: DemoBranchMeta[];
@@ -32,6 +33,20 @@ export interface DemoPlaybackMeta {
     | { type: 'step'; stepIndex: number }
     | { type: 'branch'; branchIndex: number }
   >;
+}
+
+export function getTourDemoDisplayTitle(
+  demo: Pick<TourDemoRef, 'label'>,
+  meta: Pick<DemoPlaybackMeta, 'documentTitle'> | undefined,
+  demoIndex: number,
+): string {
+  const documentTitle = meta?.documentTitle.trim();
+  if (documentTitle) return documentTitle;
+
+  const label = demo.label?.trim();
+  if (label) return label;
+
+  return `Demo ${demoIndex + 1}`;
 }
 
 export async function estimateTourDurationMinutes(tour: ProductTour): Promise<number | null> {
@@ -59,6 +74,7 @@ export async function buildTourDemoMeta(tour: ProductTour): Promise<DemoPlayback
       const doc = await getFlowDocument(demo.documentId);
       if (!doc) {
         featureMeta.push({
+          documentTitle: 'Missing demo',
           stepCount: 0,
           branchCount: 0,
           branches: [],
@@ -96,6 +112,7 @@ export async function buildTourDemoMeta(tour: ProductTour): Promise<DemoPlayback
       }
 
       featureMeta.push({
+        documentTitle: doc.flow.flow.title.trim() || 'Untitled flow',
         stepCount: getPlayableSteps(doc.steps).length,
         branchCount: branches.length,
         branches,

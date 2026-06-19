@@ -2,8 +2,7 @@ import { CheckCircle2, GitBranch, Layers3, PlayCircle, Sparkles } from 'lucide-r
 import { useEffect, useMemo, useState } from 'react';
 import { getSortedFeatures } from '@/store/productTourBuilderStore';
 import type { ProductTour } from '@/types/productTour';
-import type { DemoPlaybackMeta } from '@/utils/productTourLearner';
-import { buildTourDemoMeta } from '@/utils/productTourLearner';
+import { buildTourDemoMeta, getTourDemoDisplayTitle, type DemoPlaybackMeta } from '@/utils/productTourLearner';
 
 interface ProductTourOverviewCanvasProps {
   tour: ProductTour;
@@ -61,6 +60,16 @@ export const ProductTourOverviewCanvas = ({
   const activeFeature = activeFeatureIndex !== null ? features[activeFeatureIndex] : null;
   const activeDemo =
     activeFeature && activeDemoIndex !== null ? activeFeature.demos[activeDemoIndex] : null;
+  const activeDemoTitle =
+    activeDemo && activeDemoIndex !== null
+      ? getTourDemoDisplayTitle(
+          activeDemo,
+          activeFeatureIndex !== null
+            ? resolvedDemoMeta[activeFeatureIndex]?.[activeDemoIndex]
+            : undefined,
+          activeDemoIndex,
+        )
+      : null;
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60">
@@ -104,13 +113,11 @@ export const ProductTourOverviewCanvas = ({
             ) : null}
             {activeDemo ? (
               <span
-                title={activeDemo.label || `Demo ${activeDemoIndex !== null ? activeDemoIndex + 1 : ''}`}
+                title={activeDemoTitle ?? undefined}
                 className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
               >
                 <PlayCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <span className="max-w-[170px] truncate">
-                  {activeDemo.label || `Demo ${activeDemoIndex !== null ? activeDemoIndex + 1 : ''}`}
-                </span>
+                <span className="max-w-[170px] truncate">{activeDemoTitle}</span>
               </span>
             ) : null}
             {activeBranchTitle ? (
@@ -183,7 +190,9 @@ export const ProductTourOverviewCanvas = ({
                     <ul className="mt-3 space-y-1.5">
                       {feature.demos.map((demo, demoIndex) => {
                         const isActiveDemo = isActiveFeature && activeDemoIndex === demoIndex;
-                        const branchCount = resolvedDemoMeta[index]?.[demoIndex]?.branchCount ?? 0;
+                        const demoMeta = resolvedDemoMeta[index]?.[demoIndex];
+                        const branchCount = demoMeta?.branchCount ?? 0;
+                        const demoTitle = getTourDemoDisplayTitle(demo, demoMeta, demoIndex);
                         return (
                           <li
                             key={demo.id}
@@ -193,12 +202,8 @@ export const ProductTourOverviewCanvas = ({
                                 : 'border-slate-200 bg-white text-slate-600'
                             }`}
                           >
-                            <span
-                              title={demo.label || `Demo ${demoIndex + 1}`}
-                              className="truncate"
-                            >
-                              Demo {demoIndex + 1}
-                              {demo.label ? ` · ${demo.label}` : ''}
+                            <span title={demoTitle} className="truncate">
+                              {demoTitle}
                             </span>
                             <span className="ml-2 inline-flex shrink-0 items-center gap-1">
                               {branchCount > 0 ? (

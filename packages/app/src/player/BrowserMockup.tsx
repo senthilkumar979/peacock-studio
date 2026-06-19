@@ -17,30 +17,44 @@ function getDisplayUrl(url: string): string {
   }
 }
 
+const MAX_ADDRESS_BAR_URL_LENGTH = 124;
+
+function truncateDisplayUrl(url: string): string {
+  const displayUrl = getDisplayUrl(url);
+  if (displayUrl.length <= MAX_ADDRESS_BAR_URL_LENGTH) return displayUrl;
+
+  const keepLength = MAX_ADDRESS_BAR_URL_LENGTH - 1;
+  const startLength = Math.ceil(keepLength * 0.65);
+  const endLength = keepLength - startLength;
+
+  return `${displayUrl.slice(0, startLength)}…${displayUrl.slice(-endLength)}`;
+}
+
 export const BrowserMockup = ({
   url,
   children,
   isFluid = false,
 }: BrowserMockupProps) => {
   const displayUrl = getDisplayUrl(url);
+  const truncatedUrl = truncateDisplayUrl(url);
 
   return (
     <div
-      className={`flex flex-col overflow-hidden rounded-xl bg-slate-800 ring-1 ring-slate-900/10 ${
+      className={`flex min-w-0 flex-col overflow-hidden rounded-xl bg-slate-800 ring-1 ring-slate-900/10 ${
         isFluid
           ? "w-full max-w-full shadow-xl"
           : "mx-auto w-fit max-w-[calc(100vw-2rem)] shadow-2xl"
       }`}
     >
-      <div className="flex shrink-0 items-center gap-3 border-b border-slate-700/80 bg-slate-800 px-4 py-3">
+      <div className="flex min-w-0 max-w-full shrink-0 items-center gap-3 border-b border-slate-700/80 bg-slate-800 px-4 py-3">
         <div className="flex shrink-0 items-center gap-1.5" aria-hidden>
           <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
           <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
           <span className="h-3 w-3 rounded-full bg-[#28c840]" />
         </div>
         <div
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-slate-900/60 px-3 py-1.5 text-xs text-slate-300"
-          title={url}
+          className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-lg bg-slate-900/60 px-3 py-1.5 text-xs text-slate-300"
+          title={displayUrl}
         >
           <svg
             className="h-3 w-3 shrink-0 text-slate-500"
@@ -55,9 +69,9 @@ export const BrowserMockup = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
-            className="min-w-0 max-w-[85%] truncate font-medium"
+            className="min-w-0 flex-1 truncate font-medium"
           >
-            {displayUrl}
+            {truncatedUrl}
           </motion.span>
         </div>
       </div>

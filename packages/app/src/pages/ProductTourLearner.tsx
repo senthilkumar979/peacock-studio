@@ -1,35 +1,36 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { getPlayableStepRange, type FlowStep } from '@peacock/shared';
-import { EmptyFlowState } from '@/components/EmptyFlowState';
-import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
-import { AppHeader } from '@/components/AppHeader';
-import { useKeyboard } from '@/hooks/useKeyboard';
-import { useProductTourLearner } from '@/hooks/useProductTourLearner';
-import { useSavedProductTour } from '@/hooks/useSavedProductTour';
-import { ProductTourOverviewCanvas } from '@/product-tour-builder/ProductTourOverviewCanvas';
-import { RoutePeacockPlayer } from '@/route-learner/RoutePeacockPlayer';
-import { PlayerStep } from '@/player/PlayerStep';
-import { getFlowDocument } from '@/services/flowLibraryService';
-import { getPersona } from '@/services/productTourLibraryService';
-import { getSortedFeatures } from '@/store/productTourBuilderStore';
-import type { Persona } from '@/types/persona';
-import { countTourDemos } from '@/utils/createProductTour';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { getPlayableStepRange, type FlowStep } from "@peacock/shared";
+import { EmptyFlowState } from "@/components/EmptyFlowState";
+import { PeacockStudioLoader } from "@/components/PeacockStudioLoader";
+import { AppHeader } from "@/components/AppHeader";
+import { useKeyboard } from "@/hooks/useKeyboard";
+import { useProductTourLearner } from "@/hooks/useProductTourLearner";
+import { useSavedProductTour } from "@/hooks/useSavedProductTour";
+import { ProductTourOverviewCanvas } from "@/product-tour-builder/ProductTourOverviewCanvas";
+import { RoutePeacockPlayer } from "@/route-learner/RoutePeacockPlayer";
+import { PlayerStep } from "@/player/PlayerStep";
+import { getFlowDocument } from "@/services/flowLibraryService";
+import { getPersona } from "@/services/productTourLibraryService";
+import { getSortedFeatures } from "@/store/productTourBuilderStore";
+import type { Persona } from "@/types/persona";
+import { countTourDemos } from "@/utils/createProductTour";
 import {
   countTourStepsFromCounts,
   estimateTourDurationMinutes,
-} from '@/utils/productTourLearner';
-import { TourCompletePanel } from '@/product-tour-learner/TourCompletePanel';
-import { TourFeatureIntroPanel } from '@/product-tour-learner/TourFeatureIntroPanel';
-import { TourPersonaIntroPanel } from '@/product-tour-learner/TourPersonaIntroPanel';
-import { TourDetailsPanel } from '@/product-tour-learner/TourDetailsPanel';
-import { TourDemoIntroPanel } from '@/product-tour-learner/TourDemoIntroPanel';
-import { TourBranchPointPanel } from '@/product-tour-learner/TourBranchPointPanel';
+  getTourDemoDisplayTitle,
+} from "@/utils/productTourLearner";
+import { TourCompletePanel } from "@/product-tour-learner/TourCompletePanel";
+import { TourFeatureIntroPanel } from "@/product-tour-learner/TourFeatureIntroPanel";
+import { TourPersonaIntroPanel } from "@/product-tour-learner/TourPersonaIntroPanel";
+import { TourDetailsPanel } from "@/product-tour-learner/TourDetailsPanel";
+import { TourDemoIntroPanel } from "@/product-tour-learner/TourDemoIntroPanel";
+import { TourBranchPointPanel } from "@/product-tour-learner/TourBranchPointPanel";
 
 export const ProductTourLearner = () => {
   const { tourId } = useParams<{ tourId: string }>();
   const [searchParams] = useSearchParams();
-  const isPresenter = searchParams.get('presenter') === '1';
+  const isPresenter = searchParams.get("presenter") === "1";
 
   const { tour, isLoading, isLoaded, error } = useSavedProductTour(tourId);
   const playback = useProductTourLearner(tour);
@@ -95,10 +96,10 @@ export const ProductTourLearner = () => {
 
   const handleSelectBranchPath = useCallback(
     async (pathId: string) => {
-      if (!segment || segment.type !== 'demo-branch') return;
-      const branch = playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex]?.branches?.[
-        segment.branchIndex
-      ];
+      if (!segment || segment.type !== "demo-branch") return;
+      const branch =
+        playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex]
+          ?.branches?.[segment.branchIndex];
       const path = branch?.paths.find((item) => item.id === pathId);
       if (!path) return;
 
@@ -108,13 +109,17 @@ export const ProductTourLearner = () => {
       try {
         const doc = await getFlowDocument(path.targetDocumentId);
         if (!doc) {
-          setLinkedError('This linked demo is no longer available.');
+          setLinkedError("This linked demo is no longer available.");
           return;
         }
 
-        const slice = getPlayableStepRange(doc.steps, path.fromStepId, path.toStepId);
+        const slice = getPlayableStepRange(
+          doc.steps,
+          path.fromStepId,
+          path.toStepId,
+        );
         if (!slice?.length) {
-          setLinkedError('The selected path has no playable steps.');
+          setLinkedError("The selected path has no playable steps.");
           return;
         }
 
@@ -122,8 +127,8 @@ export const ProductTourLearner = () => {
           steps: slice,
           screenshotUrls: doc.screenshotUrls,
           stepIndex: 0,
-          branchTitle: branch?.title || 'Branch decision',
-          pathLabel: path.label || 'Selected path',
+          branchTitle: branch?.title || "Branch decision",
+          pathLabel: path.label || "Selected path",
         });
       } finally {
         setIsLoadingLinked(false);
@@ -159,38 +164,51 @@ export const ProductTourLearner = () => {
   }
 
   const activeFeatureIndex =
-    segment?.type === 'feature-intro' ||
-    segment?.type === 'demo-intro' ||
-    segment?.type === 'demo-branch' ||
-    segment?.type === 'demo-step'
+    segment?.type === "feature-intro" ||
+    segment?.type === "demo-intro" ||
+    segment?.type === "demo-branch" ||
+    segment?.type === "demo-step"
       ? segment.featureIndex
       : null;
 
   const activeDemoIndex =
-    segment?.type === 'demo-intro' ||
-    segment?.type === 'demo-branch' ||
-    segment?.type === 'demo-step'
+    segment?.type === "demo-intro" ||
+    segment?.type === "demo-branch" ||
+    segment?.type === "demo-step"
       ? segment.demoIndex
       : null;
 
   const activeStageLabel = (() => {
-    if (linkedPlayback) return 'Inside selected branch path';
-    if (!segment) return 'Overview';
-    if (segment.type === 'persona-intro') return 'Persona intro';
-    if (segment.type === 'tour-details') return 'Tour details';
-    if (segment.type === 'feature-intro') return `Feature ${segment.featureIndex + 1} intro`;
-    if (segment.type === 'demo-intro') return `Demo ${segment.demoIndex + 1} intro`;
-    if (segment.type === 'demo-branch') return 'Branch point';
-    if (segment.type === 'demo-step') return `Demo step ${segment.stepIndex + 1}`;
-    return 'Tour complete';
+    if (linkedPlayback) return "Inside selected branch path";
+    if (!segment) return "Overview";
+    if (segment.type === "persona-intro") return "Persona intro";
+    if (segment.type === "tour-details") return "Tour details";
+    if (segment.type === "feature-intro")
+      return `Feature ${segment.featureIndex + 1} intro`;
+    if (segment.type === "demo-intro") {
+      const demo = features[segment.featureIndex]?.demos[segment.demoIndex];
+      const demoTitle = demo
+        ? getTourDemoDisplayTitle(
+            demo,
+            playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex],
+            segment.demoIndex,
+          )
+        : null;
+      return demoTitle
+        ? `${demoTitle} intro`
+        : `Demo ${segment.demoIndex + 1} intro`;
+    }
+    if (segment.type === "demo-branch") return "Branch point";
+    if (segment.type === "demo-step")
+      return `Demo step ${segment.stepIndex + 1}`;
+    return "Tour complete";
   })();
 
   const activeBranchTitle =
-    segment?.type === 'demo-branch'
-      ? playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex]?.branches?.[
-          segment.branchIndex
-        ]?.title ?? null
-      : linkedPlayback?.branchTitle ?? null;
+    segment?.type === "demo-branch"
+      ? (playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex]
+          ?.branches?.[segment.branchIndex]?.title ?? null)
+      : (linkedPlayback?.branchTitle ?? null);
 
   const activePathLabel = linkedPlayback?.pathLabel ?? null;
 
@@ -198,7 +216,9 @@ export const ProductTourLearner = () => {
 
   const renderStage = () => {
     if (isLoadingLinked) {
-      return <p className="text-sm text-slate-500">Loading linked branch demo…</p>;
+      return (
+        <p className="text-sm text-slate-500">Loading linked branch demo…</p>
+      );
     }
     if (linkedError) {
       return <p className="text-sm text-amber-800">{linkedError}</p>;
@@ -217,13 +237,13 @@ export const ProductTourLearner = () => {
 
     if (!segment) return null;
 
-    if (segment.type === 'persona-intro') {
+    if (segment.type === "persona-intro") {
       return (
         <TourPersonaIntroPanel persona={persona} onContinue={playback.goNext} />
       );
     }
 
-    if (segment.type === 'tour-details') {
+    if (segment.type === "tour-details") {
       return (
         <TourDetailsPanel
           tour={tour}
@@ -235,7 +255,7 @@ export const ProductTourLearner = () => {
       );
     }
 
-    if (segment.type === 'feature-intro') {
+    if (segment.type === "feature-intro") {
       const feature = features[segment.featureIndex];
       if (!feature) return null;
       return (
@@ -247,11 +267,13 @@ export const ProductTourLearner = () => {
       );
     }
 
-    if (segment.type === 'demo-intro') {
+    if (segment.type === "demo-intro") {
       const feature = features[segment.featureIndex];
       const demo = feature?.demos[segment.demoIndex];
-      const demoStepCount = playback.stepCounts?.[segment.featureIndex]?.[segment.demoIndex] ?? 0;
-      const demoMeta = playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex];
+      const demoStepCount =
+        playback.stepCounts?.[segment.featureIndex]?.[segment.demoIndex] ?? 0;
+      const demoMeta =
+        playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex];
       if (!feature || !demo) return null;
       return (
         <TourDemoIntroPanel
@@ -266,7 +288,7 @@ export const ProductTourLearner = () => {
       );
     }
 
-    if (segment.type === 'demo-step') {
+    if (segment.type === "demo-step") {
       const feature = features[segment.featureIndex];
       const demo = feature?.demos[segment.demoIndex];
       if (!demo) return null;
@@ -280,10 +302,10 @@ export const ProductTourLearner = () => {
       );
     }
 
-    if (segment.type === 'demo-branch') {
-      const branch = playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex]?.branches?.[
-        segment.branchIndex
-      ];
+    if (segment.type === "demo-branch") {
+      const branch =
+        playback.demoMeta?.[segment.featureIndex]?.[segment.demoIndex]
+          ?.branches?.[segment.branchIndex];
       if (!branch) return null;
       return (
         <TourBranchPointPanel
@@ -308,7 +330,9 @@ export const ProductTourLearner = () => {
   };
 
   return (
-    <div className={`flex h-screen flex-col overflow-hidden bg-slate-50 ${isPresenter ? 'presenter-mode' : ''}`}>
+    <div
+      className={`flex h-screen flex-col overflow-hidden bg-slate-50 ${isPresenter ? "presenter-mode" : ""}`}
+    >
       {!isPresenter ? (
         <AppHeader
           eyebrow="Product Tours"
@@ -327,9 +351,9 @@ export const ProductTourLearner = () => {
         </AppHeader>
       ) : null}
 
-      <main className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 gap-6 overflow-hidden px-4 py-6">
+      <main className="mx-auto flex min-h-0 w-full max-w-8xl flex-1 gap-6 overflow-hidden px-4 py-6">
         {!isPresenter ? (
-          <aside className="hidden w-72 shrink-0 lg:block">
+          <aside className="hidden w-[400px] shrink-0 lg:block">
             <ProductTourOverviewCanvas
               tour={tour}
               activeFeatureIndex={activeFeatureIndex}
