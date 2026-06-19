@@ -1,15 +1,27 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
-import { createAndSaveProductTour } from '@/services/productTourLibraryService';
+import { createAndSaveProductTourOnce } from '@/services/productTourLibraryService';
 
 export const NewProductTour = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    void createAndSaveProductTour()
-      .then((tour) => navigate(`/tours/${tour.id}/edit`, { replace: true }))
-      .catch(() => navigate('/', { replace: true }));
+    let cancelled = false;
+
+    void createAndSaveProductTourOnce()
+      .then((tour) => {
+        if (cancelled) return;
+        navigate(`/tours/${tour.id}/edit`, { replace: true });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        navigate('/', { replace: true });
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   return (

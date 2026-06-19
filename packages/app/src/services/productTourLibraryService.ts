@@ -18,6 +18,19 @@ export async function createAndSaveProductTour(): Promise<ProductTour> {
   return tour;
 }
 
+let activeTourCreation: Promise<ProductTour> | null = null;
+
+/** Prevents duplicate draft tours when /tours/new mounts more than once (e.g. Strict Mode). */
+export function createAndSaveProductTourOnce(): Promise<ProductTour> {
+  if (!activeTourCreation) {
+    activeTourCreation = createAndSaveProductTour().finally(() => {
+      activeTourCreation = null;
+    });
+  }
+
+  return activeTourCreation;
+}
+
 export async function persistProductTour(tour: ProductTour): Promise<void> {
   await saveProductTour(tour);
 }
