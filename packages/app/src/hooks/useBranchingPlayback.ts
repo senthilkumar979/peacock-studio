@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   getPlayableStepRange,
   getPlayerOutlineSegments,
+  sortBranchPaths,
   type FlowStep,
   type LinkedPeacockPath,
   type PlayerOutlineSegment,
@@ -30,6 +31,8 @@ interface UseBranchingPlaybackResult {
   sectionCount: number;
   branchCount: number;
   selectBranchPath: (path: LinkedPeacockPath) => void;
+  selectedPathByBranchId: Record<string, string>;
+  setBranchPathSelection: (branchId: string, pathId: string) => void;
   goNext: () => void;
   goPrevious: () => void;
   replay: () => void;
@@ -47,6 +50,9 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
   const [linkedPlayback, setLinkedPlayback] = useState<LinkedPlayback | null>(null);
   const [isLoadingLinked, setIsLoadingLinked] = useState(false);
   const [linkedError, setLinkedError] = useState<string | null>(null);
+  const [selectedPathByBranchId, setSelectedPathByBranchId] = useState<Record<string, string>>(
+    {},
+  );
 
   const playableStepCount = useMemo(
     () => segments.filter((segment) => segment.type === 'step').length,
@@ -68,6 +74,34 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
   const segmentIndex = getSegmentIndex(currentIndex);
   const currentSegment =
     linkedPlayback || isAtIntro || isAtFinale ? null : (segments[segmentIndex] ?? null);
+
+  useEffect(() => {
+    for (const segment of segments) {
+      if (segment.type !== 'branch') continue;
+      const firstPath = sortBranchPaths(segment.branch.paths)[0];
+      if (!firstPath) continue;
+
+      setSelectedPathByBranchId((current) => {
+        if (current[segment.branch.id]) return current;
+        return { ...current, [segment.branch.id]: firstPath.id };
+      });
+    }
+  }, [segments]);
+
+  const setBranchPathSelection = useCallback((branchId: string, pathId: string) => {
+    setSelectedPathByBranchId((current) => ({ ...current, [branchId]: pathId }));
+  }, []);
+
+  const getSelectedBranchPath = useCallback(
+    (branch: PlayerOutlineSegment & { type: 'branch' }): LinkedPeacockPath | null => {
+      const paths = sortBranchPaths(branch.branch.paths);
+      if (!paths.length) return null;
+
+      const selectedPathId = selectedPathByBranchId[branch.branch.id];
+      return paths.find((path) => path.id === selectedPathId) ?? paths[0] ?? null;
+    },
+    [selectedPathByBranchId],
+  );
 
   const selectBranchPath = useCallback((path: LinkedPeacockPath) => {
     setIsLoadingLinked(true);
@@ -115,8 +149,19 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
       setCurrentIndex((index) => Math.min(index + 1, finaleIndex));
       return;
     }
-    setCurrentIndex((index) => Math.min(index + 1, finaleIndex));
-  }, [linkedPlayback, finaleIndex, clearLinked]);
+
+    setCurrentIndex((index) => {
+      const segment = segments[getSegmentIndex(index)];
+      if (segment?.type === 'branch') {
+        const path = getSelectedBranchPath(segment);
+        if (path) {
+          selectBranchPath(path);
+          return index;
+        }
+      }
+      return Math.min(index + 1, finaleIndex);
+    });
+  }, [linkedPlayback, finaleIndex, clearLinked, segments, getSelectedBranchPath, selectBranchPath]);
 
   const goPrevious = useCallback(() => {
     if (linkedPlayback) {
@@ -152,6 +197,8 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
     sectionCount,
     branchCount,
     selectBranchPath,
+    selectedPathByBranchId,
+    setBranchPathSelection,
     goNext,
     goPrevious,
     replay,

@@ -158,7 +158,14 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
             screenshotUrls={playback.linkedPlayback.screenshotUrls}
           />
         ) : atBranch ? (
-          <FlowBranchChoicePanel branch={atBranch} onSelect={playback.selectBranchPath} />
+          <FlowBranchChoicePanel
+            branch={atBranch}
+            selectedPathId={playback.selectedPathByBranchId[atBranch.id] ?? null}
+            onSelectedPathChange={(pathId) =>
+              playback.setBranchPathSelection(atBranch.id, pathId)
+            }
+            onSelect={playback.selectBranchPath}
+          />
         ) : playback.currentSegment?.type === 'section' ? (
           <FlowSectionCard section={playback.currentSegment.section} variant="player" />
         ) : playback.currentSegment?.type === 'step' ? (

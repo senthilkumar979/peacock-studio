@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { ArrowRight, GitBranch, Sparkles } from 'lucide-react';
 import { sortBranchPaths, type FlowBranch, type LinkedPeacockPath } from '@peacock/shared';
 import { FlowBranchPathOption } from './FlowBranchPathOption';
@@ -6,19 +6,27 @@ import { useBranchPathMetadata } from './useBranchPathMetadata';
 
 interface FlowBranchChoicePanelProps {
   branch: FlowBranch;
+  selectedPathId: string | null;
+  onSelectedPathChange: (pathId: string) => void;
   onSelect: (path: LinkedPeacockPath) => void;
 }
 
-export const FlowBranchChoicePanel = ({ branch, onSelect }: FlowBranchChoicePanelProps) => {
+export const FlowBranchChoicePanel = ({
+  branch,
+  selectedPathId,
+  onSelectedPathChange,
+  onSelect,
+}: FlowBranchChoicePanelProps) => {
   const paths = sortBranchPaths(branch.paths);
   const metaByPathId = useBranchPathMetadata(branch);
-  const [selectedPathId, setSelectedPathId] = useState<string | null>(paths[0]?.id ?? null);
   const selectedPath = paths.find((path) => path.id === selectedPathId) ?? null;
-  const useRowLayout = paths.length < 4;
 
   useEffect(() => {
-    setSelectedPathId(paths[0]?.id ?? null);
-  }, [branch.id]);
+    const firstPathId = paths[0]?.id ?? null;
+    if (firstPathId && !selectedPathId) {
+      onSelectedPathChange(firstPathId);
+    }
+  }, [branch.id, onSelectedPathChange, paths, selectedPathId]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -28,16 +36,32 @@ export const FlowBranchChoicePanel = ({ branch, onSelect }: FlowBranchChoicePane
         return;
       }
 
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        if (paths.length <= 1) return;
+
+        event.preventDefault();
+        const currentIndex = Math.max(
+          0,
+          paths.findIndex((path) => path.id === selectedPathId),
+        );
+        const offset = event.key === 'ArrowDown' ? 1 : -1;
+        const nextIndex = (currentIndex + offset + paths.length) % paths.length;
+        const nextPath = paths[nextIndex];
+        if (nextPath) onSelectedPathChange(nextPath.id);
+        return;
+      }
+
       const index = Number.parseInt(event.key, 10);
       if (index >= 1 && index <= paths.length) {
         event.preventDefault();
-        setSelectedPathId(paths[index - 1]?.id ?? null);
+        const path = paths[index - 1];
+        if (path) onSelectedPathChange(path.id);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onSelect, paths, selectedPath]);
+  }, [onSelect, onSelectedPathChange, paths, selectedPath, selectedPathId]);
 
   if (!paths.length) {
     return (
@@ -90,13 +114,7 @@ export const FlowBranchChoicePanel = ({ branch, onSelect }: FlowBranchChoicePane
               Select a path
             </p>
 
-            <ul
-              className={`mt-3 sm:mt-4 ${
-                useRowLayout
-                  ? 'flex flex-row items-start gap-3 overflow-x-auto pb-1 sm:gap-4 sm:pb-2'
-                  : 'flex flex-col gap-2 sm:gap-2.5'
-              }`}
-            >
+            <ul className="mt-3 flex flex-col gap-2 sm:mt-4 sm:gap-2.5">
               {paths.map((path, index) => (
                 <FlowBranchPathOption
                   key={path.id}
@@ -104,8 +122,8 @@ export const FlowBranchChoicePanel = ({ branch, onSelect }: FlowBranchChoicePane
                   index={index}
                   meta={metaByPathId[path.id]}
                   isSelected={path.id === selectedPathId}
-                  layout={useRowLayout ? 'row' : 'column'}
-                  onSelect={() => setSelectedPathId(path.id)}
+                  layout="column"
+                  onSelect={() => onSelectedPathChange(path.id)}
                 />
               ))}
             </ul>
@@ -113,13 +131,24 @@ export const FlowBranchChoicePanel = ({ branch, onSelect }: FlowBranchChoicePane
 
           <div className="mt-6 flex flex-col items-stretch gap-3 border-t border-slate-200/80 pt-5 sm:mt-8 sm:gap-4 sm:pt-6 lg:flex-row lg:items-center lg:justify-between">
             <p className="text-center text-sm text-slate-500 sm:text-left">
-              Press{' '}
+              Use{' '}
+              <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
+                ↑
+              </kbd>{' '}
+              <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
+                ↓
+              </kbd>{' '}
+              or{' '}
               <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
                 1–{paths.length}
               </kbd>{' '}
               to select, then{' '}
               <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
                 Enter
+              </kbd>{' '}
+              or{' '}
+              <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
+                →
               </kbd>{' '}
               to continue.
             </p>
