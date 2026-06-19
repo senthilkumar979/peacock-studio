@@ -30,11 +30,12 @@ export async function saveNewFlowFromStore(): Promise<string | null> {
   if (!state.flow || !state.steps.some((item) => 'event' in item)) return null;
 
   const documentId = createNewDocumentId();
+  useFlowStore.getState().setDocumentId(documentId);
+
   const doc = buildSavedFlowDocument(getSnapshotSource(), documentId);
   if (!doc) return null;
 
   await saveFlowDocument(doc);
-  useFlowStore.getState().setDocumentId(documentId);
   return documentId;
 }
 

@@ -29,7 +29,7 @@ export const Editor = () => {
   const saved = useSavedDocument(documentId);
 
   const { isLoading, isLoaded, error } = isExtensionHandoff ? payload : saved;
-  usePersistDocument(Boolean(documentId && isLoaded));
+  usePersistDocument(Boolean(documentId && isLoaded), documentId);
 
   const selectedStep = useSelectedStep();
   const selectedSection = useSelectedSection();

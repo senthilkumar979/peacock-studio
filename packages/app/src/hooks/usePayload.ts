@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { FlowPayload } from '@peacock/shared';
 import {
   HANDOFF_REQUEST,
   HANDOFF_RESPONSE,
@@ -103,13 +104,44 @@ function formatSaveError(error: unknown): string {
   return 'Could not save documentation to this browser. Check storage permissions and try again.';
 }
 
+interface ResolvedHandoff {
+  payload: FlowPayload;
+  screenshotUrls: Record<string, string>;
+}
+
+interface HandoffSaveResult {
+  documentId: string;
+}
+
+let activeHandoffSave: Promise<HandoffSaveResult | null> | null = null;
+
+async function saveHandoffOnce(handoff: ResolvedHandoff): Promise<HandoffSaveResult | null> {
+  if (activeHandoffSave) return activeHandoffSave;
+
+  activeHandoffSave = (async () => {
+    useFlowStore.getState().resetFlow();
+    useFlowStore.getState().setFlow(handoff.payload, handoff.screenshotUrls);
+
+    const documentId = await saveNewFlowFromStore();
+    if (!documentId) return null;
+
+    return { documentId };
+  })();
+
+  try {
+    return await activeHandoffSave;
+  } catch (error) {
+    activeHandoffSave = null;
+    throw error;
+  }
+}
+
 interface UsePayloadOptions {
   enabled?: boolean;
 }
 
 export function usePayload({ enabled = true }: UsePayloadOptions = {}) {
   const navigate = useNavigate();
-  const setFlow = useFlowStore((state) => state.setFlow);
   const isLoaded = useFlowStore((state) => state.isLoaded);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -129,6 +161,7 @@ export function usePayload({ enabled = true }: UsePayloadOptions = {}) {
         (await requestHandoffViaBridge());
 
       if (!handoff?.payload) {
+        activeHandoffSave = null;
         setIsLoading(false);
         setError(
           extensionId
@@ -138,26 +171,28 @@ export function usePayload({ enabled = true }: UsePayloadOptions = {}) {
         return;
       }
 
-      useFlowStore.getState().resetFlow();
-      setFlow(handoff.payload, handoff.screenshotUrls ?? {});
-
       try {
-        const documentId = await saveNewFlowFromStore();
+        const result = await saveHandoffOnce({
+          payload: handoff.payload,
+          screenshotUrls: handoff.screenshotUrls ?? {},
+        });
         setIsLoading(false);
 
-        if (!documentId) {
+        if (!result?.documentId) {
+          activeHandoffSave = null;
           setError('Recording had no steps to save.');
           return;
         }
 
-        navigate(`/docs/${documentId}/edit`, { replace: true });
+        navigate(`/docs/${result.documentId}/edit`, { replace: true });
       } catch (saveError) {
+        activeHandoffSave = null;
         console.error('[Peacock] Failed to save flow after handoff', saveError);
         setIsLoading(false);
         setError(formatSaveError(saveError));
       }
     })();
-  }, [enabled, isLoaded, setFlow, navigate]);
+  }, [enabled, isLoaded, navigate]);
 
   return { isLoading, isLoaded, error };
 }

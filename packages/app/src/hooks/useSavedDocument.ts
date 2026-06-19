@@ -21,6 +21,13 @@ export function useSavedDocument(documentId: string | undefined) {
       return;
     }
 
+    if (isLoaded && !storeDocumentId && documentId) {
+      useFlowStore.getState().setDocumentId(documentId);
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+
     let cancelled = false;
     setIsLoading(true);
     setError(null);
