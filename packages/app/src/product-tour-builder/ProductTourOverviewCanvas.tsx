@@ -16,6 +16,7 @@ import {
 
 interface ProductTourOverviewCanvasProps {
   tour: ProductTour;
+  className?: string;
   activeFeatureIndex?: number | null;
   activeDemoIndex?: number | null;
   demoMeta?: DemoPlaybackMeta[][];
@@ -39,6 +40,7 @@ function buildTourDemoStructureKey(tour: ProductTour): string {
 
 export const ProductTourOverviewCanvas = ({
   tour,
+  className,
   activeFeatureIndex = null,
   activeDemoIndex = null,
   demoMeta,
@@ -95,8 +97,10 @@ export const ProductTourOverviewCanvas = ({
       : null;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60">
-      <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-peacock-50/60 px-5 py-4">
+    <section
+      className={`flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60 ${className ?? ""}`}
+    >
+      <div className="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-peacock-50/60 px-5 py-4">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
           Tour overview
         </p>
@@ -115,7 +119,7 @@ export const ProductTourOverviewCanvas = ({
         </div>
       </div>
 
-      <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-4">
+      <div className="shrink-0 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-4">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
           Current location
         </p>
@@ -175,7 +179,7 @@ export const ProductTourOverviewCanvas = ({
         </div>
       </div>
 
-      <div className="max-h-[62vh] overflow-y-auto px-5 py-5">
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
         <ol className="space-y-4">
           {features.map((feature, index) => {
             const isActiveFeature = activeFeatureIndex === index;

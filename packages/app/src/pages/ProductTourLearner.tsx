@@ -380,10 +380,11 @@ export const ProductTourLearner = () => {
         </AppHeader>
       ) : null}
 
-      <main className="mx-auto flex w-full max-w-8xl flex-1 gap-6 overflow-hidden px-4 py-6">
+      <main className="mx-auto flex min-h-0 w-full max-w-8xl flex-1 gap-6 overflow-hidden px-4 py-6">
         {!isPresenter ? (
-          <aside className="hidden w-[400px] shrink-0 lg:block">
+          <aside className="hidden h-full min-h-0 w-[400px] shrink-0 lg:flex lg:flex-col">
             <ProductTourOverviewCanvas
+              className="h-full min-h-0"
               tour={tour}
               activeFeatureIndex={activeFeatureIndex}
               activeDemoIndex={activeDemoIndex}
@@ -402,7 +403,7 @@ export const ProductTourLearner = () => {
       </main>
 
       {!isPresenter ? (
-        <footer className="flex items-center justify-between border-t border-slate-200 bg-white px-6 py-4">
+        <footer className="flex shrink-0 items-center justify-between border-t border-slate-200 bg-white px-6 py-4">
           <p className="text-sm text-slate-500">
             {playback.currentIndex + 1} of {playback.segments.length}
           </p>
