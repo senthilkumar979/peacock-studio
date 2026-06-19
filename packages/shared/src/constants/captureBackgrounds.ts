@@ -3,7 +3,7 @@ import type { CaptureBackgroundPreset } from '../types/capture';
 export const CAPTURE_BACKGROUND_PRESETS: CaptureBackgroundPreset[] = [
   // { id: 'white', label: 'White', kind: 'solid', solidColor: '#ffffff' },
   // { id: 'slate', label: 'Slate', kind: 'solid', solidColor: '#f1f5f9' },
-  { id: 'charcoal', label: 'Charcoal', kind: 'solid', solidColor: '#1e293b', imageShadow: true },
+  { id: 'charcoal', label: 'Charcoal', kind: 'solid', solidColor: '#1e293b', imageShadow: true, lightHeaderText: true },
   {
     id: 'peacock-soft',
     label: 'Peacock soft',
@@ -27,6 +27,7 @@ export const CAPTURE_BACKGROUND_PRESETS: CaptureBackgroundPreset[] = [
       { offset: 1, color: '#7c3aed' },
     ],
     imageShadow: true,
+    lightHeaderText: true,
   },
   {
     id: 'ocean',
@@ -39,6 +40,7 @@ export const CAPTURE_BACKGROUND_PRESETS: CaptureBackgroundPreset[] = [
       { offset: 1, color: '#1e3a8a' },
     ],
     imageShadow: true,
+    lightHeaderText: true,
   },
   {
     id: 'aurora',
@@ -51,6 +53,7 @@ export const CAPTURE_BACKGROUND_PRESETS: CaptureBackgroundPreset[] = [
       { offset: 1, color: '#a855f7' },
     ],
     imageShadow: true,
+    lightHeaderText: true,
   },
   {
     id: 'sunrise',
@@ -87,6 +90,7 @@ export const CAPTURE_BACKGROUND_PRESETS: CaptureBackgroundPreset[] = [
       { offset: 1, color: '#a7f3d0' },
     ],
     imageShadow: true,
+    lightHeaderText: true,
   },
   {
     id: 'ember',
@@ -99,6 +103,7 @@ export const CAPTURE_BACKGROUND_PRESETS: CaptureBackgroundPreset[] = [
       { offset: 1, color: '#fde047' },
     ],
     imageShadow: true,
+    lightHeaderText: true,
   },
   {
     id: 'midnight',
@@ -111,6 +116,7 @@ export const CAPTURE_BACKGROUND_PRESETS: CaptureBackgroundPreset[] = [
       { offset: 1, color: '#581c87' },
     ],
     imageShadow: true,
+    lightHeaderText: true,
   },
   {
     id: 'studio-dark',
@@ -122,6 +128,7 @@ export const CAPTURE_BACKGROUND_PRESETS: CaptureBackgroundPreset[] = [
       { offset: 1, color: '#1e293b' },
     ],
     imageShadow: true,
+    lightHeaderText: true,
   },
   {
     id: 'silver',
@@ -177,6 +184,10 @@ export const CAPTURE_BACKGROUND_PRESETS: CaptureBackgroundPreset[] = [
 
 export function getCaptureBackgroundPreset(id: string): CaptureBackgroundPreset | null {
   return CAPTURE_BACKGROUND_PRESETS.find((preset) => preset.id === id) ?? null;
+}
+
+export function captureBackgroundUsesLightHeaderText(presetId: string): boolean {
+  return getCaptureBackgroundPreset(presetId)?.lightHeaderText ?? false;
 }
 
 export function getPresetSwatchCss(preset: CaptureBackgroundPreset): string {

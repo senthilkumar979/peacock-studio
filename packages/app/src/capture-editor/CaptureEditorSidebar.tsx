@@ -14,6 +14,9 @@ export const CaptureEditorSidebar = () => {
   const setCornerRadius = useCaptureEditorStore(
     (state) => state.setCornerRadius,
   );
+  const setFrameCornerRadius = useCaptureEditorStore(
+    (state) => state.setFrameCornerRadius,
+  );
   const setTitle = useCaptureEditorStore((state) => state.setTitle);
   const setDescription = useCaptureEditorStore((state) => state.setDescription);
   const commitSettings = useCaptureEditorStore((state) => state.commitSettings);
@@ -104,7 +107,7 @@ export const CaptureEditorSidebar = () => {
         />
 
         <label className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-          <span>Corner radius</span>
+          <span>Image corner radius</span>
           <span className="tabular-nums text-slate-700">
             {settings.cornerRadius}px
           </span>
@@ -116,6 +119,22 @@ export const CaptureEditorSidebar = () => {
           step={2}
           value={settings.cornerRadius}
           onChange={(event) => setCornerRadius(Number(event.target.value))}
+          className="w-full accent-peacock-600"
+        />
+
+        <label className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+          <span>Frame corner radius</span>
+          <span className="tabular-nums text-slate-700">
+            {settings.frameCornerRadius}px
+          </span>
+        </label>
+        <input
+          type="range"
+          min={0}
+          max={96}
+          step={2}
+          value={settings.frameCornerRadius}
+          onChange={(event) => setFrameCornerRadius(Number(event.target.value))}
           className="w-full accent-peacock-600"
         />
       </div>

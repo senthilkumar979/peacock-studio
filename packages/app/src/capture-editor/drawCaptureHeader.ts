@@ -1,8 +1,19 @@
-import type { CaptureEditorSettings } from '@peacock/shared';
+import { captureBackgroundUsesLightHeaderText, type CaptureEditorSettings } from '@peacock/shared';
 import type { CaptureLayout } from './computeCaptureLayout';
 import { getCaptureHeaderTypography } from './captureHeaderTypography';
 
 type PaintContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+
+const CAPTURE_HEADER_COLORS = {
+  dark: {
+    title: '#0f172a',
+    description: '#475569',
+  },
+  light: {
+    title: '#ffffff',
+    description: '#ffffff',
+  },
+} as const;
 
 function wrapLines(
   context: PaintContext,
@@ -50,6 +61,9 @@ export function drawCaptureHeader(
   const x = layout.imageLeft;
   const maxWidth = layout.imageWidth;
   const typo = getCaptureHeaderTypography(maxWidth);
+  const colors = captureBackgroundUsesLightHeaderText(settings.backgroundPresetId)
+    ? CAPTURE_HEADER_COLORS.light
+    : CAPTURE_HEADER_COLORS.dark;
   let y = layout.imageTop - layout.headerHeight + typo.topPadding;
 
   context.save();
@@ -58,7 +72,7 @@ export function drawCaptureHeader(
 
   if (title) {
     context.font = typo.titleFont;
-    context.fillStyle = '#0f172a';
+    context.fillStyle = colors.title;
     for (const line of wrapLines(context, title, maxWidth)) {
       context.fillText(line, x, y);
       y += typo.titleLineHeight;
@@ -68,7 +82,7 @@ export function drawCaptureHeader(
 
   if (description) {
     context.font = typo.descFont;
-    context.fillStyle = '#475569';
+    context.fillStyle = colors.description;
     for (const line of wrapLines(context, description, maxWidth)) {
       context.fillText(line, x, y);
       y += typo.descLineHeight;

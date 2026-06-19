@@ -1,5 +1,6 @@
 import { getCaptureBackgroundPreset, type CaptureEditorSettings } from '@peacock/shared';
 import { applyPrivacyRegions } from './applyPrivacyRegions';
+import { roundRectPath } from './canvasRoundRect';
 import { computeCaptureLayout } from './computeCaptureLayout';
 import { drawCaptureBackground } from './drawCaptureBackground';
 import { drawCaptureHeader } from './drawCaptureHeader';
@@ -13,24 +14,6 @@ export interface PaintCaptureInput {
 }
 
 type PaintContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
-
-function roundRectPath(
-  context: PaintContext,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number,
-): void {
-  const r = Math.min(radius, width / 2, height / 2);
-  context.beginPath();
-  context.moveTo(x + r, y);
-  context.arcTo(x + width, y, x + width, y + height, r);
-  context.arcTo(x + width, y + height, x, y + height, r);
-  context.arcTo(x, y + height, x, y, r);
-  context.arcTo(x, y, x + width, y, r);
-  context.closePath();
-}
 
 async function paintScreenshot(
   context: PaintContext,
@@ -94,7 +77,16 @@ export async function paintCaptureComposite(
   const preset =
     getCaptureBackgroundPreset(input.settings.backgroundPresetId) ??
     getCaptureBackgroundPreset('rose-gold')!;
-  drawCaptureBackground(context, layout.canvasWidth, layout.canvasHeight, preset);
+  const frameCornerRadius = Math.max(0, Math.round(input.settings.frameCornerRadius));
+
+  context.clearRect(0, 0, layout.canvasWidth, layout.canvasHeight);
+  drawCaptureBackground(
+    context,
+    layout.canvasWidth,
+    layout.canvasHeight,
+    preset,
+    frameCornerRadius,
+  );
 
   drawCaptureHeader(context, layout, input.settings);
 

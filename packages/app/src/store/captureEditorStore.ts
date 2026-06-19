@@ -24,6 +24,7 @@ interface CaptureEditorState {
   setBackgroundPresetId: (backgroundPresetId: string) => void;
   setPadding: (padding: number) => void;
   setCornerRadius: (cornerRadius: number) => void;
+  setFrameCornerRadius: (frameCornerRadius: number) => void;
   setTitle: (title: string) => void;
   setDescription: (description: string) => void;
   setCrop: (crop: NormalizedRect, commit?: boolean) => void;
@@ -88,6 +89,10 @@ export const useCaptureEditorStore = create<CaptureEditorState>((set, get) => ({
 
   setCornerRadius: (cornerRadius) => {
     get().patchSettings({ cornerRadius: Math.max(0, Math.round(cornerRadius)) }, true);
+  },
+
+  setFrameCornerRadius: (frameCornerRadius) => {
+    get().patchSettings({ frameCornerRadius: Math.max(0, Math.round(frameCornerRadius)) }, true);
   },
 
   setTitle: (title) => {

@@ -24,6 +24,8 @@ export interface CaptureBackgroundPreset {
   gradientAngle?: number;
   gradientStops?: CaptureGradientStop[];
   imageShadow?: boolean;
+  /** Render caption title and description in light colors on dark backgrounds. */
+  lightHeaderText?: boolean;
 }
 
 export interface CapturePrivacyRegion {
@@ -38,6 +40,8 @@ export interface CaptureEditorSettings {
   backgroundPresetId: string;
   padding: number;
   cornerRadius: number;
+  /** Rounded corners for the gradient frame (exported with transparency outside). */
+  frameCornerRadius: number;
   crop: NormalizedRect;
   privacyRegions: CapturePrivacyRegion[];
   /** Optional caption above the screenshot (outside the image). */
@@ -56,6 +60,7 @@ export const DEFAULT_CAPTURE_EDITOR_SETTINGS: CaptureEditorSettings = {
   backgroundPresetId: 'rose-gold',
   padding: 60,
   cornerRadius: 48,
+  frameCornerRadius: 32,
   crop: { ...DEFAULT_CAPTURE_CROP },
   privacyRegions: [],
   title: '',

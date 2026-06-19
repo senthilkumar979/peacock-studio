@@ -1,18 +1,17 @@
 import type { CaptureBackgroundPreset } from '@peacock/shared';
+import { roundRectPath } from './canvasRoundRect';
 import { getGradientVector } from './gradientVector';
 
 type PaintContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
-export function drawCaptureBackground(
+function resolveBackgroundFill(
   context: PaintContext,
   width: number,
   height: number,
   preset: CaptureBackgroundPreset,
-): void {
+): CanvasGradient | string {
   if (preset.kind === 'solid' && preset.solidColor) {
-    context.fillStyle = preset.solidColor;
-    context.fillRect(0, 0, width, height);
-    return;
+    return preset.solidColor;
   }
 
   const stops = preset.gradientStops ?? [];
@@ -24,6 +23,28 @@ export function drawCaptureBackground(
     gradient.addColorStop(stop.offset, stop.color);
   }
 
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, width, height);
+  return gradient;
+}
+
+export function drawCaptureBackground(
+  context: PaintContext,
+  width: number,
+  height: number,
+  preset: CaptureBackgroundPreset,
+  cornerRadius = 0,
+): void {
+  const fillStyle = resolveBackgroundFill(context, width, height, preset);
+  const radius = Math.max(0, Math.round(cornerRadius));
+
+  context.fillStyle = fillStyle;
+
+  if (radius <= 0) {
+    context.fillRect(0, 0, width, height);
+    return;
+  }
+
+  context.save();
+  roundRectPath(context, 0, 0, width, height, radius);
+  context.fill();
+  context.restore();
 }
