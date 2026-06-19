@@ -1,18 +1,35 @@
 import { AppHeader } from "@/components/AppHeader";
-import { getPlayableSteps, isFlowBranch, isFlowSection, isFlowStep } from "@peacock/shared";
+import {
+  collectAllBranches,
+  isFlowBranch,
+  isFlowSection,
+  isFlowStep,
+  sortBranchPaths,
+} from "@peacock/shared";
+import { useDocumentBranchPaths } from "@/hooks/useDocumentBranchPaths";
 import { useFlowStore, useViewerOutline } from "@/store/flowStore";
 import { DocumentBranchCard } from "./DocumentBranchCard";
+import {
+  buildDocumentIndexItems,
+  countDocumentViewPlayableSteps,
+  getBranchRenderContext,
+} from "./documentOutline";
+import { DocumentLinkedPathSteps } from "./DocumentLinkedPathSteps";
 import {
   FLOW_DETAILS_OUTLINE_ID,
   getDocumentFlowDetailsAnchor,
   getDocumentStepAnchor,
   type SharedDocumentViewMode,
-} from '@/utils/shareLink';
+} from "@/utils/shareLink";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DocumentSectionCard } from "./DocumentSectionCard";
 import { DocumentStepCard } from "./DocumentStepCard";
-import { DocumentStepIndex, type DocumentStepIndexItem } from "./DocumentStepIndex";
+import {
+  DocumentStepIndex,
+  type DocumentStepIndexItem,
+} from "./DocumentStepIndex";
+import { getDocumentStepIndexItemId } from "./documentStepIndexTypes";
 import { FlowDetailsIntro } from "./FlowDetailsIntro";
 import { SharedViewToggle } from "./SharedViewToggle";
 
@@ -28,51 +45,48 @@ export const DocumentView = ({
   const flow = useFlowStore((state) => state.flow);
   const steps = useViewerOutline();
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
-  const playableStepCount = useMemo(() => getPlayableSteps(steps).length, [steps]);
+  const branches = useMemo(() => collectAllBranches(steps), [steps]);
+  const {
+    selectedPathByBranchId,
+    linkedContentByPathId,
+    loadingPathIds,
+    errorsByPathId,
+    selectPath,
+  } = useDocumentBranchPaths(branches);
 
   const flowDetailsAnchor = getDocumentFlowDetailsAnchor();
 
-  const indexItems = useMemo((): DocumentStepIndexItem[] => {
-    const overviewItem: DocumentStepIndexItem = {
-      type: 'overview',
-      anchorId: flowDetailsAnchor,
-      itemId: FLOW_DETAILS_OUTLINE_ID,
-      title: flow?.flow.title?.trim() || 'Flow details',
-    };
+  const playableStepCount = useMemo(
+    () =>
+      countDocumentViewPlayableSteps(
+        steps,
+        selectedPathByBranchId,
+        linkedContentByPathId,
+      ),
+    [steps, selectedPathByBranchId, linkedContentByPathId],
+  );
 
-    let stepNumber = 0;
-    const outlineItems = steps.map((item) => {
-      const anchorId = getDocumentStepAnchor(item.id);
-      if (isFlowSection(item)) {
-        return {
-          type: 'section' as const,
-          anchorId,
-          sectionId: item.id,
-          title: item.title,
-        };
-      }
-      if (isFlowBranch(item)) {
-        return {
-          type: 'branch' as const,
-          anchorId,
-          branchId: item.id,
-          title: item.title,
-        };
-      }
-      stepNumber += 1;
-      return {
-        type: 'step' as const,
-        anchorId,
-        stepId: item.id,
-        stepNumber,
-        title: item.title,
-      };
-    });
+  const indexItems = useMemo(
+    (): DocumentStepIndexItem[] =>
+      buildDocumentIndexItems({
+        steps,
+        flowTitle: flow?.flow.title,
+        flowDetailsAnchor,
+        selectedPathByBranchId,
+        linkedContentByPathId,
+      }),
+    [
+      steps,
+      flow?.flow.title,
+      flowDetailsAnchor,
+      selectedPathByBranchId,
+      linkedContentByPathId,
+    ],
+  );
 
-    return [overviewItem, ...outlineItems];
-  }, [steps, flow?.flow.title, flowDetailsAnchor]);
-
-  const [activeItemId, setActiveItemId] = useState<string | null>(FLOW_DETAILS_OUTLINE_ID);
+  const [activeItemId, setActiveItemId] = useState<string | null>(
+    FLOW_DETAILS_OUTLINE_ID,
+  );
   const [desktopPaneHeight, setDesktopPaneHeight] = useState<number | null>(
     null,
   );
@@ -142,15 +156,7 @@ export const DocumentView = ({
       const target = indexItems.find((item) => item.anchorId === hash);
       if (!target) return;
 
-      setActiveItemId(
-        target.type === 'overview'
-          ? target.itemId
-          : target.type === 'step'
-          ? target.stepId
-          : target.type === 'branch'
-            ? target.branchId
-            : target.sectionId,
-      );
+      setActiveItemId(getDocumentStepIndexItemId(target));
       window.requestAnimationFrame(() => {
         scrollStepsPaneToAnchor(hash, "auto");
       });
@@ -172,7 +178,8 @@ export const DocumentView = ({
         const visibleEntries = entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        const nextItemId = visibleEntries[0]?.target.getAttribute("data-outline-id");
+        const nextItemId =
+          visibleEntries[0]?.target.getAttribute("data-outline-id");
         if (nextItemId) setActiveItemId(nextItemId);
       },
       {
@@ -207,21 +214,32 @@ export const DocumentView = ({
       <main className="mx-auto flex w-full max-w-8xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
         <div
           ref={layoutRef}
-          className={`grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] ${isDesktopPane ? "" : ""}`}
+          className="grid min-h-0 gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]"
           style={desktopPaneHeight ? { height: desktopPaneHeight } : undefined}
         >
-          <div className="sticky">
+          <div className="min-h-0 h-full">
             <DocumentStepIndex
               items={indexItems}
               activeItemId={activeItemId}
-              onSelectOverview={(anchorId, itemId) => scrollToAnchor(anchorId, itemId)}
-              onSelectStep={(anchorId, stepId) => scrollToAnchor(anchorId, stepId)}
-              onSelectSection={(anchorId, sectionId) => scrollToAnchor(anchorId, sectionId)}
-              onSelectBranch={(anchorId, branchId) => scrollToAnchor(anchorId, branchId)}
+              onSelectOverview={(anchorId, itemId) =>
+                scrollToAnchor(anchorId, itemId)
+              }
+              onSelectStep={(anchorId, stepId) =>
+                scrollToAnchor(anchorId, stepId)
+              }
+              onSelectSection={(anchorId, sectionId) =>
+                scrollToAnchor(anchorId, sectionId)
+              }
+              onSelectBranch={(anchorId, branchId) =>
+                scrollToAnchor(anchorId, branchId)
+              }
+              onSelectLinkedPath={(anchorId, itemId) =>
+                scrollToAnchor(anchorId, itemId)
+              }
             />
           </div>
 
-          <div className="max-h-screen overflow-y-auto">
+          <div className="min-h-0 h-full overflow-y-auto">
             <div
               ref={stepsScrollRef}
               className="flex min-w-0 flex-col gap-5 pr-1 "
@@ -231,9 +249,9 @@ export const DocumentView = ({
                   variant="doc"
                   anchorId={flowDetailsAnchor}
                   isActive={activeItemId === FLOW_DETAILS_OUTLINE_ID}
-                  title={flow?.flow.title ?? 'Untitled Flow'}
-                  description={flow?.flow.description ?? ''}
-                  version={flow?.flow.version ?? ''}
+                  title={flow?.flow.title ?? "Untitled Flow"}
+                  description={flow?.flow.description ?? ""}
+                  version={flow?.flow.version ?? ""}
                   captureEnvironment={flow?.metadata.captureEnvironment ?? null}
                   createdAt={flow?.metadata.createdAt}
                   stepCount={playableStepCount}
@@ -262,15 +280,59 @@ export const DocumentView = ({
                   }
 
                   if (isFlowBranch(item)) {
-                    return (
+                    const branchPaths = sortBranchPaths(item.paths);
+                    const branchContext = getBranchRenderContext(
+                      item.id,
+                      branchPaths,
+                      selectedPathByBranchId,
+                      linkedContentByPathId,
+                      loadingPathIds,
+                      errorsByPathId,
+                    );
+                    const linkedStepCount =
+                      branchContext.linkedContent?.steps.length ?? 0;
+                    const linkedStartStepNumber = stepNumber + 1;
+
+                    const branchElement = (
                       <div key={item.id} data-outline-id={item.id}>
                         <DocumentBranchCard
                           branch={item}
                           anchorId={anchorId}
                           isActive={item.id === activeItemId}
+                          selectedPathId={branchContext.selectedPathId}
+                          onSelectPath={(path) => selectPath(item.id, path)}
                         />
+                        {branchContext.loading ? (
+                          <p className="mt-4 text-sm text-slate-500">
+                            Loading path steps…
+                          </p>
+                        ) : null}
+                        {branchContext.error ? (
+                          <p className="mt-4 text-sm text-amber-800">
+                            {branchContext.error}
+                          </p>
+                        ) : null}
+                        {branchContext.linkedContent &&
+                        branchContext.pathLabel ? (
+                          <DocumentLinkedPathSteps
+                            pathId={branchContext.linkedContent.pathId}
+                            pathLabel={branchContext.pathLabel}
+                            steps={branchContext.linkedContent.steps}
+                            screenshotUrls={
+                              branchContext.linkedContent.screenshotUrls
+                            }
+                            targetDocumentId={
+                              branchContext.linkedContent.targetDocumentId
+                            }
+                            startStepNumber={linkedStartStepNumber}
+                            activeItemId={activeItemId}
+                          />
+                        ) : null}
                       </div>
                     );
+
+                    stepNumber += linkedStepCount;
+                    return branchElement;
                   }
 
                   if (!isFlowStep(item)) return null;

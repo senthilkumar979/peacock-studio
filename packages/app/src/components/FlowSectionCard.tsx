@@ -1,7 +1,7 @@
-import { BookMarked, Sparkles } from 'lucide-react';
-import type { FlowSection } from '@peacock/shared';
+import { BookMarked, Sparkles } from "lucide-react";
+import type { FlowSection } from "@peacock/shared";
 
-export type FlowSectionCardVariant = 'document' | 'player' | 'editor';
+export type FlowSectionCardVariant = "document" | "player" | "editor";
 
 interface FlowSectionCardProps {
   section: FlowSection;
@@ -16,25 +16,25 @@ const variantStyles: Record<
   { shell: string; title: string; padding: string }
 > = {
   document: {
-    shell: 'scroll-mt-24',
-    title: 'text-2xl sm:text-3xl',
-    padding: 'px-6 py-9 sm:px-8 sm:py-10',
+    shell: "scroll-mt-24",
+    title: "text-2xl sm:text-3xl",
+    padding: "px-6 py-9 sm:px-8 sm:py-10",
   },
   player: {
-    shell: 'max-w-2xl w-full',
-    title: 'text-3xl sm:text-4xl',
-    padding: 'px-8 py-10 sm:px-10 sm:py-12',
+    shell: "max-w-2xl w-full",
+    title: "text-3xl sm:text-4xl",
+    padding: "px-8 py-10 sm:px-10 sm:py-12",
   },
   editor: {
-    shell: 'max-w-lg w-full',
-    title: 'text-2xl',
-    padding: 'px-6 py-8',
+    shell: "max-w-lg w-full",
+    title: "text-2xl",
+    padding: "px-6 py-8",
   },
 };
 
 export const FlowSectionCard = ({
   section,
-  variant = 'document',
+  variant = "document",
   anchorId,
   isActive = false,
   sectionIndex,
@@ -42,15 +42,15 @@ export const FlowSectionCard = ({
   const styles = variantStyles[variant];
   const hasDescription = Boolean(section.description.trim());
   const sectionLabel =
-    sectionIndex !== undefined ? `Chapter ${sectionIndex + 1}` : 'Chapter';
+    sectionIndex !== undefined ? `Chapter ${sectionIndex + 1}` : "Chapter";
 
   return (
     <article
       id={anchorId}
       className={`relative overflow-hidden rounded-3xl border shadow-lg transition duration-300 ${styles.shell} ${
         isActive
-          ? 'border-brand-violet/50 shadow-brand-violet/10 ring-2 ring-brand-violet/25'
-          : 'border-slate-200/80 shadow-slate-200/60'
+          ? "border-brand-violet/50 shadow-brand-violet/10 ring-2 ring-brand-violet/25"
+          : "border-slate-200/80 shadow-slate-200/60"
       }`}
     >
       <div
@@ -80,9 +80,6 @@ export const FlowSectionCard = ({
                 <Sparkles className="h-3.5 w-3.5" aria-hidden />
                 {sectionLabel}
               </span>
-              <span className="rounded-full bg-slate-900/5 px-2.5 py-0.5 text-xs font-medium text-slate-500">
-                Section divider
-              </span>
             </div>
 
             <h2
@@ -103,11 +100,14 @@ export const FlowSectionCard = ({
           </div>
         </div>
 
-        {variant === 'player' ? (
+        {variant === "player" ? (
           <p className="mt-8 border-t border-slate-200/80 pt-6 text-center text-sm text-slate-500">
-            Press <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">→</kbd>{' '}
-            or <span className="font-medium text-slate-700">Next</span> to begin the steps in this
-            chapter.
+            Press{" "}
+            <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
+              →
+            </kbd>{" "}
+            or <span className="font-medium text-slate-700">Next</span> to begin
+            the steps in this chapter.
           </p>
         ) : null}
       </div>

@@ -54,6 +54,14 @@ export function getDocumentStepAnchor(stepId: string): string {
   return `step-${stepId}`;
 }
 
+export function getLinkedDocumentPathAnchor(pathId: string): string {
+  return `linked-path-${pathId}`;
+}
+
+export function getLinkedDocumentStepAnchor(pathId: string, stepId: string): string {
+  return `linked-${pathId}-${stepId}`;
+}
+
 export function getDocumentStepShareUrl(documentId: string, stepId: string): string {
   return `${buildSharedDocumentUrl(documentId)}#${getDocumentStepAnchor(stepId)}`;
 }

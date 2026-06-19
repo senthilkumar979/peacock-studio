@@ -6,6 +6,7 @@ import { usePlayerStepDetailsVisibility } from '@/hooks/usePlayerStepDetailsVisi
 import { getDocumentStepShareUrl } from '@/utils/shareLink';
 import { BrowserMockup } from './BrowserMockup';
 import { PlayerClickMarker } from './PlayerClickMarker';
+import { getEventTypeIcon, getEventTypeLabel } from './eventTypeDisplay';
 import { getStepScreenshotUrl } from '@/store/flowStore';
 
 interface DocumentStepCardProps {
@@ -15,11 +16,6 @@ interface DocumentStepCardProps {
   anchorId: string;
   isActive: boolean;
   screenshotUrls: Record<string, string>;
-}
-
-function formatEventTypeLabel(step: FlowStep): string {
-  if (step.event.type === 'page-view') return 'Page view';
-  return step.event.type.charAt(0).toUpperCase() + step.event.type.slice(1);
 }
 
 export const DocumentStepCard = ({
@@ -36,6 +32,7 @@ export const DocumentStepCard = ({
   const description = step.notes || step.generatedDescription;
   const { isDetailsVisible, toggleDetails } = usePlayerStepDetailsVisibility(step.id);
   const [copyMessage, setCopyMessage] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const EventTypeIcon = getEventTypeIcon(step.event.type);
 
   const handleCopyStepLink = async () => {
     try {
@@ -64,8 +61,9 @@ export const DocumentStepCard = ({
           <h2 className="mt-1 text-lg font-semibold text-slate-900">{step.title}</h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-            {formatEventTypeLabel(step)}
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+            <EventTypeIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            {getEventTypeLabel(step.event.type)}
           </span>
           <button
             type="button"
