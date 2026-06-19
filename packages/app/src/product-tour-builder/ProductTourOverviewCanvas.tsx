@@ -1,8 +1,18 @@
-import { CheckCircle2, GitBranch, Layers3, PlayCircle, Sparkles } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { getSortedFeatures } from '@/store/productTourBuilderStore';
-import type { ProductTour } from '@/types/productTour';
-import { buildTourDemoMeta, getTourDemoDisplayTitle, type DemoPlaybackMeta } from '@/utils/productTourLearner';
+import {
+  CheckCircle2,
+  GitBranch,
+  Layers3,
+  PlayCircle,
+  Sparkles,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { getSortedFeatures } from "@/store/productTourBuilderStore";
+import type { ProductTour } from "@/types/productTour";
+import {
+  buildTourDemoMeta,
+  getTourDemoDisplayTitle,
+  type DemoPlaybackMeta,
+} from "@/utils/productTourLearner";
 
 interface ProductTourOverviewCanvasProps {
   tour: ProductTour;
@@ -12,16 +22,19 @@ interface ProductTourOverviewCanvasProps {
   activeStageLabel?: string;
   activeBranchTitle?: string | null;
   activePathLabel?: string | null;
+  onFeatureSelect?: (featureIndex: number) => void;
+  onDemoSelect?: (featureIndex: number, demoIndex: number) => void;
 }
 
 const EMPTY_DEMO_META: DemoPlaybackMeta[][] = [];
 
 function buildTourDemoStructureKey(tour: ProductTour): string {
   return getSortedFeatures(tour)
-    .map((feature) =>
-      `${feature.id}:${feature.demos.map((demo) => demo.documentId).join(',')}`,
+    .map(
+      (feature) =>
+        `${feature.id}:${feature.demos.map((demo) => demo.documentId).join(",")}`,
     )
-    .join('|');
+    .join("|");
 }
 
 export const ProductTourOverviewCanvas = ({
@@ -29,18 +42,25 @@ export const ProductTourOverviewCanvas = ({
   activeFeatureIndex = null,
   activeDemoIndex = null,
   demoMeta,
-  activeStageLabel = 'Builder mode',
+  activeStageLabel = "Builder mode",
   activeBranchTitle = null,
   activePathLabel = null,
+  onFeatureSelect,
+  onDemoSelect,
 }: ProductTourOverviewCanvasProps) => {
   const features = getSortedFeatures(tour);
-  const totalDemos = features.reduce((sum, feature) => sum + feature.demos.length, 0);
+  const totalDemos = features.reduce(
+    (sum, feature) => sum + feature.demos.length,
+    0,
+  );
   const resolvedDemoMetaProp = demoMeta ?? EMPTY_DEMO_META;
   const hasProvidedDemoMeta = resolvedDemoMetaProp.length > 0;
-  const tourDemoStructureKey = useMemo(() => buildTourDemoStructureKey(tour), [tour]);
-  const [resolvedDemoMeta, setResolvedDemoMeta] = useState<DemoPlaybackMeta[][]>(
-    resolvedDemoMetaProp,
+  const tourDemoStructureKey = useMemo(
+    () => buildTourDemoStructureKey(tour),
+    [tour],
   );
+  const [resolvedDemoMeta, setResolvedDemoMeta] =
+    useState<DemoPlaybackMeta[][]>(resolvedDemoMetaProp);
 
   useEffect(() => {
     if (hasProvidedDemoMeta) {
@@ -57,9 +77,12 @@ export const ProductTourOverviewCanvas = ({
     };
   }, [hasProvidedDemoMeta, resolvedDemoMetaProp, tour, tourDemoStructureKey]);
 
-  const activeFeature = activeFeatureIndex !== null ? features[activeFeatureIndex] : null;
+  const activeFeature =
+    activeFeatureIndex !== null ? features[activeFeatureIndex] : null;
   const activeDemo =
-    activeFeature && activeDemoIndex !== null ? activeFeature.demos[activeDemoIndex] : null;
+    activeFeature && activeDemoIndex !== null
+      ? activeFeature.demos[activeDemoIndex]
+      : null;
   const activeDemoTitle =
     activeDemo && activeDemoIndex !== null
       ? getTourDemoDisplayTitle(
@@ -77,7 +100,9 @@ export const ProductTourOverviewCanvas = ({
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
           Tour overview
         </p>
-        <h3 className="mt-1 text-base font-bold text-slate-900">{tour.title}</h3>
+        <h3 className="mt-1 text-base font-bold text-slate-900">
+          {tour.title}
+        </h3>
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
             <Layers3 className="h-3.5 w-3.5" aria-hidden />
@@ -108,7 +133,9 @@ export const ProductTourOverviewCanvas = ({
                 className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-peacock-50 px-2.5 py-1 text-xs font-medium text-peacock-800"
               >
                 <Layers3 className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <span className="max-w-[170px] truncate">{activeFeature.title}</span>
+                <span className="max-w-[170px] truncate">
+                  {activeFeature.title}
+                </span>
               </span>
             ) : null}
             {activeDemo ? (
@@ -117,7 +144,9 @@ export const ProductTourOverviewCanvas = ({
                 className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
               >
                 <PlayCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <span className="max-w-[170px] truncate">{activeDemoTitle}</span>
+                <span className="max-w-[170px] truncate">
+                  {activeDemoTitle}
+                </span>
               </span>
             ) : null}
             {activeBranchTitle ? (
@@ -126,7 +155,9 @@ export const ProductTourOverviewCanvas = ({
                 className="inline-flex max-w-full items-center gap-1 rounded-full bg-brand-violet/10 px-2.5 py-1 text-xs font-medium text-brand-violet"
               >
                 <GitBranch className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <span className="max-w-[170px] truncate">{activeBranchTitle}</span>
+                <span className="max-w-[170px] truncate">
+                  {activeBranchTitle}
+                </span>
               </span>
             ) : null}
             {activePathLabel ? (
@@ -135,7 +166,9 @@ export const ProductTourOverviewCanvas = ({
                 className="inline-flex max-w-full items-center gap-1 rounded-full bg-brand-violet/5 px-2.5 py-1 text-xs font-medium text-brand-violet"
               >
                 <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <span className="max-w-[170px] truncate">{activePathLabel}</span>
+                <span className="max-w-[170px] truncate">
+                  {activePathLabel}
+                </span>
               </span>
             ) : null}
           </div>
@@ -148,12 +181,15 @@ export const ProductTourOverviewCanvas = ({
             const isActiveFeature = activeFeatureIndex === index;
             return (
               <li key={feature.id} className="relative pl-9">
-                <span className="absolute left-[0.84rem] top-0 h-full w-px bg-slate-200" aria-hidden />
+                <span
+                  className="absolute left-[0.84rem] top-0 h-full w-px bg-slate-200"
+                  aria-hidden
+                />
                 <span
                   className={`absolute left-0 top-1.5 flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold ${
                     isActiveFeature
-                      ? 'bg-peacock-600 text-white shadow-md shadow-peacock-500/35'
-                      : 'bg-slate-100 text-slate-600'
+                      ? "bg-peacock-600 text-white shadow-md shadow-peacock-500/35"
+                      : "bg-slate-100 text-slate-600"
                   }`}
                   aria-hidden
                 >
@@ -163,11 +199,20 @@ export const ProductTourOverviewCanvas = ({
                 <article
                   className={`rounded-2xl border p-4 transition ${
                     isActiveFeature
-                      ? 'border-peacock-400 bg-gradient-to-br from-peacock-50 to-white shadow-md shadow-peacock-100'
-                      : 'border-slate-200 bg-slate-50/70'
-                  }`}
+                      ? "border-peacock-400 bg-gradient-to-br from-peacock-50 to-white shadow-md shadow-peacock-100"
+                      : "border-slate-200 bg-slate-50/70"
+                  } ${onFeatureSelect ? "cursor-pointer hover:border-peacock-300 hover:bg-peacock-50/40" : ""}`}
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={
+                      onFeatureSelect ? () => onFeatureSelect(index) : undefined
+                    }
+                    disabled={!onFeatureSelect}
+                    className={`flex w-full items-start justify-between gap-3 text-left ${
+                      onFeatureSelect ? "cursor-pointer" : "cursor-default"
+                    }`}
+                  >
                     <div className="min-w-0">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                         Feature {index + 1}
@@ -184,44 +229,69 @@ export const ProductTourOverviewCanvas = ({
                         Active
                       </span>
                     ) : null}
-                  </div>
+                  </button>
 
                   {feature.demos.length ? (
                     <ul className="mt-3 space-y-1.5">
                       {feature.demos.map((demo, demoIndex) => {
-                        const isActiveDemo = isActiveFeature && activeDemoIndex === demoIndex;
+                        const isActiveDemo =
+                          isActiveFeature && activeDemoIndex === demoIndex;
                         const demoMeta = resolvedDemoMeta[index]?.[demoIndex];
                         const branchCount = demoMeta?.branchCount ?? 0;
-                        const demoTitle = getTourDemoDisplayTitle(demo, demoMeta, demoIndex);
+                        const demoTitle = getTourDemoDisplayTitle(
+                          demo,
+                          demoMeta,
+                          demoIndex,
+                        );
                         return (
-                          <li
-                            key={demo.id}
-                            className={`flex items-center justify-between rounded-lg border px-2.5 py-2 text-xs ${
-                              isActiveDemo
-                                ? 'border-peacock-300 bg-peacock-100/70 text-peacock-900'
-                                : 'border-slate-200 bg-white text-slate-600'
-                            }`}
-                          >
-                            <span title={demoTitle} className="truncate">
-                              {demoTitle}
-                            </span>
-                            <span className="ml-2 inline-flex shrink-0 items-center gap-1">
-                              {branchCount > 0 ? (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-brand-violet/10 px-2 py-0.5 text-[10px] font-semibold text-brand-violet">
-                                  <GitBranch className="h-3 w-3" aria-hidden />
-                                  {branchCount}
-                                </span>
-                              ) : null}
-                              {isActiveDemo ? (
-                                <Sparkles className="h-3.5 w-3.5 text-peacock-700" aria-hidden />
-                              ) : null}
-                            </span>
+                          <li key={demo.id}>
+                            <button
+                              type="button"
+                              onClick={
+                                onDemoSelect
+                                  ? () => onDemoSelect(index, demoIndex)
+                                  : undefined
+                              }
+                              disabled={!onDemoSelect}
+                              className={`flex w-full items-center justify-between rounded-lg border px-2.5 py-2 text-left text-xs transition ${
+                                isActiveDemo
+                                  ? "border-peacock-300 bg-peacock-100/70 text-peacock-900"
+                                  : "border-slate-200 bg-white text-slate-600"
+                              } ${
+                                onDemoSelect
+                                  ? "cursor-pointer hover:border-peacock-300 hover:bg-peacock-50/60"
+                                  : "cursor-default"
+                              }`}
+                            >
+                              <span title={demoTitle} className="truncate">
+                                {demoTitle}
+                              </span>
+                              <span className="ml-2 inline-flex shrink-0 items-center gap-1">
+                                {branchCount > 0 ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-violet/10 px-2 py-0.5 text-[10px] font-semibold text-brand-violet">
+                                    <GitBranch
+                                      className="h-3 w-3"
+                                      aria-hidden
+                                    />
+                                    {branchCount}
+                                  </span>
+                                ) : null}
+                                {isActiveDemo ? (
+                                  <Sparkles
+                                    className="h-3.5 w-3.5 text-peacock-700"
+                                    aria-hidden
+                                  />
+                                ) : null}
+                              </span>
+                            </button>
                           </li>
                         );
                       })}
                     </ul>
                   ) : (
-                    <p className="mt-3 text-xs italic text-slate-400">No demos yet</p>
+                    <p className="mt-3 text-xs italic text-slate-400">
+                      No demos yet
+                    </p>
                   )}
                 </article>
               </li>

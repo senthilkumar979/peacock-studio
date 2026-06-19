@@ -170,6 +170,28 @@ export function buildTourLearnerSegments(demoMeta: DemoPlaybackMeta[][]): TourLe
   return segments;
 }
 
+export function findFeatureIntroSegmentIndex(
+  segments: TourLearnerSegment[],
+  featureIndex: number,
+): number {
+  return segments.findIndex(
+    (segment) => segment.type === 'feature-intro' && segment.featureIndex === featureIndex,
+  );
+}
+
+export function findDemoIntroSegmentIndex(
+  segments: TourLearnerSegment[],
+  featureIndex: number,
+  demoIndex: number,
+): number {
+  return segments.findIndex(
+    (segment) =>
+      segment.type === 'demo-intro' &&
+      segment.featureIndex === featureIndex &&
+      segment.demoIndex === demoIndex,
+  );
+}
+
 export function countTourStepsFromCounts(stepCounts: number[][]): number {
   return stepCounts.reduce(
     (total, feature) => total + feature.reduce((sum, count) => sum + count, 0),

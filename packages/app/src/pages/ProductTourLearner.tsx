@@ -18,6 +18,8 @@ import { countTourDemos } from "@/utils/createProductTour";
 import {
   countTourStepsFromCounts,
   estimateTourDurationMinutes,
+  findDemoIntroSegmentIndex,
+  findFeatureIntroSegmentIndex,
   getTourDemoDisplayTitle,
 } from "@/utils/productTourLearner";
 import { TourCompletePanel } from "@/product-tour-learner/TourCompletePanel";
@@ -93,6 +95,33 @@ export const ProductTourLearner = () => {
 
   const onDocumentLoaded = useCallback(() => undefined, []);
   const segment = playback.currentSegment;
+
+  const handleFeatureSelect = useCallback(
+    (featureIndex: number) => {
+      setLinkedPlayback(null);
+      setLinkedError(null);
+      const index = findFeatureIntroSegmentIndex(
+        playback.segments,
+        featureIndex,
+      );
+      if (index >= 0) playback.setCurrentIndex(index);
+    },
+    [playback],
+  );
+
+  const handleDemoSelect = useCallback(
+    (featureIndex: number, demoIndex: number) => {
+      setLinkedPlayback(null);
+      setLinkedError(null);
+      const index = findDemoIntroSegmentIndex(
+        playback.segments,
+        featureIndex,
+        demoIndex,
+      );
+      if (index >= 0) playback.setCurrentIndex(index);
+    },
+    [playback],
+  );
 
   const handleSelectBranchPath = useCallback(
     async (pathId: string) => {
@@ -351,7 +380,7 @@ export const ProductTourLearner = () => {
         </AppHeader>
       ) : null}
 
-      <main className="mx-auto flex min-h-0 w-full max-w-8xl flex-1 gap-6 overflow-hidden px-4 py-6">
+      <main className="mx-auto flex w-full max-w-8xl flex-1 gap-6 overflow-hidden px-4 py-6">
         {!isPresenter ? (
           <aside className="hidden w-[400px] shrink-0 lg:block">
             <ProductTourOverviewCanvas
@@ -362,6 +391,8 @@ export const ProductTourLearner = () => {
               activeStageLabel={activeStageLabel}
               activeBranchTitle={activeBranchTitle}
               activePathLabel={activePathLabel}
+              onFeatureSelect={handleFeatureSelect}
+              onDemoSelect={handleDemoSelect}
             />
           </aside>
         ) : null}
