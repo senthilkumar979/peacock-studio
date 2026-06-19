@@ -1,9 +1,10 @@
-import { useEffect, useId } from 'react';
+import { useEffect, useId, type ReactNode } from 'react';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
   title: string;
-  description: string;
+  description?: string;
+  children?: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   isDestructive?: boolean;
@@ -15,6 +16,7 @@ export const ConfirmDialog = ({
   isOpen,
   title,
   description,
+  children,
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
   isDestructive = false,
@@ -37,6 +39,8 @@ export const ConfirmDialog = ({
 
   if (!isOpen) return null;
 
+  const hasDescription = Boolean(children ?? description);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button
@@ -49,15 +53,19 @@ export const ConfirmDialog = ({
         role="alertdialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        aria-describedby={descriptionId}
+        aria-describedby={hasDescription ? descriptionId : undefined}
         className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
       >
         <h2 id={titleId} className="text-lg font-semibold text-slate-900">
           {title}
         </h2>
-        <p id={descriptionId} className="mt-2 text-sm text-slate-600">
-          {description}
-        </p>
+        {children ? (
+          <div id={descriptionId}>{children}</div>
+        ) : description ? (
+          <p id={descriptionId} className="mt-2 text-sm text-slate-600">
+            {description}
+          </p>
+        ) : null}
         <div className="mt-6 flex justify-end gap-2">
           <button
             type="button"

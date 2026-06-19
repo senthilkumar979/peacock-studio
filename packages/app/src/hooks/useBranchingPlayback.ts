@@ -21,6 +21,7 @@ interface UseBranchingPlaybackResult {
   currentSegment: PlayerOutlineSegment | null;
   currentIndex: number;
   totalNavigableSegments: number;
+  isAtIntro: boolean;
   isAtFinale: boolean;
   linkedPlayback: LinkedPlayback | null;
   isLoadingLinked: boolean;
@@ -33,6 +34,10 @@ interface UseBranchingPlaybackResult {
   goPrevious: () => void;
   replay: () => void;
   setCurrentIndex: (index: number) => void;
+}
+
+function getSegmentIndex(currentIndex: number): number {
+  return currentIndex - 1;
 }
 
 export function useBranchingPlayback(): UseBranchingPlaybackResult {
@@ -56,9 +61,13 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
     [segments],
   );
 
-  const totalNavigableSegments = segments.length + 1;
-  const isAtFinale = !linkedPlayback && segments.length > 0 && currentIndex >= segments.length;
-  const currentSegment = linkedPlayback || isAtFinale ? null : (segments[currentIndex] ?? null);
+  const finaleIndex = segments.length + 1;
+  const totalNavigableSegments = segments.length + 2;
+  const isAtIntro = !linkedPlayback && currentIndex === 0;
+  const isAtFinale = !linkedPlayback && currentIndex >= finaleIndex;
+  const segmentIndex = getSegmentIndex(currentIndex);
+  const currentSegment =
+    linkedPlayback || isAtIntro || isAtFinale ? null : (segments[segmentIndex] ?? null);
 
   const selectBranchPath = useCallback((path: LinkedPeacockPath) => {
     setIsLoadingLinked(true);
@@ -103,11 +112,11 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
         return;
       }
       clearLinked();
-      setCurrentIndex((index) => Math.min(index + 1, segments.length));
+      setCurrentIndex((index) => Math.min(index + 1, finaleIndex));
       return;
     }
-    setCurrentIndex((index) => Math.min(index + 1, segments.length));
-  }, [linkedPlayback, segments.length, clearLinked]);
+    setCurrentIndex((index) => Math.min(index + 1, finaleIndex));
+  }, [linkedPlayback, finaleIndex, clearLinked]);
 
   const goPrevious = useCallback(() => {
     if (linkedPlayback) {
@@ -124,16 +133,17 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
   }, [linkedPlayback, clearLinked]);
 
   useEffect(() => {
-    if (currentIndex > segments.length) {
-      setCurrentIndex(Math.max(segments.length, 0));
+    if (currentIndex > finaleIndex) {
+      setCurrentIndex(finaleIndex);
     }
-  }, [currentIndex, segments.length]);
+  }, [currentIndex, finaleIndex]);
 
   return {
     segments,
     currentSegment,
     currentIndex,
     totalNavigableSegments,
+    isAtIntro,
     isAtFinale,
     linkedPlayback,
     isLoadingLinked,

@@ -104,6 +104,7 @@ export function toFlowSummary(doc: SavedFlowDocument): SavedFlowSummary {
     id: doc.id,
     title: doc.flow.flow.title.trim() || 'Untitled flow',
     description: doc.flow.flow.description.trim(),
+    version: doc.flow.flow.version?.trim() ?? '',
     generatedAt: doc.flow.metadata.createdAt,
     updatedAt: doc.updatedAt,
     stepCount: countPlayableSteps(doc.steps),

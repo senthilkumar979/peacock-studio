@@ -1,4 +1,4 @@
-import { createId, type ExtensionMessage, type FlowEvent, type PageViewEvent, type Viewport } from '@peacock/shared';
+import { createId, type ExtensionMessage, type FlowCaptureEnvironment, type FlowEvent, type PageViewEvent, type Viewport, getFlowEventUrl } from '@peacock/shared';
 import {
   cropVisibleCapture,
   openCaptureResult,
@@ -21,6 +21,12 @@ import {
 import { canInjectIntoUrl, ensureContentScript } from './injectContentScript';
 import { buildCaptureResultHandoff } from './captureHandoff';
 import { captureScreenshot, captureVisibleScreenshotBlob } from './screenshot';
+import {
+  clearCaptureSession,
+  finalizeCaptureSession,
+  saveCaptureSession,
+  saveFinalCaptureEnvironment,
+} from './captureSession';
 
 const APP_URL = import.meta.env.VITE_APP_URL ?? 'http://localhost:5173/editor';
 const HANDOFF_PENDING_KEY = 'peacockHandoffPending';
@@ -67,6 +73,41 @@ interface SelectionCaptureArea {
   viewportWidth: number;
   viewportHeight: number;
   error?: string;
+}
+
+async function requestNavigationPageViewCapture(tabId: number): Promise<void> {
+  const isReady = await ensureContentScript(tabId);
+  if (!isReady) return;
+
+  await chrome.tabs.sendMessage(tabId, { type: 'CAPTURE_NAVIGATION_PAGE_VIEW' });
+  await broadcastRecordingState();
+}
+
+async function handleContentScriptReady(url: string, tabId?: number): Promise<void> {
+  if (!tabId) return;
+
+  const status = await getRecordingStatus();
+  if (status !== 'recording' && status !== 'paused') return;
+
+  const latestEvent = await getLatestStoredEvent();
+  if (!latestEvent) return;
+
+  const latestUrl = getFlowEventUrl(latestEvent);
+  if (latestUrl === url) return;
+
+  if (
+    latestEvent.type === 'page-view' &&
+    latestEvent.navigationRedirect &&
+    latestEvent.url === url
+  ) {
+    return;
+  }
+
+  try {
+    await requestNavigationPageViewCapture(tabId);
+  } catch (error) {
+    console.warn('[Peacock] Could not capture navigation page view on tab load', error);
+  }
 }
 
 async function broadcastRecordingState(): Promise<void> {
@@ -235,8 +276,30 @@ async function clearHandoffPending(): Promise<void> {
   await chrome.storage.local.remove(HANDOFF_PENDING_KEY);
 }
 
+async function captureEnvironmentFromTab(
+  tabId: number,
+  recordingStartedAt: number,
+): Promise<void> {
+  try {
+    const response = (await chrome.tabs.sendMessage(tabId, {
+      type: 'CAPTURE_ENVIRONMENT',
+      recordingStartedAt,
+    })) as { environment?: FlowCaptureEnvironment } | undefined;
+
+    if (response?.environment) {
+      await saveCaptureSession({
+        recordingStartedAt,
+        environment: response.environment,
+      });
+    }
+  } catch (error) {
+    console.warn('[Peacock] Could not capture recording environment', error);
+  }
+}
+
 async function handleStartRecording(): Promise<void> {
   await clearRecordingData();
+  await clearCaptureSession();
   await clearHandoffPending();
   handoffBuildPromise = null;
   cachedHandoff = undefined;
@@ -244,6 +307,7 @@ async function handleStartRecording(): Promise<void> {
 
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const state = await getRecordingState(await getEventCount());
+  const startedAt = state.startedAt ?? Date.now();
 
   if (activeTab?.id && canInjectIntoUrl(activeTab.url)) {
     const isReady = await ensureContentScript(activeTab.id);
@@ -251,6 +315,7 @@ async function handleStartRecording(): Promise<void> {
       try {
         await chrome.tabs.sendMessage(activeTab.id, { type: 'RECORDING_STARTED' });
         await chrome.tabs.sendMessage(activeTab.id, { type: 'RECORDING_STATE', state });
+        await captureEnvironmentFromTab(activeTab.id, startedAt);
       } catch (error) {
         console.warn('[Peacock] Could not notify tab to start recording', error);
       }
@@ -356,6 +421,12 @@ async function handleCapturePageSnapshot(tab?: chrome.tabs.Tab): Promise<void> {
 }
 
 async function handleStopRecording(tab?: chrome.tabs.Tab): Promise<void> {
+  const endedAt = Date.now();
+  const captureEnvironment = await finalizeCaptureSession(endedAt);
+  if (captureEnvironment) {
+    await saveFinalCaptureEnvironment(captureEnvironment);
+  }
+
   const eventCount = await getEventCount();
   const capturedFinalPage = await captureFinalPageBeforeStop(tab);
   const finalEventCount = capturedFinalPage ? await getEventCount() : eventCount;
@@ -477,6 +548,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
 
         case 'CONTENT_SCRIPT_READY':
           console.info('[Peacock] Content script ready on', message.url);
+          await handleContentScriptReady(message.url, sender.tab?.id);
           sendResponse({ success: true });
           break;
 

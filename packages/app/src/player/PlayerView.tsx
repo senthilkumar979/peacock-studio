@@ -7,6 +7,7 @@ import { useKeyboard } from '@/hooks/useKeyboard';
 import { useFlowStore } from '@/store/flowStore';
 import type { SharedDocumentViewMode } from '@/utils/shareLink';
 import { FlowBranchChoicePanel } from './FlowBranchChoicePanel';
+import { FlowDetailsIntro } from './FlowDetailsIntro';
 import { PlayerControls } from './PlayerControls';
 import { PlayerFinale } from './PlayerFinale';
 import { PlayerStep } from './PlayerStep';
@@ -23,6 +24,7 @@ function getControlsLabel(
   playback: ReturnType<typeof useBranchingPlayback>,
 ): string {
   if (playback.isAtFinale) return 'Guide complete';
+  if (playback.isAtIntro) return 'Flow overview';
   if (playback.linkedPlayback) {
     const { path, stepIndex, steps } = playback.linkedPlayback;
     return `${path.label} · Step ${stepIndex + 1} of ${steps.length}`;
@@ -53,7 +55,13 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
 
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
-  }, [playback.currentIndex, atBranch?.id, playback.linkedPlayback?.path.id, playback.isAtFinale]);
+  }, [
+    playback.currentIndex,
+    atBranch?.id,
+    playback.linkedPlayback?.path.id,
+    playback.isAtFinale,
+    playback.isAtIntro,
+  ]);
 
   const keyboardHandlers = useMemo(
     () => ({
@@ -71,7 +79,7 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
     if (playback.currentSegment?.type === 'branch') return;
 
     const timer = window.setTimeout(() => {
-      if (playback.currentIndex < playback.segments.length) {
+      if (playback.currentIndex < playback.totalNavigableSegments - 1) {
         playback.goNext();
         return;
       }
@@ -80,10 +88,6 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
 
     return () => window.clearTimeout(timer);
   }, [isPlaying, playback]);
-
-  if (!playback.segments.length && !playback.linkedPlayback) {
-    return null;
-  }
 
   const positionLabel = getControlsLabel(playback);
   const progressLabel = playback.linkedPlayback
@@ -95,7 +99,8 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
     setIsPlaying(false);
   };
 
-  const isScrollableMain = atBranch || playback.isAtFinale;
+  const isScrollableMain =
+    playback.isAtIntro || atBranch || playback.isAtFinale;
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
@@ -131,6 +136,16 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
             branchCount={playback.branchCount}
             sectionCount={playback.sectionCount}
             onReplay={handleReplay}
+          />
+        ) : playback.isAtIntro ? (
+          <FlowDetailsIntro
+            variant="player"
+            title={flow?.flow.title ?? 'Untitled Flow'}
+            description={flow?.flow.description ?? ''}
+            version={flow?.flow.version ?? ''}
+            captureEnvironment={flow?.metadata.captureEnvironment ?? null}
+            createdAt={flow?.metadata.createdAt}
+            stepCount={playback.playableStepCount}
           />
         ) : playback.isLoadingLinked ? (
           <p className="text-sm text-slate-500">Loading linked demo…</p>

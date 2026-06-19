@@ -4,7 +4,7 @@ import { AppHeader } from '@/components/AppHeader';
 import { persistCurrentFlow } from '@/services/flowLibraryService';
 import { useFlowStore, usePlayableSteps } from '@/store/flowStore';
 import { getDocumentPath } from '@/utils/shareLink';
-import { FlowDetailsModal } from './FlowDetailsModal';
+import { FlowDetailsModal, type FlowDetailsInput } from './FlowDetailsModal';
 
 function getFlowDetailsPromptKey(createdAt: number): string {
   return `peacock-flow-details-prompted-${createdAt}`;
@@ -32,8 +32,8 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
     setIsFlowDetailsOpen(true);
   }, [isLoaded, flow]);
 
-  const handleFlowDetailsSave = async (title: string, description: string) => {
-    updateFlowDetails(title, description);
+  const handleFlowDetailsSave = async (details: FlowDetailsInput) => {
+    updateFlowDetails(details.title, details.description, details.version);
 
     if (flow) {
       sessionStorage.setItem(getFlowDetailsPromptKey(flow.metadata.createdAt), '1');
@@ -48,6 +48,8 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
 
   const flowTitle = flow?.flow.title ?? 'Untitled Flow';
   const flowDescription = flow?.flow.description ?? '';
+  const flowVersion = flow?.flow.version ?? '';
+  const captureEnvironment = flow?.metadata.captureEnvironment ?? null;
   const playerPath = documentId ? getDocumentPath(documentId, 'player') : '/';
 
   return (
@@ -87,9 +89,11 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
         isOpen={isFlowDetailsOpen}
         initialTitle={flowTitle}
         initialDescription={flowDescription}
+        initialVersion={flowVersion}
+        captureEnvironment={captureEnvironment}
         confirmLabel="Save"
-        onSave={(title, description) => {
-          void handleFlowDetailsSave(title, description);
+        onSave={(details) => {
+          void handleFlowDetailsSave(details);
         }}
         onClose={() => setIsFlowDetailsOpen(false)}
       />

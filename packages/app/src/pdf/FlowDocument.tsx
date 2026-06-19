@@ -3,6 +3,7 @@ import type { FlowPayload } from '@peacock/shared';
 import type { PdfExportPage } from './buildPdfExportPages';
 import { PdfBranchPage } from './PdfBranchPage';
 import { PdfCoverPage } from './PdfCoverPage';
+import { PdfFlowDetailsPage } from './PdfFlowDetailsPage';
 import { PdfStepPage } from './PdfStepPage';
 
 interface FlowDocumentProps {
@@ -19,6 +20,13 @@ export const FlowDocument = ({ flow, pages, stepCount, logoSrc }: FlowDocumentPr
   return (
     <Document title={flowTitle} author="Peacock Studio">
       <PdfCoverPage flow={flow} stepCount={stepCount} logoSrc={logoSrc} />
+      {flow.metadata.captureEnvironment ? (
+        <PdfFlowDetailsPage
+          flowTitle={flowTitle}
+          environment={flow.metadata.captureEnvironment}
+          logoSrc={logoSrc}
+        />
+      ) : null}
       {pages.map((page, index) => {
         if (page.kind === 'branch') {
           return (

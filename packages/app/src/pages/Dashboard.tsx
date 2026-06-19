@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Navigate } from "react-router-dom";
 import { AppFooter } from "@/components/AppFooter";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { DeleteDocumentConfirmContent } from "@/components/dashboard/DeleteDocumentConfirmContent";
+import { DeleteProductTourConfirmContent } from "@/components/dashboard/DeleteProductTourConfirmContent";
 import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { DashboardFeaturedDoc } from "@/components/dashboard/DashboardFeaturedDoc";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
@@ -189,29 +191,34 @@ export const Dashboard = () => {
       <ConfirmDialog
         isOpen={Boolean(pendingDelete)}
         title="Delete documentation?"
-        description={
-          pendingDelete
-            ? `"${pendingDelete.title}" and all ${pendingDelete.stepCount} steps will be removed from this device. This cannot be undone.`
-            : ""
-        }
         confirmLabel="Delete"
         isDestructive
         onConfirm={handleConfirmDelete}
         onCancel={() => setPendingDelete(null)}
-      />
+      >
+        {pendingDelete ? (
+          <DeleteDocumentConfirmContent
+            title={pendingDelete.title}
+            stepCount={pendingDelete.stepCount}
+          />
+        ) : null}
+      </ConfirmDialog>
       <ConfirmDialog
         isOpen={Boolean(pendingTourDelete)}
         title="Delete product tour?"
-        description={
-          pendingTourDelete
-            ? `"${pendingTourDelete.title}" and its ${pendingTourDelete.featureCount} features will be removed from this device. This cannot be undone.`
-            : ""
-        }
         confirmLabel="Delete"
         isDestructive
         onConfirm={handleConfirmTourDelete}
         onCancel={() => setPendingTourDelete(null)}
-      />
+      >
+        {pendingTourDelete ? (
+          <DeleteProductTourConfirmContent
+            title={pendingTourDelete.title}
+            featureCount={pendingTourDelete.featureCount}
+            demoCount={pendingTourDelete.demoCount}
+          />
+        ) : null}
+      </ConfirmDialog>
     </div>
   );
 };

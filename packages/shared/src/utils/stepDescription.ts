@@ -1,120 +1,103 @@
 import type { ElementSnapshot, FlowEvent } from '../types/events';
-import { formatVisibleLabel, humanizeIdentifier, sentenceCase } from './humanize';
-
-function getVisibleLabel(snapshot: ElementSnapshot): string {
-  if (snapshot.innerText) return formatVisibleLabel(snapshot.innerText);
-  if (snapshot.label.text) return formatVisibleLabel(snapshot.label.text);
-  if (snapshot.label.ariaLabel) return formatVisibleLabel(snapshot.label.ariaLabel);
-  if (snapshot.label.placeholder) return formatVisibleLabel(snapshot.label.placeholder);
-  if (snapshot.name) return humanizeIdentifier(snapshot.name);
-  if (snapshot.id) return humanizeIdentifier(snapshot.id);
-  return snapshot.tagName;
-}
-
-function findDataAttribute(
-  snapshot: ElementSnapshot,
-  key: string
-): string | undefined {
-  const lowerKey = key.toLowerCase();
-
-  const fromElement = Object.entries(snapshot.dataAttributes).find(
-    ([attrKey]) => attrKey.toLowerCase() === lowerKey
-  );
-  if (fromElement) return fromElement[1];
-
-  const fromParent = snapshot.parent
-    ? Object.entries(snapshot.parent.dataAttributes).find(
-        ([attrKey]) => attrKey.toLowerCase() === lowerKey
-      )
-    : undefined;
-  if (fromParent) return fromParent[1];
-
-  const fromGrandparent = snapshot.grandparent
-    ? Object.entries(snapshot.grandparent.dataAttributes).find(
-        ([attrKey]) => attrKey.toLowerCase() === lowerKey
-      )
-    : undefined;
-
-  return fromGrandparent?.[1];
-}
-
-function getFormContextHint(snapshot: ElementSnapshot): string {
-  const parentIsForm = snapshot.parent?.tagName === 'form';
-  const grandparentIsForm = snapshot.grandparent?.tagName === 'form';
-  const hasFormName = Boolean(snapshot.parent?.name || snapshot.grandparent?.name);
-
-  if (parentIsForm || grandparentIsForm || hasFormName) {
-    return ' to save the form';
-  }
-
-  return '';
-}
-
-function getFieldName(snapshot: ElementSnapshot): string {
-  if (snapshot.label.text) return sentenceCase(snapshot.label.text);
-  if (snapshot.name) return sentenceCase(snapshot.name);
-  if (snapshot.id) return sentenceCase(snapshot.id);
-  if (snapshot.label.placeholder) return sentenceCase(snapshot.label.placeholder);
-  return 'field';
-}
-
-function getRecordedValue(snapshot: ElementSnapshot, event: FlowEvent): string | null {
-  if (event.type === 'input' && event.valuePreview) return event.valuePreview;
-  return snapshot.valuePreview;
-}
-
-function formatValuePhrase(value: string | null): string {
-  if (!value) return '';
-  return ` "${value}"`;
-}
-
-function normalizeText(value: string | null | undefined): string {
-  if (!value) return '';
-  return formatVisibleLabel(value);
-}
-
-function getControlContextLabel(snapshot: ElementSnapshot): string {
-  const candidates = [
-    snapshot.label.text,
-    snapshot.parent?.text,
-    snapshot.grandparent?.text,
-    snapshot.innerText,
-    snapshot.valuePreview,
-    snapshot.name,
-    snapshot.id,
-  ]
-    .map(normalizeText)
-    .filter(Boolean);
-
-  const seen = new Set<string>();
-  const unique = candidates.filter((candidate) => {
-    const key = candidate.toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-
-  return unique[0] || getVisibleLabel(snapshot);
-}
-
-function formatFieldLabel(snapshot: ElementSnapshot): string {
-  return `"${getFieldName(snapshot)}"`;
-}
-
-function formatValueLabel(value: string | null): string {
-  if (!value) return 'a value';
-  return `value ${normalizeText(value)}`;
-}
-
-function getPageContext(event: FlowEvent): string {
-  if (event.type === 'navigation' || event.type === 'page-view') return '';
-  const title = formatVisibleLabel(event.title);
-  return title ? `On the ${title} page, ` : 'On the current page, ';
-}
+import {
+  formatContextSuffix,
+  formatPagePrefix,
+  getControlKind,
+  isInsideForm,
+  isSubmitButton,
+  resolveStepLabels,
+} from './stepDescriptionLabels';
 
 function getPageViewName(event: Extract<FlowEvent, { type: 'page-view' }>): string {
-  const title = formatVisibleLabel(event.title);
+  const title = event.title.trim();
   return title || 'page';
+}
+
+function getNavigationRedirectPageName(event: Extract<FlowEvent, { type: 'page-view' }>): string {
+  const title = event.title.trim();
+  return title || 'the new page';
+}
+
+function titleForButton(labels: ReturnType<typeof resolveStepLabels>): string {
+  return `Click ${labels.target}`;
+}
+
+function titleForLink(labels: ReturnType<typeof resolveStepLabels>): string {
+  return `Open ${labels.target}`;
+}
+
+function titleForTextInput(labels: ReturnType<typeof resolveStepLabels>): string {
+  const field = labels.field ?? 'field';
+  if (labels.value) return `Enter ${labels.value} in ${field}`;
+  return `Fill in ${field}`;
+}
+
+function titleForSelect(labels: ReturnType<typeof resolveStepLabels>): string {
+  const field = labels.field ?? 'field';
+  if (labels.value) return `Select ${labels.value} for ${field}`;
+  return `Select ${field}`;
+}
+
+function titleForCheckbox(labels: ReturnType<typeof resolveStepLabels>): string {
+  return `Check ${labels.target}`;
+}
+
+function titleForRadio(labels: ReturnType<typeof resolveStepLabels>): string {
+  return `Select ${labels.target}`;
+}
+
+function titleForGeneric(labels: ReturnType<typeof resolveStepLabels>): string {
+  return `Click ${labels.target}`;
+}
+
+function descriptionForButton(
+  snapshot: ElementSnapshot,
+  labels: ReturnType<typeof resolveStepLabels>,
+): string {
+  const prefix = formatPagePrefix(labels.pageTitle);
+  const submitHint =
+    isSubmitButton(snapshot) && isInsideForm(snapshot) ? ' to save the form' : '';
+  return `${prefix}click ${labels.target}${submitHint}.`;
+}
+
+function descriptionForLink(labels: ReturnType<typeof resolveStepLabels>): string {
+  return `${formatPagePrefix(labels.pageTitle)}open ${labels.target}.`;
+}
+
+function descriptionForTextInput(labels: ReturnType<typeof resolveStepLabels>): string {
+  const field = labels.field ?? 'field';
+  const suffix = formatContextSuffix(labels.contextHint);
+  const prefix = formatPagePrefix(labels.pageTitle);
+
+  if (labels.value) {
+    return `${prefix}enter ${labels.value} in the ${field} field${suffix}.`;
+  }
+
+  return `${prefix}enter a value in the ${field} field${suffix}.`;
+}
+
+function descriptionForSelect(labels: ReturnType<typeof resolveStepLabels>): string {
+  const field = labels.field ?? 'field';
+  const suffix = formatContextSuffix(labels.contextHint);
+  const prefix = formatPagePrefix(labels.pageTitle);
+
+  if (labels.value) {
+    return `${prefix}select ${labels.value} from the ${field} dropdown${suffix}.`;
+  }
+
+  return `${prefix}choose an option from the ${field} dropdown${suffix}.`;
+}
+
+function descriptionForCheckbox(labels: ReturnType<typeof resolveStepLabels>): string {
+  return `${formatPagePrefix(labels.pageTitle)}check ${labels.target}.`;
+}
+
+function descriptionForRadio(labels: ReturnType<typeof resolveStepLabels>): string {
+  return `${formatPagePrefix(labels.pageTitle)}select ${labels.target}.`;
+}
+
+function descriptionForGeneric(labels: ReturnType<typeof resolveStepLabels>): string {
+  return `${formatPagePrefix(labels.pageTitle)}click ${labels.target}.`;
 }
 
 export function generateStepTitle(snapshot: ElementSnapshot, event: FlowEvent): string {
@@ -123,39 +106,31 @@ export function generateStepTitle(snapshot: ElementSnapshot, event: FlowEvent): 
   }
 
   if (event.type === 'page-view') {
+    if (event.navigationRedirect) {
+      return `User navigates to ${getNavigationRedirectPageName(event)} page`;
+    }
     return `Open ${getPageViewName(event)}`;
   }
 
-  const label = getVisibleLabel(snapshot);
-  const value = getRecordedValue(snapshot, event);
+  const labels = resolveStepLabels(snapshot, event);
 
-  if (snapshot.isButton) {
-    return `Click ${label}`;
+  switch (getControlKind(snapshot)) {
+    case 'button':
+      return titleForButton(labels);
+    case 'link':
+      return titleForLink(labels);
+    case 'text-input':
+    case 'textarea':
+      return titleForTextInput(labels);
+    case 'select':
+      return titleForSelect(labels);
+    case 'checkbox':
+      return titleForCheckbox(labels);
+    case 'radio':
+      return titleForRadio(labels);
+    default:
+      return titleForGeneric(labels);
   }
-
-  if (snapshot.isLink) {
-    return `Open ${label} link`;
-  }
-
-  if (snapshot.isSelect) {
-    return value
-      ? `Select ${normalizeText(value)} in ${getFieldName(snapshot)}`
-      : `Select ${getFieldName(snapshot)}`;
-  }
-
-  if (snapshot.isCheckbox || snapshot.isRadio) {
-    return snapshot.isCheckbox
-      ? `Mark ${sentenceCase(getControlContextLabel(snapshot))}`
-      : `Choose ${sentenceCase(getControlContextLabel(snapshot))}`;
-  }
-
-  if (snapshot.isInput) {
-    return value
-      ? `Enter ${normalizeText(value)} in ${getFieldName(snapshot)}`
-      : `Enter ${getFieldName(snapshot)}`;
-  }
-
-  return `Click ${sentenceCase(label)}`;
 }
 
 export function generateStepDescription(snapshot: ElementSnapshot, event: FlowEvent): string {
@@ -164,101 +139,41 @@ export function generateStepDescription(snapshot: ElementSnapshot, event: FlowEv
   }
 
   if (event.type === 'page-view') {
-    return `Open ${getPageViewName(event)} at ${event.url}.`;
-  }
-
-  const pageContext = getPageContext(event);
-
-  if (snapshot.isButton) {
-    const label = getVisibleLabel(snapshot);
-    const formHint = getFormContextHint(snapshot);
-    return `${pageContext}click the ${label} button${formHint}.`;
-  }
-
-  if (snapshot.isLink) {
-    const label = getVisibleLabel(snapshot);
-    return `${pageContext}open the ${label} link.`;
-  }
-
-  if (snapshot.isSelect) {
-    const fieldLabel = formatFieldLabel(snapshot);
-    const value = getRecordedValue(snapshot, event);
-    const country = findDataAttribute(snapshot, 'country');
-
-    if (value && country) {
-      return `${pageContext}select ${normalizeText(value)} in the dropdown field ${fieldLabel} for country ${country}.`;
+    if (event.navigationRedirect) {
+      return `After previous action, page is redirected to ${getNavigationRedirectPageName(event)}`;
     }
-
-    if (value) {
-      return `${pageContext}select ${normalizeText(value)} in the dropdown field ${fieldLabel}.`;
-    }
-
-    if (country) {
-      return `${pageContext}select a value in the dropdown field ${fieldLabel} for country ${country}.`;
-    }
-
-    return `${pageContext}select a value in the dropdown field ${fieldLabel}.`;
+    return `Open the ${getPageViewName(event)} page.`;
   }
 
-  if (snapshot.isInput || snapshot.tagName === 'textarea') {
-    const fieldLabel = formatFieldLabel(snapshot);
-    const value = getRecordedValue(snapshot, event);
-    const country = findDataAttribute(snapshot, 'country');
-    const valueLabel = formatValueLabel(value);
+  const labels = resolveStepLabels(snapshot, event);
 
-    if (country && value) {
-      return `${pageContext}enter ${valueLabel} in the input field ${fieldLabel} for country ${country}.`;
-    }
-
-    if (country) {
-      return `${pageContext}enter a value in the input field ${fieldLabel} for country ${country}.`;
-    }
-
-    if (value) {
-      return `${pageContext}enter ${valueLabel} in the input field ${fieldLabel}.`;
-    }
-
-    return `${pageContext}enter a value in the input field ${fieldLabel}.`;
+  switch (getControlKind(snapshot)) {
+    case 'button':
+      return descriptionForButton(snapshot, labels);
+    case 'link':
+      return descriptionForLink(labels);
+    case 'text-input':
+    case 'textarea':
+      return descriptionForTextInput(labels);
+    case 'select':
+      return descriptionForSelect(labels);
+    case 'checkbox':
+      return descriptionForCheckbox(labels);
+    case 'radio':
+      return descriptionForRadio(labels);
+    default:
+      return descriptionForGeneric(labels);
   }
-
-  if (snapshot.isCheckbox) {
-    const label = normalizeText(getControlContextLabel(snapshot));
-    return `${pageContext}mark the checkbox with label "${label}".`;
-  }
-
-  if (snapshot.isRadio) {
-    const label = normalizeText(getControlContextLabel(snapshot));
-    return `${pageContext}select the option with label "${label}".`;
-  }
-
-  const label = sentenceCase(getVisibleLabel(snapshot));
-  const role = snapshot.role ?? snapshot.tagName;
-  return `${pageContext}click the ${role} "${label}".`;
 }
 
 export function enrichStepFromEvent(
   step: { title: string; notes: string; generatedTitle: string; generatedDescription: string },
-  event: FlowEvent
+  event: FlowEvent,
 ): void {
-  if (event.type === 'navigation') {
-    step.generatedTitle = generateStepTitle({} as ElementSnapshot, event);
-    step.generatedDescription = generateStepDescription({} as ElementSnapshot, event);
-    step.title = step.generatedTitle;
-    step.notes = step.generatedDescription;
-    return;
-  }
+  const snapshot = event.type === 'click' || event.type === 'input' ? event.element : ({} as ElementSnapshot);
 
-  if (event.type === 'page-view') {
-    step.generatedTitle = generateStepTitle({} as ElementSnapshot, event);
-    step.generatedDescription = generateStepDescription({} as ElementSnapshot, event);
-    step.title = step.generatedTitle;
-    step.notes = step.generatedDescription;
-    return;
-  }
-
-  const { element } = event;
-  step.generatedTitle = generateStepTitle(element, event);
-  step.generatedDescription = generateStepDescription(element, event);
+  step.generatedTitle = generateStepTitle(snapshot, event);
+  step.generatedDescription = generateStepDescription(snapshot, event);
   step.title = step.generatedTitle;
-  step.notes = step.generatedDescription;
+  step.notes = '';
 }

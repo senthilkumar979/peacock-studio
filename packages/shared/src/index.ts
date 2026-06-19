@@ -1,4 +1,5 @@
 export * from './types/appMessages';
+export * from './types/captureEnvironment';
 export * from './types/events';
 export * from './types/messages';
 export * from './constants/handoff';
@@ -22,3 +23,6 @@ export * from './utils/stepMarker';
 export * from './utils/stepUrl';
 export * from './utils/playerOutline';
 export * from './utils/flowBranch';
+export * from './utils/parseCaptureEnvironment';
+export * from './utils/collectCaptureEnvironment';
+export * from './utils/formatCaptureDuration';

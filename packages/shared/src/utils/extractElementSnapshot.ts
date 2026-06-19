@@ -178,7 +178,12 @@ function captureValuePreview(el: HTMLElement): string | null {
 
 function getElementRoles(el: HTMLElement) {
   const tag = el.tagName.toLowerCase();
-  const type = el instanceof HTMLInputElement ? el.type.toLowerCase() : null;
+  const type =
+    el instanceof HTMLInputElement
+      ? el.type.toLowerCase()
+      : el instanceof HTMLButtonElement && el.type
+        ? el.type.toLowerCase()
+        : null;
   const role = el.getAttribute('role');
 
   return {
@@ -196,7 +201,12 @@ function getElementRoles(el: HTMLElement) {
 
 export function extractElementSnapshot(el: HTMLElement): ElementSnapshot {
   const tagName = el.tagName.toLowerCase();
-  const type = el instanceof HTMLInputElement ? el.type.toLowerCase() : null;
+  const type =
+    el instanceof HTMLInputElement
+      ? el.type.toLowerCase()
+      : el instanceof HTMLButtonElement && el.type
+        ? el.type.toLowerCase()
+        : null;
   const roles = getElementRoles(el);
   const innerText = truncate((el.innerText ?? '').trim(), MAX_INNER_TEXT_LENGTH);
   const parentEl = el.parentElement;

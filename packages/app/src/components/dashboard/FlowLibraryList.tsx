@@ -1,7 +1,10 @@
-import { Calendar, FileText, Layers } from 'lucide-react';
+import { Calendar, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { SavedFlowSummary } from '@/types/savedFlow';
 import { formatFlowDate } from '@/utils/formatFlowDate';
+import { getDocumentPath } from '@/utils/shareLink';
 import { FlowDocumentActions } from './FlowDocumentActions';
+import { FlowStepCountBadge } from './FlowStepCountBadge';
 
 interface FlowLibraryListProps {
   summaries: SavedFlowSummary[];
@@ -19,24 +22,29 @@ export const FlowLibraryList = ({ summaries, onRequestDelete }: FlowLibraryListP
           <span className="mt-0.5 inline-flex rounded-lg bg-peacock-50 p-2 text-peacock-600 ring-1 ring-peacock-100">
             <FileText className="h-4 w-4" aria-hidden />
           </span>
-          <div className="min-w-0">
-            <p className="truncate font-semibold text-slate-900">{summary.title}</p>
-            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
-              <span className="inline-flex items-center gap-1">
+          <Link
+            to={getDocumentPath(summary.id, 'player')}
+            className="group min-w-0 flex-1 rounded-lg outline-none ring-peacock-500 focus-visible:ring-2"
+          >
+            <p className="truncate font-semibold text-slate-900 transition-colors group-hover:text-peacock-700">
+              {summary.title}
+            </p>
+            <p className="mt-1.5 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1 text-sm text-slate-500">
                 <Calendar className="h-3.5 w-3.5 text-slate-400" aria-hidden />
                 {formatFlowDate(summary.generatedAt)}
               </span>
-              <span className="inline-flex items-center gap-1">
-                <Layers className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-                {summary.stepCount} steps
-              </span>
+              <FlowStepCountBadge stepCount={summary.stepCount} />
             </p>
-          </div>
+          </Link>
         </div>
-        <FlowDocumentActions
-          documentId={summary.id}
-          onRequestDelete={() => onRequestDelete(summary)}
-        />
+        <div className="shrink-0 sm:ml-4">
+          <FlowDocumentActions
+            documentId={summary.id}
+            layout="row"
+            onRequestDelete={() => onRequestDelete(summary)}
+          />
+        </div>
       </li>
     ))}
   </ul>

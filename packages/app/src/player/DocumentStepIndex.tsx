@@ -1,4 +1,11 @@
-import { BookMarked, GitBranch } from 'lucide-react';
+import { BookMarked, FileText, GitBranch } from 'lucide-react';
+
+interface DocumentStepIndexOverviewItem {
+  type: 'overview';
+  anchorId: string;
+  itemId: string;
+  title: string;
+}
 
 interface DocumentStepIndexStepItem {
   type: 'step';
@@ -23,6 +30,7 @@ interface DocumentStepIndexBranchItem {
 }
 
 export type DocumentStepIndexItem =
+  | DocumentStepIndexOverviewItem
   | DocumentStepIndexStepItem
   | DocumentStepIndexSectionItem
   | DocumentStepIndexBranchItem;
@@ -30,6 +38,7 @@ export type DocumentStepIndexItem =
 interface DocumentStepIndexProps {
   items: DocumentStepIndexItem[];
   activeItemId: string | null;
+  onSelectOverview: (anchorId: string, itemId: string) => void;
   onSelectStep: (anchorId: string, stepId: string) => void;
   onSelectSection: (anchorId: string, sectionId: string) => void;
   onSelectBranch: (anchorId: string, branchId: string) => void;
@@ -38,6 +47,7 @@ interface DocumentStepIndexProps {
 export const DocumentStepIndex = ({
   items,
   activeItemId,
+  onSelectOverview,
   onSelectStep,
   onSelectSection,
   onSelectBranch,
@@ -48,6 +58,26 @@ export const DocumentStepIndex = ({
       <nav className="mt-4 pr-1">
         <ol className="space-y-2">
           {items.map((item) => {
+            if (item.type === 'overview') {
+              const isActive = item.itemId === activeItemId;
+              return (
+                <li key={item.itemId}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectOverview(item.anchorId, item.itemId)}
+                    className={`flex w-full items-start gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm transition ${
+                      isActive
+                        ? 'bg-peacock-50 font-semibold text-peacock-800 ring-1 ring-peacock-200'
+                        : 'font-medium text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <FileText className="mt-1 h-4 w-4 shrink-0" aria-hidden />
+                    <span className="line-clamp-2 leading-5">{item.title}</span>
+                  </button>
+                </li>
+              );
+            }
+
             if (item.type === 'branch') {
               const isActive = item.branchId === activeItemId;
               return (

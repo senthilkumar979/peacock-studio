@@ -21,10 +21,12 @@ export const FlowDocumentActions = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const containerClass =
-    layout === 'stack' ? 'flex justify-center gap-2' : 'flex flex-wrap items-center gap-2';
+    layout === 'stack'
+      ? 'flex justify-center gap-2'
+      : 'flex shrink-0 flex-wrap items-center gap-1.5 sm:flex-nowrap';
 
   const actionClass =
-    'inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-colors';
+    'inline-flex shrink-0 items-center justify-center rounded-lg border p-2 text-sm font-medium transition-colors sm:px-2.5 sm:py-2';
 
   return (
     <>

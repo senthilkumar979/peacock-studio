@@ -50,7 +50,7 @@ interface FlowStore {
   updateSectionDescription: (id: string, description: string) => void;
   setStepCustomScreenshot: (id: string, dataUrl: string) => void;
   resetStepScreenshot: (id: string) => void;
-  updateFlowDetails: (title: string, description: string) => void;
+  updateFlowDetails: (title: string, description: string, version: string) => void;
   addBranch: (afterItemId?: string | null) => void;
   addBranchWithPath: (
     path: Omit<LinkedPeacockPath, 'id' | 'order'>,
@@ -122,7 +122,13 @@ export const useFlowStore = create<FlowStore>()(
     hydrateFromDocument: (doc) =>
       set({
         documentId: doc.id,
-        flow: doc.flow,
+        flow: {
+          ...doc.flow,
+          flow: {
+            ...doc.flow.flow,
+            version: doc.flow.flow.version ?? '',
+          },
+        },
         screenshotUrls: doc.screenshotUrls,
         steps: doc.steps,
         selectedOutlineId: pickInitialSelection(doc.steps),
@@ -221,11 +227,12 @@ export const useFlowStore = create<FlowStore>()(
         delete step.customScreenshotId;
       }),
 
-    updateFlowDetails: (title, description) =>
+    updateFlowDetails: (title, description, version) =>
       set((state) => {
         if (!state.flow) return;
         state.flow.flow.title = title;
         state.flow.flow.description = description;
+        state.flow.flow.version = version;
       }),
 
     addBranch: (afterItemId) =>

@@ -1,3 +1,5 @@
+import type { FlowCaptureEnvironment } from './captureEnvironment';
+
 export type EventType = 'click' | 'input' | 'navigation' | 'tab-switch' | 'scroll';
 
 export interface Viewport {
@@ -103,6 +105,8 @@ export interface PageViewEvent {
   title: string;
   viewport: Viewport;
   screenshotId: string;
+  /** True when the user navigated to this page after a prior action (SPA, reload, or new tab). */
+  navigationRedirect?: boolean;
 }
 
 export type FlowEvent = ClickEvent | InputEvent | NavigationEvent | PageViewEvent;
@@ -166,18 +170,26 @@ export function getPlayableSteps(items: FlowOutlineItem[]): FlowStep[] {
   return items.filter(isFlowStep);
 }
 
+export interface FlowDocumentMetadata {
+  createdAt: number;
+  /** Legacy full user agent string. Prefer captureEnvironment.userAgent. */
+  browser: string;
+  /** Legacy platform string. Prefer captureEnvironment.platform. */
+  platform: string;
+  screen: { width: number; height: number };
+  /** One-time capture context for the recording session. */
+  captureEnvironment?: FlowCaptureEnvironment;
+}
+
 export interface FlowPayload {
   flow: {
     title: string;
     description: string;
+    /** User-defined document version label (e.g. semver, release tag). */
+    version: string;
     category: string;
     tags: string[];
   };
-  metadata: {
-    createdAt: number;
-    browser: string;
-    platform: string;
-    screen: { width: number; height: number };
-  };
+  metadata: FlowDocumentMetadata;
   steps: FlowOutlineItem[];
 }

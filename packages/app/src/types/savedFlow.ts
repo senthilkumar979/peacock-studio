@@ -20,6 +20,7 @@ export interface SavedFlowSummary {
   id: string;
   title: string;
   description: string;
+  version: string;
   generatedAt: number;
   updatedAt: number;
   stepCount: number;

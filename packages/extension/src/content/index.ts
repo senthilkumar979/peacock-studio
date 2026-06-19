@@ -1,5 +1,6 @@
 import {
   createId,
+  collectCaptureEnvironmentFromWindow,
   extractElementSnapshot,
   getViewport,
   isSensitiveField,
@@ -275,6 +276,37 @@ function handleInput(event: Event): void {
   })();
 }
 
+async function waitForPageSettle(): Promise<void> {
+  if (document.readyState === 'loading') {
+    await new Promise<void>((resolve) => {
+      window.addEventListener('load', () => resolve(), { once: true });
+    });
+  }
+
+  await waitForUiPaint();
+  await new Promise((resolve) => window.setTimeout(resolve, 100));
+}
+
+async function captureNavigationPageView(): Promise<void> {
+  if (!(await isRecordingActive())) return;
+
+  await waitForPageSettle();
+
+  const screenshotId = await tryCaptureScreenshotId();
+  const pageViewEvent: PageViewEvent = {
+    id: createId(),
+    type: 'page-view',
+    timestamp: Date.now(),
+    url: location.href,
+    title: document.title,
+    viewport: getViewport(),
+    screenshotId,
+    navigationRedirect: true,
+  };
+
+  await storeEvent(pageViewEvent);
+}
+
 async function captureInitialPageView(): Promise<void> {
   if (!(await isRecordingActive())) return;
 
@@ -344,9 +376,10 @@ async function handleNavigation(event: NavigationEvent): Promise<void> {
   if (isSensitiveUrl(event.toUrl)) {
     await sendExtensionMessage({ type: 'PAUSE_RECORDING' });
     await refreshRecordingState();
+    return;
   }
 
-  await storeEvent(event);
+  await captureNavigationPageView();
 }
 
 async function stopRecordingFromUi(): Promise<void> {
@@ -396,6 +429,23 @@ function registerRuntimeListeners(): void {
         console.error('[Peacock] Failed to capture initial page view', error);
       });
       return;
+    }
+
+    if (message.type === 'CAPTURE_ENVIRONMENT') {
+      const startedAt = message.recordingStartedAt;
+      const environment = collectCaptureEnvironmentFromWindow(startedAt, startedAt);
+      sendResponse({ environment });
+      return true;
+    }
+
+    if (message.type === 'CAPTURE_NAVIGATION_PAGE_VIEW') {
+      void captureNavigationPageView()
+        .then(() => sendResponse({ success: true }))
+        .catch((error) => {
+          console.error('[Peacock] Failed to capture navigation page view', error);
+          sendResponse({ error: error instanceof Error ? error.message : 'Unknown error' });
+        });
+      return true;
     }
 
     if (message.type === 'CAPTURE_FINAL_PAGE') {

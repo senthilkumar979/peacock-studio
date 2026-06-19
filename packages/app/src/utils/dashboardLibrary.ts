@@ -10,7 +10,7 @@ export function filterSummaries(
   if (!normalized) return summaries;
 
   return summaries.filter((item) => {
-    const haystack = `${item.title} ${item.description}`.toLowerCase();
+    const haystack = `${item.title} ${item.description} ${item.version}`.toLowerCase();
     return haystack.includes(normalized);
   });
 }

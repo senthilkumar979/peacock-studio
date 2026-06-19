@@ -2,16 +2,18 @@ import { AppHeader } from "@/components/AppHeader";
 import { getPlayableSteps, isFlowBranch, isFlowSection, isFlowStep } from "@peacock/shared";
 import { useFlowStore, useViewerOutline } from "@/store/flowStore";
 import { DocumentBranchCard } from "./DocumentBranchCard";
-import { formatFlowDate } from "@/utils/formatFlowDate";
 import {
+  FLOW_DETAILS_OUTLINE_ID,
+  getDocumentFlowDetailsAnchor,
   getDocumentStepAnchor,
   type SharedDocumentViewMode,
-} from "@/utils/shareLink";
+} from '@/utils/shareLink';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DocumentSectionCard } from "./DocumentSectionCard";
 import { DocumentStepCard } from "./DocumentStepCard";
 import { DocumentStepIndex, type DocumentStepIndexItem } from "./DocumentStepIndex";
+import { FlowDetailsIntro } from "./FlowDetailsIntro";
 import { SharedViewToggle } from "./SharedViewToggle";
 
 interface DocumentViewProps {
@@ -28,9 +30,18 @@ export const DocumentView = ({
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
   const playableStepCount = useMemo(() => getPlayableSteps(steps).length, [steps]);
 
+  const flowDetailsAnchor = getDocumentFlowDetailsAnchor();
+
   const indexItems = useMemo((): DocumentStepIndexItem[] => {
+    const overviewItem: DocumentStepIndexItem = {
+      type: 'overview',
+      anchorId: flowDetailsAnchor,
+      itemId: FLOW_DETAILS_OUTLINE_ID,
+      title: flow?.flow.title?.trim() || 'Flow details',
+    };
+
     let stepNumber = 0;
-    return steps.map((item) => {
+    const outlineItems = steps.map((item) => {
       const anchorId = getDocumentStepAnchor(item.id);
       if (isFlowSection(item)) {
         return {
@@ -57,9 +68,11 @@ export const DocumentView = ({
         title: item.title,
       };
     });
-  }, [steps]);
 
-  const [activeItemId, setActiveItemId] = useState<string | null>(steps[0]?.id ?? null);
+    return [overviewItem, ...outlineItems];
+  }, [steps, flow?.flow.title, flowDetailsAnchor]);
+
+  const [activeItemId, setActiveItemId] = useState<string | null>(FLOW_DETAILS_OUTLINE_ID);
   const [desktopPaneHeight, setDesktopPaneHeight] = useState<number | null>(
     null,
   );
@@ -93,8 +106,9 @@ export const DocumentView = ({
 
   useEffect(() => {
     setActiveItemId((current) => {
+      if (current === FLOW_DETAILS_OUTLINE_ID) return current;
       if (current && steps.some((item) => item.id === current)) return current;
-      return steps[0]?.id ?? null;
+      return FLOW_DETAILS_OUTLINE_ID;
     });
   }, [steps]);
 
@@ -129,7 +143,9 @@ export const DocumentView = ({
       if (!target) return;
 
       setActiveItemId(
-        target.type === 'step'
+        target.type === 'overview'
+          ? target.itemId
+          : target.type === 'step'
           ? target.stepId
           : target.type === 'branch'
             ? target.branchId
@@ -189,23 +205,6 @@ export const DocumentView = ({
       </AppHeader>
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
-        <section className="shrink-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap gap-3 text-sm text-slate-600">
-            <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 font-medium">
-              {playableStepCount} {playableStepCount === 1 ? "step" : "steps"}
-            </span>
-            {flow ? (
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 font-medium">
-                Created {formatFlowDate(flow.metadata.createdAt)}
-              </span>
-            ) : null}
-          </div>
-          <p className="mt-4 text-sm leading-6 text-slate-600">
-            Follow the documented steps below, or switch to player mode for a
-            guided walkthrough.
-          </p>
-        </section>
-
         <div
           ref={layoutRef}
           className={`grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)] ${isDesktopPane ? "" : ""}`}
@@ -215,6 +214,7 @@ export const DocumentView = ({
             <DocumentStepIndex
               items={indexItems}
               activeItemId={activeItemId}
+              onSelectOverview={(anchorId, itemId) => scrollToAnchor(anchorId, itemId)}
               onSelectStep={(anchorId, stepId) => scrollToAnchor(anchorId, stepId)}
               onSelectSection={(anchorId, sectionId) => scrollToAnchor(anchorId, sectionId)}
               onSelectBranch={(anchorId, branchId) => scrollToAnchor(anchorId, branchId)}
@@ -226,6 +226,20 @@ export const DocumentView = ({
               ref={stepsScrollRef}
               className="flex min-w-0 flex-col gap-5 pr-1 "
             >
+              <div data-outline-id={FLOW_DETAILS_OUTLINE_ID}>
+                <FlowDetailsIntro
+                  variant="doc"
+                  anchorId={flowDetailsAnchor}
+                  isActive={activeItemId === FLOW_DETAILS_OUTLINE_ID}
+                  title={flow?.flow.title ?? 'Untitled Flow'}
+                  description={flow?.flow.description ?? ''}
+                  version={flow?.flow.version ?? ''}
+                  captureEnvironment={flow?.metadata.captureEnvironment ?? null}
+                  createdAt={flow?.metadata.createdAt}
+                  stepCount={playableStepCount}
+                />
+              </div>
+
               {(() => {
                 let stepNumber = 0;
                 let sectionIndex = 0;

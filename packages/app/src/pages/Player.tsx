@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { getPlayerOutlineSegments } from '@peacock/shared';
 import { EmptyFlowState } from '@/components/EmptyFlowState';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { useSavedDocument } from '@/hooks/useSavedDocument';
 import { DocumentView } from '@/player/DocumentView';
 import { PlayerView } from '@/player/PlayerView';
-import { useFlowStore, usePlayableSteps, useViewerOutline } from '@/store/flowStore';
+import { useFlowStore } from '@/store/flowStore';
 import { parseShareSearchParams } from '@/utils/flowShareSettings';
 import type { SharedDocumentViewMode } from '@/utils/shareLink';
 
@@ -14,12 +13,9 @@ export const Player = () => {
   const { documentId } = useParams<{ documentId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isLoading, isLoaded, error } = useSavedDocument(documentId);
-  const outline = useViewerOutline();
   const rawSteps = useFlowStore((state) => state.steps);
   const shareSettings = useFlowStore((state) => state.shareSettings);
   const setViewerFilter = useFlowStore((state) => state.setViewerFilter);
-  const playableSteps = usePlayableSteps();
-  const playerSegments = getPlayerOutlineSegments(outline);
   const viewMode: SharedDocumentViewMode =
     searchParams.get('view') === 'player' ? 'player' : 'doc';
 
@@ -76,21 +72,6 @@ export const Player = () => {
       <EmptyFlowState
         title="Documentation not found"
         description="It may have been deleted from this browser."
-      />
-    );
-  }
-
-  if (!outline.length) {
-    return (
-      <EmptyFlowState title="No content yet" description="This documentation has no steps or sections yet." />
-    );
-  }
-
-  if (viewMode === 'player' && playableSteps.length === 0 && playerSegments.length === 0) {
-    return (
-      <EmptyFlowState
-        title="No steps to play"
-        description="Add steps in the editor. Chapter sections and branches can display in player mode once content exists."
       />
     );
   }

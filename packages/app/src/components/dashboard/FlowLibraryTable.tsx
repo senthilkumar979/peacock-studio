@@ -1,7 +1,11 @@
-import { Calendar, Hash, Type } from 'lucide-react';
+import { Calendar, Type } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { SavedFlowSummary } from '@/types/savedFlow';
 import { formatFlowDate } from '@/utils/formatFlowDate';
+import { getDocumentPath } from '@/utils/shareLink';
 import { FlowDocumentActions } from './FlowDocumentActions';
+import { FlowStepCountBadge } from './FlowStepCountBadge';
+import { FlowVersionBadge } from './FlowVersionBadge';
 
 interface FlowLibraryTableProps {
   summaries: SavedFlowSummary[];
@@ -19,16 +23,11 @@ export const FlowLibraryTable = ({ summaries, onRequestDelete }: FlowLibraryTabl
               Title
             </span>
           </th>
+          <th className="px-4 py-3 text-left font-semibold text-slate-700">Version</th>
           <th className="px-4 py-3 text-left font-semibold text-slate-700">
             <span className="inline-flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5 text-slate-400" aria-hidden />
               Generated
-            </span>
-          </th>
-          <th className="px-4 py-3 text-left font-semibold text-slate-700">
-            <span className="inline-flex items-center gap-1.5">
-              <Hash className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-              Steps
             </span>
           </th>
           <th className="px-4 py-3 text-right font-semibold text-slate-700">Actions</th>
@@ -38,16 +37,28 @@ export const FlowLibraryTable = ({ summaries, onRequestDelete }: FlowLibraryTabl
         {summaries.map((summary) => (
           <tr key={summary.id} className="hover:bg-slate-50/80">
             <td className="px-4 py-3">
-              <p className="font-medium text-slate-900">{summary.title}</p>
-              {summary.description ? (
-                <p className="mt-0.5 line-clamp-1 text-slate-500">{summary.description}</p>
-              ) : null}
+              <Link
+                to={getDocumentPath(summary.id, 'player')}
+                className="group block min-w-0 rounded-lg outline-none ring-peacock-500 focus-visible:ring-2"
+              >
+                <p className="font-medium text-slate-900 transition-colors group-hover:text-peacock-700">
+                  {summary.title}
+                </p>
+                {summary.description ? (
+                  <p className="mt-0.5 line-clamp-1 text-slate-500">{summary.description}</p>
+                ) : null}
+                <div className="mt-2">
+                  <FlowStepCountBadge stepCount={summary.stepCount} />
+                </div>
+              </Link>
+            </td>
+            <td className="px-4 py-3">
+              <FlowVersionBadge version={summary.version} />
             </td>
             <td className="whitespace-nowrap px-4 py-3 text-slate-600">
               {formatFlowDate(summary.generatedAt)}
             </td>
-            <td className="px-4 py-3 tabular-nums text-slate-600">{summary.stepCount}</td>
-            <td className="px-4 py-3">
+            <td className="whitespace-nowrap px-4 py-3">
               <div className="flex justify-end">
                 <FlowDocumentActions
                   documentId={summary.id}

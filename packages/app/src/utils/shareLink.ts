@@ -44,6 +44,12 @@ export function getDocumentShareUrl(
   return buildSharedDocumentUrl(documentId, { viewMode, query });
 }
 
+export function getDocumentFlowDetailsAnchor(): string {
+  return 'flow-details';
+}
+
+export const FLOW_DETAILS_OUTLINE_ID = 'flow-details';
+
 export function getDocumentStepAnchor(stepId: string): string {
   return `step-${stepId}`;
 }

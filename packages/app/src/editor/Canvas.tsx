@@ -28,7 +28,7 @@ export const Canvas = ({ step }: CanvasProps) => {
     <div className="flex h-full flex-col gap-3">
       <div className="rounded-lg bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200">
         <h2 className="text-base font-semibold text-slate-900">{step.title}</h2>
-        <p className="mt-1 text-sm text-slate-600">{step.generatedDescription || step.notes}</p>
+        <p className="mt-1 text-sm text-slate-600">{step.notes || step.generatedDescription}</p>
         <p className="mt-2 truncate text-xs text-slate-500" title={stepUrl}>
           {stepUrl}
         </p>

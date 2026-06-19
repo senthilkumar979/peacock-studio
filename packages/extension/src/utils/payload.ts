@@ -1,8 +1,10 @@
 import {
   createFlowStep,
+  type FlowCaptureEnvironment,
   type FlowEvent,
   type FlowPayload,
 } from '@peacock/shared';
+import { getFinalCaptureEnvironment } from '../background/captureSession';
 import { db } from '../storage/db';
 import { blobToDataUrl } from './blobToDataUrl';
 
@@ -24,10 +26,33 @@ function getFlowTitle(events: FlowEvent[]): string {
   return first.title || 'Untitled Flow';
 }
 
+function buildMetadata(captureEnvironment: FlowCaptureEnvironment | null): FlowPayload['metadata'] {
+  if (captureEnvironment) {
+    return {
+      createdAt: captureEnvironment.recordingStartedAt,
+      browser: captureEnvironment.userAgent,
+      platform: captureEnvironment.platform,
+      screen: {
+        width: captureEnvironment.screen.width,
+        height: captureEnvironment.screen.height,
+      },
+      captureEnvironment,
+    };
+  }
+
+  return {
+    createdAt: Date.now(),
+    browser: '',
+    platform: '',
+    screen: { width: 0, height: 0 },
+  };
+}
+
 export async function buildPayloadFromRecording(): Promise<PendingHandoff> {
   const storedEvents = await db.events.orderBy('timestamp').toArray();
   const events = storedEvents.map((entry) => entry.data);
   const screenshots = await db.screenshots.toArray();
+  const captureEnvironment = await getFinalCaptureEnvironment();
 
   const screenshotUrls: Record<string, string> = {};
   for (const screenshot of screenshots) {
@@ -36,24 +61,15 @@ export async function buildPayloadFromRecording(): Promise<PendingHandoff> {
 
   const steps = events.map((event) => createFlowStep(event, getScreenshotId(event)));
 
-  const screenSize =
-    typeof screen !== 'undefined'
-      ? { width: screen.width, height: screen.height }
-      : { width: 1920, height: 1080 };
-
   const payload: FlowPayload = {
     flow: {
       title: getFlowTitle(events),
       description: '',
+      version: '',
       category: '',
       tags: [],
     },
-    metadata: {
-      createdAt: Date.now(),
-      browser: navigator.userAgent,
-      platform: navigator.platform,
-      screen: screenSize,
-    },
+    metadata: buildMetadata(captureEnvironment),
     steps,
   };
 
