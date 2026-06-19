@@ -204,10 +204,10 @@ export const DocumentView = ({
         </Link>
       </AppHeader>
 
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
+      <main className="mx-auto flex w-full max-w-8xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
         <div
           ref={layoutRef}
-          className={`grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)] ${isDesktopPane ? "" : ""}`}
+          className={`grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] ${isDesktopPane ? "" : ""}`}
           style={desktopPaneHeight ? { height: desktopPaneHeight } : undefined}
         >
           <div className="sticky">

@@ -4,7 +4,7 @@ import { AppHeader } from '@/components/AppHeader';
 import { persistCurrentFlow } from '@/services/flowLibraryService';
 import { useFlowStore, usePlayableSteps } from '@/store/flowStore';
 import { getDocumentPath } from '@/utils/shareLink';
-import { FlowDetailsModal, type FlowDetailsInput } from './FlowDetailsModal';
+import { FlowDetailsDrawer, type FlowDetailsInput } from './FlowDetailsDrawer';
 
 function getFlowDetailsPromptKey(createdAt: number): string {
   return `peacock-flow-details-prompted-${createdAt}`;
@@ -85,7 +85,7 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
         )}
       </AppHeader>
 
-      <FlowDetailsModal
+      <FlowDetailsDrawer
         isOpen={isFlowDetailsOpen}
         initialTitle={flowTitle}
         initialDescription={flowDescription}

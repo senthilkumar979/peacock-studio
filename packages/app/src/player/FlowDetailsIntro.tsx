@@ -16,6 +16,79 @@ interface FlowDetailsIntroProps {
   isActive?: boolean;
 }
 
+const introCardClass =
+  "h-full rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6";
+
+interface FlowDetailsSummaryProps {
+  title: string;
+  trimmedDescription: string;
+  version: string;
+  stepCount?: number;
+  createdAt?: number;
+  isPlayer: boolean;
+  showEyebrow?: boolean;
+}
+
+const FlowDetailsSummary = ({
+  title,
+  trimmedDescription,
+  version,
+  stepCount,
+  createdAt,
+  isPlayer,
+  showEyebrow = false,
+}: FlowDetailsSummaryProps) => (
+  <>
+    {showEyebrow ? (
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-peacock-600">
+        Flow details
+      </p>
+    ) : null}
+
+    <h2
+      className={
+        isPlayer
+          ? "text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl"
+          : "mt-1 text-xl font-semibold text-slate-900"
+      }
+    >
+      {title}
+    </h2>
+
+    {trimmedDescription ? (
+      <p
+        className={
+          isPlayer
+            ? "mt-3 text-base leading-relaxed text-slate-700 sm:text-lg"
+            : "mt-3 text-sm leading-6 text-slate-600"
+        }
+      >
+        {trimmedDescription}
+      </p>
+    ) : (
+      <p className="mt-3 text-sm italic text-slate-500">
+        No description provided.
+      </p>
+    )}
+
+    <div className="mt-5 flex flex-col gap-3">
+      <FlowVersionBadge version={version} />
+      <div className="flex flex-wrap items-center gap-3">
+        {typeof stepCount === "number" ? (
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
+            {stepCount} {stepCount === 1 ? "step" : "steps"}
+          </span>
+        ) : null}
+        {createdAt ? (
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
+            Created {formatFlowDate(createdAt)}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  </>
+);
+
 export const FlowDetailsIntro = ({
   title,
   description,
@@ -29,76 +102,44 @@ export const FlowDetailsIntro = ({
 }: FlowDetailsIntroProps) => {
   const trimmedDescription = description.trim();
   const isPlayer = variant === "player";
+  const hasEnvironment = Boolean(captureEnvironment);
 
-  const content = (
-    <>
-      <div className="mt-5">
-        <h2
-          className={
-            isPlayer
-              ? "text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl"
-              : "text-xl font-semibold text-slate-900"
-          }
-        >
-          {title}
-        </h2>
-        {trimmedDescription ? (
-          <p
-            className={
-              isPlayer
-                ? "mt-1 text-base leading-relaxed text-slate-700 sm:text-lg"
-                : "mt-1 text-sm leading-6 text-slate-600"
-            }
-          >
-            {trimmedDescription}
-          </p>
-        ) : (
-          <p className="mt-3 text-sm italic text-slate-500">
-            No description provided.
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3 mt-2">
-        <FlowVersionBadge version={version} />
-        {typeof stepCount === "number" ? (
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
-            {stepCount} {stepCount === 1 ? "step" : "steps"}
-          </span>
-        ) : null}
-        {createdAt ? (
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
-            Created {formatFlowDate(createdAt)}
-          </span>
-        ) : null}
-      </div>
-
-      {captureEnvironment ? (
-        <div className="mt-6">
-          <CaptureEnvironmentPanel
-            environment={captureEnvironment}
-            compact={isPlayer}
-          />
-        </div>
-      ) : null}
-    </>
-  );
+  const summaryProps = {
+    title,
+    trimmedDescription,
+    version,
+    stepCount,
+    createdAt,
+    isPlayer,
+  };
 
   if (isPlayer) {
     return (
-      <article className="relative mx-auto w-full max-w-3xl overflow-hidden rounded-3xl border border-peacock-200/70 bg-white shadow-xl shadow-peacock-100/40">
+      <div className="mx-auto w-full max-w-6xl">
         <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-peacock-50 via-white to-brand-violet/5"
-          aria-hidden
-        />
-        <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-10">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-peacock-200 bg-peacock-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-peacock-800">
-            <FileText className="h-3.5 w-3.5" aria-hidden />
-            Flow overview
-          </span>
-          {content}
+          className={`grid gap-6 lg:items-stretch lg:gap-8 ${hasEnvironment ? "lg:grid-cols-2" : ""}`}
+        >
+          <div className={`min-w-0 ${introCardClass}`}>
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-peacock-200 bg-peacock-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-peacock-800">
+              <FileText className="h-3.5 w-3.5" aria-hidden />
+              Flow overview
+            </span>
+            <FlowDetailsSummary {...summaryProps} />
+            <p className="mt-6 text-sm text-slate-500">
+              Press Next or use the arrow keys to begin the guided walkthrough.
+            </p>
+          </div>
+
+          {captureEnvironment ? (
+            <div className="min-w-0">
+              <CaptureEnvironmentPanel
+                environment={captureEnvironment}
+                compact
+              />
+            </div>
+          ) : null}
         </div>
-      </article>
+      </div>
     );
   }
 
@@ -111,10 +152,18 @@ export const FlowDetailsIntro = ({
           : "border-slate-200"
       }`}
     >
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-peacock-600">
-        Flow details
+      <FlowDetailsSummary {...summaryProps} showEyebrow />
+
+      {captureEnvironment ? (
+        <div className="mt-6">
+          <CaptureEnvironmentPanel environment={captureEnvironment} />
+        </div>
+      ) : null}
+
+      <p className="mt-6 text-sm text-slate-500">
+        Follow the documented steps below, or switch to player mode for a guided
+        walkthrough.
       </p>
-      {content}
     </section>
   );
 };

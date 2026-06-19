@@ -52,7 +52,7 @@ export const DocumentStepIndex = ({
   onSelectSection,
   onSelectBranch,
 }: DocumentStepIndexProps) => (
-  <aside className="hidden min-h-0 lg:block">
+  <aside className="hidden min-h-0 lg:block min-w-[300px]">
     <div className="h-full rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Outline</p>
       <nav className="mt-4 pr-1">
@@ -92,7 +92,7 @@ export const DocumentStepIndex = ({
                     }`}
                   >
                     <GitBranch className="mt-1 h-4 w-4 shrink-0" aria-hidden />
-                    <span className="line-clamp-2 leading-5">{item.title}</span>
+                    <span className="line-clamp-2 leading-5 text-left">{item.title}</span>
                   </button>
                 </li>
               );
@@ -150,7 +150,7 @@ export const DocumentStepIndex = ({
                   >
                     {item.stepNumber}
                   </span>
-                  <span className="line-clamp-2 leading-5">{item.title}</span>
+                  <span className="line-clamp-2 leading-5 text-left">{item.title}</span>
                 </button>
               </li>
             );
