@@ -1,12 +1,8 @@
 import { GitBranch } from 'lucide-react';
 import { sortBranchPaths, type FlowBranch, type LinkedPeacockPath } from '@peacock/shared';
+import { getBranchAccentColors } from './documentAccentColors';
 import { FlowBranchPathOption } from './FlowBranchPathOption';
 import { useBranchPathMetadata } from './useBranchPathMetadata';
-
-function getDocumentBranchPathLayout(pathCount: number): 'column' | 'row' {
-  if (pathCount === 1 || pathCount >= 4) return 'column';
-  return 'row';
-}
 
 interface DocumentBranchCardProps {
   branch: FlowBranch;
@@ -25,16 +21,18 @@ export const DocumentBranchCard = ({
 }: DocumentBranchCardProps) => {
   const paths = sortBranchPaths(branch.paths);
   const metaByPathId = useBranchPathMetadata(branch);
-  const layout = getDocumentBranchPathLayout(paths.length);
+  const accent = getBranchAccentColors(branch.id);
 
   return (
     <article
       id={anchorId}
-      className={`scroll-mt-24 rounded-2xl border bg-white p-6 shadow-sm transition ${
-        isActive ? 'border-brand-violet ring-2 ring-brand-violet/20' : 'border-slate-200'
+      className={`scroll-mt-24 rounded-2xl border border-l-4 bg-white p-6 shadow-sm transition ${
+        isActive
+          ? `${accent.borderCardActive} ${accent.borderLeft} ring-2 ${accent.ringActive}`
+          : `border-slate-200 ${accent.borderLeft}`
       }`}
     >
-      <div className="flex items-center gap-2 text-brand-violet">
+      <div className={`flex items-center gap-2 ${accent.icon}`}>
         <GitBranch className="h-4 w-4" aria-hidden />
         <p className="text-xs font-semibold uppercase tracking-wide">Branch</p>
       </div>
@@ -48,13 +46,7 @@ export const DocumentBranchCard = ({
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
             {paths.length === 1 ? 'Automatically chosen path' : 'Select a path'}
           </p>
-          <ul
-            className={`mt-3 ${
-              layout === 'row'
-                ? 'flex flex-row items-start gap-3 overflow-x-auto pb-1'
-                : 'flex flex-col gap-2'
-            }`}
-          >
+          <ul className="mt-3 flex flex-col gap-2">
             {paths.map((path, index) => (
               <FlowBranchPathOption
                 key={path.id}
@@ -62,7 +54,7 @@ export const DocumentBranchCard = ({
                 index={index}
                 meta={metaByPathId[path.id]}
                 isSelected={path.id === selectedPathId}
-                layout={layout}
+                layout="column"
                 onSelect={() => onSelectPath(path)}
               />
             ))}

@@ -5,8 +5,13 @@ import {
   isFlowSection,
   isFlowStep,
   sortBranchPaths,
+  type LinkedPeacockPath,
 } from "@peacock/shared";
 import { useDocumentBranchPaths } from "@/hooks/useDocumentBranchPaths";
+import {
+  scrollDocumentPaneToAnchor,
+  useDocumentOutlineScrollSpy,
+} from "@/hooks/useDocumentOutlineScrollSpy";
 import { useFlowStore, useViewerOutline } from "@/store/flowStore";
 import { DocumentBranchCard } from "./DocumentBranchCard";
 import {
@@ -21,7 +26,7 @@ import {
   getDocumentStepAnchor,
   type SharedDocumentViewMode,
 } from "@/utils/shareLink";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DocumentSectionCard } from "./DocumentSectionCard";
 import { DocumentStepCard } from "./DocumentStepCard";
@@ -91,24 +96,57 @@ export const DocumentView = ({
     null,
   );
   const layoutRef = useRef<HTMLDivElement | null>(null);
-  const stepsScrollRef = useRef<HTMLDivElement | null>(null);
+  const contentScrollRef = useRef<HTMLDivElement | null>(null);
+  const indexItemsRef = useRef(indexItems);
+  const scrollSpyPausedRef = useRef(false);
+  const pendingPathScrollRestoreRef = useRef<number | null>(null);
   const isDesktopPane = desktopPaneHeight !== null;
+
+  indexItemsRef.current = indexItems;
 
   const scrollStepsPaneToAnchor = (
     anchorId: string,
     behavior: ScrollBehavior = "smooth",
   ) => {
-    const stepsPane = stepsScrollRef.current;
-    const target = document.getElementById(anchorId);
-    if (!target) return;
-
-    if (!stepsPane || !isDesktopPane || !stepsPane.contains(target)) {
-      target.scrollIntoView({ block: "start", behavior });
-      return;
-    }
-
-    target.scrollIntoView({ block: "start", behavior, inline: "nearest" });
+    scrollDocumentPaneToAnchor(contentScrollRef.current, anchorId, behavior);
   };
+
+  const handleOutlineActiveItemChange = useCallback((itemId: string) => {
+    if (scrollSpyPausedRef.current) return;
+    setActiveItemId(itemId);
+  }, []);
+
+  useDocumentOutlineScrollSpy(
+    contentScrollRef,
+    isDesktopPane,
+    handleOutlineActiveItemChange,
+    indexItems.map((item) => getDocumentStepIndexItemId(item)).join("|"),
+    scrollSpyPausedRef,
+  );
+
+  const handleSelectPath = useCallback(
+    (branchId: string, path: LinkedPeacockPath) => {
+      pendingPathScrollRestoreRef.current =
+        contentScrollRef.current?.scrollTop ?? 0;
+      scrollSpyPausedRef.current = true;
+      selectPath(branchId, path);
+      setActiveItemId(branchId);
+    },
+    [selectPath],
+  );
+
+  useLayoutEffect(() => {
+    if (pendingPathScrollRestoreRef.current === null) return;
+
+    const scrollTop = pendingPathScrollRestoreRef.current;
+    pendingPathScrollRestoreRef.current = null;
+    const scrollContainer = contentScrollRef.current;
+    if (scrollContainer) scrollContainer.scrollTop = scrollTop;
+
+    window.requestAnimationFrame(() => {
+      scrollSpyPausedRef.current = false;
+    });
+  }, [selectedPathByBranchId, linkedContentByPathId, loadingPathIds]);
 
   const scrollToAnchor = (anchorId: string, itemId: string) => {
     setActiveItemId(itemId);
@@ -120,11 +158,17 @@ export const DocumentView = ({
 
   useEffect(() => {
     setActiveItemId((current) => {
-      if (current === FLOW_DETAILS_OUTLINE_ID) return current;
-      if (current && steps.some((item) => item.id === current)) return current;
+      if (!current) return FLOW_DETAILS_OUTLINE_ID;
+      const isKnownItem = indexItems.some(
+        (item) => getDocumentStepIndexItemId(item) === current,
+      );
+      if (isKnownItem) return current;
+      if (steps.some((item) => isFlowBranch(item) && item.id === current)) {
+        return current;
+      }
       return FLOW_DETAILS_OUTLINE_ID;
     });
-  }, [steps]);
+  }, [indexItems, steps]);
 
   useEffect(() => {
     const updateDesktopPaneHeight = () => {
@@ -153,7 +197,7 @@ export const DocumentView = ({
     const syncFromHash = () => {
       const hash = window.location.hash.replace(/^#/, "");
       if (!hash) return;
-      const target = indexItems.find((item) => item.anchorId === hash);
+      const target = indexItemsRef.current.find((item) => item.anchorId === hash);
       if (!target) return;
 
       setActiveItemId(getDocumentStepIndexItemId(target));
@@ -165,36 +209,10 @@ export const DocumentView = ({
     syncFromHash();
     window.addEventListener("hashchange", syncFromHash);
     return () => window.removeEventListener("hashchange", syncFromHash);
-  }, [indexItems]);
-
-  useEffect(() => {
-    const elements = indexItems
-      .map((item) => document.getElementById(item.anchorId))
-      .filter((element): element is HTMLElement => Boolean(element));
-    if (!elements.length) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleEntries = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        const nextItemId =
-          visibleEntries[0]?.target.getAttribute("data-outline-id");
-        if (nextItemId) setActiveItemId(nextItemId);
-      },
-      {
-        root: isDesktopPane ? stepsScrollRef.current : null,
-        rootMargin: "-18% 0px -55% 0px",
-        threshold: [0.15, 0.35, 0.6],
-      },
-    );
-
-    elements.forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
-  }, [isDesktopPane, indexItems]);
+  }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-screen[calc(100vh-128px)] flex-col bg-slate-50">
       <AppHeader
         eyebrow="Peacock Shared Guide"
         title={flow?.flow.title ?? "Untitled Flow"}
@@ -239,11 +257,11 @@ export const DocumentView = ({
             />
           </div>
 
-          <div className="min-h-0 h-full overflow-y-auto">
-            <div
-              ref={stepsScrollRef}
-              className="flex min-w-0 flex-col gap-5 pr-1 "
-            >
+          <div
+            ref={contentScrollRef}
+            className="min-h-0 h-full overflow-y-auto"
+          >
+            <div className="flex min-w-0 flex-col gap-5 pr-1 ">
               <div data-outline-id={FLOW_DETAILS_OUTLINE_ID}>
                 <FlowDetailsIntro
                   variant="doc"
@@ -300,7 +318,7 @@ export const DocumentView = ({
                           anchorId={anchorId}
                           isActive={item.id === activeItemId}
                           selectedPathId={branchContext.selectedPathId}
-                          onSelectPath={(path) => selectPath(item.id, path)}
+                          onSelectPath={(path) => handleSelectPath(item.id, path)}
                         />
                         {branchContext.loading ? (
                           <p className="mt-4 text-sm text-slate-500">

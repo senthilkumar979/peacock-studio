@@ -35,11 +35,6 @@ export function buildCaptureHighlights(
       detail: environment.browser.version ?? undefined,
     },
     {
-      id: 'device',
-      label: 'Device',
-      value: environment.device.type,
-    },
-    {
       id: 'duration',
       label: 'Capture time',
       value: formatCaptureDuration(environment.durationMs),

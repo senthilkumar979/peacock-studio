@@ -40,12 +40,11 @@ export const CaptureEnvironmentPanel = ({
         </span>
       </div>
 
-      <div className={`mt-5 grid gap-3 sm:grid-cols-2 ${compact ? '' : 'xl:grid-cols-4'}`}>
+      <div className={`mt-5 grid gap-3 sm:grid-cols-2 ${compact ? '' : 'lg:grid-cols-3'}`}>
         {highlights.map((highlight) => (
           <CaptureHighlightCard
             key={highlight.id}
             highlight={highlight}
-            deviceCategory={environment.device.category}
             compact={compact}
           />
         ))}

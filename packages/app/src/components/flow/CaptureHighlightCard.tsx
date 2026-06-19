@@ -1,33 +1,19 @@
-import type { FlowCaptureEnvironment } from '@peacock/shared';
-import { Clock, Globe2, Laptop, Monitor, ScanSearch, Smartphone, Tablet } from 'lucide-react';
+import { Clock, Globe2, Monitor, ScanSearch } from 'lucide-react';
 import type { CaptureHighlight } from './captureEnvironmentDisplay';
 
 const HIGHLIGHT_ICONS: Record<string, typeof Monitor> = {
   os: Monitor,
   browser: ScanSearch,
-  device: Laptop,
   duration: Clock,
 };
 
-function getDeviceIcon(category: FlowCaptureEnvironment['device']['category']) {
-  if (category === 'mobile') return Smartphone;
-  if (category === 'tablet') return Tablet;
-  return Laptop;
-}
-
 interface CaptureHighlightCardProps {
   highlight: CaptureHighlight;
-  deviceCategory: FlowCaptureEnvironment['device']['category'];
   compact: boolean;
 }
 
-export const CaptureHighlightCard = ({
-  highlight,
-  deviceCategory,
-  compact,
-}: CaptureHighlightCardProps) => {
-  const Icon =
-    highlight.id === 'device' ? getDeviceIcon(deviceCategory) : HIGHLIGHT_ICONS[highlight.id] ?? Globe2;
+export const CaptureHighlightCard = ({ highlight, compact }: CaptureHighlightCardProps) => {
+  const Icon = HIGHLIGHT_ICONS[highlight.id] ?? Globe2;
 
   return (
     <div
