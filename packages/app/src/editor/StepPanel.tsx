@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import type { FlowStep } from '@peacock/shared';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { StepImageUpload } from '@/editor/StepImageUpload';
-import { useFlowStore } from '@/store/flowStore';
+import { useState } from "react";
+import type { FlowStep } from "@peacock/shared";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { StepImageUpload } from "@/editor/StepImageUpload";
+import { useFlowStore } from "@/store/flowStore";
 
 interface StepPanelProps {
   step: FlowStep | null;
@@ -30,7 +30,9 @@ export const StepPanel = ({ step }: StepPanelProps) => {
   return (
     <>
       <div className="flex h-full flex-col gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Step details</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Step details
+        </h2>
 
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium text-slate-700">Title</span>
@@ -44,7 +46,7 @@ export const StepPanel = ({ step }: StepPanelProps) => {
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium text-slate-700">Notes</span>
           <span className="text-xs text-slate-500">
-            Optional. Leave blank to use the auto-generated description below.
+            Leave blank to use the auto-generated description below.
           </span>
           <textarea
             value={step.notes}
@@ -59,7 +61,9 @@ export const StepPanel = ({ step }: StepPanelProps) => {
 
         {step.generatedDescription && (
           <div className="rounded-lg bg-slate-100 p-3 text-sm text-slate-600">
-            <p className="mb-1 font-medium text-slate-700">Auto-generated description</p>
+            <p className="mb-1 font-medium text-slate-700">
+              Auto-generated description
+            </p>
             <p>{step.generatedDescription}</p>
           </div>
         )}
