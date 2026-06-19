@@ -10,12 +10,16 @@ import { ProductTourBuilder } from '@/pages/ProductTourBuilder';
 import { ProductTourLearner } from '@/pages/ProductTourLearner';
 import { CaptureEditor } from '@/pages/CaptureEditor';
 import { CaptureEditorLegacyRedirect } from '@/pages/CaptureEditorLegacyRedirect';
+import { Solutions } from '@/pages/Solutions';
+import { SolutionRole } from '@/pages/SolutionRole';
 
 export const App = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<Dashboard />} />
       <Route path="/landing" element={<Landing />} />
+      <Route path="/solutions" element={<Solutions />} />
+      <Route path="/solutions/:roleSlug" element={<SolutionRole />} />
       <Route path="/compare" element={<CompareDocs />} />
       <Route path="/editor" element={<Editor />} />
       <Route path="/tours/new" element={<NewProductTour />} />

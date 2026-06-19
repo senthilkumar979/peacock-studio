@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { LandingSectionShell } from './LandingSectionShell';
 
 const BEFORE = [
@@ -57,6 +58,16 @@ export const SolutionSection = () => (
           ))}
         </ul>
       </motion.article>
+    </div>
+
+    <div className="mt-10 text-center">
+      <Link
+        to="/solutions"
+        className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-peacock-800 shadow-lg transition hover:bg-slate-100"
+      >
+        Explore solutions by role
+        <ArrowRight className="h-4 w-4" aria-hidden />
+      </Link>
     </div>
   </LandingSectionShell>
 );
