@@ -1,5 +1,8 @@
+import type { PlayerControlsPosition } from './playerControlsPosition';
+import { PlayerControlsPositionDisplay } from './PlayerControlsPositionDisplay';
+
 interface PlayerControlsProps {
-  positionLabel: string;
+  position: PlayerControlsPosition;
   progressLabel: string;
   currentIndex: number;
   totalSegments: number;
@@ -10,7 +13,7 @@ interface PlayerControlsProps {
 }
 
 export const PlayerControls = ({
-  positionLabel,
+  position,
   progressLabel,
   currentIndex,
   totalSegments,
@@ -21,8 +24,8 @@ export const PlayerControls = ({
 }: PlayerControlsProps) => (
   <div className="flex shrink-0 flex-col gap-3 border-t border-slate-200 bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
     <div className="min-w-0">
-      <p className="truncate text-sm font-semibold text-slate-900">{positionLabel}</p>
-      <p className="text-xs text-slate-500">{progressLabel}</p>
+      <PlayerControlsPositionDisplay position={position} />
+      <p className="mt-1 text-xs text-slate-500">{progressLabel}</p>
     </div>
 
     <div className="flex items-center gap-2">
@@ -34,11 +37,7 @@ export const PlayerControls = ({
       >
         Previous
       </button>
-      <button
-        type="button"
-        onClick={onTogglePlay}
-        className="btn-peacock"
-      >
+      <button type="button" onClick={onTogglePlay} className="btn-peacock">
         {isPlaying ? 'Pause' : 'Play'}
       </button>
       <button

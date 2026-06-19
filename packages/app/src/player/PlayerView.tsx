@@ -9,6 +9,10 @@ import type { SharedDocumentViewMode } from '@/utils/shareLink';
 import { FlowBranchChoicePanel } from './FlowBranchChoicePanel';
 import { FlowDetailsIntro } from './FlowDetailsIntro';
 import { PlayerControls } from './PlayerControls';
+import {
+  getPlayerControlsPosition,
+  getPlayerControlsProgressLabel,
+} from './playerControlsPosition';
 import { PlayerFinale } from './PlayerFinale';
 import { PlayerStep } from './PlayerStep';
 import { SharedViewToggle } from './SharedViewToggle';
@@ -18,26 +22,6 @@ const AUTO_PLAY_MS = 2500;
 interface PlayerViewProps {
   documentId: string;
   onModeChange: (mode: SharedDocumentViewMode) => void;
-}
-
-function getControlsLabel(
-  playback: ReturnType<typeof useBranchingPlayback>,
-): string {
-  if (playback.isAtFinale) return 'Guide complete';
-  if (playback.isAtIntro) return 'Flow overview';
-  if (playback.linkedPlayback) {
-    const { path, stepIndex, steps } = playback.linkedPlayback;
-    return `${path.label} · Step ${stepIndex + 1} of ${steps.length}`;
-  }
-  const segment = playback.currentSegment;
-  if (!segment) return 'Guide';
-  if (segment.type === 'section') return `Chapter · ${segment.section.title}`;
-  if (segment.type === 'branch') return `Branch · ${segment.branch.title}`;
-  return `Step ${segment.stepNumber} of ${playback.playableStepCount}`;
-}
-
-function getProgressLabel(currentIndex: number, segmentCount: number): string {
-  return `${currentIndex + 1} of ${segmentCount} in guide`;
 }
 
 export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
@@ -89,10 +73,8 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
     return () => window.clearTimeout(timer);
   }, [isPlaying, playback]);
 
-  const positionLabel = getControlsLabel(playback);
-  const progressLabel = playback.linkedPlayback
-    ? positionLabel
-    : getProgressLabel(playback.currentIndex, playback.totalNavigableSegments);
+  const position = getPlayerControlsPosition(playback);
+  const progressLabel = getPlayerControlsProgressLabel(playback);
 
   const handleReplay = () => {
     playback.replay();
@@ -178,7 +160,7 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
       </main>
 
       <PlayerControls
-        positionLabel={positionLabel}
+        position={position}
         progressLabel={progressLabel}
         currentIndex={playback.currentIndex}
         totalSegments={playback.totalNavigableSegments}

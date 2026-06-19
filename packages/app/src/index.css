@@ -4,9 +4,9 @@
 
 @layer base {
   button,
-  [type='button'],
-  [type='submit'],
-  [type='reset'] {
+  [type="button"],
+  [type="submit"],
+  [type="reset"] {
     -webkit-appearance: none;
     appearance: none;
   }
@@ -19,7 +19,7 @@
     justify-content: center;
     border-radius: 0.5rem;
     border: 0;
-    background-color: #2563eb;
+    background-color: theme("colors.peacock.500");
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -29,13 +29,15 @@
   }
 
   .btn-peacock:hover:not(:disabled) {
-    background-color: #1d4ed8;
+    background-color: theme("colors.peacock.600");
   }
 
   .btn-peacock:focus-visible {
     outline: 2px solid transparent;
     outline-offset: 2px;
-    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #3b82f6;
+    box-shadow:
+      0 0 0 2px theme("colors.white"),
+      0 0 0 4px theme("colors.peacock.500");
   }
 
   .btn-peacock:disabled {

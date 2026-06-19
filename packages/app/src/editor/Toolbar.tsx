@@ -1,10 +1,10 @@
-import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { AppHeader } from '@/components/AppHeader';
-import { persistCurrentFlow } from '@/services/flowLibraryService';
-import { useFlowStore, usePlayableSteps } from '@/store/flowStore';
-import { getDocumentPath } from '@/utils/shareLink';
-import { FlowDetailsDrawer, type FlowDetailsInput } from './FlowDetailsDrawer';
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { AppHeader } from "@/components/AppHeader";
+import { persistCurrentFlow } from "@/services/flowLibraryService";
+import { useFlowStore, usePlayableSteps } from "@/store/flowStore";
+import { getDocumentPath } from "@/utils/shareLink";
+import { FlowDetailsDrawer, type FlowDetailsInput } from "./FlowDetailsDrawer";
 
 function getFlowDetailsPromptKey(createdAt: number): string {
   return `peacock-flow-details-prompted-${createdAt}`;
@@ -17,7 +17,8 @@ interface ToolbarProps {
 export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
   const flow = useFlowStore((state) => state.flow);
   const playableSteps = usePlayableSteps();
-  const documentId = useFlowStore((state) => state.documentId) ?? routeDocumentId;
+  const documentId =
+    useFlowStore((state) => state.documentId) ?? routeDocumentId;
   const isLoaded = useFlowStore((state) => state.isLoaded);
   const updateFlowDetails = useFlowStore((state) => state.updateFlowDetails);
 
@@ -36,7 +37,10 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
     updateFlowDetails(details.title, details.description, details.version);
 
     if (flow) {
-      sessionStorage.setItem(getFlowDetailsPromptKey(flow.metadata.createdAt), '1');
+      sessionStorage.setItem(
+        getFlowDetailsPromptKey(flow.metadata.createdAt),
+        "1",
+      );
     }
 
     if (documentId) {
@@ -46,11 +50,11 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
     setIsFlowDetailsOpen(false);
   };
 
-  const flowTitle = flow?.flow.title ?? 'Untitled Flow';
-  const flowDescription = flow?.flow.description ?? '';
-  const flowVersion = flow?.flow.version ?? '';
+  const flowTitle = flow?.flow.title ?? "Untitled Flow";
+  const flowDescription = flow?.flow.description ?? "";
+  const flowVersion = flow?.flow.version ?? "";
   const captureEnvironment = flow?.metadata.captureEnvironment ?? null;
-  const playerPath = documentId ? getDocumentPath(documentId, 'player') : '/';
+  const playerPath = documentId ? getDocumentPath(documentId, "player") : "/";
 
   return (
     <>
@@ -62,7 +66,7 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
         documentId={documentId}
       >
         <p className="text-sm text-slate-500">
-          {playableSteps.length} {playableSteps.length === 1 ? 'step' : 'steps'}
+          {playableSteps.length} {playableSteps.length === 1 ? "step" : "steps"}
         </p>
         {isLoaded && playableSteps.length > 0 && (
           <>
@@ -76,7 +80,7 @@ export const Toolbar = ({ documentId: routeDocumentId }: ToolbarProps) => {
             {documentId ? (
               <Link
                 to={playerPath}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 bg-peacock-500 text-white hover:text-peacock-500"
               >
                 Play
               </Link>
