@@ -8,6 +8,7 @@ import { convertRouteToProductTour } from '@/utils/migrateRouteToProductTour';
 import { estimateTourDurationMinutes } from '@/utils/productTourLearner';
 import { countRouteBranches, countRoutePeacocks, getChapterNodes, migrateSavedRoute, needsRouteMigration } from '@/utils/routeGraph';
 import { countPlayableSteps } from '@/utils/flowDocumentSnapshot';
+import { normalizePersona } from '@/utils/normalizePersona';
 import { DEFAULT_PERSONA_ID } from '@/constants/personaAvatars';
 import { sortTourFeatures } from '@/utils/createProductTour';
 
@@ -180,18 +181,19 @@ export async function listPersonas(): Promise<Persona[]> {
   const db = await getDb();
   await ensureProductTourMigration(db);
   const personas = await db.getAllFromIndex('personas', 'by-updated');
-  return personas.reverse();
+  return personas.reverse().map((persona) => normalizePersona(persona));
 }
 
 export async function getPersona(id: string): Promise<Persona | undefined> {
   const db = await getDb();
   await ensureDefaultPersona(db);
-  return db.get('personas', id);
+  const persona = await db.get('personas', id);
+  return persona ? normalizePersona(persona) : undefined;
 }
 
 export async function savePersona(persona: Persona): Promise<void> {
   const db = await getDb();
-  await db.put('personas', { ...persona, updatedAt: Date.now() });
+  await db.put('personas', normalizePersona({ ...persona, updatedAt: Date.now() }));
 }
 
 export async function deletePersona(id: string): Promise<void> {

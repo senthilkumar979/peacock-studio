@@ -1,5 +1,5 @@
 import { CheckCircle2, GitBranch, Layers3, PlayCircle, Sparkles } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getSortedFeatures } from '@/store/productTourBuilderStore';
 import type { ProductTour } from '@/types/productTour';
 import type { DemoPlaybackMeta } from '@/utils/productTourLearner';
@@ -15,22 +15,37 @@ interface ProductTourOverviewCanvasProps {
   activePathLabel?: string | null;
 }
 
+const EMPTY_DEMO_META: DemoPlaybackMeta[][] = [];
+
+function buildTourDemoStructureKey(tour: ProductTour): string {
+  return getSortedFeatures(tour)
+    .map((feature) =>
+      `${feature.id}:${feature.demos.map((demo) => demo.documentId).join(',')}`,
+    )
+    .join('|');
+}
+
 export const ProductTourOverviewCanvas = ({
   tour,
   activeFeatureIndex = null,
   activeDemoIndex = null,
-  demoMeta = [],
+  demoMeta,
   activeStageLabel = 'Builder mode',
   activeBranchTitle = null,
   activePathLabel = null,
 }: ProductTourOverviewCanvasProps) => {
   const features = getSortedFeatures(tour);
   const totalDemos = features.reduce((sum, feature) => sum + feature.demos.length, 0);
-  const [resolvedDemoMeta, setResolvedDemoMeta] = useState<DemoPlaybackMeta[][]>(demoMeta);
+  const resolvedDemoMetaProp = demoMeta ?? EMPTY_DEMO_META;
+  const hasProvidedDemoMeta = resolvedDemoMetaProp.length > 0;
+  const tourDemoStructureKey = useMemo(() => buildTourDemoStructureKey(tour), [tour]);
+  const [resolvedDemoMeta, setResolvedDemoMeta] = useState<DemoPlaybackMeta[][]>(
+    resolvedDemoMetaProp,
+  );
 
   useEffect(() => {
-    if (demoMeta.length) {
-      setResolvedDemoMeta(demoMeta);
+    if (hasProvidedDemoMeta) {
+      setResolvedDemoMeta(resolvedDemoMetaProp);
       return;
     }
 
@@ -41,7 +56,7 @@ export const ProductTourOverviewCanvas = ({
     return () => {
       cancelled = true;
     };
-  }, [tour, demoMeta]);
+  }, [hasProvidedDemoMeta, resolvedDemoMetaProp, tour, tourDemoStructureKey]);
 
   const activeFeature = activeFeatureIndex !== null ? features[activeFeatureIndex] : null;
   const activeDemo =

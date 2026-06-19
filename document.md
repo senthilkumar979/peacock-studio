@@ -1,597 +1,885 @@
-# Peacock Studio
+# Peacock Studio — Product Bible
 
-## Product overview
+> **Purpose of this document:** Canonical product reference for pitch decks, landing pages, store listings, sales enablement, and AI-assisted copy generation. Describes what Peacock Studio is, what it does today, who it serves, and how to talk about it accurately.
 
-Peacock Studio is a browser-based flow capture and documentation product for turning real user journeys into reusable product demos, SOPs, training guides, support artifacts, persona-led product tours, and side-by-side workflow comparisons.
+---
 
-The product has two parts that work together:
+## Table of contents
 
-1. A **browser extension** that records actions and captures screenshots directly on live websites.
-2. A **React web app** that turns those recordings into editable, shareable documentation and multi-demo product tours.
+1. [Executive summary](#executive-summary)
+2. [The problem we solve](#the-problem-we-solve)
+3. [The Peacock solution](#the-peacock-solution)
+4. [Core workflow](#core-workflow)
+5. [Product architecture](#product-architecture)
+6. [Browser extension](#browser-extension)
+7. [Capture Editor (standalone screenshots)](#capture-editor-standalone-screenshots)
+8. [Flow editor (documentation builder)](#flow-editor-documentation-builder)
+9. [Document metadata: version & capture environment](#document-metadata-version--capture-environment)
+10. [Branching documents](#branching-documents)
+11. [Document view (read mode)](#document-view-read-mode)
+12. [Player (guided playback)](#player-guided-playback)
+13. [Dashboard & library](#dashboard--library)
+14. [Share, links & PDF export](#share-links--pdf-export)
+15. [Product tours](#product-tours)
+16. [Compare Docs](#compare-docs)
+17. [Privacy & safety](#privacy--safety)
+18. [Technical architecture](#technical-architecture)
+19. [Route reference](#route-reference)
+20. [Messaging toolkit (pitch & landing)](#messaging-toolkit-pitch--landing)
+21. [Use cases by team](#use-cases-by-team)
+22. [Differentiators](#differentiators)
+23. [Limitations & honest boundaries](#limitations--honest-boundaries)
+24. [Roadmap themes](#roadmap-themes)
+25. [Glossary](#glossary)
 
-At a high level, Peacock helps a user go from "I just performed this workflow" to "I now have a polished walkthrough I can edit, branch, tour, present, export, share, and compare."
+---
+
+## Executive summary
+
+**Peacock Studio** is a browser-based flow capture and documentation platform. It turns real product usage on live websites into polished, reusable assets: step-by-step guides, SOPs, branching demos, persona-led product tours, PDFs, and shareable walkthrough links.
+
+The product has two parts:
+
+| Part | Role |
+|------|------|
+| **Browser extension** (Chrome / Edge) | Records clicks, inputs, navigation, and screenshots on any website |
+| **Web app** (React) | Edits recordings into structured documentation, plays them back, bundles them into tours, exports PDFs, and compares versions |
+
+**One-line pitch:** Record a workflow once — get an editable guide with screenshots, branching paths, and a shareable player in minutes.
+
+**Positioning statement:** Peacock Studio converts real browser activity into customer-facing documentation, internal SOPs, branching decision guides, and persona-led product tours — without rebuilding screenshots and copy from scratch.
+
+**What Peacock is not (today):** Not a video screen recorder. Not an AI writing tool. Not a cloud CMS. Not a team workspace with accounts. It is **local-first**, **action-aware**, and **structured**.
+
+---
+
+## The problem we solve
+
+Teams document product workflows constantly — for sales demos, onboarding, support, QA, and release notes. The manual approach fails in predictable ways:
+
+| Pain | Manual approach | With Peacock |
+|------|-----------------|--------------|
+| **Time** | Hours of screenshots + writing per guide | Minutes from one live recording |
+| **Drift** | Docs fall out of sync with the product | Re-record and compare side by side |
+| **Consistency** | Every presenter tells a different story | Same structured narrative every time |
+| **Branching** | Separate videos or docs per path | One guide with selectable paths |
+| **Persona fit** | Generic decks for every audience | Persona-led tours with feature chapters |
+| **Privacy** | Sensitive data in screenshots | Redact/blur tools + field exclusions |
+| **Distribution** | Scattered files and drives | Links, PDF, and presenter mode |
+
+---
+
+## The Peacock solution
+
+Peacock captures **structured interaction data** (not just pixels): what was clicked, what was typed, where on the page, and a screenshot at that moment. The web app turns that into:
+
+- **Editable steps** with auto-generated titles and optional notes
+- **Sections** (chapters) for long guides
+- **Branches** that link to other saved documents without duplicating content
+- **Document view** for reading and **Player view** for guided step-through
+- **Product tours** that chain multiple demos under a buyer persona
+- **PDF export** and **share links** for distribution
+- **Compare Docs** for before/after or release review
+
+Everything persists **locally in the browser** (IndexedDB) — fast, private, no account required.
 
 ---
 
 ## Core workflow
 
-### 1. Record a live flow
+### Step 1 — Install & record
 
-The user opens the browser extension from the toolbar and starts recording (with an optional countdown before capture begins).
+1. Install the Peacock browser extension.
+2. Navigate to any website.
+3. Click **Start** in the popup (optional 3-2-1 countdown).
+4. Perform the workflow — clicks, form fills, navigation.
+5. Extension captures events + screenshots in sync.
 
-During recording, Peacock captures:
+### Step 2 — Edit & structure
 
-- page views (initial and final)
-- clicks
-- text inputs, selects, checkboxes, and radios
-- navigation transitions
-- screenshots tied to interaction steps
+1. Click **Stop and open editor** — app opens in a new tab.
+2. Recording handoff hydrates the flow editor; document auto-saves to IndexedDB.
+3. **Flow details drawer** prompts for title, description, and version (once per session).
+4. Refine steps, add sections/chapters, link branch paths, replace screenshots, add blur/redact via Capture Editor if needed.
+5. Auto-save keeps work safe as you edit.
 
-The popup gives live session feedback without requiring a page refresh:
+### Step 3 — Tour & share
 
-- current recording state (idle, recording, paused)
-- step count
-- elapsed session time
-- current page/domain
-- quick actions for start, pause, resume, stop, dashboard, and editor
-- quick screenshot capture modes (visible area, selection, full page) when not actively recording
-
-### 2. End recording and open the editor
-
-When the user clicks **Stop and open editor**:
-
-- Peacock captures a final screenshot of the current page state
-- adds a final page snapshot event
-- opens the React editor in a new tab
-- hands off the captured payload from the extension to the app via a bridge message
-- saves the result as a new document in the local library (IndexedDB)
-
-### 3. Edit the documentation
-
-Inside the editor, the user can refine the raw recording into a polished deliverable (see **Flow editor** below).
-
-The app auto-persists saved documents in IndexedDB for local-first storage.
-
-### 4. Present, export, and share
-
-Once a flow is saved, users can:
-
-- open it in a readable document-style view
-- play it back in a focused player UI
-- export it as PDF (with optional branch-path selection)
-- copy a shareable link (readonly or editable)
-- deep-link directly to individual steps
-- compare two saved docs side by side
-- bundle multiple docs into a persona-led product tour
-- reopen and continue editing later
+1. Open **Doc view** for reading or **Player** for guided playback.
+2. Copy a **share link** (readonly or editable) or **export PDF**.
+3. Optionally bundle demos into a **product tour** with persona and presenter mode.
+4. Use **Compare Docs** when reviewing UI or flow changes across releases.
 
 ---
 
-## Implemented features (detailed)
+## Product architecture
 
-### Screenshot capture (multiple ways)
+```
+┌─────────────────────┐         handoff          ┌──────────────────────────────┐
+│  Browser extension  │ ───────────────────────► │  Peacock web app             │
+│  · content script   │   payload + screenshots  │  · dashboard                 │
+│  · background worker│                          │  · flow editor               │
+│  · popup UI         │                          │  · document / player views   │
+│  · IndexedDB (temp) │                          │  · product tour builder      │
+└─────────────────────┘                          │  · capture editor            │
+         │                                       │  · compare docs              │
+         │ quick screenshots                     │  · IndexedDB (library)       │
+         └──────────────────────────────────────►└──────────────────────────────┘
+                              │
+                    ┌─────────┴─────────┐
+                    │  @peacock/shared  │
+                    │  types, events,   │
+                    │  step language,   │
+                    │  coordinates      │
+                    └───────────────────┘
+```
 
-Peacock supports screenshots through several distinct paths, each suited to a different moment in the workflow.
+**Monorepo packages:**
 
-#### 1. Automatic screenshots during recording
+| Package | Responsibility |
+|---------|----------------|
+| `packages/extension` | Recording, screenshots, popup, handoff bridge |
+| `packages/app` | Dashboard, editor, player, tours, PDF, compare, capture editor |
+| `packages/shared` | Shared TypeScript types, event model, utilities |
 
-While recording is active, Peacock captures screenshots in sync with user actions:
+---
 
-- **Pointer-down pre-capture** — on mousedown, a screenshot request begins so the image reflects the UI state at click time.
-- **Click steps** — each click stores a screenshot linked to the step (Peacock UI elements and sensitive password fields are excluded from click capture).
-- **Input steps** — debounced input/select/radio changes capture a screenshot after the value settles.
-- **Page views** — the initial page and final page snapshot (on stop) include screenshots.
-- **Recording UI hidden during capture** — the in-page recording badge is temporarily hidden so it does not appear in screenshots.
+## Browser extension
 
-Screenshots are stored as blobs in the extension's IndexedDB during recording, then transferred to the web app on handoff.
+### Popup capabilities
 
-#### 2. Quick screenshot modes (extension popup)
+- **Recording controls:** Start (with countdown), Pause, Resume, Stop and open editor
+- **Live session feedback:** Status badge, step count, elapsed time, current domain
+- **Quick navigation:** Open dashboard, open editor
+- **Quick screenshots** (when not recording): Visible area, Selection, Full page
 
-When not actively recording, the extension popup exposes three standalone capture modes:
+### Recording behavior
+
+| Behavior | Detail |
+|----------|--------|
+| Event types | Clicks, debounced inputs (400ms), navigation (SPA-aware), page views |
+| Screenshots | Pointer-down pre-capture on clicks; debounced on inputs; page view on load/stop |
+| UI exclusion | Peacock's own UI hidden during screenshot capture |
+| Password fields | Never captured in element snapshots |
+| Sensitive URLs | Auto-pause on URL patterns matching login, payment, billing |
+| Stop flow | Final screenshot → page snapshot → open `/editor` → handoff via bridge |
+
+### Capture environment (session metadata)
+
+Recorded **once per session** when recording stops. Stored in flow metadata and shown in document intro, player intro, and PDF (when complete).
+
+| Field group | Examples |
+|-------------|----------|
+| System | OS name/version, browser name/version, platform |
+| Display | Screen size, viewport, available area, device pixel ratio |
+| Locale | Language, timezone |
+| Session | Recording start/end, duration |
+| Raw | Full user agent string |
+
+Parsed deterministically from `navigator` APIs — not editable after capture.
+
+### Screenshot capture modes
+
+#### During recording (automatic)
+
+Screenshots tie to interaction steps. Stored as blobs in extension IndexedDB, transferred on handoff.
+
+#### Quick capture (extension popup, idle only)
 
 | Mode | Behavior |
 |------|----------|
-| **Visible area** | Captures the currently visible viewport of the active tab. |
-| **Selection** | User draws a rectangle on the page; only that region is captured (selection overlay is excluded from the result). |
-| **Full page** | Stitches the entire scrollable page by scrolling and capturing viewport slices. |
+| **Visible area** | Current viewport |
+| **Selection** | User draws rectangle; overlay excluded from result |
+| **Full page** | Scroll-and-stitch with sticky header/footer suppression, widget suppression, scroll restore |
 
-Full-page capture includes production-quality handling:
-
-- fixed and sticky headers/footers are tracked and suppressed so they do not repeat on every slice
-- floating widgets (chat launchers, cookie banners) are suppressed similarly
-- a post-scroll settle delay reduces animation artifacts on dynamic pages
-- page scroll position is restored after capture completes
-
-Quick captures open a **screenshot result page** with download and copy-to-clipboard actions, and can optionally open the **Capture Editor** for further polish.
-
-#### 3. Capture Editor (standalone screenshot polish)
-
-Route: `/capture/:captureId/edit`
-
-After a quick capture, users can open the Capture Editor to prepare marketing- or support-ready images:
-
-- **Tools:** Select, Crop, Blur, Redact (privacy regions)
-- **Caption:** title and description overlay
-- **Background presets:** decorative frames/gradients around the screenshot
-- **Layout:** adjustable padding and corner radius
-- **History:** undo/redo (up to 30 states)
-- **Export:** download PNG or copy to clipboard
-
-Privacy regions use normalized coordinates (0–1) so redaction boxes scale correctly when the composite image is rendered.
-
-#### 4. Replace screenshot on a flow step (editor)
-
-In the flow editor, each step has a **Step image** panel:
-
-- upload a replacement image (JPEG, JPG, PNG, or SVG)
-- the custom image overrides the captured screenshot for display, player, document view, and PDF export
-- **Reset to captured** restores the original recording screenshot and removes the custom upload
-
-Manual steps (added in the editor without recording) start with a placeholder screenshot until the user uploads an image.
+Quick captures open a result page (download/copy) and can open **Capture Editor** at `/capture/:captureId/edit`.
 
 ---
 
-### Capture user actions
+## Capture Editor (standalone screenshots)
 
-Peacock captures structured interaction data, not just pixels.
+**Route:** `/capture/:captureId/edit`
 
-#### Event types
+Polish marketing- or support-ready images outside of a full flow recording.
 
-| Event | What is captured |
-|-------|------------------|
-| `click` | Normalized click position, element snapshot, viewport, page URL/title, screenshot |
-| `input` | Form control metadata, value preview (masked when sensitive), screenshot |
-| `navigation` | From/to URLs (no screenshot) |
-| `page-view` | URL, title, viewport, screenshot |
+### Tools
 
-#### Element metadata
+| Tool | Purpose |
+|------|---------|
+| **Select** | Default mode after other tools finish. Click blur/redact regions to select; drag to move; corner/edge handles to resize; **Delete** removes selected region |
+| **Crop** | Drag to select crop area; **applies automatically on mouse release**; switches back to Select |
+| **Blur** | Draw privacy region; adjustable intensity (4–24) in sidebar when selected |
+| **Redact** | Draw region; soft white overlay hides underlying content |
 
-Each interaction step includes rich DOM context used for playback markers and auto-generated descriptions:
+### Caption & layout
 
-- CSS selector and XPath
-- tag, role, classes, inner text
-- label associations (aria-label, placeholder, associated `<label>`)
-- parent/grandparent context
-- data attributes
+| Setting | Range / detail |
+|---------|----------------|
+| **Title & description** | Rendered above screenshot (outside image frame) |
+| **Background presets** | 15 gradients/solids (Rose gold default) — see list below |
+| **Padding** | 0–200px |
+| **Image corner radius** | 0–48px (screenshot card) |
+| **Frame corner radius** | 0–96px (gradient frame; transparent corners on export) |
+| **Light caption text** | White title/description on dark presets (Charcoal, Peacock bold, Ocean, Aurora, Forest, Ember, Midnight, Studio dark) |
 
-#### Privacy and safety
+### Background presets (active)
 
-- password and other sensitive fields are excluded from click/input capture
-- Peacock's own UI elements are ignored
-- sensitive URL patterns can pause or guard recording (login, payment, billing flows)
-- Capture Editor supports blur and redact regions for post-capture sanitization
+Charcoal · Peacock soft · Peacock bold · Ocean · Aurora · Sunrise · Citrus · Forest · Ember · Midnight · Studio dark · Silver · Rose gold · Mesh blue · Mesh warm
 
-#### Normalized coordinates
+### History & export
 
-Click markers and privacy regions use normalized floats (0–1), not raw pixels, so highlights stay accurate when screenshots are resized in the editor, player, document view, or PDF.
+- Undo/redo (30 states)
+- **Download PNG** or **Copy to clipboard**
+- Privacy regions use normalized coordinates (0–1) for correct scaling
 
-#### Auto-generated step language
+---
 
-Peacock generates step titles and descriptions deterministically from captured element context (not AI):
+## Flow editor (documentation builder)
+
+**Routes:** `/editor` (new handoff) · `/docs/:documentId/edit` (saved document)
+
+### Layout
+
+Three columns: **Outline** (280px) | **Canvas preview** | **Detail panel** (320px)
+
+### Outline capabilities
+
+- Drag-and-drop reorder (steps, sections, branches)
+- **Add step** — manual step with placeholder screenshot
+- **Add section** — chapter divider (title + description)
+- **Create a branching point** — link paths from other saved documents
+- Auto-scroll selected item into view
+
+### Step editing (Step panel)
+
+- Edit title and notes (blank notes → auto-generated description shown)
+- Upload/replace screenshot (JPEG, PNG, SVG); reset to captured original
+- View auto-generated description (read-only reference)
+- Canvas preview with click marker
+- Delete step (confirmation dialog)
+
+### Section editing (Section panel)
+
+Sections divide a flow into **chapters**. They appear in document view, player (as chapter intro cards), and PDF context — not as interactive steps.
+
+- Edit title and description
+- Info tooltip explains section purpose
+- Delete section (confirmation — steps below are kept)
+
+### Branch editing (Branch panel)
+
+- Edit branch title, description, layout (list vs grid for 4+ paths)
+- Add paths via modal: pick target document, step range, path label
+- Remove path or delete branch (confirmation dialogs with highlighted names)
+- Info tooltip explains branch points
+
+### Flow details drawer
+
+Slides in from the right on first editor open (once per session per recording). Fields:
+
+| Field | Required | Appears in |
+|-------|----------|------------|
+| **Title** | Yes | Library, doc header, PDF cover, share |
+| **Description** | No | Doc intro, PDF cover |
+| **Version** | No | Library (badge), doc intro, PDF cover, searchable in dashboard |
+
+Version is free-form (e.g. `1.0.0`, `2026.1.0`, `v1.2.0-g4b2d9e1`). Empty version shows **Unversioned** badge.
+
+Re-open anytime via **Flow details** in toolbar.
+
+### Toolbar actions
+
+- Step count display
+- **Flow details** — reopen metadata drawer
+- **Play** — opens player at `/docs/:id?view=player`
+- Header **Share** and PDF export
+
+### Auto-save
+
+Documents persist to IndexedDB with debounced auto-save (~1.5s) once a document ID exists.
+
+---
+
+## Document metadata: version & capture environment
+
+### Version
+
+Tracks release or iteration of a guide (e.g. after UI refresh). Visible in:
+
+- Dashboard library (table, card, list views) via version badge
+- Document & player intro (`FlowVersionBadge`)
+- PDF cover page
+- Branch-linking modals when picking target documents
+- Dashboard search (title, description, **or version**)
+
+### Capture environment
+
+One-time snapshot of browser/device at recording time. Displayed in:
+
+- **Document view** — `FlowDetailsIntro` + `CaptureEnvironmentPanel`
+- **Player** — intro segment before steps
+- **PDF export** — dedicated session metadata page (when data is complete)
+
+Highlights: OS, browser, capture duration. Detail groups: system, display, locale. Full user agent string included.
+
+**Not shown in Flow details drawer** (read-only metadata from recording).
+
+---
+
+## Branching documents
+
+Branching lets one document present **multiple paths** at a decision point without duplicating target content.
+
+### Setup
+
+1. **Create a branching point** in outline.
+2. Pick a **target saved document** (host document excluded).
+3. Choose **step range** within target (`fromStepId` → `toStepId`).
+4. Set **path label** (e.g. "Admin setup", "Member setup").
+5. Repeat for additional paths on the same branch.
+
+### Presentation
+
+| Surface | Behavior |
+|---------|----------|
+| **Document view** | Branch card with path picker; linked steps inline with accent colors |
+| **Player** | Branch choice panel (list or grid); keyboard path selection |
+| **PDF** | Branch highlight page + steps from selected paths only |
+| **Share links** | Readonly links can filter visible paths via URL params |
+
+### Share URL branch filtering
+
+Readonly doc URLs support query params:
+
+- `?paths=pathId1,pathId2` — include specific paths
+- `?branches=branchId1` — include specific branches
+
+Settings saved on link copy for readonly shares.
+
+---
+
+## Document view (read mode)
+
+**Route:** `/docs/:documentId` (default; toggle Player in header)
+
+Long-form, scrollable documentation optimized for reading and reference.
+
+### Layout (large screens)
+
+Fixed two-column: **outline sidebar** (~22rem) + **scrollable content**.
+
+### Flow intro
+
+Title, description, version badge, step count, created date, capture environment panel.
+
+### Content structure
+
+- **Section cards** — chapter headings with description
+- **Step cards** — screenshot, title, notes, click marker, copy-link button
+- **Branch cards** — branch title/description, path selection
+- **Linked path steps** — indented under branch with path-specific accent colors (8-color palette)
+
+### Outline sidebar
+
+- Flow overview, sections, steps, branches, linked-path groups
+- **Scroll spy** — active item follows scroll position
+- Click navigates content pane and updates URL hash
+- Branch with single path labeled **Automatically chosen path**
+
+### Deep linking
+
+| Anchor pattern | Target |
+|----------------|--------|
+| `#flow-details` | Intro section |
+| `#step-{stepId}` | Main flow step |
+| `#linked-{pathId}-{stepId}` | Linked path step |
+
+**Copy link** on each step copies current doc URL with anchor.
+
+### Header actions
+
+Toggle Doc/Player, Share, PDF export, Edit (if editable link).
+
+---
+
+## Player (guided playback)
+
+**Route:** `/docs/:documentId?view=player`
+
+Focused, step-by-step playback with browser mockup framing — ideal for demos, onboarding walkthroughs, and self-serve exploration.
+
+### Playback segments
+
+Intro → **section chapter cards** → steps → **branch choice panels** → linked path steps → **finale**
+
+### Section behavior in player
+
+When playback reaches a section, a full **chapter intro card** appears with title and description. User presses **Next** or **→** to enter that chapter's steps. Sections are **not skipped** — they frame the narrative.
+
+### Branch behavior
+
+- First path **pre-selected** per branch
+- **FlowBranchChoicePanel:** list or grid layout
+- **→ / Enter** — start selected path
+- **↑ / ↓** or **1–N** — change path selection before continuing
+- Linked document steps play inline, then return to host flow
+
+### Controls & keyboard
+
+| Input | Action |
+|-------|--------|
+| **← / →** | Previous / next segment |
+| **Space** | Toggle autoplay (~2.5s per segment) |
+| At branch | **↑↓**, **1–N**, **Enter**, **→** |
+
+Autoplay pauses at branches, linked playback transitions, and finale.
+
+### Finale
+
+Summary screen with step, section, and branch counts; option to replay.
+
+### Player intro
+
+Same metadata as document view: title, description, version, capture environment.
+
+---
+
+## Dashboard & library
+
+**Route:** `/` (redirects to `/landing` when library is empty)
+
+### Stats bar
+
+| Stat | Meaning |
+|------|---------|
+| Total documentations | All saved docs |
+| Created this week | Docs recorded this calendar week |
+| Created this month | Docs recorded this calendar month |
+| Steps documented | Sum of playable steps |
+| Avg steps per doc | Mean step count |
+
+### Your documentations
+
+| Capability | Detail |
+|------------|--------|
+| **View modes** | Table (default), Cards, List — persisted in localStorage |
+| **Search** | Expandable search icon; matches title, description, version |
+| **Sort** | Newest, oldest, most steps, title A–Z |
+| **Version badge** | Violet tag or "Unversioned" dashed badge |
+| **Per-doc actions** | Play, Edit, Share, Delete (confirm with step count) |
+| **Compare** | Link to `/compare` |
+
+Table columns: Title (with step count), Version, Generated date, Actions — each with icon headers.
+
+### Product tours section
+
+Separate from single docs. Create tour → `/tours/new`. Tour cards: edit, play, share, delete (confirm with feature/demo counts).
+
+### Featured document
+
+Highlights the most recently updated documentation.
+
+---
+
+## Share, links & PDF export
+
+### Share modal methods
+
+| Method | Status |
+|--------|--------|
+| **Link** | Readonly or editable URLs |
+| **PDF** | Multi-page export with screenshots |
+| **Embed** | Placeholder — "coming soon" |
+
+### Document links
+
+| Type | URL pattern |
+|------|-------------|
+| Readonly doc | `/docs/{id}` (+ optional branch query params) |
+| Editable doc | `/docs/{id}/edit` |
+| Player | `/docs/{id}?view=player` |
+| Step anchor | `/docs/{id}#step-{stepId}` |
+
+Branch path preferences for readonly links configurable in share modal; saved to document `shareSettings`.
+
+### PDF export (documents)
+
+- Cover page: title, description, version badge, step count, recorded date
+- Session metadata page (when capture environment complete)
+- Step pages: screenshot, title, instruction text, click marker
+- Branch pages: branch title, selected path, other paths listed as excluded
+- **Branch path selection** required when document has branches (one path per branch)
+- **Blocking loader** during export — full-screen overlay prevents navigation until complete
+- Downloads as `{sanitized-title}.pdf`
+
+### PDF export (product tours)
+
+Exports narrative across all linked demos in tour (when tour has exportable demos).
+
+---
+
+## Product tours
+
+Product tours bundle **multiple saved documents** into a **persona-led**, multi-chapter guided experience — distinct from a single linear doc.
+
+### Concepts
+
+| Entity | Purpose |
+|--------|---------|
+| **Tour** | Container: title, description, draft/live status, completion CTA |
+| **Persona** | Buyer/user role: name, title, company, avatar, descriptions |
+| **Feature** | Chapter grouping demos |
+| **Demo** | Reference to saved Peacock document, ordered within feature |
+| **Completion CTA** | Optional button (label + URL) on final slide |
+
+### Tour builder
+
+**Routes:** `/tours/new` → `/tours/:tourId/edit`
+
+#### Tour persona (first panel in builder)
+
+Each tour is anchored to one **persona** — the buyer or user role the narrative speaks to.
+
+| Capability | Detail |
+|------------|--------|
+| **Saved persona library** | All personas stored locally; reusable across tours |
+| **Choose existing** | Chip picker lists every saved persona; click to assign to this tour |
+| **Create new** | **New persona** opens a slide-in drawer (same pattern as flow details) |
+| **Edit selected** | **Edit** opens the drawer pre-filled with current persona fields |
+| **Persona fields** | Name, role, short description, detailed description, gender, avatar, company, tagline |
+| **Default persona** | New tours start with “Product explorer” until changed |
+| **Auto-assign on save** | Creating or editing a persona automatically selects it for the tour |
+
+#### Other builder capabilities
+
+- Add/reorder features and link demos from library
+- Live overview canvas showing tour structure
+- Draft / Live status
+- Completion CTA (optional label + URL on final slide)
+- Auto-save, preview learner, share, PDF export
+
+### Tour learner (playback)
+
+**Route:** `/tours/:tourId`
+
+Segment flow:
+
+1. Persona intro
+2. Tour details (estimated duration)
+3. For each feature: feature intro → for each demo: demo intro → demo steps (with inline branches) → complete panel
+
+Navigation: prev/next, keyboard arrows. Inherits branching from linked documents.
+
+### Presenter mode
+
+**Route:** `/tours/:tourId?presenter=1`
+
+- Hides app chrome, sidebar overview, footer controls
+- Share modal can generate presenter links
+- Optimized for live storytelling on calls
+
+### Legacy routes
+
+`/routes/*` redirects to equivalent `/tours/*`. Old routes auto-migrate to tours in IndexedDB.
+
+---
+
+## Compare Docs
+
+**Route:** `/compare`
+
+Side-by-side review of two saved documents.
+
+| Capability | Detail |
+|------------|--------|
+| Document pickers | Left and right from library |
+| Navigation | Shared step index; Previous/Next; keyboard arrows |
+| Alignment | By **step index**, not semantic diff |
+| Short doc handling | Empty pane when one doc has fewer steps |
+
+**Best for:** Release review, UI regression checks, before/after workflow comparison — not automated visual diff.
+
+---
+
+## Privacy & safety
+
+| Mechanism | Where |
+|-----------|-------|
+| Password field exclusion | Extension recording |
+| Peacock UI exclusion | Extension recording |
+| Sensitive URL auto-pause | Extension (login/payment/billing patterns) |
+| Blur regions | Capture Editor, exportable |
+| Redact regions | Capture Editor, exportable |
+| Local-only storage | IndexedDB on device — no cloud upload by default |
+| Normalized coordinates | Markers/regions scale correctly on resize |
+
+---
+
+## Technical architecture
+
+### Shared package (`@peacock/shared`)
+
+- Event types: `click`, `input`, `navigation`, `page-view`
+- Outline types: `FlowStep`, `FlowSection`, `FlowBranch`, `LinkedPeacockPath`
+- Capture types: editor settings, background presets, capture environment
+- Utilities: step description generation, element snapshots, normalized coordinates, branch helpers
+
+### Step language (deterministic, not AI)
+
+Generated from captured element metadata:
 
 - `Click Save and Close`
 - `Enter State: Tamil Nadu`
 - `Select Country: India`
 - `On the Order page, click the Save and Close button to save the form.`
 
-Users can override titles and add freeform notes in the editor.
+Users override with custom titles and notes.
+
+### Storage model
+
+| Data | Location |
+|------|----------|
+| Documents, screenshots, tours, personas | App IndexedDB (`peacock-flow-library`) |
+| In-flight recording | Extension IndexedDB |
+| View preferences | localStorage (dashboard view mode) |
+| Flow details prompt | sessionStorage (once per recording) |
+
+**Note:** `localhost` and production deployments use **separate** IndexedDB databases.
+
+### Handoff bridge
+
+Extension opens app tab → app requests pending handoff → extension delivers payload + screenshot blob URLs → app saves document.
 
 ---
 
-### Document creation and library
-
-#### Creating a document
-
-1. Install the Chrome/Edge extension.
-2. Navigate to any website and start recording.
-3. Perform the workflow.
-4. Stop recording — the app opens `/editor`, receives the handoff payload, hydrates the flow store, and saves a new document to IndexedDB.
-5. A **Flow details** modal prompts for title and description on first open.
-
-#### Dashboard workspace
-
-Route: `/`
-
-The dashboard is the documentation home:
-
-- hero section with stats (document count, steps, etc.)
-- **Product tours** section (separate from single docs)
-- featured latest document highlight
-- flow library with **card, list, and table** view modes
-- search and sort (newest, oldest, title)
-- delete documents and tours
-- entry point to **Compare Docs**
-- redirects to landing page when the library is empty
-
-#### Local-first persistence
-
-- documents, screenshots, product tours, and personas are stored in IndexedDB on the current browser origin
-- auto-save runs as the user edits in the editor or tour builder
-- `localhost` and production deployments use separate databases
-
----
-
-### Flow editor
-
-Route: `/editor` (new handoff) or `/docs/:documentId/edit` (saved doc)
-
-Three-column layout: **Outline** | **Canvas preview** | **Detail panel**
-
-#### Outline actions
-
-- **Add step** — inserts a manual step after the current selection (blank title, placeholder screenshot, editable notes)
-- **Add section** — inserts a chapter/section divider (title + description; shown in document view, not player)
-- **Create a branching point** — inserts a branch node linked to another saved document
-- **Drag to reorder** — visible drag handle on each outline item
-- **Delete** — remove steps, sections, or branches
-
-#### Step editing
-
-- edit title and notes
-- upload or replace step screenshot (see above)
-- view generated description (read-only reference)
-- canvas preview with click marker overlay
-- delete step
-
-#### Section editing
-
-- edit section title and description
-- sections group content in document view; they are skipped during player step playback
-
-#### Branch editing
-
-- edit branch title, description, and layout (list vs grid for 4+ options)
-- add multiple **paths**, each linking to a saved document with a step range (`fromStepId` → `toStepId`) and label
-- remove individual paths or delete the entire branch
-
-#### Flow metadata
-
-- title and description via Flow details modal
-- Play link opens the shared player route
-- Share and PDF export from the header
-
----
-
-### Branching documents
-
-Branching lets one document fork into linked sub-flows without duplicating content.
-
-#### How it works
-
-1. In the editor, click **Create a branching point**.
-2. Pick a target saved document from the library.
-3. Choose the step range within that document to play when a path is selected.
-4. Give the path a label (e.g. "Admin setup" vs "Member setup").
-5. Add more paths to the same branch for multi-option decision points.
-
-#### Playback behavior
-
-- In **player mode**, reaching a branch shows a choice panel (list or grid layout).
-- Selecting a path loads the linked document's step slice inline, then returns to the host document flow.
-- In **document mode**, branches render as cards describing each path option.
-- **Share links** and **PDF export** support choosing which branch paths to include for readonly shared views.
-
-Branch metadata is stored on the host document; target documents remain independent and reusable.
-
----
-
-### Compare Docs
-
-Route: `/compare`
-
-Side-by-side review of two saved documents:
-
-- dropdown selectors for left and right documents
-- synchronized **Previous / Next step** navigation across both panes
-- keyboard arrow-key navigation
-- step screenshots, titles, and markers rendered in parallel
-- graceful handling when documents have different step counts (empty pane on the shorter side)
-
-Compare aligns documents by **step index**, not semantic diffing — useful for release review, UI regression checks, and before/after workflow comparison.
-
----
-
-### Shared document view and player
-
-Route: `/docs/:documentId`
-
-Toggle between **Doc** and **Player** modes on the same URL (`?view=player` for player mode).
-
-#### Document mode
-
-- long-form, scrollable step-by-step reading layout
-- section cards and branch cards inline with steps
-- mini step index sidebar with active-step highlighting
-- per-step anchor links (`#step-…`) for deep linking
-- copy link to current step
-- export and share from header
-
-#### Player mode
-
-- focused step-by-step playback with browser mockup framing
-- previous/next controls and progress indicator
-- **autoplay** (spacebar toggle; ~2.5s per step)
-- keyboard navigation (arrows, space)
-- branch choice panels at decision points
-- linked path playback for branch selections
-- finale screen at guide completion
-- jump to edit mode
-
-#### Share settings
-
-Share modal supports:
-
-- **Link** — readonly or editable access URLs
-- **PDF** — export with branch path selection when branches exist
-- **Embed** — placeholder (not yet implemented)
-- readonly links can encode branch path preferences via query parameters
-
----
-
-### Product tours
-
-Product tours bundle multiple saved documents into a persona-led, multi-chapter guided experience — distinct from a single linear doc.
-
-#### Data model
-
-| Concept | Purpose |
-|---------|---------|
-| **Tour** | Top-level container with title, description, draft/live status |
-| **Persona** | Buyer/user role the tour speaks to (name, title, company, avatar) |
-| **Feature** | A chapter grouping related demos (title + description) |
-| **Demo** | A reference to a saved Peacock document, ordered within a feature |
-| **Completion CTA** | Optional button (label + URL) on the final slide |
-
-Tours and personas persist in IndexedDB alongside documents.
-
-#### Tour builder
-
-Routes: `/tours/new` (creates and redirects) → `/tours/:tourId/edit`
-
-Builder capabilities:
-
-- assign or create/edit personas (saved persona library)
-- edit tour title and description
-- add/remove/reorder **features** (chapters)
-- per feature: edit title and description
-- **link demos** — pick saved documents from the library; reorder demos within a feature
-- set tour status: **Draft** or **Live**
-- configure completion CTA
-- live overview canvas showing tour structure
-- auto-save
-- preview tour (opens learner view)
-- share tour link and export tour PDF from header
-
-Legacy **RouteHub** routes (`/routes/...`) redirect to the product tour equivalents; existing routes can auto-migrate to tours.
-
-#### Tour learner (playback)
-
-Route: `/tours/:tourId`
-
-Guided playback progresses through structured segments:
-
-1. **Persona intro** — introduces the buyer persona (avatar, name, role)
-2. **Tour details** — tour title and description
-3. For each feature:
-   - **Feature intro** — chapter title and context
-   - For each linked demo:
-     - **Demo intro** — demo label and source document info
-     - **Demo steps** — plays the document's steps (respects sections; branches show branch panels)
-     - **Demo branches** — inline branch path selection within a linked demo
-4. **Complete** — summary with optional CTA button
-
-Navigation:
-
-- previous/next controls and keyboard arrows
-- estimated duration calculated from step counts
-- **Presenter mode** (`?presenter=1`) — cleaner chrome for live demos; share modal can copy presenter links
-
-Product tours inherit branching behavior from linked documents — a demo that contains branch points pauses for path selection during tour playback.
-
-#### Product tour sharing
-
-- readonly/editable share links
-- presenter link option for live storytelling
-- PDF export of the full tour narrative
-
----
-
-### PDF export
-
-Available from document and tour share flows:
-
-- multi-page PDF with step screenshots
-- click/input markers rendered on screenshots where supported
-- branch path selection for branched documents (choose which paths to include)
-- product tour PDF export covers the tour structure and demo content
-
----
-
-### Browser extension (summary)
-
-| Capability | Details |
-|------------|---------|
-| Toolbar popup | Branded UI, live status, recording controls |
-| Recording | Start (with countdown), pause, resume, stop-and-open-editor |
-| Event capture | Content script on all pages; navigation tracking |
-| Screenshots | Background worker capture; visible, selection, full-page modes |
-| Handoff | Opens app editor tab; transfers payload + screenshot blobs |
-| Shortcuts | Open dashboard, open editor |
-| Quick screenshots | Hidden while recording is active |
-
----
-
-## Architecture summary
-
-### Monorepo structure
-
-- `packages/extension` — browser extension (popup, content script, background worker, capture tool)
-- `packages/app` — React web app (dashboard, editor, player, compare, tours, capture editor)
-- `packages/shared` — shared types, event model, step descriptions, coordinate utilities
-
-### Shared package
-
-The shared package provides:
-
-- event and outline types (`FlowStep`, `FlowSection`, `FlowBranch`)
-- handoff message types
-- coordinate utilities and selector/xpath helpers
-- masking helpers for sensitive values
-- step description generation
-- flow step creation and manual outline item factories
-
-This keeps the extension and web app aligned around a single recording schema.
-
-### App routes
+## Route reference
 
 | Route | Purpose |
 |-------|---------|
 | `/` | Dashboard |
 | `/landing` | Marketing landing (empty library redirect) |
-| `/editor` | New recording handoff editor |
-| `/docs/:documentId` | Shared doc/player view |
-| `/docs/:documentId/edit` | Saved document editor |
+| `/editor` | New recording editor (handoff) |
+| `/docs/:documentId` | Document view |
+| `/docs/:documentId?view=player` | Player |
+| `/docs/:documentId/edit` | Flow editor |
 | `/compare` | Compare two documents |
+| `/capture/:captureId/edit` | Capture Editor |
 | `/tours/new` | Create product tour |
-| `/tours/:tourId/edit` | Product tour builder |
-| `/tours/:tourId` | Product tour learner |
-| `/capture/:captureId/edit` | Standalone screenshot editor |
-
-### Extension responsibilities
-
-- capture browser interactions
-- store temporary recording data and screenshot blobs
-- manage recording state
-- capture screenshots (inline and quick modes)
-- build the handoff payload
-- open the editor tab
-
-### App responsibilities
-
-- hydrate the handoff payload and save documents
-- render dashboard, editor, player, compare, tour, and capture editor views
-- manage local library (documents, tours, personas)
-- export PDF
-- generate share links
+| `/tours/:tourId/edit` | Tour builder |
+| `/tours/:tourId` | Tour learner |
+| `/tours/:tourId?presenter=1` | Presenter mode |
 
 ---
 
-## Customer value proposition
+## Messaging toolkit (pitch & landing)
 
-Peacock turns product activity into customer-facing documentation with almost no friction.
+Use these blocks directly or adapt for decks, hero sections, and ads.
 
-### Primary benefits
+### Hero headline options
 
-- **Faster documentation** — document workflows by doing them once
-- **Better product demos** — recordings become guided walkthroughs and tour assets
-- **Better onboarding and training** — repeatable SOPs and enablement content
-- **Better customer support** — turn fix steps into reusable guides
-- **Better product marketing** — persona-led tours from real product journeys
-- **Release confidence** — compare docs side by side after UI or flow changes
+1. **Turn real product usage into polished documentation — in minutes.**
+2. **Record once. Guide forever.**
+3. **The fastest path from live workflow to shareable product guide.**
+4. **Stop rebuilding screenshots. Start recording workflows.**
 
-### Why customers care
+### Hero subhead options
 
-- reduces manual screenshot-and-write work
-- keeps screenshots and action descriptions in sync
-- supports branching decision trees without duplicating content
-- produces consistent documentation across teams
-- local-first default for speed and privacy
+- Peacock captures clicks, inputs, and screenshots from any website, then turns them into editable step-by-step guides with branching paths, PDF export, and persona-led product tours.
+- From browser extension to shareable player — no manual screenshot assembly, no generic screen recording.
+
+### Three-step workflow (landing)
+
+| Step | Title | Copy |
+|------|-------|------|
+| 01 | Install & record | Pin the Peacock Chrome extension and record a real workflow on any site. |
+| 02 | Edit & structure | Refine steps, add sections and branches, attach screenshots, and auto-save locally. |
+| 03 | Tour & share | Bundle demos into persona-led tours, then share links, export PDFs, or present live. |
+
+### Feature pillars (landing cards)
+
+| Pillar | Explanation | Benefit | Impact |
+|--------|-------------|---------|--------|
+| Chrome extension capture | Record clicks, inputs, navigation, screenshots from any website | Structured steps without manual screenshot work | Cut documentation prep from hours to minutes |
+| Flow editor with branches | Reorder steps, sections, link paths to other docs | Complex workflows in one guide | Replace Loom + doc + slide deck fragmentation |
+| Persona-led product tours | Multiple demos in feature chapters for a buyer persona | Focused story per audience | Better demo relevance for sales & enablement |
+| Interactive player | Step-through, autoplay, keyboard nav, branch selection | Self-serve exploration | Comprehension without another live call |
+| Share links & PDF | Readonly/editable links, printable guides | Same asset across email, calls, teams | Scale best walkthrough without repeating live |
+| Capture editor & compare | Polish screenshots; compare two docs side by side | Release notes, redacted support artifacts | Keep docs accurate as product evolves |
+
+### Comparison table (vs manual docs)
+
+| Dimension | Manual documentation | Peacock Studio |
+|-----------|---------------------|----------------|
+| Setup time | Hours per guide | Minutes from recording |
+| Consistency | Varies by presenter | Same narrative every time |
+| Branching | Separate videos or docs | Built-in path selection |
+| Persona targeting | Custom decks per role | Structured product tours |
+| Data control | Scattered files & drives | Local-first on device |
+| Screenshot sync | Manual paste & crop | Captured with each action |
+| Release review | Side-by-side guesswork | Compare Docs by step index |
+
+### Architecture trust points
+
+- **Local-first storage** — Documents, tours, personas on device; no cloud required
+- **Shared type system** — Extension and app use one event model
+- **Privacy by design** — Password exclusion, URL guardrails, redaction tools
+- **Normalized coordinates** — Click markers stay accurate at any size
+
+### FAQ (approved answers)
+
+**What is Peacock Studio?**  
+A browser flow capture and documentation platform that converts real product usage into editable walkthroughs, shareable demos, and persona-led product tours.
+
+**Do I need a backend or account?**  
+No. Local-first workflow — library stored in browser IndexedDB on this device.
+
+**Can I share with team or customers?**  
+Yes — copy shareable links (readonly or editable) and export PDFs for documents and tours. Embed widgets planned, not yet available.
+
+**How do product tours differ from single documents?**  
+Tours combine multiple saved demos into feature chapters anchored to a persona, with guided playback and presenter mode.
+
+**Does Peacock use AI?**  
+Not today. Step titles/descriptions use deterministic rules from captured element metadata. AI-assisted rewrite is on the roadmap.
+
+**Who is this built for?**  
+Product marketing, sales engineering, customer success, support, and enablement teams who need repeatable, high-quality product storytelling.
+
+### Automation highlights (sales copy)
+
+- **Auto step descriptions** — Clicks and inputs become readable titles
+- **Auto-save library** — Documents and tours persist as you edit
+- **Sensitive URL guardrails** — Recording pauses on login/payment/billing patterns
+- **Presenter-ready tours** — Clean presenter link hides chrome for live demos
+- **Capture environment** — Browser/device metadata captured once per recording
+- **Version tracking** — Label docs by release for library search and PDF export
+
+### Pitch lengths
+
+**30 seconds:**  
+Peacock records your real browser workflow and instantly turns it into an editable guide — screenshots, steps, click markers, and all. Add branches for different user paths, bundle demos into persona-led tours, and share a player link or PDF. No manual screenshot work. Local-first and private.
+
+**2 minutes:**  
+Every team documents product workflows — for sales, onboarding, support, and QA. Today that's hours of screenshots and writing that goes stale after the next release. Peacock is a Chrome extension plus web app that records what you actually do on a live website: clicks, inputs, navigation, and screenshots in sync. The app turns that into structured, editable steps with auto-generated language you can refine. Add chapter sections for long guides. Link branch paths to other saved docs so one guide covers admin vs member flows without duplication. Share a readonly link or export PDF. Build persona-led product tours for VP Engineering vs Customer Success. Compare two saved docs side by side after a UI refresh. Everything stays local in your browser — fast, no account required. Peacock is for teams who need repeatable product storytelling without rebuilding docs from scratch every quarter.
+
+**Investor angle:**  
+Peacock sits at the intersection of product-led growth tooling and documentation automation. The extension creates proprietary structured event data (not video), enabling editable guides, branching, tours, and comparison workflows competitors can't easily replicate with screen recorders. Local-first reduces friction for individual adoption; cloud/team layer is natural expansion. Market: every B2B SaaS team documents workflows — TAM scales with seat expansion and team workspaces.
 
 ---
 
-## Ideal target users
+## Use cases by team
 
-- product marketing teams
-- customer success teams
-- solutions and sales engineers
-- support teams
-- operations and enablement teams
-- SaaS founders demonstrating workflows
+### Product marketing
 
----
+- Record feature walkthrough once → publish player link on website
+- Build persona-led tour for enterprise vs SMB buyers
+- Export PDF for sales leave-behind
+- Version docs per release (`2.1.0`, `2026-Q1`)
 
-## Example use cases
+### Sales engineering
 
-### Customer onboarding guide
+- Live demo backup when prospect explores async
+- Branching guide for setup vs evaluation paths
+- Presenter mode on discovery calls
+- Compare doc before/after pricing page change
 
-Record setup once, add sections, clean up steps, export PDF, share a hosted player link.
+### Customer success & onboarding
 
-### Internal SOP with branches
+- Chapter sections for phased onboarding
+- Player autoplay for webinar walkthrough
+- Share readonly link in welcome email
+- Redact customer data in Capture Editor for support articles
 
-Record the happy path, link alternate admin and member paths as branches, share one guide with path selection.
+### Support
 
-### Persona-led sales demo
+- Reproduce fix once → share player link instead of rewriting steps
+- Full-page capture + redact for help center images
+- Branch paths for different product tiers or OS setups
 
-Build a product tour for "VP Engineering" with feature chapters (Security, Integrations, Analytics), each linking to recorded demos; present with presenter mode.
+### Enablement & operations
 
-### Support macro content
+- Internal SOPs with sections and branches
+- QA regression: save doc before release, compare after
+- Library search by version to find latest guide
 
-Reproduce a fix, save the flow, share the player link instead of rewriting instructions.
+### Founders & small teams
 
-### Workflow regression comparison
-
-Save docs before and after a release; open Compare Docs to walk through both step by step.
-
-### Redacted support screenshot
-
-Capture full page from extension, open Capture Editor, redact customer data, download polished image.
+- No account setup — install extension, record, share
+- One person maintains library locally until team cloud ships
 
 ---
 
 ## Differentiators
 
-Compared with manual screenshot docs or generic screen recorders:
+Compared with manual docs, Loom/video, and generic screenshot tools:
 
-- captures structured interaction data, not just video
-- produces editable steps with auto-generated language
-- couples screenshots with the exact user action and click markers
-- multiple screenshot workflows (inline, quick capture, step replacement, capture editor)
-- branching across documents without duplication
-- persona-led product tours from the same library
-- document and player modes from one share URL
-- side-by-side compare for release review
-- local-first by default
-
----
-
-## Current limitations
-
-- storage is browser-local, not team-shared cloud storage
-- share links point to documents on the current app instance/origin
-- compare mode aligns by step index, not semantic diffing
-- embed sharing is planned but not implemented
-- step descriptions use deterministic rules, not AI rewrite
-- Chrome extension requires rebuild/reload when env values change
-- `localhost` and production are separate storage environments
+1. **Structured actions, not video** — Editable steps, not a timeline to re-record
+2. **Screenshot + action coupling** — Image and instruction always in sync
+3. **Auto-generated step language** — From DOM context, instantly readable
+4. **Branching without duplication** — Link paths across documents
+5. **Dual consumption modes** — Same URL: read (doc) or play (player)
+6. **Persona-led tours** — Multi-demo narratives from one library
+7. **Compare workspace** — Side-by-side step review
+8. **Capture Editor** — Marketing-grade screenshot polish with privacy tools
+9. **Local-first** — Fast, private, no account friction
+10. **Session metadata** — Capture environment for audit and context
+11. **Version labels** — Track iterations in library and PDF
 
 ---
 
-## Recommended positioning statement
+## Limitations & honest boundaries
 
-Peacock Studio is a browser flow capture and documentation platform that converts real product usage into editable walkthroughs, branching guides, persona-led product tours, comparable doc pairs, and exportable SOPs in minutes.
+| Limitation | Detail |
+|------------|--------|
+| **No cloud sync** | Data is browser-local; no team library across devices |
+| **Share links are URL-based** | Editable links open editor for anyone with URL on same origin |
+| **No embed widgets yet** | Share modal shows placeholder |
+| **No AI writing** | Deterministic step language only |
+| **Compare is index-based** | Not semantic or visual diff |
+| **Chrome extension env** | Rebuild/reload when env values change |
+| **Separate storage per origin** | localhost ≠ production library |
+| **Cross-device sharing** | Recipient needs hosted deployment + same doc IDs for true remote share (future cloud) |
+
+Be transparent in marketing: Peacock excels at **speed, structure, and local privacy** today; **collaboration and cloud** are the natural next chapter.
 
 ---
 
-## Short pitch
+## Roadmap themes
 
-Peacock helps teams record a workflow once and instantly turn it into a polished customer-facing guide, internal SOP, branching demo, or product tour — complete with screenshots, structured steps, playback, export, and sharing.
+- Cloud-backed persistence and team workspaces
+- Real access control and authenticated sharing
+- Embed widgets for docs and tours
+- Semantic diff and smarter compare
+- Reusable templates and doc categories
+- Analytics on viewed/shared flows
+- AI-assisted rewrite and summarization
+- Deeper compliance (PII detection, retention policies)
+- Multi-browser extension support
 
 ---
 
-## Suggested roadmap themes
+## Glossary
 
-- cloud-backed persistence and team workspaces
-- comments and collaboration
-- embed widgets for share modal
-- semantic diffing and smarter compare workflows
-- reusable templates
-- analytics on viewed/shared flows
-- deeper redaction and compliance tooling
-- AI-assisted rewrite and summarization of steps
-- multi-product libraries and categorization
+| Term | Definition |
+|------|------------|
+| **Document / flow / doc** | A saved recording with steps, sections, and optional branches |
+| **Step** | Single interaction unit: screenshot, title, marker, notes |
+| **Section** | Chapter divider; intro card in player, heading in doc |
+| **Branch** | Decision point with multiple linked paths |
+| **Path** | Link from branch to step range in another document |
+| **Player** | Guided step-through playback mode |
+| **Document view** | Scrollable read mode with outline |
+| **Product tour** | Multi-demo, persona-led narrative |
+| **Persona** | Buyer/user role anchoring a tour |
+| **Feature** | Tour chapter containing linked demos |
+| **Demo** | Tour reference to a saved document |
+| **Capture Editor** | Standalone screenshot polish tool |
+| **Handoff** | Extension → app payload transfer on stop recording |
+| **Capture environment** | One-time browser/device metadata per recording |
+| **Normalized coordinates** | 0–1 floats for markers and regions (not pixels) |
 
 ---
 
 ## One-line summary for AI assistants
 
-Peacock Studio is a browser extension + React app that captures browser actions and screenshots (multiple modes), converts them into editable documentation steps with sections and branching, bundles docs into persona-led product tours, and lets users compare, play, export, and share those flows — all stored locally in IndexedDB.
+Peacock Studio is a browser extension + React app that captures browser actions and screenshots (recording and quick modes), converts them into editable documentation with sections, branching, and version labels, bundles docs into persona-led product tours, and supports document/player views, PDF export, share links, capture environment metadata, and side-by-side compare — stored locally in IndexedDB.

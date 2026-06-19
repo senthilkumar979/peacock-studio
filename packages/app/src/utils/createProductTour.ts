@@ -1,5 +1,5 @@
 import { createId } from '@peacock/shared';
-import { DEFAULT_PERSONA_ID } from '@/constants/personaAvatars';
+import { DEFAULT_PERSONA_ID, getAvatarIdForGender } from '@/constants/personaAvatars';
 import type { Persona, PersonaInput } from '@/types/persona';
 import type { ProductTour, TourDemoRef, TourFeature } from '@/types/productTour';
 
@@ -38,11 +38,11 @@ export function createDefaultPersona(): Persona {
   return {
     id: DEFAULT_PERSONA_ID,
     name: 'Product explorer',
-    role: 'New user',
-    shortDescription: 'Someone exploring the product for the first time.',
+    occupation: 'New user',
+    shortBio: 'Someone exploring the product for the first time.',
+    goal: 'Show me what this product can do',
     gender: 'neutral',
-    avatarId: 'n-1',
-    tagline: 'Show me what this product can do',
+    avatarId: getAvatarIdForGender('neutral'),
     createdAt: now,
     updatedAt: now,
   };
@@ -53,6 +53,7 @@ export function createPersonaFromInput(input: PersonaInput): Persona {
   return {
     id: createId(),
     ...input,
+    avatarId: getAvatarIdForGender(input.gender),
     createdAt: now,
     updatedAt: now,
   };

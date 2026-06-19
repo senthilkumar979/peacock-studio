@@ -22,8 +22,8 @@ export const TourIntroPanel = ({
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-peacock-600">Persona</p>
         <h2 className="mt-1 text-2xl font-bold text-slate-900">{persona.name}</h2>
-        {persona.role ? <p className="text-sm text-slate-600">{persona.role}</p> : null}
-        {persona.tagline ? <p className="mt-1 text-sm italic text-slate-500">{persona.tagline}</p> : null}
+        {persona.occupation ? <p className="text-sm text-slate-600">{persona.occupation}</p> : null}
+        {persona.goal ? <p className="mt-1 text-sm italic text-slate-500">{persona.goal}</p> : null}
       </div>
     </div>
 
@@ -33,8 +33,8 @@ export const TourIntroPanel = ({
       {tour.description ? (
         <p className="mt-3 text-base leading-relaxed text-slate-600">{tour.description}</p>
       ) : null}
-      {persona.shortDescription ? (
-        <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">{persona.shortDescription}</p>
+      {persona.shortBio ? (
+        <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">{persona.shortBio}</p>
       ) : null}
       {estimatedMinutes ? (
         <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-peacock-50 px-3 py-1 text-sm font-medium text-peacock-800">

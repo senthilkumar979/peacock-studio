@@ -33,12 +33,13 @@ export const TourPersonaIntroPanel = ({
           {persona.name}
         </h2>
 
-        {persona.role ? (
+        {persona.occupation ? (
           <p className="mt-2 text-base font-semibold text-slate-700">
-            {persona.role}
+            {persona.occupation}
           </p>
         ) : null}
         <p className="mt-1 text-sm text-slate-500">
+          {persona.age ? `${persona.age} · ` : ""}
           {persona.gender === "female"
             ? "Female"
             : persona.gender === "male"
@@ -48,31 +49,20 @@ export const TourPersonaIntroPanel = ({
         {persona.company ? (
           <p className="mt-1 text-sm text-slate-500">{persona.company}</p>
         ) : null}
-        {persona.tagline ? (
-          <p className="mt-3 rounded-xl bg-peacock-50 px-4 py-2 text-sm font-semibold text-peacock-800 w-fit">
-            {persona.tagline}
+        {persona.goal ? (
+          <p className="mt-3 w-fit rounded-xl bg-peacock-50 px-4 py-2 text-sm font-semibold text-peacock-800">
+            {persona.goal}
           </p>
         ) : null}
       </div>
 
-      {persona.shortDescription ? (
+      {persona.shortBio ? (
         <div className="mt-6 rounded-2xl bg-slate-50 p-5">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Quick intro
+            Short bio
           </p>
           <p className="mt-2 text-base leading-relaxed text-slate-700">
-            {persona.shortDescription}
-          </p>
-        </div>
-      ) : null}
-
-      {persona.detailedDescription ? (
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            What they care about
-          </p>
-          <p className="mt-2 text-base leading-relaxed text-slate-700">
-            {persona.detailedDescription}
+            {persona.shortBio}
           </p>
         </div>
       ) : null}
