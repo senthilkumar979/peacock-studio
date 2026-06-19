@@ -3,7 +3,7 @@ import { Check, Link2 } from "lucide-react";
 import type { FlowStep } from "@peacock/shared";
 import { getStepMarkerPosition, getStepUrl } from "@peacock/shared";
 import { usePlayerStepDetailsVisibility } from "@/hooks/usePlayerStepDetailsVisibility";
-import { getDocumentStepShareUrl } from "@/utils/shareLink";
+import { getDocumentAnchorShareUrl } from "@/utils/shareLink";
 import { BrowserMockup } from "./BrowserMockup";
 import { PlayerClickMarker } from "./PlayerClickMarker";
 import { getEventTypeIcon, getEventTypeLabel } from "./eventTypeDisplay";
@@ -41,7 +41,7 @@ export const DocumentStepCard = ({
   const handleCopyStepLink = async () => {
     try {
       await navigator.clipboard.writeText(
-        getDocumentStepShareUrl(documentId, step.id),
+        getDocumentAnchorShareUrl(documentId, anchorId),
       );
       setCopyMessage("copied");
       window.setTimeout(() => setCopyMessage("idle"), 2000);

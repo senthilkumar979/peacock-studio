@@ -4,21 +4,21 @@ import { getPathAccentColors } from './documentAccentColors';
 import { DocumentStepCard } from './DocumentStepCard';
 
 interface DocumentLinkedPathStepsProps {
+  documentId: string;
   pathId: string;
   pathLabel: string;
   steps: FlowStep[];
   screenshotUrls: Record<string, string>;
-  targetDocumentId: string;
   startStepNumber: number;
   activeItemId: string | null;
 }
 
 export const DocumentLinkedPathSteps = ({
+  documentId,
   pathId,
   pathLabel,
   steps,
   screenshotUrls,
-  targetDocumentId,
   startStepNumber,
   activeItemId,
 }: DocumentLinkedPathStepsProps) => {
@@ -41,7 +41,7 @@ export const DocumentLinkedPathSteps = ({
       return (
         <div key={outlineId} data-outline-id={outlineId}>
           <DocumentStepCard
-            documentId={targetDocumentId}
+            documentId={documentId}
             step={step}
             stepNumber={stepNumber}
             anchorId={anchorId}

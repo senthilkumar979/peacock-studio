@@ -12,6 +12,7 @@ import {
   scrollDocumentPaneToAnchor,
   useDocumentOutlineScrollSpy,
 } from "@/hooks/useDocumentOutlineScrollSpy";
+import { useDocumentHashNavigation } from "@/hooks/useDocumentHashNavigation";
 import { useFlowStore, useViewerOutline } from "@/store/flowStore";
 import { DocumentBranchCard } from "./DocumentBranchCard";
 import {
@@ -193,23 +194,15 @@ export const DocumentView = ({
     return () => window.removeEventListener("resize", updateDesktopPaneHeight);
   }, [steps.length]);
 
-  useEffect(() => {
-    const syncFromHash = () => {
-      const hash = window.location.hash.replace(/^#/, "");
-      if (!hash) return;
-      const target = indexItemsRef.current.find((item) => item.anchorId === hash);
-      if (!target) return;
-
-      setActiveItemId(getDocumentStepIndexItemId(target));
-      window.requestAnimationFrame(() => {
-        scrollStepsPaneToAnchor(hash, "auto");
-      });
-    };
-
-    syncFromHash();
-    window.addEventListener("hashchange", syncFromHash);
-    return () => window.removeEventListener("hashchange", syncFromHash);
-  }, []);
+  useDocumentHashNavigation({
+    branches,
+    selectedPathByBranchId,
+    linkedContentByPathId,
+    selectPath,
+    indexItemsRef,
+    setActiveItemId,
+    scrollToHash: (anchorId) => scrollStepsPaneToAnchor(anchorId, "auto"),
+  });
 
   return (
     <div className="flex min-h-screen[calc(100vh-128px)] flex-col bg-slate-50">
@@ -333,14 +326,12 @@ export const DocumentView = ({
                         {branchContext.linkedContent &&
                         branchContext.pathLabel ? (
                           <DocumentLinkedPathSteps
+                            documentId={documentId}
                             pathId={branchContext.linkedContent.pathId}
                             pathLabel={branchContext.pathLabel}
                             steps={branchContext.linkedContent.steps}
                             screenshotUrls={
                               branchContext.linkedContent.screenshotUrls
-                            }
-                            targetDocumentId={
-                              branchContext.linkedContent.targetDocumentId
                             }
                             startStepNumber={linkedStartStepNumber}
                             activeItemId={activeItemId}

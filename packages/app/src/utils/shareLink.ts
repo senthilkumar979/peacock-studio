@@ -62,8 +62,42 @@ export function getLinkedDocumentStepAnchor(pathId: string, stepId: string): str
   return `linked-${pathId}-${stepId}`;
 }
 
+export function getDocumentAnchorShareUrl(documentId: string, anchorId: string): string {
+  return `${buildSharedDocumentUrl(documentId, { viewMode: 'doc' })}#${anchorId}`;
+}
+
 export function getDocumentStepShareUrl(documentId: string, stepId: string): string {
-  return `${buildSharedDocumentUrl(documentId)}#${getDocumentStepAnchor(stepId)}`;
+  return getDocumentAnchorShareUrl(documentId, getDocumentStepAnchor(stepId));
+}
+
+export function getLinkedDocumentStepShareUrl(
+  documentId: string,
+  pathId: string,
+  stepId: string,
+): string {
+  return getDocumentAnchorShareUrl(documentId, getLinkedDocumentStepAnchor(pathId, stepId));
+}
+
+const DOCUMENT_ANCHOR_UUID =
+  '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+
+export function parseLinkedDocumentPathAnchor(anchorId: string): string | null {
+  const match = anchorId.match(new RegExp(`^linked-path-(${DOCUMENT_ANCHOR_UUID})$`, 'i'));
+  return match?.[1] ?? null;
+}
+
+export function parseLinkedDocumentStepAnchor(
+  anchorId: string,
+): { pathId: string; stepId: string } | null {
+  const match = anchorId.match(
+    new RegExp(`^linked-(${DOCUMENT_ANCHOR_UUID})-(${DOCUMENT_ANCHOR_UUID})$`, 'i'),
+  );
+  if (!match?.[1] || !match[2]) return null;
+  return { pathId: match[1], stepId: match[2] };
+}
+
+export function resolveLinkedPathIdFromAnchor(anchorId: string): string | null {
+  return parseLinkedDocumentPathAnchor(anchorId) ?? parseLinkedDocumentStepAnchor(anchorId)?.pathId ?? null;
 }
 
 export function getEmbedCodePlaceholder(documentId: string): string {
