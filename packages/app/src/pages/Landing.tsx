@@ -1,7 +1,9 @@
 import { AppFooter } from "@/components/AppFooter";
+import { LandingSubNav } from "@/components/site/LandingSubNav";
+import { SiteNav } from "@/components/site/SiteNav";
+import { useLandingNavVisibility } from "@/hooks/useLandingNavVisibility";
 import { Suspense, lazy } from "react";
 import { HeroSection } from "./landing/HeroSection";
-import { LandingNav } from "./landing/LandingNav";
 import { useLandingSeo } from "./landing/useLandingSeo";
 
 const ProblemSection = lazy(() =>
@@ -65,10 +67,12 @@ const BelowFoldFallback = () => <div className="min-h-[40vh]" aria-hidden />;
 
 export const Landing = () => {
   useLandingSeo();
+  const { showMainNav, showSubNav } = useLandingNavVisibility();
 
   return (
     <div className="landing-page">
-      <LandingNav />
+      <SiteNav visible={showMainNav} />
+      <LandingSubNav visible={showSubNav} />
       <main>
         <HeroSection />
         <Suspense fallback={<BelowFoldFallback />}>

@@ -11,7 +11,7 @@ export const SolutionRoleHero = ({ role }: SolutionRoleHeroProps) => {
   const Icon = role.icon;
 
   return (
-    <section className="relative overflow-hidden border-b border-slate-800 bg-slate-950 px-6 pb-20 pt-10 text-white sm:pb-24 sm:pt-12">
+    <section className="relative overflow-hidden border-b border-slate-800 bg-slate-950 px-6 pb-20 pt-28 text-white sm:pb-24 sm:pt-32">
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-peacock-900/60 via-slate-950 to-slate-950"
         aria-hidden

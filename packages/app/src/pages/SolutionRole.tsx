@@ -6,7 +6,7 @@ import { SolutionRoleExploreMore } from "@/pages/solutions/SolutionRoleExploreMo
 import { SolutionRoleWhyPeacock } from "@/pages/solutions/SolutionRoleWhyPeacock";
 import { SolutionRoleHero } from "@/pages/solutions/SolutionRoleHero";
 import { SolutionRoleSubNav } from "@/pages/solutions/SolutionRoleSubNav";
-import { SolutionsNav } from "@/pages/solutions/SolutionsNav";
+import { SiteNav } from "@/components/site/SiteNav";
 import { getSolutionRoleBySlug } from "@/pages/solutions/solutionsData";
 import { useEffect } from "react";
 import { Navigate, useParams } from "react-router-dom";
@@ -23,7 +23,7 @@ export const SolutionRole = () => {
 
   return (
     <div className="landing-page min-h-screen">
-      <SolutionsNav backHref="/solutions" backLabel="All solutions" />
+      <SiteNav />
       <SolutionRoleHero role={role} />
       <SolutionRoleSubNav role={role} />
       <SolutionRoleChallenges role={role} />

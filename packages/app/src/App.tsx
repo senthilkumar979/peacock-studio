@@ -10,6 +10,8 @@ import { ProductTourBuilder } from '@/pages/ProductTourBuilder';
 import { ProductTourLearner } from '@/pages/ProductTourLearner';
 import { CaptureEditor } from '@/pages/CaptureEditor';
 import { CaptureEditorLegacyRedirect } from '@/pages/CaptureEditorLegacyRedirect';
+import { Products } from '@/pages/Products';
+import { ProductDetail } from '@/pages/ProductDetail';
 import { Solutions } from '@/pages/Solutions';
 import { SolutionRole } from '@/pages/SolutionRole';
 
@@ -18,6 +20,8 @@ export const App = () => (
     <Routes>
       <Route path="/" element={<Dashboard />} />
       <Route path="/landing" element={<Landing />} />
+      <Route path="/products" element={<Products />} />
+      <Route path="/products/:productSlug" element={<ProductDetail />} />
       <Route path="/solutions" element={<Solutions />} />
       <Route path="/solutions/:roleSlug" element={<SolutionRole />} />
       <Route path="/compare" element={<CompareDocs />} />

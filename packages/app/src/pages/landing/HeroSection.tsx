@@ -5,7 +5,7 @@ import { LANDING_CATEGORY } from './landingData';
 import { HeroWorkflowVisual } from './HeroWorkflowVisual';
 
 export const HeroSection = () => (
-  <section className="relative overflow-hidden border-b border-slate-800 bg-slate-950 px-6 pb-24 pt-12 sm:pb-32 sm:pt-16">
+  <section id="hero" className="relative min-h-screen overflow-hidden border-b border-slate-800 bg-slate-950 px-6 pb-2 mt-12 sm:pb-2 sm:pt-16">
     <motion.div
       aria-hidden
       className="pointer-events-none absolute -right-24 top-0 h-96 w-96 rounded-full bg-brand-violet/20 blur-3xl"
@@ -25,7 +25,7 @@ export const HeroSection = () => (
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55 }}
       >
-        <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-cyan">
+        <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-cyan mt-10">
           Structured workflow capture — not screen recording
         </p>
 

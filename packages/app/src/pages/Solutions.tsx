@@ -1,6 +1,6 @@
 import { AppFooter } from "@/components/AppFooter";
+import { SiteNav } from "@/components/site/SiteNav";
 import { SolutionRoleCard } from "@/pages/solutions/SolutionRoleCard";
-import { SolutionsNav } from "@/pages/solutions/SolutionsNav";
 import {
   PEACOCK_CATEGORY_STATEMENT,
   SOLUTION_ROLE_GROUPS,
@@ -10,9 +10,9 @@ import { motion } from "framer-motion";
 
 export const Solutions = () => (
   <div className="landing-page min-h-screen">
-    <SolutionsNav backHref="/landing" backLabel="Home" />
+    <SiteNav />
 
-    <section className="relative overflow-hidden border-b border-slate-800 bg-slate-950 px-6 py-24 text-white sm:py-28">
+    <section className="relative overflow-hidden border-b border-slate-800 bg-slate-950 px-6 pb-24 pt-28 text-white sm:pb-28 sm:pt-32">
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-peacock-900/80 via-slate-950 to-slate-950"
         aria-hidden
