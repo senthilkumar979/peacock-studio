@@ -25,7 +25,7 @@ export const ProblemSection = () => (
     tone="muted"
     eyebrow="The problem"
     title="Product teams lose hours explaining the same workflows"
-    description="Manual screenshots, scattered Loom videos, and one-off slide decks cannot keep up with how fast your product moves."
+    description="Manual screenshots, scattered screen recordings, and one-off slide decks cannot keep up with how fast your product moves."
   >
     <div className="grid gap-5 md:grid-cols-3">
       {PAINS.map((pain, index) => {

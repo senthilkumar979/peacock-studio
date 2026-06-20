@@ -7,8 +7,8 @@ export const ComparisonSection = () => (
   <LandingSectionShell
     tone="dark"
     eyebrow="Why Peacock Studio"
-    title="Built for product storytelling, not generic screen recording"
-    description="See how Peacock compares to manual documentation and traditional one-off demo tools."
+    title="Built for structured workflow capture, not generic screen recording"
+    description="See how Peacock compares to manual documentation — and when it complements your existing knowledge platforms."
   >
     <div className="overflow-hidden rounded-2xl border border-white/10">
       <div className="grid grid-cols-[1.2fr_1fr_1fr] border-b border-white/10 bg-white/5 text-xs font-semibold uppercase tracking-wide text-slate-400">

@@ -29,9 +29,19 @@ const AutomationSection = lazy(() =>
     default: m.AutomationSection,
   })),
 );
+const TrustArchitectureSection = lazy(() =>
+  import("./landing/TrustArchitectureSection").then((m) => ({
+    default: m.TrustArchitectureSection,
+  })),
+);
 const ComparisonSection = lazy(() =>
   import("./landing/ComparisonSection").then((m) => ({
     default: m.ComparisonSection,
+  })),
+);
+const PlatformComparisonSection = lazy(() =>
+  import("./landing/PlatformComparisonSection").then((m) => ({
+    default: m.PlatformComparisonSection,
   })),
 );
 const PreviewSection = lazy(() =>
@@ -67,7 +77,9 @@ export const Landing = () => {
           <FeaturesSection />
           <WorkflowSection />
           <AutomationSection />
+          <TrustArchitectureSection />
           <ComparisonSection />
+          <PlatformComparisonSection />
           <PreviewSection />
           {/* <TestimonialsSection /> */}
           <FAQSection />

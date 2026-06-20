@@ -43,6 +43,12 @@ export const LandingNav = () => (
           Workflow
         </a>
         <a
+          href="#platform-comparison"
+          className="text-sm text-slate-300 transition hover:text-white"
+        >
+          Compare
+        </a>
+        <a
           href="#faq"
           className="text-sm text-slate-300 transition hover:text-white"
         >

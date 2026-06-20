@@ -7,7 +7,7 @@ export const FeaturesSection = () => (
     id="features"
     eyebrow="Features"
     title="Everything in the product, mapped to outcomes"
-    description="Every capability below exists in Peacock Studio today — from Chrome extension capture to persona-led product tours."
+    description="Every capability below exists in Peacock Studio today — from Chrome extension capture to flow sections, branches, Product Tours, and Compare Docs."
   >
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {LANDING_FEATURES.map((feature, index) => {

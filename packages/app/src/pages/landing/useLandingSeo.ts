@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { PEACOCK_APP_NAME } from '@/constants/branding';
 
-const TITLE = `${PEACOCK_APP_NAME} — Capture workflows, build product tours, share demos`;
+const TITLE = `${PEACOCK_APP_NAME} — The system of record for how work happens`;
 const DESCRIPTION =
-  'Peacock Studio converts real browser workflows into editable walkthroughs, persona-led product tours, and shareable demos. Local-first. Chrome extension included.';
+  'Peacock Studio captures browser workflows and transforms them into editable Flow Documents and Product Tours. Structured steps, branching paths, PDF export, and local-first storage — no account required.';
 
 export const useLandingSeo = () => {
   useEffect(() => {

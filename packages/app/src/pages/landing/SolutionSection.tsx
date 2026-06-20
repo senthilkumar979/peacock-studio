@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LandingSectionShell } from './LandingSectionShell';
+import { LANDING_TWO_FORMATS } from './landingData';
 
 const BEFORE = [
   'Screenshot each step into a doc',
@@ -12,17 +13,17 @@ const BEFORE = [
 
 const AFTER = [
   'Record the workflow once in Chrome',
-  'Edit steps, sections, and branches in one place',
-  'Bundle demos into persona-led product tours',
-  'Share links or export PDFs from the same asset',
+  'Publish Flow Documents for execution and reference',
+  'Compose Product Tours for adoption and storytelling',
+  'Share links or export PDFs from the same library',
 ];
 
 export const SolutionSection = () => (
   <LandingSectionShell
     tone="dark"
     eyebrow="The solution"
-    title="One capture pipeline. Every format your team needs."
-    description="Peacock Studio connects extension recording, structured editing, interactive playback, and tour packaging into a single local-first workflow."
+    title="One capture pipeline. Two formats your teams need."
+    description="Peacock Studio connects extension recording, structured editing, and guided playback — producing execution-grade Flow Documents and adoption-focused Product Tours from the same local-first library."
   >
     <div className="grid gap-6 lg:grid-cols-2">
       <motion.article
@@ -58,6 +59,25 @@ export const SolutionSection = () => (
           ))}
         </ul>
       </motion.article>
+    </div>
+
+    <div className="mt-8 grid gap-4 sm:grid-cols-2">
+      {LANDING_TWO_FORMATS.map((format, index) => (
+        <motion.article
+          key={format.title}
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: index * 0.08 }}
+          className="rounded-2xl border border-white/10 bg-white/5 p-5"
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-cyan">
+            {format.subtitle}
+          </p>
+          <h3 className="mt-2 text-base font-semibold text-white">{format.title}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-slate-300">{format.copy}</p>
+        </motion.article>
+      ))}
     </div>
 
     <div className="mt-10 text-center">
