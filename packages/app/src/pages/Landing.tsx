@@ -77,7 +77,6 @@ export const Landing = () => {
           <FeaturesSection />
           <WorkflowSection />
           <AutomationSection />
-          <TrustArchitectureSection />
           <ComparisonSection />
           <PlatformComparisonSection />
           <PreviewSection />

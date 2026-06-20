@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
-import { CheckCircle2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { PLATFORM_COMPARISON } from './platformComparisonData';
+import { WhenPeacockFitsBestPanel } from './WhenPeacockFitsBestPanel';
 
 const COLUMN_KEYS = ['peacock', 'confluence', 'notion', 'sharepoint'] as const;
 
@@ -83,33 +82,7 @@ export const PlatformComparisonSection = () => {
           </table>
         </div>
 
-        <motion.aside
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.35 }}
-          transition={{ duration: 0.4 }}
-          className="mt-10 rounded-2xl border border-peacock-200 bg-peacock-50/50 p-6 sm:p-8"
-        >
-          <h3 className="text-lg font-semibold text-slate-900">{whenPeacockFitsBest.title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
-            Peacock complements existing knowledge platforms — it does not replace enterprise
-            content repositories. Consider Peacock when:
-          </p>
-          <ul className="mt-5 space-y-3">
-            {whenPeacockFitsBest.bullets.map((bullet) => (
-              <li key={bullet} className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-700">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-peacock-600" aria-hidden />
-                <span>{bullet}</span>
-              </li>
-            ))}
-          </ul>
-          <Link
-            to="/solutions"
-            className="mt-6 inline-flex text-sm font-semibold text-peacock-700 hover:text-peacock-900"
-          >
-            Explore solutions by role →
-          </Link>
-        </motion.aside>
+        <WhenPeacockFitsBestPanel content={whenPeacockFitsBest} />
       </div>
     </section>
   );

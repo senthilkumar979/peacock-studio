@@ -13,9 +13,16 @@ export interface PlatformComparisonTable {
   rows: PlatformComparisonRow[];
 }
 
+export interface WhenPeacockFitsSignal {
+  title: string;
+  copy: string;
+}
+
 export interface WhenPeacockFitsBest {
   title: string;
-  bullets: string[];
+  thesis: string;
+  complement: string;
+  signals: WhenPeacockFitsSignal[];
 }
 
 export const PLATFORM_COMPARISON = {
@@ -130,52 +137,26 @@ export const PLATFORM_COMPARISON = {
         notion: 'Limited',
         sharepoint: 'Limited',
       },
-      {
-        capability: 'Knowledge collaboration and rich text editing',
-        peacock: 'Limited',
-        confluence: 'Native',
-        notion: 'Native',
-        sharepoint: 'Native',
-      },
-      {
-        capability: 'General-purpose wiki capabilities',
-        peacock: 'Not designed for this use case',
-        confluence: 'Native',
-        notion: 'Native',
-        sharepoint: 'Native',
-      },
-      {
-        capability: 'File storage and document repositories',
-        peacock: 'Limited',
-        confluence: 'Strong',
-        notion: 'Strong',
-        sharepoint: 'Native',
-      },
-      {
-        capability: 'Enterprise governance and permissions',
-        peacock: 'Limited',
-        confluence: 'Native',
-        notion: 'Requires setup',
-        sharepoint: 'Native',
-      },
-      {
-        capability: 'Search across documentation assets',
-        peacock: 'Limited',
-        confluence: 'Native',
-        notion: 'Native',
-        sharepoint: 'Native',
-      },
     ],
   } satisfies PlatformComparisonTable,
   whenPeacockFitsBest: {
     title: 'When Peacock fits best',
-    bullets: [
-      'Your organization already uses Confluence, Notion, or SharePoint but workflow documentation still falls out of date after UI changes.',
-      'Operational knowledge lives in demos, Slack threads, and tribal knowledge rather than reusable artifacts.',
-      'Cross-functional teams need visual guidance that business stakeholders, support agents, and auditors can follow.',
-      'Product and process changes outpace the capacity to manually update screenshots and written procedures.',
-      'QA and business owners need shared validation references that reflect what users actually see on screen.',
-      'Compliance and security teams need evidence-ready workflow records without exposing passwords or sensitive inputs.',
+    thesis: 'Your wiki explains what should happen. Peacock captures what people actually do on screen.',
+    complement:
+      'Peacock complements Confluence, Notion, and SharePoint — it does not replace your enterprise content repository.',
+    signals: [
+      {
+        title: 'The UI moves faster than the docs',
+        copy: 'Releases change screens rapidly; manual screenshots and procedures cannot keep up.',
+      },
+      {
+        title: 'Walkthroughs never become assets',
+        copy: 'Demos, Slack threads, and tribal knowledge do not scale across engineering, product, and support teams.',
+      },
+      {
+        title: 'Teams need visual proof',
+        copy: 'Product owners, analysts, and support agents need step-level guidance — not documentation pages alone.',
+      },
     ],
   } satisfies WhenPeacockFitsBest,
 } as const;

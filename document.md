@@ -40,10 +40,10 @@
 
 The product has two parts:
 
-| Part | Role |
-|------|------|
-| **Browser extension** (Chrome / Edge) | Records clicks, inputs, navigation, and screenshots on any website |
-| **Web app** (React) | Edits recordings into structured documentation, plays them back, bundles them into tours, exports PDFs, and compares versions |
+| Part                                  | Role                                                                                                                          |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Browser extension** (Chrome / Edge) | Records clicks, inputs, navigation, and screenshots on any website                                                            |
+| **Web app** (React)                   | Edits recordings into structured documentation, plays them back, bundles them into tours, exports PDFs, and compares versions |
 
 **One-line pitch:** Record a workflow once — get an editable guide with screenshots, branching paths, and a shareable player in minutes.
 
@@ -57,15 +57,15 @@ The product has two parts:
 
 Teams document product workflows constantly — for sales demos, onboarding, support, QA, and release notes. The manual approach fails in predictable ways:
 
-| Pain | Manual approach | With Peacock |
-|------|-----------------|--------------|
-| **Time** | Hours of screenshots + writing per guide | Minutes from one live recording |
-| **Drift** | Docs fall out of sync with the product | Re-record and compare side by side |
-| **Consistency** | Every presenter tells a different story | Same structured narrative every time |
-| **Branching** | Separate videos or docs per path | One guide with selectable paths |
-| **Persona fit** | Generic decks for every audience | Persona-led tours with feature chapters |
-| **Privacy** | Sensitive data in screenshots | Redact/blur tools + field exclusions |
-| **Distribution** | Scattered files and drives | Links, PDF, and presenter mode |
+| Pain             | Manual approach                          | With Peacock                            |
+| ---------------- | ---------------------------------------- | --------------------------------------- |
+| **Time**         | Hours of screenshots + writing per guide | Minutes from one live recording         |
+| **Drift**        | Docs fall out of sync with the product   | Re-record and compare side by side      |
+| **Consistency**  | Every presenter tells a different story  | Same structured narrative every time    |
+| **Branching**    | Separate videos or docs per path         | One guide with selectable paths         |
+| **Persona fit**  | Generic decks for every audience         | Persona-led tours with feature chapters |
+| **Privacy**      | Sensitive data in screenshots            | Redact/blur tools + field exclusions    |
+| **Distribution** | Scattered files and drives               | Links, PDF, and presenter mode          |
 
 ---
 
@@ -136,11 +136,11 @@ Everything persists **locally in the browser** (IndexedDB) — fast, private, no
 
 **Monorepo packages:**
 
-| Package | Responsibility |
-|---------|----------------|
-| `packages/extension` | Recording, screenshots, popup, handoff bridge |
-| `packages/app` | Dashboard, editor, player, tours, PDF, compare, capture editor |
-| `packages/shared` | Shared TypeScript types, event model, utilities |
+| Package              | Responsibility                                                 |
+| -------------------- | -------------------------------------------------------------- |
+| `packages/extension` | Recording, screenshots, popup, handoff bridge                  |
+| `packages/app`       | Dashboard, editor, player, tours, PDF, compare, capture editor |
+| `packages/shared`    | Shared TypeScript types, event model, utilities                |
 
 ---
 
@@ -155,26 +155,26 @@ Everything persists **locally in the browser** (IndexedDB) — fast, private, no
 
 ### Recording behavior
 
-| Behavior | Detail |
-|----------|--------|
-| Event types | Clicks, debounced inputs (400ms), navigation (SPA-aware), page views |
-| Screenshots | Pointer-down pre-capture on clicks; debounced on inputs; page view on load/stop |
-| UI exclusion | Peacock's own UI hidden during screenshot capture |
-| Password fields | Never captured in element snapshots |
-| Sensitive URLs | Auto-pause on URL patterns matching login, payment, billing |
-| Stop flow | Final screenshot → page snapshot → open `/editor` → handoff via bridge |
+| Behavior        | Detail                                                                          |
+| --------------- | ------------------------------------------------------------------------------- |
+| Event types     | Clicks, debounced inputs (400ms), navigation (SPA-aware), page views            |
+| Screenshots     | Pointer-down pre-capture on clicks; debounced on inputs; page view on load/stop |
+| UI exclusion    | Peacock's own UI hidden during screenshot capture                               |
+| Password fields | Never captured in element snapshots                                             |
+| Sensitive URLs  | Auto-pause on URL patterns matching login, payment, billing                     |
+| Stop flow       | Final screenshot → page snapshot → open `/editor` → handoff via bridge          |
 
 ### Capture environment (session metadata)
 
 Recorded **once per session** when recording stops. Stored in flow metadata and shown in document intro, player intro, and PDF (when complete).
 
-| Field group | Examples |
-|-------------|----------|
-| System | OS name/version, browser name/version, platform |
-| Display | Screen size, viewport, available area, device pixel ratio |
-| Locale | Language, timezone |
-| Session | Recording start/end, duration |
-| Raw | Full user agent string |
+| Field group | Examples                                                  |
+| ----------- | --------------------------------------------------------- |
+| System      | OS name/version, browser name/version, platform           |
+| Display     | Screen size, viewport, available area, device pixel ratio |
+| Locale      | Language, timezone                                        |
+| Session     | Recording start/end, duration                             |
+| Raw         | Full user agent string                                    |
 
 Parsed deterministically from `navigator` APIs — not editable after capture.
 
@@ -186,11 +186,11 @@ Screenshots tie to interaction steps. Stored as blobs in extension IndexedDB, tr
 
 #### Quick capture (extension popup, idle only)
 
-| Mode | Behavior |
-|------|----------|
-| **Visible area** | Current viewport |
-| **Selection** | User draws rectangle; overlay excluded from result |
-| **Full page** | Scroll-and-stitch with sticky header/footer suppression, widget suppression, scroll restore |
+| Mode             | Behavior                                                                                    |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| **Visible area** | Current viewport                                                                            |
+| **Selection**    | User draws rectangle; overlay excluded from result                                          |
+| **Full page**    | Scroll-and-stitch with sticky header/footer suppression, widget suppression, scroll restore |
 
 Quick captures open a result page (download/copy) and can open **Capture Editor** at `/capture/:captureId/edit`.
 
@@ -204,23 +204,23 @@ Polish marketing- or support-ready images outside of a full flow recording.
 
 ### Tools
 
-| Tool | Purpose |
-|------|---------|
+| Tool       | Purpose                                                                                                                                                     |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Select** | Default mode after other tools finish. Click blur/redact regions to select; drag to move; corner/edge handles to resize; **Delete** removes selected region |
-| **Crop** | Drag to select crop area; **applies automatically on mouse release**; switches back to Select |
-| **Blur** | Draw privacy region; adjustable intensity (4–24) in sidebar when selected |
-| **Redact** | Draw region; soft white overlay hides underlying content |
+| **Crop**   | Drag to select crop area; **applies automatically on mouse release**; switches back to Select                                                               |
+| **Blur**   | Draw privacy region; adjustable intensity (4–24) in sidebar when selected                                                                                   |
+| **Redact** | Draw region; soft white overlay hides underlying content                                                                                                    |
 
 ### Caption & layout
 
-| Setting | Range / detail |
-|---------|----------------|
-| **Title & description** | Rendered above screenshot (outside image frame) |
-| **Background presets** | 15 gradients/solids (Rose gold default) — see list below |
-| **Padding** | 0–200px |
-| **Image corner radius** | 0–48px (screenshot card) |
-| **Frame corner radius** | 0–96px (gradient frame; transparent corners on export) |
-| **Light caption text** | White title/description on dark presets (Charcoal, Peacock bold, Ocean, Aurora, Forest, Ember, Midnight, Studio dark) |
+| Setting                 | Range / detail                                                                                                        |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Title & description** | Rendered above screenshot (outside image frame)                                                                       |
+| **Background presets**  | 15 gradients/solids (Rose gold default) — see list below                                                              |
+| **Padding**             | 0–200px                                                                                                               |
+| **Image corner radius** | 0–48px (screenshot card)                                                                                              |
+| **Frame corner radius** | 0–96px (gradient frame; transparent corners on export)                                                                |
+| **Light caption text**  | White title/description on dark presets (Charcoal, Peacock bold, Ocean, Aurora, Forest, Ember, Midnight, Studio dark) |
 
 ### Background presets (active)
 
@@ -277,11 +277,11 @@ Sections divide a flow into **chapters**. They appear in document view, player (
 
 Slides in from the right on first editor open (once per session per recording). Fields:
 
-| Field | Required | Appears in |
-|-------|----------|------------|
-| **Title** | Yes | Library, doc header, PDF cover, share |
-| **Description** | No | Doc intro, PDF cover |
-| **Version** | No | Library (badge), doc intro, PDF cover, searchable in dashboard |
+| Field           | Required | Appears in                                                     |
+| --------------- | -------- | -------------------------------------------------------------- |
+| **Title**       | Yes      | Library, doc header, PDF cover, share                          |
+| **Description** | No       | Doc intro, PDF cover                                           |
+| **Version**     | No       | Library (badge), doc intro, PDF cover, searchable in dashboard |
 
 Version is free-form (e.g. `1.0.0`, `2026.1.0`, `v1.2.0-g4b2d9e1`). Empty version shows **Unversioned** badge.
 
@@ -340,12 +340,12 @@ Branching lets one document present **multiple paths** at a decision point witho
 
 ### Presentation
 
-| Surface | Behavior |
-|---------|----------|
+| Surface           | Behavior                                                             |
+| ----------------- | -------------------------------------------------------------------- |
 | **Document view** | Branch card with path picker; linked steps inline with accent colors |
-| **Player** | Branch choice panel (list or grid); keyboard path selection |
-| **PDF** | Branch highlight page + steps from selected paths only |
-| **Share links** | Readonly links can filter visible paths via URL params |
+| **Player**        | Branch choice panel (list or grid); keyboard path selection          |
+| **PDF**           | Branch highlight page + steps from selected paths only               |
+| **Share links**   | Readonly links can filter visible paths via URL params               |
 
 ### Share URL branch filtering
 
@@ -388,10 +388,10 @@ Title, description, version badge, step count, created date, capture environment
 
 ### Deep linking
 
-| Anchor pattern | Target |
-|----------------|--------|
-| `#flow-details` | Intro section |
-| `#step-{stepId}` | Main flow step |
+| Anchor pattern              | Target           |
+| --------------------------- | ---------------- |
+| `#flow-details`             | Intro section    |
+| `#step-{stepId}`            | Main flow step   |
 | `#linked-{pathId}-{stepId}` | Linked path step |
 
 **Copy link** on each step copies current doc URL with anchor.
@@ -426,11 +426,11 @@ When playback reaches a section, a full **chapter intro card** appears with titl
 
 ### Controls & keyboard
 
-| Input | Action |
-|-------|--------|
-| **← / →** | Previous / next segment |
+| Input     | Action                              |
+| --------- | ----------------------------------- |
+| **← / →** | Previous / next segment             |
 | **Space** | Toggle autoplay (~2.5s per segment) |
-| At branch | **↑↓**, **1–N**, **Enter**, **→** |
+| At branch | **↑↓**, **1–N**, **Enter**, **→**   |
 
 Autoplay pauses at branches, linked playback transitions, and finale.
 
@@ -450,24 +450,24 @@ Same metadata as document view: title, description, version, capture environment
 
 ### Stats bar
 
-| Stat | Meaning |
-|------|---------|
-| Total documentations | All saved docs |
-| Created this week | Docs recorded this calendar week |
-| Created this month | Docs recorded this calendar month |
-| Steps documented | Sum of playable steps |
-| Avg steps per doc | Mean step count |
+| Stat                 | Meaning                           |
+| -------------------- | --------------------------------- |
+| Total documentations | All saved docs                    |
+| Created this week    | Docs recorded this calendar week  |
+| Created this month   | Docs recorded this calendar month |
+| Steps documented     | Sum of playable steps             |
+| Avg steps per doc    | Mean step count                   |
 
 ### Your documentations
 
-| Capability | Detail |
-|------------|--------|
-| **View modes** | Table (default), Cards, List — persisted in localStorage |
-| **Search** | Expandable search icon; matches title, description, version |
-| **Sort** | Newest, oldest, most steps, title A–Z |
-| **Version badge** | Violet tag or "Unversioned" dashed badge |
-| **Per-doc actions** | Play, Edit, Share, Delete (confirm with step count) |
-| **Compare** | Link to `/compare` |
+| Capability          | Detail                                                      |
+| ------------------- | ----------------------------------------------------------- |
+| **View modes**      | Table (default), Cards, List — persisted in localStorage    |
+| **Search**          | Expandable search icon; matches title, description, version |
+| **Sort**            | Newest, oldest, most steps, title A–Z                       |
+| **Version badge**   | Violet tag or "Unversioned" dashed badge                    |
+| **Per-doc actions** | Play, Edit, Share, Delete (confirm with step count)         |
+| **Compare**         | Link to `/compare`                                          |
 
 Table columns: Title (with step count), Version, Generated date, Actions — each with icon headers.
 
@@ -485,20 +485,20 @@ Highlights the most recently updated documentation.
 
 ### Share modal methods
 
-| Method | Status |
-|--------|--------|
-| **Link** | Readonly or editable URLs |
-| **PDF** | Multi-page export with screenshots |
-| **Embed** | Placeholder — "coming soon" |
+| Method    | Status                             |
+| --------- | ---------------------------------- |
+| **Link**  | Readonly or editable URLs          |
+| **PDF**   | Multi-page export with screenshots |
+| **Embed** | Placeholder — "coming soon"        |
 
 ### Document links
 
-| Type | URL pattern |
-|------|-------------|
+| Type         | URL pattern                                   |
+| ------------ | --------------------------------------------- |
 | Readonly doc | `/docs/{id}` (+ optional branch query params) |
-| Editable doc | `/docs/{id}/edit` |
-| Player | `/docs/{id}?view=player` |
-| Step anchor | `/docs/{id}#step-{stepId}` |
+| Editable doc | `/docs/{id}/edit`                             |
+| Player       | `/docs/{id}?view=player`                      |
+| Step anchor  | `/docs/{id}#step-{stepId}`                    |
 
 Branch path preferences for readonly links configurable in share modal; saved to document `shareSettings`.
 
@@ -524,13 +524,13 @@ Product tours bundle **multiple saved documents** into a **persona-led**, multi-
 
 ### Concepts
 
-| Entity | Purpose |
-|--------|---------|
-| **Tour** | Container: title, description, draft/live status, completion CTA |
-| **Persona** | Buyer/user role: name, title, company, avatar, descriptions |
-| **Feature** | Chapter grouping demos |
-| **Demo** | Reference to saved Peacock document, ordered within feature |
-| **Completion CTA** | Optional button (label + URL) on final slide |
+| Entity             | Purpose                                                          |
+| ------------------ | ---------------------------------------------------------------- |
+| **Tour**           | Container: title, description, draft/live status, completion CTA |
+| **Persona**        | Buyer/user role: name, title, company, avatar, descriptions      |
+| **Feature**        | Chapter grouping demos                                           |
+| **Demo**           | Reference to saved Peacock document, ordered within feature      |
+| **Completion CTA** | Optional button (label + URL) on final slide                     |
 
 ### Tour builder
 
@@ -540,15 +540,15 @@ Product tours bundle **multiple saved documents** into a **persona-led**, multi-
 
 Each tour is anchored to one **persona** — the buyer or user role the narrative speaks to.
 
-| Capability | Detail |
-|------------|--------|
-| **Saved persona library** | All personas stored locally; reusable across tours |
-| **Choose existing** | Chip picker lists every saved persona; click to assign to this tour |
-| **Create new** | **New persona** opens a slide-in drawer (same pattern as flow details) |
-| **Edit selected** | **Edit** opens the drawer pre-filled with current persona fields |
-| **Persona fields** | Name, role, short description, detailed description, gender, avatar, company, tagline |
-| **Default persona** | New tours start with “Product explorer” until changed |
-| **Auto-assign on save** | Creating or editing a persona automatically selects it for the tour |
+| Capability                | Detail                                                                                |
+| ------------------------- | ------------------------------------------------------------------------------------- |
+| **Saved persona library** | All personas stored locally; reusable across tours                                    |
+| **Choose existing**       | Chip picker lists every saved persona; click to assign to this tour                   |
+| **Create new**            | **New persona** opens a slide-in drawer (same pattern as flow details)                |
+| **Edit selected**         | **Edit** opens the drawer pre-filled with current persona fields                      |
+| **Persona fields**        | Name, role, short description, detailed description, gender, avatar, company, tagline |
+| **Default persona**       | New tours start with “Product explorer” until changed                                 |
+| **Auto-assign on save**   | Creating or editing a persona automatically selects it for the tour                   |
 
 #### Other builder capabilities
 
@@ -590,12 +590,12 @@ Navigation: prev/next, keyboard arrows. Inherits branching from linked documents
 
 Side-by-side review of two saved documents.
 
-| Capability | Detail |
-|------------|--------|
-| Document pickers | Left and right from library |
-| Navigation | Shared step index; Previous/Next; keyboard arrows |
-| Alignment | By **step index**, not semantic diff |
-| Short doc handling | Empty pane when one doc has fewer steps |
+| Capability         | Detail                                            |
+| ------------------ | ------------------------------------------------- |
+| Document pickers   | Left and right from library                       |
+| Navigation         | Shared step index; Previous/Next; keyboard arrows |
+| Alignment          | By **step index**, not semantic diff              |
+| Short doc handling | Empty pane when one doc has fewer steps           |
 
 **Best for:** Release review, UI regression checks, before/after workflow comparison — not automated visual diff.
 
@@ -603,15 +603,15 @@ Side-by-side review of two saved documents.
 
 ## Privacy & safety
 
-| Mechanism | Where |
-|-----------|-------|
-| Password field exclusion | Extension recording |
-| Peacock UI exclusion | Extension recording |
-| Sensitive URL auto-pause | Extension (login/payment/billing patterns) |
-| Blur regions | Capture Editor, exportable |
-| Redact regions | Capture Editor, exportable |
-| Local-only storage | IndexedDB on device — no cloud upload by default |
-| Normalized coordinates | Markers/regions scale correctly on resize |
+| Mechanism                | Where                                            |
+| ------------------------ | ------------------------------------------------ |
+| Password field exclusion | Extension recording                              |
+| Peacock UI exclusion     | Extension recording                              |
+| Sensitive URL auto-pause | Extension (login/payment/billing patterns)       |
+| Blur regions             | Capture Editor, exportable                       |
+| Redact regions           | Capture Editor, exportable                       |
+| Local-only storage       | IndexedDB on device — no cloud upload by default |
+| Normalized coordinates   | Markers/regions scale correctly on resize        |
 
 ---
 
@@ -637,12 +637,12 @@ Users override with custom titles and notes.
 
 ### Storage model
 
-| Data | Location |
-|------|----------|
+| Data                                    | Location                               |
+| --------------------------------------- | -------------------------------------- |
 | Documents, screenshots, tours, personas | App IndexedDB (`peacock-flow-library`) |
-| In-flight recording | Extension IndexedDB |
-| View preferences | localStorage (dashboard view mode) |
-| Flow details prompt | sessionStorage (once per recording) |
+| In-flight recording                     | Extension IndexedDB                    |
+| View preferences                        | localStorage (dashboard view mode)     |
+| Flow details prompt                     | sessionStorage (once per recording)    |
 
 **Note:** `localhost` and production deployments use **separate** IndexedDB databases.
 
@@ -654,20 +654,20 @@ Extension opens app tab → app requests pending handoff → extension delivers 
 
 ## Route reference
 
-| Route | Purpose |
-|-------|---------|
-| `/` | Dashboard |
-| `/landing` | Marketing landing (empty library redirect) |
-| `/editor` | New recording editor (handoff) |
-| `/docs/:documentId` | Document view |
-| `/docs/:documentId?view=player` | Player |
-| `/docs/:documentId/edit` | Flow editor |
-| `/compare` | Compare two documents |
-| `/capture/:captureId/edit` | Capture Editor |
-| `/tours/new` | Create product tour |
-| `/tours/:tourId/edit` | Tour builder |
-| `/tours/:tourId` | Tour learner |
-| `/tours/:tourId?presenter=1` | Presenter mode |
+| Route                           | Purpose                                    |
+| ------------------------------- | ------------------------------------------ |
+| `/`                             | Dashboard                                  |
+| `/landing`                      | Marketing landing (empty library redirect) |
+| `/editor`                       | New recording editor (handoff)             |
+| `/docs/:documentId`             | Document view                              |
+| `/docs/:documentId?view=player` | Player                                     |
+| `/docs/:documentId/edit`        | Flow editor                                |
+| `/compare`                      | Compare two documents                      |
+| `/capture/:captureId/edit`      | Capture Editor                             |
+| `/tours/new`                    | Create product tour                        |
+| `/tours/:tourId/edit`           | Tour builder                               |
+| `/tours/:tourId`                | Tour learner                               |
+| `/tours/:tourId?presenter=1`    | Presenter mode                             |
 
 ---
 
@@ -689,34 +689,34 @@ Use these blocks directly or adapt for decks, hero sections, and ads.
 
 ### Three-step workflow (landing)
 
-| Step | Title | Copy |
-|------|-------|------|
-| 01 | Install & record | Pin the Peacock Chrome extension and record a real workflow on any site. |
-| 02 | Edit & structure | Refine steps, add sections and branches, attach screenshots, and auto-save locally. |
-| 03 | Tour & share | Bundle demos into persona-led tours, then share links, export PDFs, or present live. |
+| Step | Title            | Copy                                                                                 |
+| ---- | ---------------- | ------------------------------------------------------------------------------------ |
+| 01   | Install & record | Pin the Peacock Chrome extension and record a real workflow on any site.             |
+| 02   | Edit & structure | Refine steps, add sections and branches, attach screenshots, and auto-save locally.  |
+| 03   | Tour & share     | Bundle demos into persona-led tours, then share links, export PDFs, or present live. |
 
 ### Feature pillars (landing cards)
 
-| Pillar | Explanation | Benefit | Impact |
-|--------|-------------|---------|--------|
-| Chrome extension capture | Record clicks, inputs, navigation, screenshots from any website | Structured steps without manual screenshot work | Cut documentation prep from hours to minutes |
-| Flow editor with branches | Reorder steps, sections, link paths to other docs | Complex workflows in one guide | Replace Loom + doc + slide deck fragmentation |
-| Persona-led product tours | Multiple demos in feature chapters for a buyer persona | Focused story per audience | Better demo relevance for sales & enablement |
-| Interactive player | Step-through, autoplay, keyboard nav, branch selection | Self-serve exploration | Comprehension without another live call |
-| Share links & PDF | Readonly/editable links, printable guides | Same asset across email, calls, teams | Scale best walkthrough without repeating live |
-| Capture editor & compare | Polish screenshots; compare two docs side by side | Release notes, redacted support artifacts | Keep docs accurate as product evolves |
+| Pillar                    | Explanation                                                     | Benefit                                         | Impact                                        |
+| ------------------------- | --------------------------------------------------------------- | ----------------------------------------------- | --------------------------------------------- |
+| Chrome extension capture  | Record clicks, inputs, navigation, screenshots from any website | Structured steps without manual screenshot work | Cut documentation prep from hours to minutes  |
+| Flow editor with branches | Reorder steps, sections, link paths to other docs               | Complex workflows in one guide                  | Replace Loom + doc + slide deck fragmentation |
+| Persona-led product tours | Multiple demos in feature chapters for a buyer persona          | Focused story per audience                      | Better demo relevance for sales & enablement  |
+| Interactive player        | Step-through, autoplay, keyboard nav, branch selection          | Self-serve exploration                          | Comprehension without another live call       |
+| Share links & PDF         | Readonly/editable links, printable guides                       | Same asset across email, calls, teams           | Scale best walkthrough without repeating live |
+| Capture editor & compare  | Polish screenshots; compare two docs side by side               | Release notes, redacted support artifacts       | Keep docs accurate as product evolves         |
 
 ### Comparison table (vs manual docs)
 
-| Dimension | Manual documentation | Peacock Studio |
-|-----------|---------------------|----------------|
-| Setup time | Hours per guide | Minutes from recording |
-| Consistency | Varies by presenter | Same narrative every time |
-| Branching | Separate videos or docs | Built-in path selection |
-| Persona targeting | Custom decks per role | Structured product tours |
-| Data control | Scattered files & drives | Local-first on device |
-| Screenshot sync | Manual paste & crop | Captured with each action |
-| Release review | Side-by-side guesswork | Compare Docs by step index |
+| Dimension         | Manual documentation     | Peacock Studio             |
+| ----------------- | ------------------------ | -------------------------- |
+| Setup time        | Hours per guide          | Minutes from recording     |
+| Consistency       | Varies by presenter      | Same narrative every time  |
+| Branching         | Separate videos or docs  | Built-in path selection    |
+| Persona targeting | Custom decks per role    | Structured product tours   |
+| Data control      | Scattered files & drives | Local-first on device      |
+| Screenshot sync   | Manual paste & crop      | Captured with each action  |
+| Release review    | Side-by-side guesswork   | Compare Docs by step index |
 
 ### Architecture trust points
 
@@ -829,16 +829,15 @@ Compared with manual docs, Loom/video, and generic screenshot tools:
 
 ## Limitations & honest boundaries
 
-| Limitation | Detail |
-|------------|--------|
-| **No cloud sync** | Data is browser-local; no team library across devices |
-| **Share links are URL-based** | Editable links open editor for anyone with URL on same origin |
-| **No embed widgets yet** | Share modal shows placeholder |
-| **No AI writing** | Deterministic step language only |
-| **Compare is index-based** | Not semantic or visual diff |
-| **Chrome extension env** | Rebuild/reload when env values change |
-| **Separate storage per origin** | localhost ≠ production library |
-| **Cross-device sharing** | Recipient needs hosted deployment + same doc IDs for true remote share (future cloud) |
+| Limitation                      | Detail                                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------------- |
+| **No cloud sync**               | Data is browser-local; no team library across devices                                 |
+| **Share links are URL-based**   | Editable links open editor for anyone with URL on same origin                         |
+| **No embed widgets yet**        | Share modal shows placeholder                                                         |
+| **Compare is index-based**      | Not semantic or visual diff                                                           |
+| **Chrome extension env**        | Rebuild/reload when env values change                                                 |
+| **Separate storage per origin** | localhost ≠ production library                                                        |
+| **Cross-device sharing**        | Recipient needs hosted deployment + same doc IDs for true remote share (future cloud) |
 
 Be transparent in marketing: Peacock excels at **speed, structure, and local privacy** today; **collaboration and cloud** are the natural next chapter.
 
@@ -860,23 +859,23 @@ Be transparent in marketing: Peacock excels at **speed, structure, and local pri
 
 ## Glossary
 
-| Term | Definition |
-|------|------------|
-| **Document / flow / doc** | A saved recording with steps, sections, and optional branches |
-| **Step** | Single interaction unit: screenshot, title, marker, notes |
-| **Section** | Chapter divider; intro card in player, heading in doc |
-| **Branch** | Decision point with multiple linked paths |
-| **Path** | Link from branch to step range in another document |
-| **Player** | Guided step-through playback mode |
-| **Document view** | Scrollable read mode with outline |
-| **Product tour** | Multi-demo, persona-led narrative |
-| **Persona** | Buyer/user role anchoring a tour |
-| **Feature** | Tour chapter containing linked demos |
-| **Demo** | Tour reference to a saved document |
-| **Capture Editor** | Standalone screenshot polish tool |
-| **Handoff** | Extension → app payload transfer on stop recording |
-| **Capture environment** | One-time browser/device metadata per recording |
-| **Normalized coordinates** | 0–1 floats for markers and regions (not pixels) |
+| Term                       | Definition                                                    |
+| -------------------------- | ------------------------------------------------------------- |
+| **Document / flow / doc**  | A saved recording with steps, sections, and optional branches |
+| **Step**                   | Single interaction unit: screenshot, title, marker, notes     |
+| **Section**                | Chapter divider; intro card in player, heading in doc         |
+| **Branch**                 | Decision point with multiple linked paths                     |
+| **Path**                   | Link from branch to step range in another document            |
+| **Player**                 | Guided step-through playback mode                             |
+| **Document view**          | Scrollable read mode with outline                             |
+| **Product tour**           | Multi-demo, persona-led narrative                             |
+| **Persona**                | Buyer/user role anchoring a tour                              |
+| **Feature**                | Tour chapter containing linked demos                          |
+| **Demo**                   | Tour reference to a saved document                            |
+| **Capture Editor**         | Standalone screenshot polish tool                             |
+| **Handoff**                | Extension → app payload transfer on stop recording            |
+| **Capture environment**    | One-time browser/device metadata per recording                |
+| **Normalized coordinates** | 0–1 floats for markers and regions (not pixels)               |
 
 ---
 
