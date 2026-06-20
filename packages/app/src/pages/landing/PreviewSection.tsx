@@ -13,6 +13,7 @@ const PREVIEW_SURFACES = ['Flow editor', 'Tour builder', 'Interactive player'] a
 
 export const PreviewSection = () => (
   <LandingSectionShell
+    id="preview"
     tone="light"
     eyebrow="Product preview"
     title="See the actual surfaces your team will use"

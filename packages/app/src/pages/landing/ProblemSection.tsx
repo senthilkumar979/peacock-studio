@@ -22,6 +22,7 @@ const PAINS = [
 
 export const ProblemSection = () => (
   <LandingSectionShell
+    id="problem"
     tone="muted"
     eyebrow="The problem"
     title="Product teams lose hours explaining the same workflows"

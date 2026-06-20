@@ -24,12 +24,24 @@ export const LandingNav = () => (
       </Link>
 
       <div className="hidden items-center gap-8 md:flex">
-        <Link
-          to="/solutions"
+        <a
+          href="#problem"
           className="text-sm text-slate-300 transition hover:text-white"
         >
-          Solutions
-        </Link>
+          Problem
+        </a>
+        <a
+          href="#solution"
+          className="text-sm text-slate-300 transition hover:text-white"
+        >
+          Solution
+        </a>
+        <a
+          href="#preview"
+          className="text-sm text-slate-300 transition hover:text-white"
+        >
+          Preview
+        </a>
         <a
           href="#features"
           className="text-sm text-slate-300 transition hover:text-white"

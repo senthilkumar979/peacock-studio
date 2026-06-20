@@ -20,6 +20,7 @@ const AFTER = [
 
 export const SolutionSection = () => (
   <LandingSectionShell
+    id="solution"
     tone="dark"
     eyebrow="The solution"
     title="One capture pipeline. Two formats your teams need."
