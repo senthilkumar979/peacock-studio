@@ -74,12 +74,12 @@ export const Landing = () => {
         <Suspense fallback={<BelowFoldFallback />}>
           <ProblemSection />
           <SolutionSection />
+          <PreviewSection />
           <FeaturesSection />
           <WorkflowSection />
           <AutomationSection />
           <ComparisonSection />
           <PlatformComparisonSection />
-          <PreviewSection />
           {/* <TestimonialsSection /> */}
           <FAQSection />
           <CTASection />
