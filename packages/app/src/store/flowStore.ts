@@ -102,6 +102,12 @@ function pickInitialSelection(items: FlowOutlineItem[]): string | null {
   return getPlayableSteps(items)[0]?.id ?? items[0]?.id ?? null;
 }
 
+function pickSelectionAfterDelete(items: FlowOutlineItem[], deletedIndex: number): string | null {
+  if (items.length === 0) return null;
+  const nextIndex = deletedIndex > 0 ? deletedIndex - 1 : 0;
+  return items[nextIndex]?.id ?? items[items.length - 1]?.id ?? null;
+}
+
 export const useFlowStore = create<FlowStore>()(
   immer((set) => ({
     ...initialState,
@@ -169,13 +175,14 @@ export const useFlowStore = create<FlowStore>()(
 
     deleteOutlineItem: (id) =>
       set((state) => {
+        const deletedIndex = state.steps.findIndex((item) => item.id === id);
         const removed = state.steps.find((item) => item.id === id);
         if (removed && isFlowStep(removed) && removed.customScreenshotId) {
           removeCustomScreenshot(state, removed.customScreenshotId);
         }
         state.steps = state.steps.filter((item) => item.id !== id);
         if (state.selectedOutlineId === id) {
-          state.selectedOutlineId = pickInitialSelection(state.steps);
+          state.selectedOutlineId = pickSelectionAfterDelete(state.steps, deletedIndex);
         }
         syncFlowSteps(state);
       }),

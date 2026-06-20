@@ -1,4 +1,9 @@
 import type { FlowCaptureEnvironment } from "@peacock/shared";
+import {
+  DEFAULT_CAPTURE_EDITOR_SETTINGS,
+  getCaptureBackgroundPreset,
+  getPresetSwatchCss,
+} from "@peacock/shared";
 import { FileText } from "lucide-react";
 import { FlowVersionBadge } from "@/components/dashboard/FlowVersionBadge";
 import { CaptureEnvironmentPanel } from "@/components/flow/CaptureEnvironmentPanel";
@@ -17,7 +22,15 @@ interface FlowDetailsIntroProps {
 }
 
 const introCardClass =
-  "h-full rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6";
+  "h-full rounded-2xl border border-slate-200 p-5 shadow-sm sm:p-6";
+
+const captureEditorIntroBackground = (() => {
+  const preset = getCaptureBackgroundPreset(
+    ("mesh-warm" as CaptureBackgroundPresetId) ||
+      DEFAULT_CAPTURE_EDITOR_SETTINGS.backgroundPresetId,
+  );
+  return preset ? getPresetSwatchCss(preset) : undefined;
+})();
 
 interface FlowDetailsSummaryProps {
   title: string;
@@ -119,7 +132,10 @@ export const FlowDetailsIntro = ({
         <div
           className={`grid gap-6 lg:items-stretch lg:gap-8 ${hasEnvironment ? "lg:grid-cols-2" : ""}`}
         >
-          <div className={`min-w-0 ${introCardClass}`}>
+          <div
+            className={`min-w-0 ${introCardClass}`}
+            style={{ background: captureEditorIntroBackground }}
+          >
             <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-peacock-200 bg-peacock-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-peacock-800">
               <FileText className="h-3.5 w-3.5" aria-hidden />
               Flow overview

@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { AppFooter } from '@/components/AppFooter';
 import { SiteNav } from '@/components/site/SiteNav';
+import { FlowDocumentDetailPage } from '@/pages/products/FlowDocumentDetailPage';
 import { ProductScreenshotPlaceholder } from '@/pages/products/ProductScreenshotPlaceholder';
 import { getProductBySlug } from '@/pages/products/productsData';
 
@@ -16,6 +17,10 @@ export const ProductDetail = () => {
   }, [productSlug]);
 
   if (!product) return <Navigate to="/products" replace />;
+
+  if (product.slug === 'flow-documents') {
+    return <FlowDocumentDetailPage product={product} />;
+  }
 
   const Icon = product.icon;
 
