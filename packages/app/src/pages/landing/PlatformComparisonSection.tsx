@@ -44,7 +44,9 @@ export const PlatformComparisonSection = () => {
                     key={column}
                     scope="col"
                     className={`px-4 py-3.5 text-xs font-semibold uppercase tracking-wide ${
-                      index === 1 ? 'bg-peacock-100/60 text-peacock-800' : 'text-slate-500'
+                      index === 1
+                        ? "bg-peacock-100/60 text-peacock-800"
+                        : "text-slate-500"
                     }`}
                   >
                     {column}
@@ -64,7 +66,7 @@ export const PlatformComparisonSection = () => {
                 >
                   <th
                     scope="row"
-                    className="px-4 py-3.5 align-top font-medium text-slate-900"
+                    className="px-4 py-3.5 align-top font-medium text-blue-700"
                   >
                     {row.capability}
                   </th>
