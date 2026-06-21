@@ -50,7 +50,7 @@ export const PersonaFormDrawer = ({
   return (
     <AnimatePresence>
       {isOpen ? (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-50 mt-0">
           <motion.button
             type="button"
             aria-label="Close drawer"

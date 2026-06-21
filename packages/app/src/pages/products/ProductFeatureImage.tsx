@@ -7,6 +7,7 @@ interface ProductFeatureImageProps {
   imageAlt?: string;
   suggestedPublicPath: string;
   variant?: "light" | "dark";
+  isFullHeight?: boolean;
 }
 
 export const ProductFeatureImage = ({
@@ -15,6 +16,7 @@ export const ProductFeatureImage = ({
   imageAlt,
   suggestedPublicPath,
   variant = "light",
+  isFullHeight = false,
 }: ProductFeatureImageProps) => {
   const [hasLoadError, setHasLoadError] = useState(false);
   const isDark = variant === "dark";
@@ -23,7 +25,9 @@ export const ProductFeatureImage = ({
     return (
       <div
         className={`overflow-hidden rounded-xl ring-1 ${
-          isDark ? "bg-white/10 ring-white/20" : "bg-slate-100 ring-slate-200"
+          isFullHeight || isDark
+            ? "bg-white ring-white/20"
+            : "bg-slate-100 ring-slate-200"
         }`}
       >
         <img
@@ -31,7 +35,7 @@ export const ProductFeatureImage = ({
           alt={imageAlt ?? `${title} screenshot`}
           width={100}
           height={840}
-          className="aspect-video w-full object-cover object-top h-full min-h-[400px]"
+          className={`aspect-video w-full ${isFullHeight ? "h-full min-h-[900px]" : "min-h-[400px]"} object-top ${isFullHeight ? "object-contain" : "object-conver"}`}
           onError={() => setHasLoadError(true)}
         />
       </div>

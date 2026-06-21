@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   BookOpen,
   CircleDot,
+  Columns2,
   GitBranch,
   ImagePlus,
   LayoutList,
@@ -12,25 +13,11 @@ import {
   PlusSquare,
   Sparkles,
 } from 'lucide-react';
+import type { ProductDetailCapability, ProductDetailCapabilityGroup } from './productCapabilityTypes';
+import { getProductDetailCapabilityImage } from './productCapabilityTypes';
 
-export interface FlowDocumentCapability {
-  id: string;
-  title: string;
-  whatItIs: string;
-  benefit: string;
-  icon: LucideIcon;
-  /** Override the default `/products/flow-documents/{id}.png` path when needed. */
-  imageSrc?: string;
-  imageAlt?: string;
-}
-
-export interface FlowDocumentCapabilityGroup {
-  id: string;
-  label: string;
-  description: string;
-  icon: LucideIcon;
-  capabilities: FlowDocumentCapability[];
-}
+export type FlowDocumentCapability = ProductDetailCapability;
+export type FlowDocumentCapabilityGroup = ProductDetailCapabilityGroup;
 
 export interface FlowDocumentLifecycleStage {
   step: string;
@@ -61,13 +48,8 @@ export const getFlowDocumentImageSrc = (fileName: string): string =>
 
 export const getFlowDocumentCapabilityImage = (
   capability: FlowDocumentCapability,
-): { src: string; publicPath: string } => {
-  const fileName = capability.imageSrc?.split('/').pop() ?? `${capability.id}.png`;
-  return {
-    src: capability.imageSrc ?? getFlowDocumentImageSrc(fileName),
-    publicPath: `${FLOW_DOCUMENT_IMAGE_BASE}/${fileName}`,
-  };
-};
+): { src: string; publicPath: string } =>
+  getProductDetailCapabilityImage(FLOW_DOCUMENT_IMAGE_BASE, capability);
 
 export const FLOW_DOCUMENT_HERO_IMAGE = {
   src: FLOW_DOCUMENT_PAGE.heroImageSrc ?? getFlowDocumentImageSrc('hero.png'),
@@ -97,7 +79,7 @@ export const FLOW_DOCUMENT_LIFECYCLE: FlowDocumentLifecycleStage[] = [
     step: '04',
     title: 'Deliver',
     description: 'Open the same saved document as scrollable reference, guided playback, or a library entry.',
-    capabilityIds: ['doc-view', 'player-view', 'flow-library'],
+    capabilityIds: ['doc-view', 'player-view', 'flow-library', 'compare-docs'],
   },
 ];
 
@@ -203,9 +185,9 @@ export const FLOW_DOCUMENT_CAPABILITY_GROUPS: FlowDocumentCapabilityGroup[] = [
   },
   {
     id: 'deliver',
-    label: 'Views & library',
+    label: 'Views, library & compare',
     description:
-      'The same saved flow document opens in multiple modes and lives in your local catalog for reuse and branch linking.',
+      'Open saved flow documents in multiple modes, manage your catalog, and review two versions side by side when releases change the workflow.',
     icon: Library,
     capabilities: [
       {
@@ -234,6 +216,15 @@ export const FLOW_DOCUMENT_CAPABILITY_GROUPS: FlowDocumentCapabilityGroup[] = [
         benefit:
           'Your execution references stay organized on device: search by title, reopen for edits, and reuse step ranges across branch paths without duplicating recordings.',
         icon: Library,
+      },
+      {
+        id: 'compare-docs',
+        title: 'Compare Docs',
+        whatItIs:
+          'Pick any two saved flow documents from your library and open them in a split compare workspace. Both panes stay locked to the same step index as you move forward or back — so step 4 on the left always lines up with step 4 on the right, with screenshots and titles visible together. Pair an older capture with a re-recorded version after a release to see what shifted in the UI or flow.',
+        benefit:
+          'Product owners and business analysts can demo improvements to customers or internal users without rebuilding decks — walk through before-and-after screens in sync and call out exactly what changed in the new implementation.',
+        icon: Columns2,
       },
     ],
   },

@@ -4,7 +4,9 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { AppFooter } from '@/components/AppFooter';
 import { SiteNav } from '@/components/site/SiteNav';
+import { CaptureEditorDetailPage } from '@/pages/products/CaptureEditorDetailPage';
 import { FlowDocumentDetailPage } from '@/pages/products/FlowDocumentDetailPage';
+import { ProductTourDetailPage } from '@/pages/products/ProductTourDetailPage';
 import { ProductScreenshotPlaceholder } from '@/pages/products/ProductScreenshotPlaceholder';
 import { getProductBySlug } from '@/pages/products/productsData';
 
@@ -20,6 +22,14 @@ export const ProductDetail = () => {
 
   if (product.slug === 'flow-documents') {
     return <FlowDocumentDetailPage product={product} />;
+  }
+
+  if (product.slug === 'product-tours') {
+    return <ProductTourDetailPage product={product} />;
+  }
+
+  if (product.slug === 'capture-screenshot-editor') {
+    return <CaptureEditorDetailPage product={product} />;
   }
 
   const Icon = product.icon;

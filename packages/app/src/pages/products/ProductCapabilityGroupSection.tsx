@@ -1,21 +1,25 @@
 import { motion } from 'framer-motion';
-import { FlowDocumentCapabilityContent } from './FlowDocumentCapabilityContent';
+import { ProductDetailCapabilityContent } from './ProductDetailCapabilityContent';
 import { ProductFeatureImage } from './ProductFeatureImage';
-import type { FlowDocumentCapability, FlowDocumentCapabilityGroup } from './flowDocumentsData';
-import { getFlowDocumentCapabilityImage } from './flowDocumentsData';
+import type { ProductDetailCapabilityGroup } from './productCapabilityTypes';
+import { getProductDetailCapabilityImage } from './productCapabilityTypes';
 
-interface FlowDocumentCapabilityCardProps {
-  capability: FlowDocumentCapability;
+interface ProductCapabilityCardProps {
+  capability: ProductDetailCapabilityGroup['capabilities'][number];
   index: number;
   layoutIndex: number;
+  imageBase: string;
+  accentClass?: string;
 }
 
-const FlowDocumentCapabilityCard = ({
+const ProductCapabilityCard = ({
   capability,
   index,
   layoutIndex,
-}: FlowDocumentCapabilityCardProps) => {
-  const image = getFlowDocumentCapabilityImage(capability);
+  imageBase,
+  accentClass,
+}: ProductCapabilityCardProps) => {
+  const image = getProductDetailCapabilityImage(imageBase, capability);
   const isImageRight = layoutIndex % 2 === 1;
 
   return (
@@ -41,27 +45,34 @@ const FlowDocumentCapabilityCard = ({
           />
         </div>
 
-        <FlowDocumentCapabilityContent
+        <ProductDetailCapabilityContent
           capability={capability}
           layoutIndex={layoutIndex}
           isImageRight={isImageRight}
+          accentClass={accentClass}
         />
       </div>
     </motion.article>
   );
 };
 
-interface FlowDocumentCapabilityGroupSectionProps {
-  group: FlowDocumentCapabilityGroup;
+interface ProductCapabilityGroupSectionProps {
+  group: ProductDetailCapabilityGroup;
   groupIndex: number;
   capabilityStartIndex: number;
+  imageBase: string;
+  accentClass?: string;
+  sectionIdPrefix?: string;
 }
 
-export const FlowDocumentCapabilityGroupSection = ({
+export const ProductCapabilityGroupSection = ({
   group,
   groupIndex,
   capabilityStartIndex,
-}: FlowDocumentCapabilityGroupSectionProps) => {
+  imageBase,
+  accentClass,
+  sectionIdPrefix = 'capability-group',
+}: ProductCapabilityGroupSectionProps) => {
   const GroupIcon = group.icon;
 
   return (
@@ -70,7 +81,7 @@ export const FlowDocumentCapabilityGroupSection = ({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.12 }}
       transition={{ delay: groupIndex * 0.04 }}
-      aria-labelledby={`flow-capability-group-${group.id}`}
+      aria-labelledby={`${sectionIdPrefix}-${group.id}`}
       className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
     >
       <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-peacock-50/40 px-6 py-5 sm:px-8">
@@ -80,7 +91,7 @@ export const FlowDocumentCapabilityGroupSection = ({
           </span>
           <div>
             <h3
-              id={`flow-capability-group-${group.id}`}
+              id={`${sectionIdPrefix}-${group.id}`}
               className="text-xl font-bold text-slate-900 sm:text-2xl"
             >
               {group.label}
@@ -93,11 +104,13 @@ export const FlowDocumentCapabilityGroupSection = ({
       </div>
       <div className="space-y-5 p-6 sm:p-8">
         {group.capabilities.map((capability, index) => (
-          <FlowDocumentCapabilityCard
+          <ProductCapabilityCard
             key={capability.id}
             capability={capability}
             index={index}
             layoutIndex={capabilityStartIndex + index}
+            imageBase={imageBase}
+            accentClass={accentClass}
           />
         ))}
       </div>

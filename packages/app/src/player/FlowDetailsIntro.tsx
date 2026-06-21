@@ -26,8 +26,7 @@ const introCardClass =
 
 const captureEditorIntroBackground = (() => {
   const preset = getCaptureBackgroundPreset(
-    ("mesh-warm" as CaptureBackgroundPresetId) ||
-      DEFAULT_CAPTURE_EDITOR_SETTINGS.backgroundPresetId,
+    DEFAULT_CAPTURE_EDITOR_SETTINGS.backgroundPresetId,
   );
   return preset ? getPresetSwatchCss(preset) : undefined;
 })();

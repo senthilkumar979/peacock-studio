@@ -1,25 +1,30 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Camera } from 'lucide-react';
 import { AppFooter } from '@/components/AppFooter';
 import { SiteNav } from '@/components/site/SiteNav';
 import type { Product } from './productsData';
-import { FLOW_DOCUMENT_CAPABILITY_GROUPS, FLOW_DOCUMENT_IMAGE_BASE } from './flowDocumentsData';
-import { FlowDocumentHero } from './FlowDocumentHero';
-import { FlowDocumentLifecycle } from './FlowDocumentLifecycle';
+import { CaptureEditorHero } from './CaptureEditorHero';
+import { CaptureEditorPainPoints } from './CaptureEditorPainPoints';
+import { CaptureEditorWorkflow } from './CaptureEditorWorkflow';
+import {
+  CAPTURE_EDITOR_CAPABILITY_GROUPS,
+  CAPTURE_EDITOR_IMAGE_BASE,
+} from './captureEditorData';
 import { ProductCapabilityGroupSection } from './ProductCapabilityGroupSection';
 
-interface FlowDocumentDetailPageProps {
+interface CaptureEditorDetailPageProps {
   product: Product;
 }
 
-export const FlowDocumentDetailPage = ({ product }: FlowDocumentDetailPageProps) => (
+export const CaptureEditorDetailPage = ({ product }: CaptureEditorDetailPageProps) => (
   <div className="landing-page min-h-screen">
     <SiteNav />
-    <FlowDocumentHero product={product} />
-    <FlowDocumentLifecycle />
+    <CaptureEditorHero product={product} />
+    <CaptureEditorPainPoints />
+    <CaptureEditorWorkflow />
 
-    <section id="capabilities" className="landing-section-light scroll-mt-28">
+    <section id="capabilities" className="landing-section-muted scroll-mt-28">
       <div className="landing-section-inner">
         <motion.header
           initial={{ opacity: 0, y: 16 }}
@@ -27,26 +32,24 @@ export const FlowDocumentDetailPage = ({ product }: FlowDocumentDetailPageProps)
           viewport={{ once: true, amount: 0.35 }}
           className="landing-section-header max-w-3xl"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-peacock-700">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
             Capabilities
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Every building block, explained
+            Capture, edit, share — without the clutter
           </h2>
           <p className="mt-4 text-base leading-relaxed text-slate-600">
-            Product-level detail on how each feature works inside Flow Documents — written for
-            builders, not a repeat of the landing overview or role-specific solution pages. Each
-            block includes a screenshot slot; add PNG or WebP files under{' '}
-            <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm text-peacock-800">
-              packages/app/public/products/flow-documents/
+            Product-level detail on Capture & Editor. Add screenshots under{' '}
+            <code className="rounded bg-white px-1.5 py-0.5 text-sm text-peacock-800 ring-1 ring-slate-200">
+              packages/app/public/products/capture-screenshot-editor/
             </code>{' '}
-            using the filename shown in the placeholder.
+            using the filename shown in each placeholder.
           </p>
         </motion.header>
 
         <div className="mt-10 space-y-8">
-          {FLOW_DOCUMENT_CAPABILITY_GROUPS.map((group, index) => {
-            const capabilityStartIndex = FLOW_DOCUMENT_CAPABILITY_GROUPS.slice(0, index).reduce(
+          {CAPTURE_EDITOR_CAPABILITY_GROUPS.map((group, index) => {
+            const capabilityStartIndex = CAPTURE_EDITOR_CAPABILITY_GROUPS.slice(0, index).reduce(
               (total, previousGroup) => total + previousGroup.capabilities.length,
               0,
             );
@@ -57,7 +60,8 @@ export const FlowDocumentDetailPage = ({ product }: FlowDocumentDetailPageProps)
                 group={group}
                 groupIndex={index}
                 capabilityStartIndex={capabilityStartIndex}
-                imageBase={FLOW_DOCUMENT_IMAGE_BASE}
+                imageBase={CAPTURE_EDITOR_IMAGE_BASE}
+                accentClass="text-slate-700"
               />
             );
           })}
@@ -65,7 +69,7 @@ export const FlowDocumentDetailPage = ({ product }: FlowDocumentDetailPageProps)
       </div>
     </section>
 
-    <section className="landing-section-muted">
+    <section className="landing-section-light">
       <div className="landing-section-inner">
         <div
           className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${product.accentGradient} px-8 py-12 shadow-2xl sm:px-12`}
@@ -80,17 +84,18 @@ export const FlowDocumentDetailPage = ({ product }: FlowDocumentDetailPageProps)
               Get started
             </p>
             <h2 className="mt-3 text-2xl font-bold text-white sm:text-3xl">
-              Record your first flow document
+              Capture your next screenshot
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/90">
-              Install the extension, capture a workflow, then refine steps and structure in the
-              editor before opening doc view or player.
+              Open the Peacock extension, choose a capture mode, then share from the preview page or
+              polish in the editor before pasting into Teams, Slack, or Confluence.
             </p>
             <Link
-              to="/editor"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-peacock-800 shadow-lg transition hover:bg-slate-100"
+              to="/"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-lg transition hover:bg-slate-100"
             >
-              Open flow editor
+              <Camera className="h-4 w-4" aria-hidden />
+              Open Peacock
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </motion.div>

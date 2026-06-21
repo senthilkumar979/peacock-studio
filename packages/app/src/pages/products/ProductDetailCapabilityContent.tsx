@@ -1,17 +1,19 @@
 import { CheckCircle2, Sparkles } from 'lucide-react';
-import type { FlowDocumentCapability } from './flowDocumentsData';
+import type { ProductDetailCapability } from './productCapabilityTypes';
 
-interface FlowDocumentCapabilityContentProps {
-  capability: FlowDocumentCapability;
+interface ProductDetailCapabilityContentProps {
+  capability: ProductDetailCapability;
   layoutIndex: number;
   isImageRight: boolean;
+  accentClass?: string;
 }
 
-export const FlowDocumentCapabilityContent = ({
+export const ProductDetailCapabilityContent = ({
   capability,
   layoutIndex,
   isImageRight,
-}: FlowDocumentCapabilityContentProps) => {
+  accentClass = 'text-peacock-700',
+}: ProductDetailCapabilityContentProps) => {
   const Icon = capability.icon;
   const featureNumber = String(layoutIndex + 1).padStart(2, '0');
 
@@ -49,7 +51,7 @@ export const FlowDocumentCapabilityContent = ({
           <span className="inline-flex rounded-2xl bg-gradient-to-br from-peacock-100 to-peacock-50 p-3 text-peacock-700 ring-1 ring-peacock-200/70 shadow-sm shadow-peacock-100/50">
             <Icon className="h-5 w-5" aria-hidden />
           </span>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-peacock-700">
+          <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${accentClass}`}>
             Capability {featureNumber}
           </p>
         </div>

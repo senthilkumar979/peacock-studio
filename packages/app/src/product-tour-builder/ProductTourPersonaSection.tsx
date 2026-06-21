@@ -174,7 +174,9 @@ export const ProductTourPersonaSection = () => {
               {persona ? <PersonaAvatar persona={persona} size="lg" /> : null}
               <div className="min-w-0">
                 <p className="text-xl font-bold text-slate-900">
-                  {isPersonaLoading ? "Loading persona…" : persona?.name ?? "No persona selected"}
+                  {isPersonaLoading
+                    ? "Loading persona…"
+                    : (persona?.name ?? "No persona selected")}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-600">
                   {persona?.occupation ? (
@@ -190,7 +192,10 @@ export const ProductTourPersonaSection = () => {
                   ) : null}
                   {persona?.company ? (
                     <span className="inline-flex items-center gap-1.5">
-                      <Building2 className="h-4 w-4 text-slate-400" aria-hidden />
+                      <Building2
+                        className="h-4 w-4 text-slate-400"
+                        aria-hidden
+                      />
                       {persona.company}
                     </span>
                   ) : null}
