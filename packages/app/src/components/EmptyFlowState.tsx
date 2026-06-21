@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { DASHBOARD_PATH } from '@/constants/routes';
 
 interface EmptyFlowStateProps {
   title: string;
@@ -11,7 +12,7 @@ export const EmptyFlowState = ({ title, description }: EmptyFlowStateProps) => (
       <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
       <p className="mt-2 text-sm text-slate-600">{description}</p>
       <Link
-        to="/"
+        to={DASHBOARD_PATH}
         className="btn-peacock mt-4"
       >
         Back to dashboard

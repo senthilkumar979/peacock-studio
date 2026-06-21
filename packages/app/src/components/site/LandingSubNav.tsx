@@ -1,4 +1,5 @@
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from "@/constants/branding";
+import { DASHBOARD_PATH, LANDING_PATH } from "@/constants/routes";
 import { useActiveSection } from "@/pages/solutions/useActiveSection";
 import { Link } from "react-router-dom";
 import { LANDING_SUB_NAV_ITEMS } from "./siteNavData";
@@ -24,7 +25,7 @@ export const LandingSubNav = ({ visible = false }: LandingSubNavProps) => {
         aria-label="Page sections"
       >
         <Link
-          to="/landing"
+          to={LANDING_PATH}
           className="inline-flex shrink-0 items-center gap-2.5 rounded-lg outline-none ring-peacock-500 focus-visible:ring-2"
         >
           <img
@@ -58,7 +59,7 @@ export const LandingSubNav = ({ visible = false }: LandingSubNavProps) => {
           })}
         </div>
         <Link
-          to="/"
+          to={DASHBOARD_PATH}
           className="rounded-lg bg-peacock-500 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-peacock-600"
         >
           Open App

@@ -7,6 +7,7 @@ import { SiteNav } from '@/components/site/SiteNav';
 import { CaptureEditorDetailPage } from '@/pages/products/CaptureEditorDetailPage';
 import { FlowDocumentDetailPage } from '@/pages/products/FlowDocumentDetailPage';
 import { ProductTourDetailPage } from '@/pages/products/ProductTourDetailPage';
+import { DASHBOARD_PATH } from '@/constants/routes';
 import { ProductScreenshotPlaceholder } from '@/pages/products/ProductScreenshotPlaceholder';
 import { getProductBySlug } from '@/pages/products/productsData';
 
@@ -99,7 +100,7 @@ export const ProductDetail = () => {
             <p className="mt-1 text-sm text-slate-600">Open the app and start from your first capture.</p>
           </div>
           <Link
-            to="/"
+            to={DASHBOARD_PATH}
             className="inline-flex items-center gap-2 rounded-xl bg-peacock-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-peacock-800"
           >
             Open App

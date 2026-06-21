@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getPlayableStepRange, type FlowStep } from "@peacock/shared";
+import { DASHBOARD_PATH } from "@/constants/routes";
 import { EmptyFlowState } from "@/components/EmptyFlowState";
 import { PeacockStudioLoader } from "@/components/PeacockStudioLoader";
 import { AppHeader } from "@/components/AppHeader";
@@ -178,7 +179,7 @@ export const ProductTourLearner = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-slate-50 px-6 py-8 text-sm text-amber-800">
-        {error} <Link to="/">Go to dashboard</Link>
+        {error} <Link to={DASHBOARD_PATH}>Go to dashboard</Link>
       </div>
     );
   }

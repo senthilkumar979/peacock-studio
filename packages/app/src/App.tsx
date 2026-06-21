@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { DASHBOARD_PATH, LANDING_PATH } from '@/constants/routes';
 import { Dashboard } from '@/pages/Dashboard';
 import { Landing } from '@/pages/Landing';
 import { CompareDocs } from '@/pages/CompareDocs';
@@ -18,8 +19,9 @@ import { SolutionRole } from '@/pages/SolutionRole';
 export const App = () => (
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/landing" element={<Landing />} />
+      <Route path={LANDING_PATH} element={<Landing />} />
+      <Route path="/landing" element={<Navigate to={LANDING_PATH} replace />} />
+      <Route path={DASHBOARD_PATH} element={<Dashboard />} />
       <Route path="/products" element={<Products />} />
       <Route path="/products/:productSlug" element={<ProductDetail />} />
       <Route path="/solutions" element={<Solutions />} />
@@ -39,8 +41,8 @@ export const App = () => (
         path="/editor/capture/:captureId/edit"
         element={<CaptureEditorLegacyRedirect />}
       />
-      <Route path="/player" element={<Navigate to="/" replace />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/player" element={<Navigate to={DASHBOARD_PATH} replace />} />
+      <Route path="*" element={<Navigate to={LANDING_PATH} replace />} />
     </Routes>
   </BrowserRouter>
 );

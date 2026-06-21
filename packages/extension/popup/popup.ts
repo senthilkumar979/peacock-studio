@@ -1,5 +1,6 @@
 import type { RecordingStateSnapshot } from '@peacock/shared';
 import { sendExtensionMessage } from '../src/messaging/sendExtensionMessage';
+import { getDashboardPageUrl } from '../src/utils/appUrl';
 import {
   runStartRecordingCountdown,
   type StartRecordingCountdownUi,
@@ -33,14 +34,7 @@ let isCountdownActive = false;
 type ScreenshotMode = 'full-page' | 'selection' | 'visible';
 
 const editorUrl = import.meta.env.VITE_APP_URL;
-const dashboardUrl = (() => {
-  try {
-    const url = new URL(editorUrl);
-    return `${url.origin}/`;
-  } catch {
-    return 'http://localhost:5173/';
-  }
-})();
+const dashboardUrl = getDashboardPageUrl();
 
 function formatElapsed(startedAt: number | null): string {
   if (!startedAt) return 'Ready';

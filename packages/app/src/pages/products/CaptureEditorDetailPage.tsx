@@ -4,6 +4,7 @@ import { ArrowRight, Camera } from 'lucide-react';
 import { AppFooter } from '@/components/AppFooter';
 import { SiteNav } from '@/components/site/SiteNav';
 import type { Product } from './productsData';
+import { DASHBOARD_PATH } from '@/constants/routes';
 import { CaptureEditorHero } from './CaptureEditorHero';
 import { CaptureEditorPainPoints } from './CaptureEditorPainPoints';
 import { CaptureEditorWorkflow } from './CaptureEditorWorkflow';
@@ -91,7 +92,7 @@ export const CaptureEditorDetailPage = ({ product }: CaptureEditorDetailPageProp
               polish in the editor before pasting into Teams, Slack, or Confluence.
             </p>
             <Link
-              to="/"
+              to={DASHBOARD_PATH}
               className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-lg transition hover:bg-slate-100"
             >
               <Camera className="h-4 w-4" aria-hidden />

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { DASHBOARD_PATH } from '@/constants/routes';
 import { Canvas } from '@/editor/Canvas';
 import { BranchPanel } from '@/editor/BranchPanel';
 import { FlowBranchCard } from '@/editor/FlowBranchCard';
@@ -69,7 +70,7 @@ export const Editor = () => {
       {error && (
         <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800">
           {error}{' '}
-          <Link to="/" className="font-medium underline">
+          <Link to={DASHBOARD_PATH} className="font-medium underline">
             Go to dashboard
           </Link>
         </div>
@@ -91,7 +92,7 @@ export const Editor = () => {
             <p className="mt-2 text-sm text-slate-600">
               Record steps with the Peacock extension, then stop recording to open the editor.
             </p>
-            <Link to="/" className="btn-peacock mt-4">
+            <Link to={DASHBOARD_PATH} className="btn-peacock mt-4">
               Back to dashboard
             </Link>
           </div>

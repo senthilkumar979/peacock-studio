@@ -12,6 +12,10 @@ export function getEditorPageUrl(): string {
   return raw.replace(/\/$/, '');
 }
 
+export function getDashboardPageUrl(): string {
+  return `${getAppOrigin()}${'/dashboard'}`;
+}
+
 export function getCaptureEditorPageUrl(captureId: string): string {
   return `${getAppOrigin()}/capture/${encodeURIComponent(captureId)}/edit`;
 }

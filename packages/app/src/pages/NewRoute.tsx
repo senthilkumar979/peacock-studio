@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { DASHBOARD_PATH } from '@/constants/routes';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { createAndSaveRoute } from '@/services/routeLibraryService';
 
@@ -13,7 +14,7 @@ export const NewRoute = () => {
       })
       .catch((error) => {
         console.error('[Peacock] Failed to create route', error);
-        navigate('/', { replace: true });
+        navigate(DASHBOARD_PATH, { replace: true });
       });
   }, [navigate]);
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { DASHBOARD_PATH } from "@/constants/routes";
 import { EmptyFlowState } from "@/components/EmptyFlowState";
 import { PeacockStudioLoader } from "@/components/PeacockStudioLoader";
 import { usePersistRoute } from "@/hooks/usePersistRoute";
@@ -54,7 +55,7 @@ export const RouteBuilder = () => {
       <div className="min-h-screen bg-slate-50">
         <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800">
           {error}{" "}
-          <Link to="/" className="font-medium underline">
+          <Link to={DASHBOARD_PATH} className="font-medium underline">
             Go to dashboard
           </Link>
         </div>

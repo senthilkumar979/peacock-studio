@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Link2 } from 'lucide-react';
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
+import { DASHBOARD_PATH } from '@/constants/routes';
 import { ShareDocumentModal } from '@/components/share/ShareDocumentModal';
 import { ShareRouteModal } from '@/components/share/ShareRouteModal';
 import { ShareProductTourModal } from '@/components/share/ShareProductTourModal';
@@ -48,7 +49,7 @@ export const AppHeader = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const handleBackToDashboard = () => {
-    window.location.assign('/');
+    window.location.assign(DASHBOARD_PATH);
   };
 
   const canShare = Boolean(documentId || routeId || tourId);
@@ -68,7 +69,7 @@ export const AppHeader = ({
 
   const brandBlock = homeLink ? (
     <Link
-      to="/"
+      to={DASHBOARD_PATH}
       className="group flex shrink-0 items-center gap-2.5 rounded-xl outline-none ring-peacock-500 focus-visible:ring-2"
     >
       {logoMark}

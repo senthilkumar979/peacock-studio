@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { DASHBOARD_PATH } from '@/constants/routes';
 import { AppHeader } from '@/components/AppHeader';
 import { EmptyFlowState } from '@/components/EmptyFlowState';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
@@ -22,7 +23,7 @@ export const RouteLearner = () => {
       <div className="min-h-screen bg-slate-50">
         <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800">
           {learner.error}{' '}
-          <Link to="/" className="font-medium underline">
+          <Link to={DASHBOARD_PATH} className="font-medium underline">
             Go to dashboard
           </Link>
         </div>

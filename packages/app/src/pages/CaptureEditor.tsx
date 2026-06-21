@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { DASHBOARD_PATH } from '@/constants/routes';
 import { AppHeader } from '@/components/AppHeader';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { CaptureEditorCanvas } from '@/capture-editor/CaptureEditorCanvas';
@@ -94,7 +95,7 @@ export const CaptureEditor = () => {
         <div className="mx-auto max-w-lg px-6 py-16 text-center">
           <h1 className="text-lg font-semibold text-slate-900">Could not open capture editor</h1>
           <p className="mt-2 text-sm text-slate-600">{error ?? 'Unknown error'}</p>
-          <Link to="/" className="btn-peacock mt-6 inline-block">
+          <Link to={DASHBOARD_PATH} className="btn-peacock mt-6 inline-block">
             Back to dashboard
           </Link>
         </div>

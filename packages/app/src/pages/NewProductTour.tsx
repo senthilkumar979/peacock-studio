@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { DASHBOARD_PATH } from '@/constants/routes';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { createAndSaveProductTourOnce } from '@/services/productTourLibraryService';
 
@@ -16,7 +17,7 @@ export const NewProductTour = () => {
       })
       .catch(() => {
         if (cancelled) return;
-        navigate('/', { replace: true });
+        navigate(DASHBOARD_PATH, { replace: true });
       });
 
     return () => {

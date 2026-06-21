@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { DASHBOARD_PATH } from "@/constants/routes";
 import { EmptyFlowState } from "@/components/EmptyFlowState";
 import { PeacockStudioLoader } from "@/components/PeacockStudioLoader";
 import { usePersistProductTour } from "@/hooks/usePersistProductTour";
@@ -38,7 +39,7 @@ export const ProductTourBuilder = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-slate-50 px-6 py-8 text-sm text-amber-800">
-        {error} <Link to="/">Go to dashboard</Link>
+        {error} <Link to={DASHBOARD_PATH}>Go to dashboard</Link>
       </div>
     );
   }
