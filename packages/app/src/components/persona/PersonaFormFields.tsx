@@ -40,11 +40,6 @@ function createInitialFormState(
     age: initialPersona?.age != null ? String(initialPersona.age) : "",
     shortBio:
       initialPersona?.shortBio ?? initialPersona?.shortDescription ?? "",
-    goal:
-      initialPersona?.goal ??
-      initialPersona?.tagline ??
-      initialPersona?.detailedDescription ??
-      "",
     gender,
     company: initialPersona?.company ?? "",
   };
@@ -66,7 +61,6 @@ export const PersonaFormFields = ({
   const [occupation, setOccupation] = useState(initialFormState.occupation);
   const [age, setAge] = useState(initialFormState.age);
   const [shortBio, setShortBio] = useState(initialFormState.shortBio);
-  const [goal, setGoal] = useState(initialFormState.goal);
   const [gender, setGender] = useState<PersonaGender>(initialFormState.gender);
   const [company, setCompany] = useState(initialFormState.company);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +72,6 @@ export const PersonaFormFields = ({
     const trimmedName = name.trim();
     const trimmedOccupation = occupation.trim();
     const trimmedShortBio = shortBio.trim();
-    const trimmedGoal = goal.trim();
     const trimmedAge = age.trim();
     const parsedAge = trimmedAge ? Number.parseInt(trimmedAge, 10) : undefined;
 
@@ -94,10 +87,6 @@ export const PersonaFormFields = ({
       setError("Short bio is required.");
       return;
     }
-    if (!trimmedGoal) {
-      setError("Goal is required.");
-      return;
-    }
     if (
       trimmedAge &&
       (parsedAge == null || Number.isNaN(parsedAge) || parsedAge < 1)
@@ -111,7 +100,6 @@ export const PersonaFormFields = ({
       occupation: trimmedOccupation,
       age: parsedAge,
       shortBio: trimmedShortBio,
-      goal: trimmedGoal,
       gender,
       company: company.trim() || undefined,
     });
@@ -197,17 +185,6 @@ export const PersonaFormFields = ({
         <textarea
           value={shortBio}
           onChange={(event) => setShortBio(event.target.value)}
-          rows={2}
-          disabled={isSaving}
-          className={`${inputClassName} resize-none`}
-        />
-      </label>
-
-      <label className="block text-sm">
-        <span className="font-medium text-slate-700">Goal</span>
-        <textarea
-          value={goal}
-          onChange={(event) => setGoal(event.target.value)}
           rows={2}
           disabled={isSaving}
           className={`${inputClassName} resize-none`}

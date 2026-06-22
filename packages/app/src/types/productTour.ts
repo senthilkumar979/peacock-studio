@@ -26,6 +26,8 @@ export interface ProductTour {
   description: string;
   status: ProductTourStatus;
   personaId: string;
+  /** Why this persona is taking this tour — shown on the learner intro slide. */
+  tourGoal: string;
   features: TourFeature[];
   completionCta?: ProductTourCompletionCta;
   /** Set when auto-migrated from legacy RouteHub. */
@@ -41,6 +43,7 @@ export interface ProductTourSummary {
   status: ProductTourStatus;
   personaId: string;
   personaName: string;
+  tourGoal: string;
   featureCount: number;
   demoCount: number;
   estimatedMinutes: number | null;

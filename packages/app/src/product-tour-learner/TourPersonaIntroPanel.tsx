@@ -4,11 +4,13 @@ import { Sparkles } from "lucide-react";
 
 interface TourPersonaIntroPanelProps {
   persona: Persona;
+  tourGoal: string;
   onContinue: () => void;
 }
 
 export const TourPersonaIntroPanel = ({
   persona,
+  tourGoal,
   onContinue,
 }: TourPersonaIntroPanelProps) => (
   <article className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-xl sm:p-10">
@@ -49,10 +51,15 @@ export const TourPersonaIntroPanel = ({
         {persona.company ? (
           <p className="mt-1 text-sm text-slate-500">{persona.company}</p>
         ) : null}
-        {persona.goal ? (
-          <p className="mt-3 w-fit rounded-xl bg-peacock-50 px-4 py-2 text-sm font-semibold text-peacock-800">
-            {persona.goal}
-          </p>
+        {tourGoal.trim() ? (
+          <>
+            <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Their goal in this tour
+            </p>
+            <p className="mt-2 w-fit rounded-xl bg-peacock-50 px-4 py-2 text-sm font-semibold text-peacock-800">
+              {tourGoal.trim()}
+            </p>
+          </>
         ) : null}
       </div>
 

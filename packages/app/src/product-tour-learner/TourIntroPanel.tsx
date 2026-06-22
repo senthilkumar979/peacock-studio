@@ -23,7 +23,9 @@ export const TourIntroPanel = ({
         <p className="text-xs font-semibold uppercase tracking-wide text-peacock-600">Persona</p>
         <h2 className="mt-1 text-2xl font-bold text-slate-900">{persona.name}</h2>
         {persona.occupation ? <p className="text-sm text-slate-600">{persona.occupation}</p> : null}
-        {persona.goal ? <p className="mt-1 text-sm italic text-slate-500">{persona.goal}</p> : null}
+        {tour.tourGoal.trim() ? (
+          <p className="mt-1 text-sm italic text-slate-500">{tour.tourGoal.trim()}</p>
+        ) : null}
       </div>
     </div>
 

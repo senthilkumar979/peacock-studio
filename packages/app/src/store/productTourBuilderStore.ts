@@ -12,6 +12,7 @@ interface ProductTourBuilderStore {
   updateTourDetails: (title: string, description: string) => void;
   setTourStatus: (status: ProductTourStatus) => void;
   setPersonaId: (personaId: string) => void;
+  setTourGoal: (tourGoal: string) => void;
   setCompletionCta: (cta: ProductTourCompletionCta | undefined) => void;
   addFeature: () => void;
   updateFeature: (featureId: string, title: string, description: string) => void;
@@ -53,6 +54,12 @@ export const useProductTourBuilderStore = create<ProductTourBuilderStore>()(
       set((state) => {
         if (!state.tour) return;
         state.tour.personaId = personaId;
+      }),
+
+    setTourGoal: (tourGoal) =>
+      set((state) => {
+        if (!state.tour) return;
+        state.tour.tourGoal = tourGoal;
       }),
 
     setCompletionCta: (cta) =>

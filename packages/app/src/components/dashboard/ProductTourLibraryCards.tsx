@@ -62,6 +62,9 @@ export const ProductTourLibraryCard = ({ summary, onRequestDelete }: ProductTour
     <div className="flex flex-1 flex-col p-5">
       <p className="text-xs font-semibold uppercase tracking-wide text-brand-violet">{summary.personaName}</p>
       <h3 className="mt-2 line-clamp-2 text-lg font-bold text-slate-900">{summary.title}</h3>
+      {summary.tourGoal ? (
+        <p className="mt-1 line-clamp-2 text-sm font-medium text-peacock-800">{summary.tourGoal}</p>
+      ) : null}
       {summary.description ? (
         <p className="mt-2 line-clamp-2 text-sm text-slate-600">{summary.description}</p>
       ) : null}

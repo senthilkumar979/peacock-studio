@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { Building2, Pencil, User, UserPlus } from "lucide-react";
+import {
+  CreatePersonaWithGoalDrawer,
+  type CreatePersonaWithGoalResult,
+} from "@/components/persona/CreatePersonaWithGoalDrawer";
 import { PersonaAvatar } from "@/components/persona/PersonaAvatar";
 import { PersonaFormDrawer } from "@/components/persona/PersonaFormDrawer";
 import { getAvatarIdForGender } from "@/constants/personaAvatars";
+import { ProductTourGoalField } from "@/product-tour-builder/ProductTourGoalField";
 import {
   createAndSavePersona,
   getPersona,
@@ -16,9 +21,8 @@ type PersonaFormMode = "closed" | "create" | "edit";
 
 export const ProductTourPersonaSection = () => {
   const tour = useProductTourBuilderStore((state) => state.tour);
-  const setPersonaId = useProductTourBuilderStore(
-    (state) => state.setPersonaId,
-  );
+  const setPersonaId = useProductTourBuilderStore((state) => state.setPersonaId);
+  const setTourGoal = useProductTourBuilderStore((state) => state.setTourGoal);
   const [persona, setPersona] = useState<Persona | null>(null);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [formMode, setFormMode] = useState<PersonaFormMode>("closed");
@@ -60,8 +64,13 @@ export const ProductTourPersonaSection = () => {
       setFormMode("closed");
       setPersonaId(nextPersona.id);
       setPersona(nextPersona);
+
+      const currentGoal = useProductTourBuilderStore.getState().tour?.tourGoal ?? "";
+      if (!currentGoal.trim() && nextPersona.defaultGoal) {
+        setTourGoal(nextPersona.defaultGoal);
+      }
     },
-    [setPersonaId],
+    [setPersonaId, setTourGoal],
   );
 
   const handleCloseForm = useCallback(() => {
@@ -69,26 +78,21 @@ export const ProductTourPersonaSection = () => {
     setFormMode("closed");
   }, [isSavingPersona]);
 
-  const handleSavePersona = useCallback(
+  const handleSavePersonaEdit = useCallback(
     async (input: PersonaInput) => {
+      if (!persona) return;
+
       setIsSavingPersona(true);
       try {
-        if (formMode === "edit" && persona) {
-          const updated: Persona = {
-            ...persona,
-            ...input,
-            avatarId: getAvatarIdForGender(input.gender),
-            updatedAt: Date.now(),
-          };
-          await savePersona(updated);
-          setPersonaId(updated.id);
-          setPersona(updated);
-        } else {
-          const created = await createAndSavePersona(input);
-          setPersonaId(created.id);
-          setPersona(created);
-        }
-
+        const updated: Persona = {
+          ...persona,
+          ...input,
+          avatarId: getAvatarIdForGender(input.gender),
+          updatedAt: Date.now(),
+        };
+        await savePersona(updated);
+        setPersonaId(updated.id);
+        setPersona(updated);
         const nextPersonas = await listPersonas();
         setPersonas(nextPersonas);
         setFormMode("closed");
@@ -96,13 +100,36 @@ export const ProductTourPersonaSection = () => {
         setIsSavingPersona(false);
       }
     },
-    [formMode, persona, setPersonaId],
+    [persona, setPersonaId],
+  );
+
+  const handleCreateWithGoal = useCallback(
+    async (result: CreatePersonaWithGoalResult) => {
+      setIsSavingPersona(true);
+      try {
+        const created = await createAndSavePersona({
+          ...result.persona,
+          defaultGoal: result.saveDefaultGoal ? result.tourGoal : undefined,
+        });
+        setPersonaId(created.id);
+        setTourGoal(result.tourGoal);
+        setPersona(created);
+        const nextPersonas = await listPersonas();
+        setPersonas(nextPersonas);
+        setFormMode("closed");
+      } finally {
+        setIsSavingPersona(false);
+      }
+    },
+    [setPersonaId, setTourGoal],
   );
 
   if (!tour) return null;
 
   const selectedPersonaCountLabel = `${personas.length} saved persona${personas.length === 1 ? "" : "s"}`;
-  const isDrawerOpen = formMode !== "closed";
+  const isCreateOpen = formMode === "create";
+  const isEditOpen = formMode === "edit";
+  const showLiveGoalWarning = tour.status === "live";
 
   return (
     <>
@@ -112,20 +139,20 @@ export const ProductTourPersonaSection = () => {
           aria-hidden
         />
 
-        <div className="relative border-b border-slate-100 px-5 py-4 sm:px-6">
+        <div className="relative z-10 border-b border-slate-100 px-5 py-4 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-peacock-700">
-                Tour persona
+                Tour audience
               </p>
               <p className="mt-1 text-sm font-medium text-slate-500">
-                Choose an existing persona or create a new one for this tour.
+                Pick a persona, then set the goal for this tour.
               </p>
             </div>
             <button
               type="button"
               onClick={() => setFormMode("create")}
-              disabled={isDrawerOpen}
+              disabled={isCreateOpen || isEditOpen}
               className="inline-flex items-center gap-1.5 rounded-xl border border-peacock-200 bg-peacock-50 px-3.5 py-2 text-sm font-semibold text-peacock-800 shadow-sm transition hover:bg-peacock-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <UserPlus className="h-4 w-4" aria-hidden />
@@ -134,9 +161,9 @@ export const ProductTourPersonaSection = () => {
           </div>
         </div>
 
-        <div className="relative border-b border-slate-100 px-5 py-4 sm:px-6">
+        <div className="relative z-10 border-b border-slate-100 px-5 py-4 sm:px-6">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Saved personas · {selectedPersonaCountLabel}
+            1 · Persona · {selectedPersonaCountLabel}
           </p>
           {personas.length === 0 ? (
             <p className="text-sm text-slate-500">
@@ -152,7 +179,7 @@ export const ProductTourPersonaSection = () => {
                     type="button"
                     onClick={() => handleSelectPersona(item)}
                     aria-pressed={isSelected}
-                    disabled={isDrawerOpen}
+                    disabled={isCreateOpen || isEditOpen}
                     className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${
                       isSelected
                         ? "border-peacock-500 bg-peacock-50 text-peacock-800 shadow-sm"
@@ -168,7 +195,7 @@ export const ProductTourPersonaSection = () => {
           )}
         </div>
 
-        <div className="relative px-5 py-5 sm:px-6">
+        <div className="relative z-10 px-5 py-5 sm:px-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex min-w-0 items-start gap-4">
               {persona ? <PersonaAvatar persona={persona} size="lg" /> : null}
@@ -185,11 +212,7 @@ export const ProductTourPersonaSection = () => {
                       {persona.occupation}
                     </span>
                   ) : null}
-                  {persona?.age ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      Age {persona.age}
-                    </span>
-                  ) : null}
+                  {persona?.age ? <span>Age {persona.age}</span> : null}
                   {persona?.company ? (
                     <span className="inline-flex items-center gap-1.5">
                       <Building2
@@ -200,22 +223,17 @@ export const ProductTourPersonaSection = () => {
                     </span>
                   ) : null}
                 </div>
-                {persona?.goal ? (
-                  <p className="mt-3 w-fit rounded-lg bg-peacock-50/80 px-3 py-1.5 text-sm font-medium text-peacock-800">
-                    {persona.goal}
-                  </p>
-                ) : null}
               </div>
             </div>
             <button
               type="button"
               onClick={() => setFormMode("edit")}
-              disabled={!persona || isPersonaLoading || isDrawerOpen}
+              disabled={!persona || isPersonaLoading || isCreateOpen || isEditOpen}
               className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Edit persona"
             >
               <Pencil className="h-4 w-4" aria-hidden />
-              Edit
+              Edit persona
             </button>
           </div>
 
@@ -225,14 +243,28 @@ export const ProductTourPersonaSection = () => {
             </p>
           ) : null}
         </div>
+
+        <ProductTourGoalField
+          value={tour.tourGoal}
+          personaName={persona?.name}
+          onChange={setTourGoal}
+          showLiveWarning={showLiveGoalWarning}
+        />
       </section>
 
-      <PersonaFormDrawer
-        isOpen={isDrawerOpen}
-        mode={formMode === "edit" ? "edit" : "create"}
-        initialPersona={formMode === "edit" ? persona : null}
+      <CreatePersonaWithGoalDrawer
+        isOpen={isCreateOpen}
         isSaving={isSavingPersona}
-        onSave={handleSavePersona}
+        onSave={handleCreateWithGoal}
+        onClose={handleCloseForm}
+      />
+
+      <PersonaFormDrawer
+        isOpen={isEditOpen}
+        mode="edit"
+        initialPersona={persona}
+        isSaving={isSavingPersona}
+        onSave={handleSavePersonaEdit}
         onClose={handleCloseForm}
       />
     </>

@@ -13,6 +13,14 @@ export const ProductTourBuilderToolbar = ({ tourId }: ProductTourBuilderToolbarP
 
   if (!tour) return null;
 
+  const handleStatusChange = (nextStatus: ProductTourStatus) => {
+    if (nextStatus === 'live' && !tour.tourGoal.trim()) {
+      window.alert('Add a tour goal before setting this tour to Live.');
+      return;
+    }
+    setTourStatus(nextStatus);
+  };
+
   return (
     <AppHeader
       eyebrow="Product Tours"
@@ -24,7 +32,7 @@ export const ProductTourBuilderToolbar = ({ tourId }: ProductTourBuilderToolbarP
     >
       <select
         value={tour.status}
-        onChange={(event) => setTourStatus(event.target.value as ProductTourStatus)}
+        onChange={(event) => handleStatusChange(event.target.value as ProductTourStatus)}
         className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
         aria-label="Tour status"
       >

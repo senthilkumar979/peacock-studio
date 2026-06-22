@@ -38,6 +38,7 @@ export function convertRouteToProductTour(route: SavedRoute): ProductTour {
     description: route.description,
     status: route.status,
     personaId: DEFAULT_PERSONA_ID,
+    tourGoal: '',
     features,
     migratedFromRoute: true,
     createdAt: route.createdAt,

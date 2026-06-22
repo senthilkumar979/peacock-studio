@@ -269,7 +269,11 @@ export const ProductTourLearner = () => {
 
     if (segment.type === "persona-intro") {
       return (
-        <TourPersonaIntroPanel persona={persona} onContinue={playback.goNext} />
+        <TourPersonaIntroPanel
+          persona={persona}
+          tourGoal={tour.tourGoal}
+          onContinue={playback.goNext}
+        />
       );
     }
 

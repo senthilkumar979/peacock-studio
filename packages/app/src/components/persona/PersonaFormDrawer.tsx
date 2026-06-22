@@ -81,9 +81,8 @@ export const PersonaFormDrawer = ({
                   {isEdit ? 'Edit persona' : 'Create persona'}
                 </h2>
                 <p className="mt-2 text-sm text-slate-600">
-                  {isEdit
-                    ? 'Update how this buyer or user role is described in the tour intro.'
-                    : 'Define a buyer or user role to anchor this product tour narrative.'}
+                  Update identity details for this buyer or user role. Tour goals
+                  are set per tour in the section below.
                 </p>
               </div>
               <button

@@ -6,7 +6,8 @@ export interface Persona {
   occupation: string;
   age?: number;
   shortBio: string;
-  goal: string;
+  /** Optional hint when picking this persona for a new tour — not shown in learner playback. */
+  defaultGoal?: string;
   gender: PersonaGender;
   avatarId: string;
   company?: string;
@@ -19,9 +20,9 @@ export interface PersonaInput {
   occupation: string;
   age?: number;
   shortBio: string;
-  goal: string;
   gender: PersonaGender;
   company?: string;
+  defaultGoal?: string;
 }
 
 /** Legacy fields persisted before the persona schema update. */
@@ -30,4 +31,5 @@ export interface LegacyPersonaRecord {
   shortDescription?: string;
   detailedDescription?: string;
   tagline?: string;
+  goal?: string;
 }

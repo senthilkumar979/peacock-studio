@@ -9,6 +9,7 @@ import { estimateTourDurationMinutes } from '@/utils/productTourLearner';
 import { countRouteBranches, countRoutePeacocks, getChapterNodes, migrateSavedRoute, needsRouteMigration } from '@/utils/routeGraph';
 import { countPlayableSteps } from '@/utils/flowDocumentSnapshot';
 import { normalizePersona } from '@/utils/normalizePersona';
+import { normalizeProductTour } from '@/utils/normalizeProductTour';
 import { DEFAULT_PERSONA_ID } from '@/constants/personaAvatars';
 import { sortTourFeatures } from '@/utils/createProductTour';
 
@@ -36,10 +37,11 @@ interface FlowLibrarySchema extends DBSchema {
 }
 
 const DB_NAME = 'peacock-flow-library';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 let dbPromise: Promise<IDBPDatabase<FlowLibrarySchema>> | null = null;
 let migrationPromise: Promise<void> | null = null;
+let personaGoalMigrationPromise: Promise<void> | null = null;
 
 function getDb(): Promise<IDBPDatabase<FlowLibrarySchema>> {
   if (!dbPromise) {
@@ -78,6 +80,44 @@ async function ensureDefaultPersona(db: IDBPDatabase<FlowLibrarySchema>): Promis
   }
 }
 
+async function ensurePersonaGoalSeparationMigration(
+  db: IDBPDatabase<FlowLibrarySchema>,
+): Promise<void> {
+  if (personaGoalMigrationPromise) {
+    await personaGoalMigrationPromise;
+    return;
+  }
+
+  personaGoalMigrationPromise = (async () => {
+    const personas = await db.getAll('personas');
+    for (const rawPersona of personas) {
+      const legacy = rawPersona as Persona & { goal?: string };
+      if ('goal' in legacy) {
+        await db.put('personas', normalizePersona(legacy));
+      }
+    }
+
+    const tours = await db.getAll('productTours');
+    for (const rawTour of tours) {
+      if (rawTour.tourGoal !== undefined) continue;
+
+      const persona = await db.get('personas', rawTour.personaId);
+      const legacyPersona = persona as (Persona & { goal?: string }) | undefined;
+      const tourGoal =
+        legacyPersona?.goal?.trim() ||
+        legacyPersona?.defaultGoal?.trim() ||
+        '';
+
+      await db.put(
+        'productTours',
+        normalizeProductTour({ ...rawTour, tourGoal }),
+      );
+    }
+  })();
+
+  await personaGoalMigrationPromise;
+}
+
 async function ensureProductTourMigration(db: IDBPDatabase<FlowLibrarySchema>): Promise<void> {
   if (migrationPromise) {
     await migrationPromise;
@@ -98,6 +138,7 @@ async function ensureProductTourMigration(db: IDBPDatabase<FlowLibrarySchema>): 
   })();
 
   await migrationPromise;
+  await ensurePersonaGoalSeparationMigration(db);
 }
 
 export function toFlowSummary(doc: SavedFlowDocument): SavedFlowSummary {
@@ -215,6 +256,7 @@ export async function toProductTourSummary(
     status: tour.status,
     personaId: tour.personaId,
     personaName,
+    tourGoal: tour.tourGoal.trim(),
     featureCount: sortTourFeatures(tour.features).length,
     demoCount: countTourDemos(tour),
     estimatedMinutes,
@@ -230,8 +272,9 @@ export async function listProductTourSummaries(): Promise<ProductTourSummary[]> 
   const summaries: ProductTourSummary[] = [];
 
   for (const tour of tours.reverse()) {
-    const persona = (await db.get('personas', tour.personaId)) ?? createDefaultPersona();
-    summaries.push(await toProductTourSummary(tour, persona.name));
+    const normalizedTour = normalizeProductTour(tour);
+    const persona = (await db.get('personas', normalizedTour.personaId)) ?? createDefaultPersona();
+    summaries.push(await toProductTourSummary(normalizedTour, persona.name));
   }
 
   return summaries;
@@ -240,13 +283,14 @@ export async function listProductTourSummaries(): Promise<ProductTourSummary[]> 
 export async function getProductTour(id: string): Promise<ProductTour | undefined> {
   const db = await getDb();
   await ensureProductTourMigration(db);
-  return db.get('productTours', id);
+  const tour = await db.get('productTours', id);
+  return tour ? normalizeProductTour(tour) : undefined;
 }
 
 export async function saveProductTour(tour: ProductTour): Promise<void> {
   const db = await getDb();
   await ensureDefaultPersona(db);
-  await db.put('productTours', { ...tour, updatedAt: Date.now() });
+  await db.put('productTours', normalizeProductTour({ ...tour, updatedAt: Date.now() }));
 }
 
 export async function deleteProductTour(id: string): Promise<void> {
