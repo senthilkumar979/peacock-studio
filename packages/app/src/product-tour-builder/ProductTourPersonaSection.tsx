@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Building2, Pencil, User, UserPlus } from "lucide-react";
+import { ArrowLeftRight, Building2, Pencil, User, UserPlus } from "lucide-react";
 import {
   CreatePersonaWithGoalDrawer,
   type CreatePersonaWithGoalResult,
 } from "@/components/persona/CreatePersonaWithGoalDrawer";
 import { PersonaAvatar } from "@/components/persona/PersonaAvatar";
 import { PersonaFormDrawer } from "@/components/persona/PersonaFormDrawer";
+import { SwitchPersonaModal } from "@/components/persona/SwitchPersonaModal";
 import { getAvatarIdForGender } from "@/constants/personaAvatars";
 import { ProductTourGoalField } from "@/product-tour-builder/ProductTourGoalField";
 import {
@@ -26,18 +27,18 @@ export const ProductTourPersonaSection = () => {
   const [persona, setPersona] = useState<Persona | null>(null);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [formMode, setFormMode] = useState<PersonaFormMode>("closed");
+  const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
   const [isPersonaLoading, setIsPersonaLoading] = useState(false);
   const [isSavingPersona, setIsSavingPersona] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    void listPersonas().then((next) => {
-      if (!cancelled) setPersonas(next);
-    });
-    return () => {
-      cancelled = true;
-    };
+  const refreshPersonas = useCallback(async () => {
+    const next = await listPersonas();
+    setPersonas(next);
   }, []);
+
+  useEffect(() => {
+    void refreshPersonas();
+  }, [refreshPersonas]);
 
   useEffect(() => {
     if (!tour?.personaId) {
@@ -93,14 +94,13 @@ export const ProductTourPersonaSection = () => {
         await savePersona(updated);
         setPersonaId(updated.id);
         setPersona(updated);
-        const nextPersonas = await listPersonas();
-        setPersonas(nextPersonas);
+        await refreshPersonas();
         setFormMode("closed");
       } finally {
         setIsSavingPersona(false);
       }
     },
-    [persona, setPersonaId],
+    [persona, refreshPersonas, setPersonaId],
   );
 
   const handleCreateWithGoal = useCallback(
@@ -114,22 +114,22 @@ export const ProductTourPersonaSection = () => {
         setPersonaId(created.id);
         setTourGoal(result.tourGoal);
         setPersona(created);
-        const nextPersonas = await listPersonas();
-        setPersonas(nextPersonas);
+        await refreshPersonas();
         setFormMode("closed");
       } finally {
         setIsSavingPersona(false);
       }
     },
-    [setPersonaId, setTourGoal],
+    [refreshPersonas, setPersonaId, setTourGoal],
   );
 
   if (!tour) return null;
 
-  const selectedPersonaCountLabel = `${personas.length} saved persona${personas.length === 1 ? "" : "s"}`;
   const isCreateOpen = formMode === "create";
   const isEditOpen = formMode === "edit";
+  const isOverlayOpen = isCreateOpen || isEditOpen || isSwitchModalOpen;
   const showLiveGoalWarning = tour.status === "live";
+  const hasAlternatePersona = personas.some((item) => item.id !== tour.personaId);
 
   return (
     <>
@@ -146,56 +146,36 @@ export const ProductTourPersonaSection = () => {
                 Tour audience
               </p>
               <p className="mt-1 text-sm font-medium text-slate-500">
-                Pick a persona, then set the goal for this tour.
+                Sheela is the default persona. Switch or create one for this tour.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setFormMode("create")}
-              disabled={isCreateOpen || isEditOpen}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-peacock-200 bg-peacock-50 px-3.5 py-2 text-sm font-semibold text-peacock-800 shadow-sm transition hover:bg-peacock-100 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <UserPlus className="h-4 w-4" aria-hidden />
-              New persona
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsSwitchModalOpen(true)}
+                disabled={isOverlayOpen && !isSwitchModalOpen}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <ArrowLeftRight className="h-4 w-4" aria-hidden />
+                Switch persona
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormMode("create")}
+                disabled={isOverlayOpen && !isCreateOpen}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-peacock-200 bg-peacock-50 px-3.5 py-2 text-sm font-semibold text-peacock-800 shadow-sm transition hover:bg-peacock-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <UserPlus className="h-4 w-4" aria-hidden />
+                New persona
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="relative z-10 border-b border-slate-100 px-5 py-4 sm:px-6">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            1 · Persona · {selectedPersonaCountLabel}
-          </p>
-          {personas.length === 0 ? (
-            <p className="text-sm text-slate-500">
-              No personas yet. Create one to anchor this tour.
-            </p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {personas.map((item) => {
-                const isSelected = tour.personaId === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => handleSelectPersona(item)}
-                    aria-pressed={isSelected}
-                    disabled={isCreateOpen || isEditOpen}
-                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                      isSelected
-                        ? "border-peacock-500 bg-peacock-50 text-peacock-800 shadow-sm"
-                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    <PersonaAvatar persona={item} size="sm" />
-                    {item.name}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
         <div className="relative z-10 px-5 py-5 sm:px-6">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Persona
+          </p>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex min-w-0 items-start gap-4">
               {persona ? <PersonaAvatar persona={persona} size="lg" /> : null}
@@ -203,7 +183,7 @@ export const ProductTourPersonaSection = () => {
                 <p className="text-xl font-bold text-slate-900">
                   {isPersonaLoading
                     ? "Loading persona…"
-                    : (persona?.name ?? "No persona selected")}
+                    : (persona?.name ?? "Sheela")}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-600">
                   {persona?.occupation ? (
@@ -228,7 +208,7 @@ export const ProductTourPersonaSection = () => {
             <button
               type="button"
               onClick={() => setFormMode("edit")}
-              disabled={!persona || isPersonaLoading || isCreateOpen || isEditOpen}
+              disabled={!persona || isPersonaLoading || isOverlayOpen}
               className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Edit persona"
             >
@@ -242,6 +222,12 @@ export const ProductTourPersonaSection = () => {
               {persona.shortBio}
             </p>
           ) : null}
+
+          {!hasAlternatePersona && personas.length > 0 ? (
+            <p className="mt-4 text-sm text-slate-500">
+              Only one persona saved. Use Switch persona after creating another, or add one with New persona.
+            </p>
+          ) : null}
         </div>
 
         <ProductTourGoalField
@@ -251,6 +237,14 @@ export const ProductTourPersonaSection = () => {
           showLiveWarning={showLiveGoalWarning}
         />
       </section>
+
+      <SwitchPersonaModal
+        isOpen={isSwitchModalOpen}
+        personas={personas}
+        selectedPersonaId={tour.personaId}
+        onSelect={handleSelectPersona}
+        onClose={() => setIsSwitchModalOpen(false)}
+      />
 
       <CreatePersonaWithGoalDrawer
         isOpen={isCreateOpen}

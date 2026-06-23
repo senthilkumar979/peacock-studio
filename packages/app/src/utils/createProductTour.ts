@@ -38,12 +38,12 @@ export function createDefaultPersona(): Persona {
   const now = Date.now();
   return {
     id: DEFAULT_PERSONA_ID,
-    name: 'Product explorer',
+    name: 'Sheela',
     occupation: 'New user',
     shortBio: 'Someone exploring the product for the first time.',
     defaultGoal: 'Show me what this product can do',
-    gender: 'neutral',
-    avatarId: getAvatarIdForGender('neutral'),
+    gender: 'female',
+    avatarId: getAvatarIdForGender('female'),
     createdAt: now,
     updatedAt: now,
   };

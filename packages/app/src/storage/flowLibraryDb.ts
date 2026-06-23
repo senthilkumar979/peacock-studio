@@ -77,6 +77,16 @@ async function ensureDefaultPersona(db: IDBPDatabase<FlowLibrarySchema>): Promis
   const existing = await db.get('personas', DEFAULT_PERSONA_ID);
   if (!existing) {
     await db.put('personas', createDefaultPersona());
+    return;
+  }
+
+  if (existing.name === 'Product explorer') {
+    const sheela = createDefaultPersona();
+    await db.put('personas', {
+      ...sheela,
+      createdAt: existing.createdAt,
+      updatedAt: Date.now(),
+    });
   }
 }
 

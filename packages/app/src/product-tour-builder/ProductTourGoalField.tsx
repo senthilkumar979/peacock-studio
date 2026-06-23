@@ -14,7 +14,7 @@ export const ProductTourGoalField = ({
   <div className="relative z-10 border-t border-slate-100 bg-white px-5 py-5 sm:px-6">
     <label className="block text-sm text-slate-900">
       <span className="font-semibold text-slate-900">Tour goal</span>
-      <p className="mt-1 text-sm text-slate-600">
+      <p className="mt-1 text-xs text-slate-500 ">
         {personaName
           ? `Why is ${personaName} taking this tour? Shown on the intro slide.`
           : 'Select a persona first, then describe why they are taking this tour.'}
