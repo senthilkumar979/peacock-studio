@@ -58,6 +58,17 @@ This means recorded content may be stored in browser-managed local storage techn
 
 If your production deployment later adds server-side syncing, cloud sharing, analytics, crash reporting, or any remote persistence, update this policy before publishing.
 
+## 5a. Cookies & similar technologies
+
+Peacock's web app uses browser storage technologies (cookies, `localStorage`, `sessionStorage`, and IndexedDB) in two categories, and asks for consent before using anything non-essential:
+
+| Category            | Purpose                                                                     | Consent required |
+| ------------------- | --------------------------------------------------------------------------- | ---------------- |
+| Strictly necessary  | Runs the app: local documentation library (IndexedDB), session state, sign-in | No (always on)   |
+| Analytics           | Understand product usage to improve Peacock                                 | Yes (opt-in)     |
+
+On first visit, a consent banner lets users **Accept all**, **Reject non-essential**, or **Manage preferences**. Analytics storage is only used after the user opts in. The consent choice itself is stored locally as a strictly necessary record and can be changed anytime via the **Cookie preferences** link in the footer.
+
 ## 6. Data sharing
 
 Current intended policy template:
