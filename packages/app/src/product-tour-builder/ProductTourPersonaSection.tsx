@@ -9,6 +9,8 @@ import { PersonaFormDrawer } from "@/components/persona/PersonaFormDrawer";
 import { SwitchPersonaModal } from "@/components/persona/SwitchPersonaModal";
 import { getAvatarIdForGender } from "@/constants/personaAvatars";
 import { ProductTourGoalField } from "@/product-tour-builder/ProductTourGoalField";
+import { HintAnchor, type PageHintControl } from "@/components/onboarding/HintAnchor";
+import { PRODUCT_TOUR_HINT_IDS } from "@/constants/firstTimeHints";
 import {
   createAndSavePersona,
   getPersona,
@@ -20,7 +22,13 @@ import type { Persona, PersonaInput } from "@/types/persona";
 
 type PersonaFormMode = "closed" | "create" | "edit";
 
-export const ProductTourPersonaSection = () => {
+interface ProductTourPersonaSectionProps {
+  pageHints?: PageHintControl;
+}
+
+export const ProductTourPersonaSection = ({
+  pageHints,
+}: ProductTourPersonaSectionProps) => {
   const tour = useProductTourBuilderStore((state) => state.tour);
   const setPersonaId = useProductTourBuilderStore((state) => state.setPersonaId);
   const setTourGoal = useProductTourBuilderStore((state) => state.setTourGoal);
@@ -141,14 +149,21 @@ export const ProductTourPersonaSection = () => {
 
         <div className="relative z-10 border-b border-slate-100 px-5 py-4 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-peacock-700">
-                Tour audience
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-500">
-                Sheela is the default persona. Switch or create one for this tour.
-              </p>
-            </div>
+            <HintAnchor
+              hints={pageHints}
+              hintId={PRODUCT_TOUR_HINT_IDS.persona}
+              title="Persona & goal"
+              description="Choose who this tour is for and what they should accomplish. The persona shapes tone; the goal drives the narrative."
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-peacock-700">
+                  Tour audience
+                </p>
+                <p className="mt-1 text-sm font-medium text-slate-500">
+                  Sheela is the default persona. Switch or create one for this tour.
+                </p>
+              </div>
+            </HintAnchor>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"

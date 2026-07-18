@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
 import { FlowSectionCard } from '@/components/FlowSectionCard';
+import { HintAnchor, type PageHintControl } from '@/components/onboarding/HintAnchor';
+import { PLAYER_HINT_IDS } from '@/constants/firstTimeHints';
 import { useBranchingPlayback } from '@/hooks/useBranchingPlayback';
 import { useKeyboard } from '@/hooks/useKeyboard';
 import { useFlowStore } from '@/store/flowStore';
@@ -22,9 +24,14 @@ const AUTO_PLAY_MS = 2500;
 interface PlayerViewProps {
   documentId: string;
   onModeChange: (mode: SharedDocumentViewMode) => void;
+  pageHints?: PageHintControl;
 }
 
-export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
+export const PlayerView = ({
+  documentId,
+  onModeChange,
+  pageHints,
+}: PlayerViewProps) => {
   const flow = useFlowStore((state) => state.flow);
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
   const playback = useBranchingPlayback();
@@ -93,13 +100,28 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
         homeLink
         documentId={documentId}
       >
-        <SharedViewToggle mode="player" onChange={onModeChange} />
-        <Link
-          to={`/docs/${documentId}/edit`}
-          className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800 hover:bg-peacock-100"
+        <HintAnchor
+          hints={pageHints}
+          hintId={PLAYER_HINT_IDS.viewToggle}
+          title="Doc or Player"
+          description="Switch between a scrollable guide and a step-by-step player. Share either view with your audience."
         >
-          Edit flow
-        </Link>
+          <SharedViewToggle mode="player" onChange={onModeChange} />
+        </HintAnchor>
+        <HintAnchor
+          hints={pageHints}
+          hintId={PLAYER_HINT_IDS.editFlow}
+          title="Edit this flow"
+          description="Jump back to the editor to update steps, branching, and screenshots."
+          placement="bottom"
+        >
+          <Link
+            to={`/docs/${documentId}/edit`}
+            className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800 hover:bg-peacock-100"
+          >
+            Edit flow
+          </Link>
+        </HintAnchor>
       </AppHeader>
 
       <main
@@ -168,6 +190,7 @@ export const PlayerView = ({ documentId, onModeChange }: PlayerViewProps) => {
         onPrevious={playback.goPrevious}
         onNext={playback.goNext}
         onTogglePlay={() => setIsPlaying((playing) => !playing)}
+        pageHints={pageHints}
       />
     </div>
   );

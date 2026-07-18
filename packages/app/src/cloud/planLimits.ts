@@ -10,7 +10,7 @@ function readLimitEnv(name: keyof ImportMetaEnv, fallback: number): number {
 
 /** Oldest N docs visible to guests on this device (IndexedDB). */
 export function getGuestVisibleDocLimit(): number {
-  return readLimitEnv('VITE_GUEST_VISIBLE_DOC_LIMIT', 0);
+  return readLimitEnv('VITE_GUEST_VISIBLE_DOC_LIMIT', 3);
 }
 
 /** Max flow documents on a free cloud account before upgrade prompt. */

@@ -10,11 +10,13 @@ import {
 interface GuestLibraryHiddenNoticeProps {
   visibleCount: number;
   totalCount: number;
+  onIntroSettled?: () => void;
 }
 
 export const GuestLibraryHiddenNotice = ({
   visibleCount,
   totalCount,
+  onIntroSettled,
 }: GuestLibraryHiddenNoticeProps) => {
   const hiddenCount = totalCount - visibleCount;
   const [isIntroOpen, setIsIntroOpen] = useState(false);
@@ -22,17 +24,22 @@ export const GuestLibraryHiddenNotice = ({
   useEffect(() => {
     if (hiddenCount <= 0) {
       setIsIntroOpen(false);
+      onIntroSettled?.();
       return;
     }
 
     if (!isGuestLibraryIntroDismissed()) {
       setIsIntroOpen(true);
+      return;
     }
-  }, [hiddenCount]);
+
+    onIntroSettled?.();
+  }, [hiddenCount, onIntroSettled]);
 
   const handleDismissIntro = () => {
     dismissGuestLibraryIntro();
     setIsIntroOpen(false);
+    onIntroSettled?.();
   };
 
   if (hiddenCount <= 0) return null;

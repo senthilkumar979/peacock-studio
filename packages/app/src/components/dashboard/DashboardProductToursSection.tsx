@@ -3,11 +3,15 @@ import { Link } from 'react-router-dom';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import type { ProductTourSummary } from '@/types/productTour';
 import { ProductTourLibraryCards } from './ProductTourLibraryCards';
+import { FirstTimeTooltip } from '@/components/onboarding/FirstTimeTooltip';
 
 interface DashboardProductToursSectionProps {
   summaries: ProductTourSummary[];
   isLoading: boolean;
   error: string | null;
+  showProductToursHint?: boolean;
+  productToursHintStep?: string;
+  onDismissProductToursHint?: () => void;
   onRequestDelete: (summary: ProductTourSummary) => void;
 }
 
@@ -15,15 +19,26 @@ export const DashboardProductToursSection = ({
   summaries,
   isLoading,
   error,
+  showProductToursHint = false,
+  productToursHintStep = 'Quick tip',
+  onDismissProductToursHint,
   onRequestDelete,
 }: DashboardProductToursSectionProps) => (
   <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl shadow-slate-200/60">
     <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-          <Map className="h-5 w-5 text-brand-violet" aria-hidden />
-          Product Tours
-        </h2>
+        <FirstTimeTooltip
+          isOpen={showProductToursHint}
+          stepLabel={productToursHintStep}
+          title="Product tours"
+          description="Combine multiple demos into persona-led tours for onboarding, sales, or feature education."
+          onDismiss={() => onDismissProductToursHint?.()}
+        >
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+            <Map className="h-5 w-5 text-brand-violet" aria-hidden />
+            Product Tours
+          </h2>
+        </FirstTimeTooltip>
         <p className="mt-1 text-sm text-slate-500">
           Multi-demo tours organized by persona and feature for product education.
         </p>

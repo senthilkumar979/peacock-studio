@@ -2,9 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getPlayableStepRange, type FlowStep } from "@peacock/shared";
 import { DASHBOARD_PATH } from "@/constants/routes";
+import {
+  getHintStepLabel,
+  getProductTourLearnerHintSequence,
+  PRODUCT_TOUR_LEARNER_HINT_IDS,
+} from "@/constants/firstTimeHints";
 import { EmptyFlowState } from "@/components/EmptyFlowState";
 import { PeacockStudioLoader } from "@/components/PeacockStudioLoader";
 import { AppHeader } from "@/components/AppHeader";
+import { HintAnchor, type PageHintControl } from "@/components/onboarding/HintAnchor";
+import { useFirstTimeHintTour } from "@/hooks/useFirstTimeHint";
 import { useKeyboard } from "@/hooks/useKeyboard";
 import { useProductTourLearner } from "@/hooks/useProductTourLearner";
 import { useSavedProductTour } from "@/hooks/useSavedProductTour";
@@ -46,9 +53,26 @@ export const ProductTourLearner = ({
   const tourId = tourIdProp ?? routeTourId;
   const isPresenter =
     isPresenterProp ?? searchParams.get("presenter") === "1";
+  const canEdit = !isPresenter && !isPublicShare;
 
   const { tour, isLoading, isLoaded, error } = useSavedProductTour(tourId);
   const playback = useProductTourLearner(tour);
+
+  const learnerHintSequence = useMemo(
+    () => getProductTourLearnerHintSequence({ canEdit }),
+    [canEdit],
+  );
+  const { activeHintId, dismissHint } = useFirstTimeHintTour(learnerHintSequence, {
+    ready: isLoaded && Boolean(tour) && !isPresenter,
+  });
+  const pageHints: PageHintControl = useMemo(
+    () => ({
+      activeHintId,
+      hintStep: (hintId) => getHintStepLabel(hintId, learnerHintSequence),
+      dismissHint,
+    }),
+    [activeHintId, dismissHint, learnerHintSequence],
+  );
 
   const [persona, setPersona] = useState<Persona | null>(null);
   const [estimatedMinutes, setEstimatedMinutes] = useState<number | null>(null);
@@ -388,12 +412,20 @@ export const ProductTourLearner = ({
           tourId={tourId}
           tour={tour}
         >
-          <Link
-            to={`/tours/${tourId}/edit`}
-            className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800"
+          <HintAnchor
+            hints={pageHints}
+            hintId={PRODUCT_TOUR_LEARNER_HINT_IDS.editTour}
+            title="Edit tour"
+            description="Return to the builder to adjust features, demos, persona, or publish status."
+            placement="bottom"
           >
-            Edit tour
-          </Link>
+            <Link
+              to={`/tours/${tourId}/edit`}
+              className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800"
+            >
+              Edit tour
+            </Link>
+          </HintAnchor>
         </AppHeader>
       ) : null}
       {isPublicShare && !isPresenter ? (
@@ -411,18 +443,26 @@ export const ProductTourLearner = ({
       <main className="mx-auto flex min-h-0 w-full max-w-8xl flex-1 gap-6 overflow-hidden px-4 py-6">
         {!isPresenter ? (
           <aside className="hidden h-full min-h-0 w-[400px] shrink-0 lg:flex lg:flex-col">
-            <ProductTourOverviewCanvas
-              className="h-full min-h-0"
-              tour={tour}
-              activeFeatureIndex={activeFeatureIndex}
-              activeDemoIndex={activeDemoIndex}
-              demoMeta={playback.demoMeta}
-              activeStageLabel={activeStageLabel}
-              activeBranchTitle={activeBranchTitle}
-              activePathLabel={activePathLabel}
-              onFeatureSelect={handleFeatureSelect}
-              onDemoSelect={handleDemoSelect}
-            />
+            <HintAnchor
+              hints={pageHints}
+              hintId={PRODUCT_TOUR_LEARNER_HINT_IDS.overview}
+              title="Tour map"
+              description="See where you are in the tour. Click a feature or demo to jump ahead."
+              placement="bottom-start"
+            >
+              <ProductTourOverviewCanvas
+                className="h-full min-h-0"
+                tour={tour}
+                activeFeatureIndex={activeFeatureIndex}
+                activeDemoIndex={activeDemoIndex}
+                demoMeta={playback.demoMeta}
+                activeStageLabel={activeStageLabel}
+                activeBranchTitle={activeBranchTitle}
+                activePathLabel={activePathLabel}
+                onFeatureSelect={handleFeatureSelect}
+                onDemoSelect={handleDemoSelect}
+              />
+            </HintAnchor>
           </aside>
         ) : null}
         <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto">
@@ -431,29 +471,37 @@ export const ProductTourLearner = ({
       </main>
 
       {!isPresenter ? (
-        <footer className="flex shrink-0 items-center justify-between border-t border-slate-200 bg-white px-6 py-4">
-          <p className="text-sm text-slate-500">
-            {playback.currentIndex + 1} of {playback.segments.length}
-          </p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={playback.currentIndex === 0 && !linkedPlayback}
-              onClick={handlePrevious}
-              className="rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              disabled={playback.isAtComplete && !linkedPlayback}
-              onClick={handleNext}
-              className="rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </footer>
+        <HintAnchor
+          hints={pageHints}
+          hintId={PRODUCT_TOUR_LEARNER_HINT_IDS.navigation}
+          title="Navigate the tour"
+          description="Use Previous and Next to move through segments. Arrow keys work too."
+          placement="top"
+        >
+          <footer className="flex shrink-0 items-center justify-between border-t border-slate-200 bg-white px-6 py-4">
+            <p className="text-sm text-slate-500">
+              {playback.currentIndex + 1} of {playback.segments.length}
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={playback.currentIndex === 0 && !linkedPlayback}
+                onClick={handlePrevious}
+                className="rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={playback.isAtComplete && !linkedPlayback}
+                onClick={handleNext}
+                className="rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </footer>
+        </HintAnchor>
       ) : null}
     </div>
   );

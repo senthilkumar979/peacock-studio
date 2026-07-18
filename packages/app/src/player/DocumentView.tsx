@@ -1,4 +1,6 @@
 import { AppHeader } from "@/components/AppHeader";
+import { HintAnchor, type PageHintControl } from "@/components/onboarding/HintAnchor";
+import { PLAYER_HINT_IDS } from "@/constants/firstTimeHints";
 import {
   collectAllBranches,
   isFlowBranch,
@@ -42,11 +44,13 @@ import { SharedViewToggle } from "./SharedViewToggle";
 interface DocumentViewProps {
   documentId: string;
   onModeChange: (mode: SharedDocumentViewMode) => void;
+  pageHints?: PageHintControl;
 }
 
 export const DocumentView = ({
   documentId,
   onModeChange,
+  pageHints,
 }: DocumentViewProps) => {
   const flow = useFlowStore((state) => state.flow);
   const steps = useViewerOutline();
@@ -213,13 +217,28 @@ export const DocumentView = ({
         homeLink
         documentId={documentId}
       >
-        <SharedViewToggle mode="doc" onChange={onModeChange} />
-        <Link
-          to={`/docs/${documentId}/edit`}
-          className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800 hover:bg-peacock-100"
+        <HintAnchor
+          hints={pageHints}
+          hintId={PLAYER_HINT_IDS.viewToggle}
+          title="Doc or Player"
+          description="Switch between a scrollable guide and a step-by-step player. Share either view with your audience."
         >
-          Edit flow
-        </Link>
+          <SharedViewToggle mode="doc" onChange={onModeChange} />
+        </HintAnchor>
+        <HintAnchor
+          hints={pageHints}
+          hintId={PLAYER_HINT_IDS.editFlow}
+          title="Edit this flow"
+          description="Jump back to the editor to update steps, branching, and screenshots."
+          placement="bottom"
+        >
+          <Link
+            to={`/docs/${documentId}/edit`}
+            className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800 hover:bg-peacock-100"
+          >
+            Edit flow
+          </Link>
+        </HintAnchor>
       </AppHeader>
 
       <main className="mx-auto flex w-full max-w-8xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
@@ -229,25 +248,33 @@ export const DocumentView = ({
           style={desktopPaneHeight ? { height: desktopPaneHeight } : undefined}
         >
           <div className="min-h-0 h-full">
-            <DocumentStepIndex
-              items={indexItems}
-              activeItemId={activeItemId}
-              onSelectOverview={(anchorId, itemId) =>
-                scrollToAnchor(anchorId, itemId)
-              }
-              onSelectStep={(anchorId, stepId) =>
-                scrollToAnchor(anchorId, stepId)
-              }
-              onSelectSection={(anchorId, sectionId) =>
-                scrollToAnchor(anchorId, sectionId)
-              }
-              onSelectBranch={(anchorId, branchId) =>
-                scrollToAnchor(anchorId, branchId)
-              }
-              onSelectLinkedPath={(anchorId, itemId) =>
-                scrollToAnchor(anchorId, itemId)
-              }
-            />
+            <HintAnchor
+              hints={pageHints}
+              hintId={PLAYER_HINT_IDS.docOutline}
+              title="Document outline"
+              description="Jump to any section, step, or branch path. The outline stays in sync as you scroll."
+              placement="bottom-start"
+            >
+              <DocumentStepIndex
+                items={indexItems}
+                activeItemId={activeItemId}
+                onSelectOverview={(anchorId, itemId) =>
+                  scrollToAnchor(anchorId, itemId)
+                }
+                onSelectStep={(anchorId, stepId) =>
+                  scrollToAnchor(anchorId, stepId)
+                }
+                onSelectSection={(anchorId, sectionId) =>
+                  scrollToAnchor(anchorId, sectionId)
+                }
+                onSelectBranch={(anchorId, branchId) =>
+                  scrollToAnchor(anchorId, branchId)
+                }
+                onSelectLinkedPath={(anchorId, itemId) =>
+                  scrollToAnchor(anchorId, itemId)
+                }
+              />
+            </HintAnchor>
           </div>
 
           <div

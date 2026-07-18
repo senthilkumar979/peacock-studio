@@ -1,9 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { DASHBOARD_PATH } from '@/constants/routes';
+import {
+  getHintStepLabel,
+  getPlayerHintSequence,
+} from '@/constants/firstTimeHints';
 import { GuestDocumentGate } from '@/components/auth/GuestDocumentGate';
 import { EmptyFlowState } from '@/components/EmptyFlowState';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
+import type { PageHintControl } from '@/components/onboarding/HintAnchor';
+import { useFirstTimeHintTour } from '@/hooks/useFirstTimeHint';
 import { useSavedDocument } from '@/hooks/useSavedDocument';
 import { DocumentView } from '@/player/DocumentView';
 import { PlayerView } from '@/player/PlayerView';
@@ -37,6 +43,22 @@ export const Player = () => {
     }
     setSearchParams(next, { replace: true });
   };
+
+  const playerHintSequence = useMemo(
+    () => getPlayerHintSequence(viewMode),
+    [viewMode],
+  );
+  const { activeHintId, dismissHint } = useFirstTimeHintTour(playerHintSequence, {
+    ready: isLoaded,
+  });
+  const pageHints: PageHintControl = useMemo(
+    () => ({
+      activeHintId,
+      hintStep: (hintId) => getHintStepLabel(hintId, playerHintSequence),
+      dismissHint,
+    }),
+    [activeHintId, dismissHint, playerHintSequence],
+  );
 
   if (!documentId) {
     return (
@@ -81,14 +103,22 @@ export const Player = () => {
   if (viewMode === 'player') {
     return (
       <GuestDocumentGate documentId={documentId}>
-        <PlayerView documentId={documentId} onModeChange={handleModeChange} />
+        <PlayerView
+          documentId={documentId}
+          onModeChange={handleModeChange}
+          pageHints={pageHints}
+        />
       </GuestDocumentGate>
     );
   }
 
   return (
     <GuestDocumentGate documentId={documentId}>
-      <DocumentView documentId={documentId} onModeChange={handleModeChange} />
+      <DocumentView
+        documentId={documentId}
+        onModeChange={handleModeChange}
+        pageHints={pageHints}
+      />
     </GuestDocumentGate>
   );
 };

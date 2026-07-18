@@ -24,6 +24,12 @@ import {
   type FlowStep,
 } from "@peacock/shared";
 import { useFlowStore } from "@/store/flowStore";
+import { FirstTimeTooltip } from "@/components/onboarding/FirstTimeTooltip";
+import { EDITOR_HINT_IDS } from "@/constants/firstTimeHints";
+import {
+  isEditorHintActive,
+  type EditorHintControl,
+} from "@/editor/editorHintControl";
 
 function getStepDisplayNumber(items: FlowOutlineItem[], index: number): number {
   let count = 0;
@@ -173,9 +179,10 @@ const SortableSection = ({
 
 interface StepListProps {
   onLinkPeacockDoc?: () => void;
+  editorHints?: EditorHintControl;
 }
 
-export const StepList = ({ onLinkPeacockDoc }: StepListProps) => {
+export const StepList = ({ onLinkPeacockDoc, editorHints }: StepListProps) => {
   const steps = useFlowStore((state) => state.steps);
   const selectedOutlineId = useFlowStore((state) => state.selectedOutlineId);
   const selectOutlineItem = useFlowStore((state) => state.selectOutlineItem);
@@ -212,39 +219,74 @@ export const StepList = ({ onLinkPeacockDoc }: StepListProps) => {
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
       <div className="flex shrink-0 items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Outline
-        </h2>
+        <FirstTimeTooltip
+          isOpen={isEditorHintActive(editorHints, EDITOR_HINT_IDS.stepList)}
+          stepLabel={editorHints?.hintStep(EDITOR_HINT_IDS.stepList) ?? "Quick tip"}
+          title="Flow outline"
+          description="Your recorded and manual steps appear here. Select one to preview it, drag to reorder, and build the path learners follow."
+          onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.stepList)}
+        >
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Outline
+          </h2>
+        </FirstTimeTooltip>
       </div>
 
       <div className="flex shrink-0 flex-col gap-2">
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => addManualStep()}
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-peacock-200 bg-peacock-50 px-2 py-2 text-xs font-medium text-peacock-800 hover:bg-peacock-100"
+          <FirstTimeTooltip
+            isOpen={isEditorHintActive(editorHints, EDITOR_HINT_IDS.addStep)}
+            stepLabel={editorHints?.hintStep(EDITOR_HINT_IDS.addStep) ?? "Quick tip"}
+            title="Add step"
+            description="Insert a manual step with your own screenshot and notes — useful for intro slides or steps you couldn't record live."
+            placement="bottom"
+            onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.addStep)}
           >
-            <Plus className="h-3.5 w-3.5" aria-hidden />
-            Add step
-          </button>
-          <button
-            type="button"
-            onClick={() => addSection()}
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-brand-violet/30 bg-brand-violet/10 px-2 py-2 text-xs font-medium text-brand-violet hover:bg-brand-violet/15"
+            <button
+              type="button"
+              onClick={() => addManualStep()}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-peacock-200 bg-peacock-50 px-2 py-2 text-xs font-medium text-peacock-800 hover:bg-peacock-100"
+            >
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+              Add step
+            </button>
+          </FirstTimeTooltip>
+          <FirstTimeTooltip
+            isOpen={isEditorHintActive(editorHints, EDITOR_HINT_IDS.addSection)}
+            stepLabel={editorHints?.hintStep(EDITOR_HINT_IDS.addSection) ?? "Quick tip"}
+            title="Add section"
+            description="Group steps under a titled section card — great for chapters like “Getting started” or “Advanced settings”."
+            placement="bottom"
+            onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.addSection)}
           >
-            <BookMarked className="h-3.5 w-3.5" aria-hidden />
-            Add section
-          </button>
+            <button
+              type="button"
+              onClick={() => addSection()}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-brand-violet/30 bg-brand-violet/10 px-2 py-2 text-xs font-medium text-brand-violet hover:bg-brand-violet/15"
+            >
+              <BookMarked className="h-3.5 w-3.5" aria-hidden />
+              Add section
+            </button>
+          </FirstTimeTooltip>
         </div>
         {onLinkPeacockDoc ? (
-          <button
-            type="button"
-            onClick={onLinkPeacockDoc}
-            className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-brand-violet/40 bg-white px-2 py-2 text-xs font-medium text-brand-violet hover:bg-brand-violet/5"
+          <FirstTimeTooltip
+            isOpen={isEditorHintActive(editorHints, EDITOR_HINT_IDS.addBranching)}
+            stepLabel={editorHints?.hintStep(EDITOR_HINT_IDS.addBranching) ?? "Quick tip"}
+            title="Create a branching point"
+            description="Link to another Peacock doc so learners choose different paths — perfect for role-based flows or optional deep dives."
+            placement="bottom"
+            onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.addBranching)}
           >
-            <Link2 className="h-3.5 w-3.5" aria-hidden />
-            Create a branching point
-          </button>
+            <button
+              type="button"
+              onClick={onLinkPeacockDoc}
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-brand-violet/40 bg-white px-2 py-2 text-xs font-medium text-brand-violet hover:bg-brand-violet/5"
+            >
+              <Link2 className="h-3.5 w-3.5" aria-hidden />
+              Create a branching point
+            </button>
+          </FirstTimeTooltip>
         ) : null}
       </div>
 

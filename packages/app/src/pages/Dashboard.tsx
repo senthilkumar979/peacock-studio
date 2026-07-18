@@ -1,5 +1,5 @@
 import { SearchX } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { AppFooter } from "@/components/AppFooter";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -32,6 +32,9 @@ import {
 } from "@/utils/dashboardLibrary";
 import { filterGuestVisibleSummaries } from "@/utils/guestDocumentVisibility";
 import { computeDashboardStats } from "@/utils/dashboardStats";
+import { DASHBOARD_HINT_IDS, DASHBOARD_HINT_SEQUENCE, getHintStepLabel } from "@/constants/firstTimeHints";
+import { isGuestLibraryIntroDismissed } from "@/constants/guestLibraryIntro";
+import { useDashboardFirstTimeHint } from "@/hooks/useFirstTimeHint";
 
 export const Dashboard = () => {
   const sessionMode = useSessionMode();
@@ -55,6 +58,7 @@ export const Dashboard = () => {
   );
   const [pendingTourDelete, setPendingTourDelete] =
     useState<ProductTourSummary | null>(null);
+  const [guestIntroSettled, setGuestIntroSettled] = useState(true);
 
   const summaries = useMemo(() => {
     if (!isGuest) return allSummaries;
@@ -73,6 +77,15 @@ export const Dashboard = () => {
     return sortSummaries(summaries, "newest")[0] ?? null;
   }, [summaries]);
 
+  useEffect(() => {
+    const hasHiddenGuestDocs = isGuest && allSummaries.length > summaries.length;
+    if (!hasHiddenGuestDocs) {
+      setGuestIntroSettled(true);
+      return;
+    }
+    setGuestIntroSettled(isGuestLibraryIntroDismissed());
+  }, [allSummaries.length, isGuest, summaries.length]);
+
   const handleViewChange = (mode: DashboardViewMode) => {
     setViewMode(mode);
     writeDashboardViewMode(mode);
@@ -89,6 +102,14 @@ export const Dashboard = () => {
       setPendingTourDelete(null),
     );
   };
+
+  const { activeHintId, dismissHint } = useDashboardFirstTimeHint({
+    isLibraryLoading: isLoading,
+    hasDocuments: allSummaries.length > 0,
+    enabled: guestIntroSettled,
+  });
+
+  const hintStepLabel = (hintId: string) => getHintStepLabel(hintId, DASHBOARD_HINT_SEQUENCE);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100/80">
@@ -135,6 +156,11 @@ export const Dashboard = () => {
                 summaries={tourSummaries}
                 isLoading={isToursLoading}
                 error={toursError}
+                showProductToursHint={activeHintId === DASHBOARD_HINT_IDS.productTours}
+                onDismissProductToursHint={() =>
+                  dismissHint(DASHBOARD_HINT_IDS.productTours)
+                }
+                productToursHintStep={hintStepLabel(DASHBOARD_HINT_IDS.productTours)}
                 onRequestDelete={setPendingTourDelete}
               />
             </motion.div>
@@ -156,6 +182,9 @@ export const Dashboard = () => {
                 resultCount={displayedSummaries.length}
                 totalCount={summaries.length}
                 guestTotalCount={isGuest ? allSummaries.length : undefined}
+                showLibraryHint={activeHintId === DASHBOARD_HINT_IDS.library}
+                onDismissLibraryHint={() => dismissHint(DASHBOARD_HINT_IDS.library)}
+                libraryHintStep={hintStepLabel(DASHBOARD_HINT_IDS.library)}
                 onSearchChange={setSearchQuery}
                 onSortChange={setSortMode}
                 onViewChange={handleViewChange}
@@ -165,6 +194,7 @@ export const Dashboard = () => {
                 <GuestLibraryHiddenNotice
                   visibleCount={summaries.length}
                   totalCount={allSummaries.length}
+                  onIntroSettled={() => setGuestIntroSettled(true)}
                 />
               ) : null}
 
@@ -184,7 +214,10 @@ export const Dashboard = () => {
               ) : null}
 
               {!isLoading && !error && summaries.length === 0 ? (
-                <DashboardEmptyState />
+                <DashboardEmptyState
+                  showRecordHint={activeHintId === DASHBOARD_HINT_IDS.recordFlow}
+                  onDismissRecordHint={() => dismissHint(DASHBOARD_HINT_IDS.recordFlow)}
+                />
               ) : null}
 
               {!isLoading &&

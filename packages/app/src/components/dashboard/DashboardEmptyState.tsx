@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
 import { CircleDot, Puzzle, Share2 } from 'lucide-react';
 import { PEACOCK_LOGO_SRC } from '@/constants/branding';
+import { FirstTimeTooltip } from '@/components/onboarding/FirstTimeTooltip';
 
 interface OnboardingStep {
   step: string;
@@ -31,7 +32,15 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
   },
 ];
 
-export const DashboardEmptyState = () => (
+interface DashboardEmptyStateProps {
+  showRecordHint?: boolean;
+  onDismissRecordHint?: () => void;
+}
+
+export const DashboardEmptyState = ({
+  showRecordHint = false,
+  onDismissRecordHint,
+}: DashboardEmptyStateProps) => (
   <motion.div
     initial={{ opacity: 0, y: 12 }}
     animate={{ opacity: 1, y: 0 }}
@@ -51,7 +60,18 @@ export const DashboardEmptyState = () => (
       >
         <img src={PEACOCK_LOGO_SRC} alt="" width={48} height={48} className="h-12 w-12 object-contain" />
       </motion.div>
-      <h3 className="text-2xl font-bold tracking-tight text-slate-900">Start your first documentation</h3>
+      <FirstTimeTooltip
+        isOpen={showRecordHint}
+        stepLabel="Tip 3 of 3"
+        title="Record your first flow"
+        description="Install the Peacock Chrome extension, click Record on any website, then stop to open the editor automatically."
+        placement="bottom"
+        onDismiss={() => onDismissRecordHint?.()}
+      >
+        <h3 className="text-2xl font-bold tracking-tight text-slate-900">
+          Start your first documentation
+        </h3>
+      </FirstTimeTooltip>
       <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600">
         Your library is empty. Record a browser flow and Peacock will turn it into a polished,
         step-by-step guide stored securely on this device.

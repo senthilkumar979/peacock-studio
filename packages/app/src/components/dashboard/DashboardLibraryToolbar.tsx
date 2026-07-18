@@ -4,6 +4,7 @@ import { ArrowDownUp, FolderOpen, ScanEye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ExpandableLibrarySearch } from './ExpandableLibrarySearch';
 import { ViewModeToggle } from './ViewModeToggle';
+import { FirstTimeTooltip } from '@/components/onboarding/FirstTimeTooltip';
 
 interface DashboardLibraryToolbarProps {
   searchQuery: string;
@@ -12,6 +13,9 @@ interface DashboardLibraryToolbarProps {
   resultCount: number;
   totalCount: number;
   guestTotalCount?: number;
+  showLibraryHint?: boolean;
+  libraryHintStep?: string;
+  onDismissLibraryHint?: () => void;
   onSearchChange: (value: string) => void;
   onSortChange: (mode: DashboardSortMode) => void;
   onViewChange: (mode: DashboardViewMode) => void;
@@ -31,6 +35,9 @@ export const DashboardLibraryToolbar = ({
   resultCount,
   totalCount,
   guestTotalCount,
+  showLibraryHint = false,
+  libraryHintStep = 'Quick tip',
+  onDismissLibraryHint,
   onSearchChange,
   onSortChange,
   onViewChange,
@@ -39,10 +46,18 @@ export const DashboardLibraryToolbar = ({
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-            <FolderOpen className="h-5 w-5 text-peacock-600" aria-hidden />
-            Your documentations
-          </h2>
+          <FirstTimeTooltip
+            isOpen={showLibraryHint}
+            stepLabel={libraryHintStep}
+            title="Your documentation library"
+            description="Every flow you record with the Peacock extension is saved here. Open, edit, share, or export any guide."
+            onDismiss={() => onDismissLibraryHint?.()}
+          >
+            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+              <FolderOpen className="h-5 w-5 text-peacock-600" aria-hidden />
+              Your documentations
+            </h2>
+          </FirstTimeTooltip>
           <span
             className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${
               guestTotalCount !== undefined && guestTotalCount > totalCount

@@ -1,6 +1,14 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { DASHBOARD_PATH } from '@/constants/routes';
+import { FirstTimeTooltip } from '@/components/onboarding/FirstTimeTooltip';
+import {
+  EDITOR_HINT_IDS,
+  getEditorHintSequence,
+  getHintStepLabel,
+} from '@/constants/firstTimeHints';
+import { useFirstTimeHintTour } from '@/hooks/useFirstTimeHint';
+import type { EditorHintControl } from '@/editor/editorHintControl';
 import { Canvas } from '@/editor/Canvas';
 import { BranchPanel } from '@/editor/BranchPanel';
 import { FlowBranchCard } from '@/editor/FlowBranchCard';
@@ -15,6 +23,7 @@ import { useSavedDocument } from '@/hooks/useSavedDocument';
 import { persistCurrentFlow } from '@/services/flowLibraryService';
 import {
   useFlowStore,
+  usePlayableSteps,
   useSelectedBranch,
   useSelectedSection,
   useSelectedStep,
@@ -37,10 +46,36 @@ export const Editor = () => {
   const selectedSection = useSelectedSection();
   const selectedBranch = useSelectedBranch();
   const documentIdFromStore = useFlowStore((state) => state.documentId);
+  const playableSteps = usePlayableSteps();
+  const resolvedDocumentId = documentId ?? documentIdFromStore;
   const addPathToBranch = useFlowStore((state) => state.addPathToBranch);
   const addBranchWithPath = useFlowStore((state) => state.addBranchWithPath);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [linkMode, setLinkMode] = useState<'new' | 'add-path'>('new');
+  const [editorHintsReady, setEditorHintsReady] = useState(false);
+
+  const editorHintSequence = useMemo(
+    () =>
+      getEditorHintSequence({
+        canBranch: isLoaded,
+        canPlay: Boolean(resolvedDocumentId),
+        canUseToolbarActions: playableSteps.length > 0,
+      }),
+    [isLoaded, playableSteps.length, resolvedDocumentId],
+  );
+
+  const { activeHintId, dismissHint } = useFirstTimeHintTour(editorHintSequence, {
+    ready: isLoaded && editorHintsReady,
+  });
+
+  const editorHints: EditorHintControl = useMemo(
+    () => ({
+      activeHintId,
+      hintStep: (hintId) => getHintStepLabel(hintId, editorHintSequence),
+      dismissHint,
+    }),
+    [activeHintId, dismissHint, editorHintSequence],
+  );
 
   const openLinkModal = (mode: 'new' | 'add-path') => {
     setLinkMode(mode);
@@ -66,7 +101,11 @@ export const Editor = () => {
 
   const editorBody = (
     <div className="flex h-screen flex-col overflow-hidden">
-      <Toolbar documentId={documentId} />
+      <Toolbar
+        documentId={documentId}
+        onEditorHintsReady={setEditorHintsReady}
+        editorHints={editorHints}
+      />
 
       {error && (
         <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800">
@@ -103,9 +142,24 @@ export const Editor = () => {
       {isLoaded && (
         <div className="grid min-h-0 flex-1 grid-cols-[280px_1fr_320px] gap-4 p-4">
           <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-            <StepList onLinkPeacockDoc={() => openLinkModal('new')} />
+            <StepList
+              onLinkPeacockDoc={() => openLinkModal('new')}
+              editorHints={editorHints}
+            />
           </aside>
-          <main className="min-h-0 overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+          <main className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+            <FirstTimeTooltip
+              isOpen={activeHintId === EDITOR_HINT_IDS.canvas}
+              stepLabel={editorHints.hintStep(EDITOR_HINT_IDS.canvas)}
+              title="Step preview"
+              description="See the captured screenshot and click marker for the selected step. This is what learners will view in the player."
+              onDismiss={() => dismissHint(EDITOR_HINT_IDS.canvas)}
+            >
+              <p className="mb-3 shrink-0 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                Preview
+              </p>
+            </FirstTimeTooltip>
+            <div className="min-h-0 flex-1 overflow-hidden">
             {selectedBranch ? (
               <div className="flex h-full flex-col items-center justify-center overflow-auto p-6">
                 <FlowBranchCard branch={selectedBranch} />
@@ -121,8 +175,22 @@ export const Editor = () => {
             ) : (
               <Canvas step={selectedStep} />
             )}
+            </div>
           </main>
-          <aside className="min-h-0 overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+          <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+            <FirstTimeTooltip
+              isOpen={activeHintId === EDITOR_HINT_IDS.stepPanel}
+              stepLabel={editorHints.hintStep(EDITOR_HINT_IDS.stepPanel)}
+              title="Step details"
+              description="Edit the title, notes, and screenshot for the selected step. Changes save automatically to your library."
+              placement="top"
+              onDismiss={() => dismissHint(EDITOR_HINT_IDS.stepPanel)}
+            >
+              <p className="mb-3 shrink-0 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                Details
+              </p>
+            </FirstTimeTooltip>
+            <div className="min-h-0 flex-1 overflow-hidden">
             {selectedBranch ? (
               <BranchPanel branch={selectedBranch} onAddPath={() => openLinkModal('add-path')} />
             ) : selectedSection ? (
@@ -130,6 +198,7 @@ export const Editor = () => {
             ) : (
               <StepPanel step={selectedStep} />
             )}
+            </div>
           </aside>
         </div>
       )}
