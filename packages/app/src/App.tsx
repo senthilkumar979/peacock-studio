@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { DASHBOARD_PATH, LANDING_PATH } from '@/constants/routes';
+import { DASHBOARD_PATH, LANDING_PATH, PRIVACY_PATH, TERMS_PATH } from '@/constants/routes';
 import { Dashboard } from '@/pages/Dashboard';
 import { Landing } from '@/pages/Landing';
 import { CompareDocs } from '@/pages/CompareDocs';
@@ -18,6 +18,8 @@ import { SolutionRole } from '@/pages/SolutionRole';
 import { SignInPage } from '@/pages/SignInPage';
 import { SignUpPage } from '@/pages/SignUpPage';
 import { PublicSharePage } from '@/pages/PublicSharePage';
+import { PrivacyPolicy } from '@/pages/PrivacyPolicy';
+import { TermsAndConditions } from '@/pages/TermsAndConditions';
 import { isCloudSyncEnabled } from '@/cloud/config';
 
 export const App = () => (
@@ -30,6 +32,8 @@ export const App = () => (
     <Route path="/products/:productSlug" element={<ProductDetail />} />
     <Route path="/solutions" element={<Solutions />} />
     <Route path="/solutions/:roleSlug" element={<SolutionRole />} />
+    <Route path={PRIVACY_PATH} element={<PrivacyPolicy />} />
+    <Route path={TERMS_PATH} element={<TermsAndConditions />} />
     <Route path="/s/:token/edit" element={<PublicSharePage mode="edit" />} />
     <Route path="/s/:token" element={<PublicSharePage mode="view" />} />
     <Route path={DASHBOARD_PATH} element={<Dashboard />} />

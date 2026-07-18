@@ -1,4 +1,6 @@
 import { Cookie } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { PRIVACY_PATH } from '@/constants/routes';
 import { useConsent } from '@/hooks/useConsent';
 import { useConsentStore } from '@/store/consentStore';
 
@@ -21,8 +23,11 @@ export const CookieConsentBanner = () => {
           <Cookie className="mt-0.5 h-5 w-5 shrink-0 text-peacock-600" aria-hidden />
           <p className="text-sm text-slate-600">
             Peacock uses strictly necessary storage to run, and — only with your
-            permission — analytics to improve the product. You can change this
-            anytime from the footer.
+            permission — analytics to improve the product. See our{' '}
+            <Link to={PRIVACY_PATH} className="font-medium text-peacock-700 underline">
+              privacy policy
+            </Link>
+            . You can change this anytime from the footer.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
