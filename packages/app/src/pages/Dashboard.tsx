@@ -1,66 +1,51 @@
-import { SearchX } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { AppFooter } from "@/components/AppFooter";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { DeleteDocumentConfirmContent } from "@/components/dashboard/DeleteDocumentConfirmContent";
-import { DeleteProductTourConfirmContent } from "@/components/dashboard/DeleteProductTourConfirmContent";
-import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
-import { DashboardFeaturedDoc } from "@/components/dashboard/DashboardFeaturedDoc";
-import { DashboardHero } from "@/components/dashboard/DashboardHero";
-import { GuestLibraryHiddenNotice } from "@/components/dashboard/GuestLibraryHiddenNotice";
-import { DashboardLibraryToolbar } from "@/components/dashboard/DashboardLibraryToolbar";
-import { DashboardProductToursSection } from "@/components/dashboard/DashboardProductToursSection";
-import { DashboardStats } from "@/components/dashboard/DashboardStats";
-import { DashboardWorkflowOutputsSection } from "@/components/dashboard/DashboardWorkflowOutputsSection";
-import { GenericErrorPage } from "@/components/errors/GenericErrorPage";
-import { FlowLibrarySection } from "@/components/dashboard/FlowLibrarySection";
-import { PeacockStudioLoader } from "@/components/PeacockStudioLoader";
+import { FileText, Map } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { DeleteDocumentConfirmContent } from '@/components/dashboard/DeleteDocumentConfirmContent';
+import { DeleteProductTourConfirmContent } from '@/components/dashboard/DeleteProductTourConfirmContent';
+import { DashboardHero } from '@/components/dashboard/DashboardHero';
+import { DashboardStats } from '@/components/dashboard/DashboardStats';
+import { FlowLibrarySection } from '@/components/dashboard/FlowLibrarySection';
+import { ProductTourLibraryCards } from '@/components/dashboard/ProductTourLibraryCards';
+import { ViewModeToggle } from '@/components/dashboard/ViewModeToggle';
+import { GenericErrorPage } from '@/components/errors/GenericErrorPage';
+import { DashboardRecentSection } from '@/components/library/LibraryPageHeader';
+import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import {
   readDashboardViewMode,
   writeDashboardViewMode,
-} from "@/constants/dashboard";
-import { getGuestVisibleDocLimit } from "@/cloud/planLimits";
-import { useCloudInitError } from "@/hooks/useCloudInitError";
-import { useIsGuestSession, useSessionMode } from "@/hooks/useSessionMode";
-import { useFlowLibrary } from "@/hooks/useFlowLibrary";
-import { useProductTourLibrary } from "@/hooks/useProductTourLibrary";
-import type { DashboardViewMode, SavedFlowSummary } from "@/types/savedFlow";
-import type { ProductTourSummary } from "@/types/productTour";
-import {
-  filterSummaries,
-  sortSummaries,
-  type DashboardSortMode,
-} from "@/utils/dashboardLibrary";
-import { filterGuestVisibleSummaries } from "@/utils/guestDocumentVisibility";
-import { computeDashboardStats } from "@/utils/dashboardStats";
-import { DASHBOARD_HINT_IDS, DASHBOARD_HINT_SEQUENCE, getHintStepLabel } from "@/constants/firstTimeHints";
-import { isGuestLibraryIntroDismissed } from "@/constants/guestLibraryIntro";
-import { useDashboardFirstTimeHint } from "@/hooks/useFirstTimeHint";
+} from '@/constants/dashboard';
+import { getGuestVisibleDocLimit } from '@/cloud/planLimits';
+import { FLOW_DOCS_PATH, PRODUCT_TOURS_PATH } from '@/constants/routes';
+import { useCloudInitError } from '@/hooks/useCloudInitError';
+import { useIsGuestSession, useSessionMode } from '@/hooks/useSessionMode';
+import { useFlowLibrary } from '@/hooks/useFlowLibrary';
+import { useProductTourLibrary } from '@/hooks/useProductTourLibrary';
+import { LibraryLayout } from '@/layouts/LibraryLayout';
+import type { ProductTourSummary } from '@/types/productTour';
+import type { DashboardViewMode, SavedFlowSummary } from '@/types/savedFlow';
+import { sortSummaries } from '@/utils/dashboardLibrary';
+import { filterGuestVisibleSummaries } from '@/utils/guestDocumentVisibility';
+import { computeDashboardStats } from '@/utils/dashboardStats';
+
+const RECENT_LIMIT = 5;
 
 export const Dashboard = () => {
   const sessionMode = useSessionMode();
   const isGuest = useIsGuestSession();
   const cloudInitError = useCloudInitError();
-  const { summaries: allSummaries, isLoading, error, deleteDocument, refresh } =
-    useFlowLibrary();
+  const { summaries: allSummaries, isLoading, error, deleteDocument } = useFlowLibrary();
   const {
     summaries: tourSummaries,
     isLoading: isToursLoading,
     error: toursError,
     deleteTourById,
   } = useProductTourLibrary();
-  const [viewMode, setViewMode] = useState<DashboardViewMode>(
-    readDashboardViewMode,
-  );
-  const [sortMode, setSortMode] = useState<DashboardSortMode>("newest");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [pendingDelete, setPendingDelete] = useState<SavedFlowSummary | null>(
-    null,
-  );
   const [pendingTourDelete, setPendingTourDelete] =
     useState<ProductTourSummary | null>(null);
-  const [guestIntroSettled, setGuestIntroSettled] = useState(true);
+  const [pendingDocDelete, setPendingDocDelete] = useState<SavedFlowSummary | null>(null);
+  const [flowDocsViewMode, setFlowDocsViewMode] = useState<DashboardViewMode>(readDashboardViewMode);
 
   const summaries = useMemo(() => {
     if (!isGuest) return allSummaries;
@@ -69,59 +54,37 @@ export const Dashboard = () => {
 
   const stats = useMemo(() => computeDashboardStats(summaries), [summaries]);
 
-  const displayedSummaries = useMemo(
-    () => sortSummaries(filterSummaries(summaries, searchQuery), sortMode),
-    [summaries, searchQuery, sortMode],
+  const recentTours = useMemo(
+    () => [...tourSummaries].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, RECENT_LIMIT),
+    [tourSummaries],
   );
 
-  const latestSummary = useMemo(() => {
-    if (summaries.length === 0) return null;
-    return sortSummaries(summaries, "newest")[0] ?? null;
-  }, [summaries]);
-
-  useEffect(() => {
-    const hasHiddenGuestDocs = isGuest && allSummaries.length > summaries.length;
-    if (!hasHiddenGuestDocs) {
-      setGuestIntroSettled(true);
-      return;
-    }
-    setGuestIntroSettled(isGuestLibraryIntroDismissed());
-  }, [allSummaries.length, isGuest, summaries.length]);
-
-  const handleViewChange = (mode: DashboardViewMode) => {
-    setViewMode(mode);
-    writeDashboardViewMode(mode);
-  };
-
-  const handleConfirmDelete = () => {
-    if (!pendingDelete) return;
-    void deleteDocument(pendingDelete.id).finally(() => setPendingDelete(null));
-  };
+  const recentFlowDocs = useMemo(
+    () => sortSummaries(summaries, 'newest').slice(0, RECENT_LIMIT),
+    [summaries],
+  );
 
   const handleConfirmTourDelete = () => {
     if (!pendingTourDelete) return;
-    void deleteTourById(pendingTourDelete.id).finally(() =>
-      setPendingTourDelete(null),
-    );
+    void deleteTourById(pendingTourDelete.id).finally(() => setPendingTourDelete(null));
   };
 
-  const { activeHintId, dismissHint } = useDashboardFirstTimeHint({
-    isLibraryLoading: isLoading,
-    hasDocuments: allSummaries.length > 0,
-    enabled: guestIntroSettled,
-  });
+  const handleConfirmDocDelete = () => {
+    if (!pendingDocDelete) return;
+    void deleteDocument(pendingDocDelete.id).finally(() => setPendingDocDelete(null));
+  };
 
-  const hintStepLabel = (hintId: string) => getHintStepLabel(hintId, DASHBOARD_HINT_SEQUENCE);
+  const handleFlowDocsViewChange = (mode: DashboardViewMode) => {
+    setFlowDocsViewMode(mode);
+    writeDashboardViewMode(mode);
+  };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-100/80">
+    <LibraryLayout>
       {sessionMode === 'connecting' ? (
         <div className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
           {cloudInitError ? (
-            <GenericErrorPage
-              compact
-              onRetry={() => window.location.reload()}
-            />
+            <GenericErrorPage compact onRetry={() => window.location.reload()} />
           ) : (
             <>
               <PeacockStudioLoader size={120} />
@@ -130,145 +93,98 @@ export const Dashboard = () => {
           )}
         </div>
       ) : (
-      <>
-      <div className="flex-1">
-        <DashboardHero stats={stats} documentCount={summaries.length} />
+        <div className="flex-1">
+          <DashboardHero />
 
-        <div className="relative z-10 mx-auto w-full max-w-8xl px-28 pb-12">
-          <div className="-mt-14 space-y-8">
-            <DashboardStats stats={stats} />
+          <div className="relative z-10 mx-auto w-full max-w-8xl px-4 pb-12 sm:px-6 lg:px-8">
+            <div className="-mt-14 space-y-8">
+              <DashboardStats stats={stats} />
 
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.15 }}
-            >
-              <DashboardProductToursSection
-                summaries={tourSummaries}
-                isLoading={isToursLoading}
-                error={toursError}
-                showProductToursHint={activeHintId === DASHBOARD_HINT_IDS.productTours}
-                onDismissProductToursHint={() =>
-                  dismissHint(DASHBOARD_HINT_IDS.productTours)
-                }
-                productToursHintStep={hintStepLabel(DASHBOARD_HINT_IDS.productTours)}
-                onRequestDelete={setPendingTourDelete}
-              />
-            </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.15 }}
+              >
+                <DashboardRecentSection
+                  title="Product Tours"
+                  description="Your most recently updated persona-led tours."
+                  icon={Map}
+                  viewAllHref={PRODUCT_TOURS_PATH}
+                >
+                  {isToursLoading ? (
+                    <div className="flex justify-center py-10">
+                      <PeacockStudioLoader size={80} />
+                    </div>
+                  ) : toursError ? (
+                    <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                      {toursError}
+                    </p>
+                  ) : recentTours.length === 0 ? (
+                    <p className="py-6 text-center text-sm text-slate-500">No product tours yet.</p>
+                  ) : (
+                    <ProductTourLibraryCards
+                      summaries={recentTours}
+                      onRequestDelete={setPendingTourDelete}
+                    />
+                  )}
+                </DashboardRecentSection>
+              </motion.div>
 
-            {!isLoading && !error && latestSummary ? (
-              <DashboardFeaturedDoc summary={latestSummary} />
-            ) : null}
-
-            <motion.section
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.3 }}
-              className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl shadow-slate-200/60"
-            >
-              <DashboardLibraryToolbar
-                searchQuery={searchQuery}
-                sortMode={sortMode}
-                viewMode={viewMode}
-                resultCount={displayedSummaries.length}
-                totalCount={summaries.length}
-                guestTotalCount={isGuest ? allSummaries.length : undefined}
-                showLibraryHint={activeHintId === DASHBOARD_HINT_IDS.library}
-                onDismissLibraryHint={() => dismissHint(DASHBOARD_HINT_IDS.library)}
-                libraryHintStep={hintStepLabel(DASHBOARD_HINT_IDS.library)}
-                onSearchChange={setSearchQuery}
-                onSortChange={setSortMode}
-                onViewChange={handleViewChange}
-              />
-
-              {isGuest && allSummaries.length > summaries.length ? (
-                <GuestLibraryHiddenNotice
-                  visibleCount={summaries.length}
-                  totalCount={allSummaries.length}
-                  onIntroSettled={() => setGuestIntroSettled(true)}
-                />
-              ) : null}
-
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center gap-4 px-6 py-20">
-                  <PeacockStudioLoader size={120} />
-                  <p className="text-sm font-medium text-slate-500">
-                    Loading your library…
-                  </p>
-                </div>
-              ) : null}
-
-              {error ? (
-                <div className="mx-6 mb-6">
-                  <GenericErrorPage compact onRetry={() => void refresh()} />
-                </div>
-              ) : null}
-
-              {!isLoading && !error && summaries.length === 0 ? (
-                <DashboardEmptyState
-                  showRecordHint={activeHintId === DASHBOARD_HINT_IDS.recordFlow}
-                  onDismissRecordHint={() => dismissHint(DASHBOARD_HINT_IDS.recordFlow)}
-                />
-              ) : null}
-
-              {!isLoading &&
-              !error &&
-              summaries.length > 0 &&
-              displayedSummaries.length === 0 ? (
-                <div className="mx-6 mb-6 rounded-xl border border-slate-200 bg-slate-50 px-6 py-10 text-center">
-                  <SearchX
-                    className="mx-auto h-10 w-10 text-slate-300"
-                    aria-hidden
-                  />
-                  <p className="mt-3 font-semibold text-slate-900">
-                    No matches found
-                  </p>
-                  <p className="mt-2 text-sm text-slate-600">
-                    Try a different search term or clear the filter to see all
-                    documentations.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    className="mt-4 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    Clear search
-                  </button>
-                </div>
-              ) : null}
-
-              {!isLoading && !error && displayedSummaries.length > 0 ? (
-                <div className="p-6 pt-2">
-                  <FlowLibrarySection
-                    viewMode={viewMode}
-                    summaries={displayedSummaries}
-                    onRequestDelete={setPendingDelete}
-                  />
-                </div>
-              ) : null}
-            </motion.section>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.25 }}
+              >
+                <DashboardRecentSection
+                  title="Flow Docs"
+                  description="Your most recently updated flow documentations."
+                  icon={FileText}
+                  viewAllHref={FLOW_DOCS_PATH}
+                  toolbar={
+                    !isLoading && !error && recentFlowDocs.length > 0 ? (
+                      <ViewModeToggle
+                        value={flowDocsViewMode}
+                        onChange={handleFlowDocsViewChange}
+                      />
+                    ) : null
+                  }
+                >
+                  {isLoading ? (
+                    <div className="flex justify-center py-10">
+                      <PeacockStudioLoader size={80} />
+                    </div>
+                  ) : error ? (
+                    <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                      {error}
+                    </p>
+                  ) : recentFlowDocs.length === 0 ? (
+                    <p className="py-6 text-center text-sm text-slate-500">No flow docs yet.</p>
+                  ) : (
+                    <FlowLibrarySection
+                      viewMode={flowDocsViewMode}
+                      summaries={recentFlowDocs}
+                      onRequestDelete={setPendingDocDelete}
+                    />
+                  )}
+                </DashboardRecentSection>
+              </motion.div>
+            </div>
           </div>
         </div>
-      </div>
-
-      <DashboardWorkflowOutputsSection />
-
-      <AppFooter />
-      </>
       )}
 
       <ConfirmDialog
-        isOpen={Boolean(pendingDelete)}
+        isOpen={Boolean(pendingDocDelete)}
         title="Delete documentation?"
         confirmLabel="Delete"
         isDestructive
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setPendingDelete(null)}
+        onConfirm={handleConfirmDocDelete}
+        onCancel={() => setPendingDocDelete(null)}
       >
-        {pendingDelete ? (
+        {pendingDocDelete ? (
           <DeleteDocumentConfirmContent
-            title={pendingDelete.title}
-            stepCount={pendingDelete.stepCount}
+            title={pendingDocDelete.title}
+            stepCount={pendingDocDelete.stepCount}
           />
         ) : null}
       </ConfirmDialog>
@@ -288,6 +204,6 @@ export const Dashboard = () => {
           />
         ) : null}
       </ConfirmDialog>
-    </div>
+    </LibraryLayout>
   );
 };

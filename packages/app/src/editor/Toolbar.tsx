@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { persistCurrentFlow } from "@/services/flowLibraryService";
@@ -27,6 +27,8 @@ export const Toolbar = ({
   onEditorHintsReady,
   editorHints,
 }: ToolbarProps) => {
+  const location = useLocation();
+  const libraryBackState = location.state;
   const flow = useFlowStore((state) => state.flow);
   const playableSteps = usePlayableSteps();
   const documentId =
@@ -117,6 +119,7 @@ export const Toolbar = ({
               >
                 <Link
                   to={playerPath}
+                  state={libraryBackState}
                   className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 bg-peacock-500 text-white hover:text-peacock-500"
                 >
                   Play

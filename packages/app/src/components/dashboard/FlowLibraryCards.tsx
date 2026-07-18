@@ -8,6 +8,7 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import type { SavedFlowSummary } from '@/types/savedFlow'
+import { useLibraryNavigationState } from '@/hooks/useLibraryBackState'
 import { formatFlowDate } from '@/utils/formatFlowDate'
 import { FlowDocumentActions } from './FlowDocumentActions'
 import { FlowVersionBadge } from './FlowVersionBadge'
@@ -45,6 +46,7 @@ const FlowLibraryCard = ({
   onRequestDelete,
 }: FlowLibraryCardProps) => {
   const wasUpdated = summary.updatedAt > summary.generatedAt + 60_000
+  const navigationState = useLibraryNavigationState()
 
   return (
     <motion.article
@@ -69,6 +71,7 @@ const FlowLibraryCard = ({
 
         <Link
           to={`/docs/${summary.id}`}
+          state={navigationState}
           className="mt-4 block min-w-0 rounded-lg outline-none ring-peacock-500 focus-visible:ring-2"
         >
           <h3 className="flex items-start gap-1.5 text-lg font-bold leading-snug text-slate-900 transition-colors group-hover:text-peacock-700">

@@ -1,18 +1,9 @@
 import { motion } from 'framer-motion'
-import { CloudUserButton } from '@/components/auth/CloudUserButton'
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding'
 import { isCloudSyncEnabled } from '@/cloud/config'
-import { getGreeting } from '@/utils/dashboardLibrary'
-import type { DashboardStats as DashboardStatsModel } from '@/utils/dashboardStats'
 
-interface DashboardHeroProps {
-  stats: DashboardStatsModel
-  documentCount: number
-}
-
-export const DashboardHero = ({ stats, documentCount }: DashboardHeroProps) => (
+export const DashboardHero = () => (
   <section className="relative overflow-hidden bg-gradient-to-br from-peacock-700 via-peacock-800 to-brand-violet px-6 pb-24 pt-10">
-    <CloudUserButton />
     <motion.div
       aria-hidden
       className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-3xl"
@@ -70,23 +61,4 @@ export const DashboardHero = ({ stats, documentCount }: DashboardHeroProps) => (
       </motion.div> */}
     </div>
   </section>
-)
-
-interface HeroChipProps {
-  label: string
-  value: number
-}
-
-const HeroChip = ({ label, value }: HeroChipProps) => (
-  <motion.div
-    whileHover={{ y: -2 }}
-    className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md"
-  >
-    <p className="text-xs font-medium uppercase tracking-wide text-peacock-100/80">
-      {label}
-    </p>
-    <p className="mt-1 text-2xl font-semibold tabular-nums text-white">
-      {value}
-    </p>
-  </motion.div>
 )

@@ -1,11 +1,9 @@
-import { Link } from 'react-router-dom';
-import { ArrowLeft, FileText } from 'lucide-react';
-import { AppFooter } from '@/components/AppFooter';
+import { FileText } from 'lucide-react';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
-import { AppHeader } from '@/components/AppHeader';
 import { CloudAuthActions } from '@/components/auth/CloudAuthActions';
 import { GenericErrorPage } from '@/components/errors/GenericErrorPage';
-import { DASHBOARD_PATH } from '@/constants/routes';
+import { LibraryLayout } from '@/layouts/LibraryLayout';
+import { Link } from 'react-router-dom';
 import { getArtifactUiConfig } from '@/constants/workflowArtifactUi';
 import { useWorkflowArtifactLibrary } from '@/hooks/useWorkflowArtifacts';
 import { useSessionMode } from '@/hooks/useSessionMode';
@@ -23,19 +21,9 @@ export const ArtifactLibraryPage = ({ artifactType }: ArtifactLibraryPageProps) 
   const Icon = config.icon;
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <AppHeader eyebrow="Workflow outputs" title={config.pluralTitle} homeLink />
-
+    <LibraryLayout>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
-        <Link
-          to={DASHBOARD_PATH}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-peacock-700"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Back to library
-        </Link>
-
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-start gap-4">
             <span className="inline-flex rounded-2xl bg-peacock-50 p-3 text-peacock-700 ring-1 ring-peacock-100">
               <Icon className="h-6 w-6" aria-hidden />
@@ -102,8 +90,6 @@ export const ArtifactLibraryPage = ({ artifactType }: ArtifactLibraryPageProps) 
           )
         ) : null}
       </main>
-
-      <AppFooter />
-    </div>
+    </LibraryLayout>
   );
 };

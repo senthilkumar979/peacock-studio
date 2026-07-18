@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link2, Pencil, Play, Trash2 } from 'lucide-react';
 import { ShareDocumentModal } from '@/components/share/ShareDocumentModal';
 import { useCanDeleteLibraryItems } from '@/hooks/useSessionMode';
+import { useLibraryNavigationState } from '@/hooks/useLibraryBackState';
 import { getFlowDocument, saveFlowDocument } from '@/storage/libraryRouter';
 import { getDocumentPath } from '@/utils/shareLink';
 
@@ -21,6 +22,7 @@ export const FlowDocumentActions = ({
 }: FlowDocumentActionsProps) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const canDelete = useCanDeleteLibraryItems();
+  const navigationState = useLibraryNavigationState();
 
   const containerClass =
     layout === 'stack'
@@ -35,12 +37,14 @@ export const FlowDocumentActions = ({
       <div className={containerClass}>
         <Link
           to={getDocumentPath(documentId, 'player')}
+          state={navigationState}
           className={`${actionClass} border-slate-300 text-slate-700 hover:bg-white`}
         >
           <Play className={ICON_CLASS} aria-hidden />
         </Link>
         <Link
           to={`/docs/${documentId}/edit`}
+          state={navigationState}
           className={`${actionClass} border-peacock-200 bg-peacock-50 text-peacock-800 hover:bg-peacock-100`}
         >
           <Pencil className={ICON_CLASS} aria-hidden />

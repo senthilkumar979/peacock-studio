@@ -1,6 +1,18 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { DASHBOARD_PATH, LANDING_PATH, PRIVACY_PATH, TERMS_PATH } from '@/constants/routes';
+import {
+  DASHBOARD_PATH,
+  FLOW_DOCS_PATH,
+  FLOW_MAPS_PATH,
+  LANDING_PATH,
+  PLAYWRIGHT_TESTS_PATH,
+  PRIVACY_PATH,
+  PRODUCT_TOURS_PATH,
+  TERMS_PATH,
+  TEST_CASES_PATH,
+} from '@/constants/routes';
 import { Dashboard } from '@/pages/Dashboard';
+import { FlowDocsLibraryPage } from '@/pages/FlowDocsLibraryPage';
+import { ProductToursLibraryPage } from '@/pages/ProductToursLibraryPage';
 import { Landing } from '@/pages/Landing';
 import { CompareDocs } from '@/pages/CompareDocs';
 import { Editor } from '@/pages/Editor';
@@ -26,11 +38,6 @@ import { PlaywrightTestsLibraryPage } from '@/pages/PlaywrightTestsLibraryPage';
 import { PlaywrightTestsDetailPage } from '@/pages/PlaywrightTestsDetailPage';
 import { FlowMapsLibraryPage } from '@/pages/FlowMapsLibraryPage';
 import { FlowMapsDetailPage } from '@/pages/FlowMapsDetailPage';
-import {
-  FLOW_MAPS_PATH,
-  PLAYWRIGHT_TESTS_PATH,
-  TEST_CASES_PATH,
-} from '@/constants/routes';
 import { isCloudSyncEnabled } from '@/cloud/config';
 
 export const App = () => (
@@ -54,6 +61,8 @@ export const App = () => (
     <Route path="/s/:token/edit" element={<PublicSharePage mode="edit" />} />
     <Route path="/s/:token" element={<PublicSharePage mode="view" />} />
     <Route path={DASHBOARD_PATH} element={<Dashboard />} />
+    <Route path={FLOW_DOCS_PATH} element={<FlowDocsLibraryPage />} />
+    <Route path={PRODUCT_TOURS_PATH} element={<ProductToursLibraryPage />} />
     <Route path="/compare" element={<CompareDocs />} />
     <Route path="/editor" element={<Editor />} />
     <Route path="/tours/new" element={<NewProductTour />} />

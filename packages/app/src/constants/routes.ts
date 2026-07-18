@@ -4,6 +4,10 @@ export const LANDING_PATH = '/' as const;
 /** App library dashboard */
 export const DASHBOARD_PATH = '/dashboard' as const;
 
+/** Library listing pages */
+export const FLOW_DOCS_PATH = '/flow-docs' as const;
+export const PRODUCT_TOURS_PATH = '/product-tours' as const;
+
 /** Legal pages */
 export const PRIVACY_PATH = '/privacy' as const;
 export const TERMS_PATH = '/terms' as const;

@@ -1,6 +1,7 @@
 import { Calendar, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { SavedFlowSummary } from '@/types/savedFlow';
+import { useLibraryNavigationState } from '@/hooks/useLibraryBackState';
 import { formatFlowDate } from '@/utils/formatFlowDate';
 import { getDocumentPath } from '@/utils/shareLink';
 import { FlowDocumentActions } from './FlowDocumentActions';
@@ -12,7 +13,10 @@ interface FlowLibraryListProps {
   onRequestDelete: (summary: SavedFlowSummary) => void;
 }
 
-export const FlowLibraryList = ({ summaries, onRequestDelete }: FlowLibraryListProps) => (
+export const FlowLibraryList = ({ summaries, onRequestDelete }: FlowLibraryListProps) => {
+  const navigationState = useLibraryNavigationState();
+
+  return (
   <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
     {summaries.map((summary) => (
       <li
@@ -25,6 +29,7 @@ export const FlowLibraryList = ({ summaries, onRequestDelete }: FlowLibraryListP
           </span>
           <Link
             to={getDocumentPath(summary.id, 'player')}
+            state={navigationState}
             className="group min-w-0 flex-1 rounded-lg outline-none ring-peacock-500 focus-visible:ring-2"
           >
             <p className="truncate font-semibold text-slate-900 transition-colors group-hover:text-peacock-700">
@@ -50,4 +55,5 @@ export const FlowLibraryList = ({ summaries, onRequestDelete }: FlowLibraryListP
       </li>
     ))}
   </ul>
-);
+  );
+};

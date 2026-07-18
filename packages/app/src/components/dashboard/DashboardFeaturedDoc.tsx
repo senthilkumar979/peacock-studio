@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, Layers, Pencil, Play, Sparkles } from 'lucide-react';
 import type { SavedFlowSummary } from '@/types/savedFlow';
+import { useLibraryNavigationState } from '@/hooks/useLibraryBackState';
 import { formatFlowDate } from '@/utils/formatFlowDate';
 import { getDocumentPath } from '@/utils/shareLink';
 
@@ -9,7 +10,10 @@ interface DashboardFeaturedDocProps {
   summary: SavedFlowSummary;
 }
 
-export const DashboardFeaturedDoc = ({ summary }: DashboardFeaturedDocProps) => (
+export const DashboardFeaturedDoc = ({ summary }: DashboardFeaturedDocProps) => {
+  const navigationState = useLibraryNavigationState();
+
+  return (
   <motion.section
     initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
@@ -64,6 +68,7 @@ export const DashboardFeaturedDoc = ({ summary }: DashboardFeaturedDocProps) => 
       <div className="flex shrink-0 flex-wrap gap-2">
         <Link
           to={getDocumentPath(summary.id, 'player')}
+          state={navigationState}
           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
         >
           <Play className="h-4 w-4" aria-hidden />
@@ -71,6 +76,7 @@ export const DashboardFeaturedDoc = ({ summary }: DashboardFeaturedDocProps) => 
         </Link>
         <Link
           to={`/docs/${summary.id}/edit`}
+          state={navigationState}
           className="inline-flex items-center gap-2 rounded-xl bg-peacock-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-peacock-600/25 transition hover:bg-peacock-700"
         >
           <Pencil className="h-4 w-4" aria-hidden />
@@ -79,4 +85,5 @@ export const DashboardFeaturedDoc = ({ summary }: DashboardFeaturedDocProps) => 
       </div>
     </motion.div>
   </motion.section>
-);
+  );
+};

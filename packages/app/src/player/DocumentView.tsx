@@ -30,7 +30,7 @@ import {
   type SharedDocumentViewMode,
 } from "@/utils/shareLink";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { DocumentSectionCard } from "./DocumentSectionCard";
 import { DocumentStepCard } from "./DocumentStepCard";
 import {
@@ -52,6 +52,8 @@ export const DocumentView = ({
   onModeChange,
   pageHints,
 }: DocumentViewProps) => {
+  const location = useLocation();
+  const libraryBackState = location.state;
   const flow = useFlowStore((state) => state.flow);
   const steps = useViewerOutline();
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
@@ -234,6 +236,7 @@ export const DocumentView = ({
         >
           <Link
             to={`/docs/${documentId}/edit`}
+            state={libraryBackState}
             className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800 hover:bg-peacock-100"
           >
             Edit flow

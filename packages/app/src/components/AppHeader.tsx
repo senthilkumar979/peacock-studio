@@ -7,6 +7,7 @@ import { DASHBOARD_PATH } from '@/constants/routes';
 import { ShareDocumentModal } from '@/components/share/ShareDocumentModal';
 import { ShareRouteModal } from '@/components/share/ShareRouteModal';
 import { ShareProductTourModal } from '@/components/share/ShareProductTourModal';
+import { useLibraryBackLink } from '@/hooks/useLibraryBackState';
 import { persistCurrentFlow } from '@/services/flowLibraryService';
 import { useFlowStore } from '@/store/flowStore';
 import type { ProductTour } from '@/types/productTour';
@@ -47,10 +48,7 @@ export const AppHeader = ({
   const updateShareSettings = useFlowStore((state) => state.updateShareSettings);
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-
-  const handleBackToDashboard = () => {
-    window.location.assign(DASHBOARD_PATH);
-  };
+  const backLink = useLibraryBackLink();
 
   const canShare = Boolean(documentId || routeId || tourId);
   const hasActions = Boolean(children) || canShare;
@@ -93,15 +91,14 @@ export const AppHeader = ({
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
           {homeLink ? (
-            <button
-              type="button"
-              onClick={handleBackToDashboard}
+            <Link
+              to={backLink.from}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-peacock-500"
-              aria-label="Back to dashboard"
+              aria-label={`Back to ${backLink.fromLabel}`}
             >
               <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="hidden sm:inline">Dashboard</span>
-            </button>
+              <span className="hidden sm:inline">{backLink.fromLabel}</span>
+            </Link>
           ) : null}
 
           {brandBlock}

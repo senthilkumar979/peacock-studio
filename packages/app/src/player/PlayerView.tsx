@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
 import { FlowSectionCard } from '@/components/FlowSectionCard';
 import { HintAnchor, type PageHintControl } from '@/components/onboarding/HintAnchor';
@@ -32,6 +32,8 @@ export const PlayerView = ({
   onModeChange,
   pageHints,
 }: PlayerViewProps) => {
+  const location = useLocation();
+  const libraryBackState = location.state;
   const flow = useFlowStore((state) => state.flow);
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
   const playback = useBranchingPlayback();
@@ -117,6 +119,7 @@ export const PlayerView = ({
         >
           <Link
             to={`/docs/${documentId}/edit`}
+            state={libraryBackState}
             className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800 hover:bg-peacock-100"
           >
             Edit flow

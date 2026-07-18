@@ -1,6 +1,7 @@
 import { Calendar, FileText, Settings2, Tag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { SavedFlowSummary } from '@/types/savedFlow';
+import { useLibraryNavigationState } from '@/hooks/useLibraryBackState';
 import { formatFlowDate } from '@/utils/formatFlowDate';
 import { getDocumentPath } from '@/utils/shareLink';
 import { FlowDocumentActions } from './FlowDocumentActions';
@@ -12,7 +13,10 @@ interface FlowLibraryTableProps {
   onRequestDelete: (summary: SavedFlowSummary) => void;
 }
 
-export const FlowLibraryTable = ({ summaries, onRequestDelete }: FlowLibraryTableProps) => (
+export const FlowLibraryTable = ({ summaries, onRequestDelete }: FlowLibraryTableProps) => {
+  const navigationState = useLibraryNavigationState();
+
+  return (
   <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
     <table className="min-w-full divide-y divide-slate-200 text-sm">
       <thead className="bg-slate-50">
@@ -49,6 +53,7 @@ export const FlowLibraryTable = ({ summaries, onRequestDelete }: FlowLibraryTabl
             <td className="px-4 py-3">
               <Link
                 to={getDocumentPath(summary.id, 'player')}
+                state={navigationState}
                 className="group block min-w-0 rounded-lg outline-none ring-peacock-500 focus-visible:ring-2"
               >
                 <p className="font-medium text-slate-900 transition-colors group-hover:text-peacock-700">
@@ -81,4 +86,5 @@ export const FlowLibraryTable = ({ summaries, onRequestDelete }: FlowLibraryTabl
       </tbody>
     </table>
   </div>
-);
+  );
+};
