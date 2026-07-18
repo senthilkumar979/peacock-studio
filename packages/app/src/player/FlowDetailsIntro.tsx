@@ -1,184 +1,97 @@
-import type { FlowCaptureEnvironment } from "@peacock/shared";
-import {
-  DEFAULT_CAPTURE_EDITOR_SETTINGS,
-  getCaptureBackgroundPreset,
-  getPresetSwatchCss,
-} from "@peacock/shared";
-import { FileText } from "lucide-react";
-import { FlowVersionBadge } from "@/components/dashboard/FlowVersionBadge";
-import { CaptureEnvironmentPanel } from "@/components/flow/CaptureEnvironmentPanel";
-import { formatFlowDate } from "@/utils/formatFlowDate";
+import { CalendarDays, Layers3, Sparkles } from 'lucide-react';
+import { FlowVersionBadge } from '@/components/dashboard/FlowVersionBadge';
+import { formatFlowDate } from '@/utils/formatFlowDate';
+import { FlowDetailsGuideHints } from '@/player/FlowDetailsGuideHints';
+import { FlowDetailsStatChip } from '@/player/FlowDetailsStatChip';
 
 interface FlowDetailsIntroProps {
   title: string;
   description: string;
   version: string;
-  captureEnvironment?: FlowCaptureEnvironment | null;
   createdAt?: number;
   stepCount?: number;
-  variant: "doc" | "player";
-  anchorId?: string;
+  variant: 'doc' | 'player';
+  fillHeight?: boolean;
   isActive?: boolean;
 }
-
-const introCardClass =
-  "h-full rounded-2xl border border-slate-200 p-5 shadow-sm sm:p-6";
-
-const captureEditorIntroBackground = (() => {
-  const preset = getCaptureBackgroundPreset(
-    DEFAULT_CAPTURE_EDITOR_SETTINGS.backgroundPresetId,
-  );
-  return preset ? getPresetSwatchCss(preset) : undefined;
-})();
-
-interface FlowDetailsSummaryProps {
-  title: string;
-  trimmedDescription: string;
-  version: string;
-  stepCount?: number;
-  createdAt?: number;
-  isPlayer: boolean;
-  showEyebrow?: boolean;
-}
-
-const FlowDetailsSummary = ({
-  title,
-  trimmedDescription,
-  version,
-  stepCount,
-  createdAt,
-  isPlayer,
-  showEyebrow = false,
-}: FlowDetailsSummaryProps) => (
-  <>
-    {showEyebrow ? (
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-peacock-600">
-        Flow details
-      </p>
-    ) : null}
-
-    <h2
-      className={
-        isPlayer
-          ? "text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl"
-          : "mt-1 text-xl font-semibold text-slate-900"
-      }
-    >
-      {title}
-    </h2>
-
-    {trimmedDescription ? (
-      <p
-        className={
-          isPlayer
-            ? "mt-3 text-base leading-relaxed text-slate-700 sm:text-lg"
-            : "mt-3 text-sm leading-6 text-slate-600"
-        }
-      >
-        {trimmedDescription}
-      </p>
-    ) : (
-      <p className="mt-3 text-sm italic text-slate-500">
-        No description provided.
-      </p>
-    )}
-
-    <div className="mt-5 flex flex-col gap-3">
-      <FlowVersionBadge version={version} />
-      <div className="flex flex-wrap items-center gap-3">
-        {typeof stepCount === "number" ? (
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
-            {stepCount} {stepCount === 1 ? "step" : "steps"}
-          </span>
-        ) : null}
-        {createdAt ? (
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
-            Created {formatFlowDate(createdAt)}
-          </span>
-        ) : null}
-      </div>
-    </div>
-  </>
-);
 
 export const FlowDetailsIntro = ({
   title,
   description,
   version,
-  captureEnvironment,
   createdAt,
   stepCount,
   variant,
-  anchorId,
+  fillHeight = false,
   isActive = false,
 }: FlowDetailsIntroProps) => {
   const trimmedDescription = description.trim();
-  const isPlayer = variant === "player";
-  const hasEnvironment = Boolean(captureEnvironment);
-
-  const summaryProps = {
-    title,
-    trimmedDescription,
-    version,
-    stepCount,
-    createdAt,
-    isPlayer,
-  };
-
-  if (isPlayer) {
-    return (
-      <div className="mx-auto w-full max-w-6xl">
-        <div
-          className={`grid gap-6 lg:items-stretch lg:gap-8 ${hasEnvironment ? "lg:grid-cols-2" : ""}`}
-        >
-          <div
-            className={`min-w-0 ${introCardClass}`}
-            style={{ background: captureEditorIntroBackground }}
-          >
-            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-peacock-200 bg-peacock-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-peacock-800">
-              <FileText className="h-3.5 w-3.5" aria-hidden />
-              Flow overview
-            </span>
-            <FlowDetailsSummary {...summaryProps} />
-            <p className="mt-6 text-sm text-slate-500">
-              Press Next or use the arrow keys to begin the guided walkthrough.
-            </p>
-          </div>
-
-          {captureEnvironment ? (
-            <div className="min-w-0">
-              <CaptureEnvironmentPanel
-                environment={captureEnvironment}
-                compact
-              />
-            </div>
-          ) : null}
-        </div>
-      </div>
-    );
-  }
+  const isPlayer = variant === 'player';
 
   return (
-    <section
-      id={anchorId}
-      className={`scroll-mt-24 rounded-2xl border bg-white p-6 shadow-sm transition ${
+    <article
+      className={`relative min-w-0 overflow-hidden rounded-3xl border shadow-lg shadow-slate-200/50 transition ${
+        fillHeight ? 'h-full' : ''
+      } ${
         isActive
-          ? "border-peacock-300 ring-2 ring-peacock-100"
-          : "border-slate-200"
+          ? 'border-peacock-300 ring-2 ring-peacock-100'
+          : 'border-slate-200/80'
       }`}
     >
-      <FlowDetailsSummary {...summaryProps} showEyebrow />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-peacock-50/80 via-white to-brand-violet/5" />
+      <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-peacock-200/25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 left-1/4 h-36 w-36 rounded-full bg-brand-violet/10 blur-3xl" />
 
-      {captureEnvironment ? (
-        <div className="mt-6">
-          <CaptureEnvironmentPanel environment={captureEnvironment} />
+      <div className="relative flex h-full flex-col p-5 sm:p-6 lg:p-7">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-peacock-200/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-peacock-800 shadow-sm">
+            <Sparkles className="h-3 w-3" aria-hidden />
+            {isPlayer ? 'Flow overview' : 'Flow details'}
+          </span>
+          <FlowVersionBadge version={version} />
         </div>
-      ) : null}
 
-      <p className="mt-6 text-sm text-slate-500">
-        Follow the documented steps below, or switch to player mode for a guided
-        walkthrough.
-      </p>
-    </section>
+        <h2
+          className={`mt-5 font-bold tracking-tight text-slate-900 ${
+            isPlayer ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'
+          }`}
+        >
+          {title}
+        </h2>
+
+        {trimmedDescription ? (
+          <p
+            className={`mt-3 leading-relaxed text-slate-600 ${
+              isPlayer ? 'text-base sm:text-lg' : 'text-sm sm:text-base'
+            }`}
+          >
+            {trimmedDescription}
+          </p>
+        ) : (
+          <p className="mt-3 text-sm italic text-slate-500">No description provided.</p>
+        )}
+
+        <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
+          {typeof stepCount === 'number' ? (
+            <FlowDetailsStatChip
+              icon={Layers3}
+              label="Recorded steps"
+              value={`${stepCount} ${stepCount === 1 ? 'step' : 'steps'}`}
+            />
+          ) : null}
+          {createdAt ? (
+            <FlowDetailsStatChip
+              icon={CalendarDays}
+              label="Created"
+              value={formatFlowDate(createdAt)}
+            />
+          ) : null}
+        </div>
+
+        <div className="mt-4">
+          <FlowDetailsGuideHints variant={variant} stepCount={stepCount} />
+        </div>
+      </div>
+    </article>
   );
 };

@@ -3,6 +3,7 @@ import { useSessionMode } from '@/hooks/useSessionMode';
 import { listFlowSummaries, removeFlowDocument } from '@/services/flowLibraryService';
 import { computeDashboardStats, type DashboardStats } from '@/utils/dashboardStats';
 import type { SavedFlowSummary } from '@/types/savedFlow';
+import { GENERIC_USER_ERROR_MESSAGE, logAppError } from '@/utils/appError';
 
 export function useFlowLibrary() {
   const sessionMode = useSessionMode();
@@ -24,8 +25,8 @@ export function useFlowLibrary() {
       setSummaries(next);
       setStats(computeDashboardStats(next));
     } catch (err) {
-      console.error('[Peacock] Failed to load flow library', err);
-      setError('Could not load saved documentation.');
+      logAppError('Failed to load flow library', err);
+      setError(GENERIC_USER_ERROR_MESSAGE);
     } finally {
       setIsLoading(false);
     }

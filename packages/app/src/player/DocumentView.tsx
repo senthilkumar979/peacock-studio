@@ -38,7 +38,7 @@ import {
   type DocumentStepIndexItem,
 } from "./DocumentStepIndex";
 import { getDocumentStepIndexItemId } from "./documentStepIndexTypes";
-import { FlowDetailsIntro } from "./FlowDetailsIntro";
+import { FlowDetailsOverviewLayout } from "@/components/flow/FlowDetailsOverviewLayout";
 import { SharedViewToggle } from "./SharedViewToggle";
 
 interface DocumentViewProps {
@@ -283,8 +283,9 @@ export const DocumentView = ({
           >
             <div className="flex min-w-0 flex-col gap-5 pr-1 ">
               <div data-outline-id={FLOW_DETAILS_OUTLINE_ID}>
-                <FlowDetailsIntro
+                <FlowDetailsOverviewLayout
                   variant="doc"
+                  documentId={documentId}
                   anchorId={flowDetailsAnchor}
                   isActive={activeItemId === FLOW_DETAILS_OUTLINE_ID}
                   title={flow?.flow.title ?? "Untitled Flow"}

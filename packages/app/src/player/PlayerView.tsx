@@ -9,7 +9,7 @@ import { useKeyboard } from '@/hooks/useKeyboard';
 import { useFlowStore } from '@/store/flowStore';
 import type { SharedDocumentViewMode } from '@/utils/shareLink';
 import { FlowBranchChoicePanel } from './FlowBranchChoicePanel';
-import { FlowDetailsIntro } from './FlowDetailsIntro';
+import { FlowDetailsOverviewLayout } from '@/components/flow/FlowDetailsOverviewLayout';
 import { PlayerControls } from './PlayerControls';
 import {
   getPlayerControlsPosition,
@@ -129,7 +129,7 @@ export const PlayerView = ({
         className={`flex min-h-0 flex-1 px-3 py-3 md:px-6 md:py-4 ${
           isScrollableMain
             ? 'items-start overflow-y-auto overscroll-contain'
-            : 'items-center justify-center overflow-hidden'
+            : 'items-start justify-center overflow-hidden'
         }`}
       >
         {playback.isAtFinale ? (
@@ -142,8 +142,10 @@ export const PlayerView = ({
             onReplay={handleReplay}
           />
         ) : playback.isAtIntro ? (
-          <FlowDetailsIntro
+          <div className="w-full self-stretch">
+            <FlowDetailsOverviewLayout
             variant="player"
+            documentId={documentId}
             title={flow?.flow.title ?? 'Untitled Flow'}
             description={flow?.flow.description ?? ''}
             version={flow?.flow.version ?? ''}
@@ -151,6 +153,7 @@ export const PlayerView = ({
             createdAt={flow?.metadata.createdAt}
             stepCount={playback.playableStepCount}
           />
+          </div>
         ) : playback.isLoadingLinked ? (
           <p className="text-sm text-slate-500">Loading linked demo…</p>
         ) : playback.linkedError ? (

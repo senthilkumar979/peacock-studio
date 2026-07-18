@@ -31,6 +31,10 @@ export function getCloudInitErrorMessage(error: unknown): string {
     return 'Cloud database tables are missing. Apply the Supabase migrations in supabase/migrations/.';
   }
 
+  if (code === '23505' && record.message?.includes('screenshot_assets_org_hash_uidx')) {
+    return 'Screenshot sync failed due to an outdated database constraint. Run supabase db push to apply the latest migrations (screenshot_assets_hash_index), then try again.';
+  }
+
   if (record?.message) {
     return record.message;
   }

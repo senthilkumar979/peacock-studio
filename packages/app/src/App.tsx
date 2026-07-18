@@ -20,6 +20,17 @@ import { SignUpPage } from '@/pages/SignUpPage';
 import { PublicSharePage } from '@/pages/PublicSharePage';
 import { PrivacyPolicy } from '@/pages/PrivacyPolicy';
 import { TermsAndConditions } from '@/pages/TermsAndConditions';
+import { TestCasesLibraryPage } from '@/pages/TestCasesLibraryPage';
+import { TestCasesDetailPage } from '@/pages/TestCasesDetailPage';
+import { PlaywrightTestsLibraryPage } from '@/pages/PlaywrightTestsLibraryPage';
+import { PlaywrightTestsDetailPage } from '@/pages/PlaywrightTestsDetailPage';
+import { FlowMapsLibraryPage } from '@/pages/FlowMapsLibraryPage';
+import { FlowMapsDetailPage } from '@/pages/FlowMapsDetailPage';
+import {
+  FLOW_MAPS_PATH,
+  PLAYWRIGHT_TESTS_PATH,
+  TEST_CASES_PATH,
+} from '@/constants/routes';
 import { isCloudSyncEnabled } from '@/cloud/config';
 
 export const App = () => (
@@ -34,6 +45,12 @@ export const App = () => (
     <Route path="/solutions/:roleSlug" element={<SolutionRole />} />
     <Route path={PRIVACY_PATH} element={<PrivacyPolicy />} />
     <Route path={TERMS_PATH} element={<TermsAndConditions />} />
+    <Route path={TEST_CASES_PATH} element={<TestCasesLibraryPage />} />
+    <Route path={`${TEST_CASES_PATH}/:documentId`} element={<TestCasesDetailPage />} />
+    <Route path={PLAYWRIGHT_TESTS_PATH} element={<PlaywrightTestsLibraryPage />} />
+    <Route path={`${PLAYWRIGHT_TESTS_PATH}/:documentId`} element={<PlaywrightTestsDetailPage />} />
+    <Route path={FLOW_MAPS_PATH} element={<FlowMapsLibraryPage />} />
+    <Route path={`${FLOW_MAPS_PATH}/:documentId`} element={<FlowMapsDetailPage />} />
     <Route path="/s/:token/edit" element={<PublicSharePage mode="edit" />} />
     <Route path="/s/:token" element={<PublicSharePage mode="view" />} />
     <Route path={DASHBOARD_PATH} element={<Dashboard />} />

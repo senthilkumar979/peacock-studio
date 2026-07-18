@@ -1,7 +1,10 @@
-import type { PlayerControlsPosition } from './playerControlsPosition';
-import { PlayerControlsPositionDisplay } from './PlayerControlsPositionDisplay';
-import { HintAnchor, type PageHintControl } from '@/components/onboarding/HintAnchor';
-import { PLAYER_HINT_IDS } from '@/constants/firstTimeHints';
+import type { PlayerControlsPosition } from "./playerControlsPosition";
+import { PlayerControlsPositionDisplay } from "./PlayerControlsPositionDisplay";
+import {
+  HintAnchor,
+  type PageHintControl,
+} from "@/components/onboarding/HintAnchor";
+import { PLAYER_HINT_IDS } from "@/constants/firstTimeHints";
 
 interface PlayerControlsProps {
   position: PlayerControlsPosition;
@@ -26,14 +29,14 @@ export const PlayerControls = ({
   onTogglePlay,
   pageHints,
 }: PlayerControlsProps) => (
-  <HintAnchor
-    hints={pageHints}
-    hintId={PLAYER_HINT_IDS.playerControls}
-    title="Player controls"
-    description="Use Previous and Next to walk through steps. Press Play for auto-advance, or use arrow keys and Space."
-    placement="top"
-  >
-    <div className="flex shrink-0 flex-col gap-3 border-t border-slate-200 bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+  // <HintAnchor
+  //   hints={pageHints}
+  //   hintId={PLAYER_HINT_IDS.playerControls}
+  //   title="Player controls"
+  //   description="Use Previous and Next to walk through steps. Press Play for auto-advance, or use arrow keys and Space."
+  //   placement="top"
+  // >
+  <div className="flex shrink-0 flex-col gap-3 border-t border-slate-200 bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
     <div className="min-w-0">
       <PlayerControlsPositionDisplay position={position} />
       <p className="mt-1 text-xs text-slate-500">{progressLabel}</p>
@@ -49,7 +52,7 @@ export const PlayerControls = ({
         Previous
       </button>
       <button type="button" onClick={onTogglePlay} className="btn-peacock">
-        {isPlaying ? 'Pause' : 'Play'}
+        {isPlaying ? "Pause" : "Play"}
       </button>
       <button
         type="button"
@@ -61,7 +64,9 @@ export const PlayerControls = ({
       </button>
     </div>
 
-    <p className="hidden text-xs text-slate-400 lg:block">← → navigate · Space play/pause</p>
-    </div>
-  </HintAnchor>
+    <p className="hidden text-xs text-slate-400 lg:block">
+      ← → navigate · Space play/pause
+    </p>
+  </div>
+  // </HintAnchor>
 );

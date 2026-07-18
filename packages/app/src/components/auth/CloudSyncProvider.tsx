@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useAuth, useSession, useUser } from '@clerk/react';
 import { setCloudAuthContext, setCloudInitError } from '@/cloud/authContext';
 import { fetchClerkSupabaseAccessToken } from '@/cloud/clerkSupabaseToken';
-import { getCloudInitErrorMessage } from '@/cloud/cloudInitErrors';
 import {
   importLocalLibraryToCloud,
   countLocalLibraryItems,
@@ -15,6 +14,7 @@ import { resetSupabaseClientCache } from '@/cloud/supabaseClient';
 import { setSessionAuthState } from '@/cloud/sessionState';
 import { getCloudEnvValidationError } from '@/cloud/validateCloudEnv';
 import { clearLocalLibrary } from '@/storage/flowLibraryDb';
+import { GENERIC_USER_ERROR_MESSAGE, logAppError } from '@/utils/appError';
 
 interface CloudSyncProviderProps {
   children: React.ReactNode;
@@ -46,8 +46,9 @@ const CloudSyncProviderInner = ({ children }: CloudSyncProviderProps) => {
 
       const envError = getCloudEnvValidationError();
       if (envError) {
+        logAppError('Cloud environment validation failed', envError);
         setCloudAuthContext(null);
-        setCloudInitError(envError);
+        setCloudInitError(GENERIC_USER_ERROR_MESSAGE);
         return;
       }
 
@@ -105,12 +106,12 @@ const CloudSyncProviderInner = ({ children }: CloudSyncProviderProps) => {
           }
         }
       } catch (error) {
-        console.error('[Peacock] Failed to initialize cloud library', error);
+        logAppError('Failed to initialize cloud library', error);
         setCloudAuthContext(null);
-        setCloudInitError(getCloudInitErrorMessage(error));
+        setCloudInitError(GENERIC_USER_ERROR_MESSAGE);
         setCloudSyncState({
           phase: 'error',
-          message: getCloudInitErrorMessage(error),
+          message: GENERIC_USER_ERROR_MESSAGE,
           importedDocuments: 0,
           exceedsFreeLimit: false,
         });

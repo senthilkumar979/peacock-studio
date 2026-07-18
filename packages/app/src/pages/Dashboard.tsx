@@ -12,6 +12,8 @@ import { GuestLibraryHiddenNotice } from "@/components/dashboard/GuestLibraryHid
 import { DashboardLibraryToolbar } from "@/components/dashboard/DashboardLibraryToolbar";
 import { DashboardProductToursSection } from "@/components/dashboard/DashboardProductToursSection";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
+import { DashboardWorkflowOutputsSection } from "@/components/dashboard/DashboardWorkflowOutputsSection";
+import { GenericErrorPage } from "@/components/errors/GenericErrorPage";
 import { FlowLibrarySection } from "@/components/dashboard/FlowLibrarySection";
 import { PeacockStudioLoader } from "@/components/PeacockStudioLoader";
 import {
@@ -40,7 +42,7 @@ export const Dashboard = () => {
   const sessionMode = useSessionMode();
   const isGuest = useIsGuestSession();
   const cloudInitError = useCloudInitError();
-  const { summaries: allSummaries, isLoading, error, deleteDocument } =
+  const { summaries: allSummaries, isLoading, error, deleteDocument, refresh } =
     useFlowLibrary();
   const {
     summaries: tourSummaries,
@@ -114,23 +116,12 @@ export const Dashboard = () => {
   return (
     <div className="flex min-h-screen flex-col bg-slate-100/80">
       {sessionMode === 'connecting' ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-24 text-center">
+        <div className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
           {cloudInitError ? (
-            <>
-              <p className="max-w-lg text-sm font-medium text-red-700">{cloudInitError}</p>
-              <p className="max-w-lg text-xs text-slate-500">
-                Clerk setup:{' '}
-                <a
-                  href="https://dashboard.clerk.com/setup/supabase"
-                  className="font-medium text-peacock-700 underline"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Activate Supabase integration
-                </a>
-                . Supabase: Authentication → Third-party → add Clerk with your Clerk domain.
-              </p>
-            </>
+            <GenericErrorPage
+              compact
+              onRetry={() => window.location.reload()}
+            />
           ) : (
             <>
               <PeacockStudioLoader size={120} />
@@ -208,8 +199,8 @@ export const Dashboard = () => {
               ) : null}
 
               {error ? (
-                <div className="mx-6 mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                  {error}
+                <div className="mx-6 mb-6">
+                  <GenericErrorPage compact onRetry={() => void refresh()} />
                 </div>
               ) : null}
 
@@ -259,6 +250,8 @@ export const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      <DashboardWorkflowOutputsSection />
 
       <AppFooter />
       </>

@@ -45,7 +45,6 @@ export function buildCaptureHighlights(
 export function buildCaptureDetailGroups(
   environment: FlowCaptureEnvironment,
 ): CaptureDetailGroup[] {
-  const screen = `${environment.screen.width} × ${environment.screen.height}`;
   const viewport = `${environment.viewport.width} × ${environment.viewport.height}`;
 
   return [
@@ -61,31 +60,8 @@ export function buildCaptureDetailGroups(
           label: 'Browser',
           value: `${environment.browser.name}${formatVersion(environment.browser.version)}`,
         },
-        { label: 'Platform', value: environment.platform || 'Unknown' },
-      ],
-    },
-    {
-      id: 'display',
-      title: 'Display',
-      items: [
-        { label: 'Screen size', value: screen },
-        { label: 'Viewport', value: viewport },
-        {
-          label: 'Available area',
-          value: `${environment.screen.availWidth} × ${environment.screen.availHeight}`,
-        },
-      ],
-    },
-    {
-      id: 'locale',
-      title: 'Locale & region',
-      items: [
         { label: 'Locale', value: environment.locale },
-        {
-          label: 'Languages',
-          value: environment.languages.join(', ') || environment.locale,
-        },
-        { label: 'Timezone', value: environment.timezone },
+        { label: 'Viewport', value: viewport },
       ],
     },
   ];

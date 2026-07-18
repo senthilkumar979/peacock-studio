@@ -2,7 +2,6 @@ import { StyleSheet, Text, View } from '@react-pdf/renderer';
 import type { FlowCaptureEnvironment } from '@peacock/shared';
 import {
   buildCaptureDetailGroups,
-  buildCaptureHighlights,
 } from '@/components/flow/captureEnvironmentDisplay';
 import { BRAND_COLORS } from '@/constants/branding';
 import { PDF_FONT_FAMILY } from './pdfTheme';
@@ -140,7 +139,6 @@ interface PdfCaptureEnvironmentPanelProps {
 }
 
 export const PdfCaptureEnvironmentPanel = ({ environment }: PdfCaptureEnvironmentPanelProps) => {
-  const highlights = buildCaptureHighlights(environment);
   const detailGroups = buildCaptureDetailGroups(environment);
 
   return (
@@ -155,18 +153,6 @@ export const PdfCaptureEnvironmentPanel = ({ environment }: PdfCaptureEnvironmen
         <View style={styles.sessionBadge}>
           <Text style={styles.sessionBadgeText}>Session metadata</Text>
         </View>
-      </View>
-
-      <View style={styles.highlightsGrid}>
-        {highlights.map((highlight) => (
-          <View key={highlight.id} style={styles.highlightCard}>
-            <Text style={styles.highlightLabel}>{highlight.label}</Text>
-            <Text style={styles.highlightValue}>{highlight.value}</Text>
-            {highlight.detail ? (
-              <Text style={styles.highlightDetail}>{highlight.detail}</Text>
-            ) : null}
-          </View>
-        ))}
       </View>
 
       {detailGroups.map((group) => (

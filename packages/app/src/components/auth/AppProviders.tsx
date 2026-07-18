@@ -1,5 +1,6 @@
 import { ClerkProvider } from '@clerk/react';
 import { BrowserRouter } from 'react-router-dom';
+import { AppErrorBoundary } from '@/components/errors/AppErrorBoundary';
 import { CloudSyncProvider } from '@/components/auth/CloudSyncProvider';
 import { CloudSyncBanner } from '@/components/auth/CloudSyncBanner';
 import { CookieConsentBanner } from '@/components/consent/CookieConsentBanner';
@@ -17,13 +18,15 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
 
   const routed = (
     <BrowserRouter>
-      <CloudSyncProvider>
-        {children}
-        <AnalyticsTracker />
-        <CloudSyncBanner />
-        <CookieConsentBanner />
-        <CookiePreferencesModal />
-      </CloudSyncProvider>
+      <AppErrorBoundary>
+        <CloudSyncProvider>
+          {children}
+          <AnalyticsTracker />
+          <CloudSyncBanner />
+          <CookieConsentBanner />
+          <CookiePreferencesModal />
+        </CloudSyncProvider>
+      </AppErrorBoundary>
     </BrowserRouter>
   );
 
