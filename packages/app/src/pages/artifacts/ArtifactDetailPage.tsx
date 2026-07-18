@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { AppFooter } from '@/components/AppFooter';
@@ -13,9 +13,12 @@ import { useWorkflowArtifactDetail } from '@/hooks/useWorkflowArtifacts';
 import { useSessionMode } from '@/hooks/useSessionMode';
 import { generateWorkflowArtifact } from '@/services/workflowArtifactService';
 import type { WorkflowArtifactType } from '@/types/workflowArtifact';
+import { WORKFLOW_ARTIFACT_TYPES } from '@/types/workflowArtifact';
 import { logAppError } from '@/utils/appError';
 import { downloadTextFile } from '@/utils/downloadTextFile';
 import { getDocumentPath } from '@/utils/shareLink';
+import { buildFlowMapPngFilename } from '@/workflow-artifacts/exportFlowMapCanvasPng';
+import type { FlowMapCanvasHandle } from '@/workflow-artifacts/flowMapCanvasHandle';
 
 interface ArtifactDetailPageProps {
   artifactType: WorkflowArtifactType;
@@ -31,6 +34,30 @@ export const ArtifactDetailPage = ({ artifactType }: ArtifactDetailPageProps) =>
   );
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [hasActionError, setHasActionError] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const flowMapCanvasRef = useRef<FlowMapCanvasHandle>(null);
+
+  const handleDownload = async () => {
+    if (!artifact) return;
+
+    if (artifactType === WORKFLOW_ARTIFACT_TYPES.flowMap) {
+      setIsDownloading(true);
+      try {
+        await flowMapCanvasRef.current?.downloadPng(buildFlowMapPngFilename(artifact.flowTitle));
+      } catch (downloadError) {
+        logAppError('Failed to download flow map PNG', downloadError);
+        setHasActionError(true);
+      } finally {
+        setIsDownloading(false);
+      }
+      return;
+    }
+
+    downloadTextFile(
+      artifact.content,
+      `${artifact.flowTitle.replace(/\s+/g, '-').toLowerCase()}.${config.fileExtension}`,
+    );
+  };
 
   const handleRegenerate = async () => {
     if (!documentId) return;
@@ -66,7 +93,11 @@ export const ArtifactDetailPage = ({ artifactType }: ArtifactDetailPageProps) =>
         ) : null}
       </AppHeader>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
+      <main
+        className={`mx-auto w-full flex-1 px-4 py-8 sm:px-6 ${
+          artifactType === WORKFLOW_ARTIFACT_TYPES.flowMap ? 'max-w-7xl' : 'max-w-5xl'
+        }`}
+      >
         <Link
           to={config.libraryPath}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-peacock-700"
@@ -127,15 +158,12 @@ export const ArtifactDetailPage = ({ artifactType }: ArtifactDetailPageProps) =>
               artifact={artifact}
               config={config}
               isRegenerating={isRegenerating}
+              isDownloading={isDownloading}
               onRegenerate={() => void handleRegenerate()}
-              onDownload={() =>
-                downloadTextFile(
-                  artifact.content,
-                  `${artifact.flowTitle.replace(/\s+/g, '-').toLowerCase()}.${config.fileExtension}`,
-                )
-              }
+              onDownload={() => void handleDownload()}
             />
             <ArtifactContentView
+              ref={artifactType === WORKFLOW_ARTIFACT_TYPES.flowMap ? flowMapCanvasRef : undefined}
               artifactType={artifactType}
               documentId={documentId}
               flowTitle={artifact.flowTitle}

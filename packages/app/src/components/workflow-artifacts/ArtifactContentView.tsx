@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { ArtifactMarkdownViewer } from '@/components/workflow-artifacts/ArtifactMarkdownViewer';
 import { CopyToClipboardButton } from '@/components/workflow-artifacts/CopyToClipboardButton';
 import { WORKFLOW_ARTIFACT_TYPES, type WorkflowArtifactType } from '@/types/workflowArtifact';
 import { getArtifactCopyContent } from '@/utils/getArtifactCopyContent';
 import { FlowMapCanvas } from '@/workflow-artifacts/FlowMapCanvas';
+import type { FlowMapCanvasHandle } from '@/workflow-artifacts/flowMapCanvasHandle';
 
 interface ArtifactContentViewProps {
   artifactType: WorkflowArtifactType;
@@ -13,19 +14,15 @@ interface ArtifactContentViewProps {
   content: string;
 }
 
-export const ArtifactContentView = ({
-  artifactType,
-  documentId,
-  flowTitle,
-  content,
-}: ArtifactContentViewProps) => {
+export const ArtifactContentView = forwardRef<FlowMapCanvasHandle, ArtifactContentViewProps>(
+  ({ artifactType, documentId, flowTitle, content }, ref) => {
   const [isSourceOpen, setIsSourceOpen] = useState(false);
   const copyContent = getArtifactCopyContent(artifactType, content);
 
   if (artifactType === WORKFLOW_ARTIFACT_TYPES.flowMap) {
     return (
       <div className="space-y-4">
-        <FlowMapCanvas documentId={documentId} flowTitle={flowTitle} />
+        <FlowMapCanvas ref={ref} documentId={documentId} flowTitle={flowTitle} />
         <div className="rounded-2xl border border-slate-200 bg-white">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
             <button
@@ -53,4 +50,6 @@ export const ArtifactContentView = ({
   }
 
   return <ArtifactMarkdownViewer content={content} />;
-};
+});
+
+ArtifactContentView.displayName = 'ArtifactContentView';

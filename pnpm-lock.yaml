@@ -40,6 +40,9 @@ importers:
       framer-motion:
         specifier: ^12.9.2
         version: 12.40.0(react-dom@19.2.6)(react@19.2.6)
+      html-to-image:
+        specifier: 1.11.11
+        version: 1.11.11
       idb:
         specifier: ^8.0.3
         version: 8.0.3
@@ -1824,6 +1827,10 @@ packages:
 
   /hsl-to-rgb-for-reals@1.1.1:
     resolution: {integrity: sha512-LgOWAkrN0rFaQpfdWBQlv/VhkOxb5AsBjk6NQVx4yEzWS923T07X0M1Y0VNko2H52HeSpZrZNNMJ0aFqsdVzQg==}
+    dev: false
+
+  /html-to-image@1.11.11:
+    resolution: {integrity: sha512-9gux8QhvjRO/erSnDPv28noDZcPZmYE7e1vFsBLKLlRlKDSqNJYebj6Qz1TGd5lsRV+X+xYyjCKjuZdABinWjA==}
     dev: false
 
   /hyphen@1.14.1:

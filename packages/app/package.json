@@ -20,6 +20,7 @@
     "@supabase/supabase-js": "^2.110.7",
     "@xyflow/react": "^12.6.0",
     "framer-motion": "^12.9.2",
+    "html-to-image": "1.11.11",
     "idb": "^8.0.3",
     "immer": "^10.1.1",
     "lucide-react": "^1.16.0",

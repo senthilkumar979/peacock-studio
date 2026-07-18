@@ -12,6 +12,7 @@ interface ArtifactDetailToolbarProps {
   artifact: WorkflowArtifact;
   config: WorkflowArtifactUiConfig;
   isRegenerating: boolean;
+  isDownloading?: boolean;
   onRegenerate: () => void;
   onDownload: () => void;
 }
@@ -20,6 +21,7 @@ export const ArtifactDetailToolbar = ({
   artifact,
   config,
   isRegenerating,
+  isDownloading = false,
   onRegenerate,
   onDownload,
 }: ArtifactDetailToolbarProps) => {
@@ -30,6 +32,8 @@ export const ArtifactDetailToolbar = ({
       : config.artifactType === WORKFLOW_ARTIFACT_TYPES.playwright
         ? 'Copy Playwright spec'
         : 'Copy test cases';
+  const downloadLabel =
+    config.artifactType === WORKFLOW_ARTIFACT_TYPES.flowMap ? 'Download PNG' : 'Download';
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -53,11 +57,16 @@ export const ArtifactDetailToolbar = ({
         </button>
         <button
           type="button"
+          disabled={isRegenerating || isDownloading}
           onClick={onDownload}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
         >
-          <Download className="h-4 w-4" aria-hidden />
-          Download
+          {isDownloading ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          ) : (
+            <Download className="h-4 w-4" aria-hidden />
+          )}
+          {downloadLabel}
         </button>
       </div>
     </div>
