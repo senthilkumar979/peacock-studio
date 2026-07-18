@@ -1,4 +1,6 @@
 export * from './types/appMessages';
+export * from './types/consent';
+export * from './utils/consent';
 export * from './types/captureEnvironment';
 export * from './types/events';
 export * from './types/messages';

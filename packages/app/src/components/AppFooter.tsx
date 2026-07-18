@@ -1,8 +1,10 @@
 import { Copyright } from "lucide-react";
 import { PEACOCK_APP_NAME } from "@/constants/branding";
+import { useConsentStore } from "@/store/consentStore";
 
 export const AppFooter = () => {
   const year = new Date().getFullYear();
+  const openPreferences = useConsentStore((state) => state.openPreferences);
 
   return (
     <footer className="mt-auto border-t border-slate-200/80 bg-white/60 py-4 backdrop-blur-sm">
@@ -17,9 +19,18 @@ export const AppFooter = () => {
             {PEACOCK_APP_NAME}
           </span>
         </p>
-        <p className="text-xs font-medium text-slate-800">
-          Platform where developers and business work together
-        </p>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={openPreferences}
+            className="text-xs font-medium text-slate-500 underline-offset-2 hover:text-peacock-700 hover:underline"
+          >
+            Cookie preferences
+          </button>
+          <p className="text-xs font-medium text-slate-800">
+            Platform where developers and business work together
+          </p>
+        </div>
       </div>
     </footer>
   );

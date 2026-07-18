@@ -2,6 +2,8 @@ import { ClerkProvider } from '@clerk/react';
 import { BrowserRouter } from 'react-router-dom';
 import { CloudSyncProvider } from '@/components/auth/CloudSyncProvider';
 import { CloudSyncBanner } from '@/components/auth/CloudSyncBanner';
+import { CookieConsentBanner } from '@/components/consent/CookieConsentBanner';
+import { CookiePreferencesModal } from '@/components/consent/CookiePreferencesModal';
 import { getClerkPublishableKey, isCloudSyncEnabled } from '@/cloud/config';
 
 interface AppProvidersProps {
@@ -17,6 +19,8 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
       <CloudSyncProvider>
         {children}
         <CloudSyncBanner />
+        <CookieConsentBanner />
+        <CookiePreferencesModal />
       </CloudSyncProvider>
     </BrowserRouter>
   );
