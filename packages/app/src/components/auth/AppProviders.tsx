@@ -4,6 +4,7 @@ import { CloudSyncProvider } from '@/components/auth/CloudSyncProvider';
 import { CloudSyncBanner } from '@/components/auth/CloudSyncBanner';
 import { CookieConsentBanner } from '@/components/consent/CookieConsentBanner';
 import { CookiePreferencesModal } from '@/components/consent/CookiePreferencesModal';
+import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker';
 import { getClerkPublishableKey, isCloudSyncEnabled } from '@/cloud/config';
 
 interface AppProvidersProps {
@@ -18,6 +19,7 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
     <BrowserRouter>
       <CloudSyncProvider>
         {children}
+        <AnalyticsTracker />
         <CloudSyncBanner />
         <CookieConsentBanner />
         <CookiePreferencesModal />

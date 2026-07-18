@@ -1,5 +1,7 @@
 import { Copyright } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PEACOCK_APP_NAME } from "@/constants/branding";
+import { PRIVACY_PATH, TERMS_PATH } from "@/constants/routes";
 import { useConsentStore } from "@/store/consentStore";
 
 export const AppFooter = () => {
@@ -19,7 +21,19 @@ export const AppFooter = () => {
             {PEACOCK_APP_NAME}
           </span>
         </p>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <Link
+            to={PRIVACY_PATH}
+            className="text-xs font-medium text-slate-500 underline-offset-2 hover:text-peacock-700 hover:underline"
+          >
+            Privacy
+          </Link>
+          <Link
+            to={TERMS_PATH}
+            className="text-xs font-medium text-slate-500 underline-offset-2 hover:text-peacock-700 hover:underline"
+          >
+            Terms
+          </Link>
           <button
             type="button"
             onClick={openPreferences}
