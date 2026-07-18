@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { isCloudSyncEnabled } from '@/cloud/config';
 import {
   getSessionModeSnapshot,
   subscribeSessionMode,
@@ -15,6 +16,12 @@ export function useSessionMode(): SessionMode {
 
 export function useIsGuestSession(): boolean {
   return useSessionMode() === 'guest';
+}
+
+export function useIsAuthenticatedAppUser(): boolean {
+  const sessionMode = useSessionMode();
+  if (!isCloudSyncEnabled()) return true;
+  return sessionMode === 'cloud' || sessionMode === 'connecting';
 }
 
 export function useCanDeleteLibraryItems(): boolean {
