@@ -3,7 +3,7 @@ import {
   getFlowDocument,
   listFlowSummaries,
   saveFlowDocument,
-} from '@/storage/flowLibraryDb';
+} from '@/storage/libraryRouter';
 import { buildSavedFlowDocument, createNewDocumentId } from '@/utils/flowDocumentSnapshot';
 import { useFlowStore } from '@/store/flowStore';
 import type { SavedFlowDocument } from '@/types/savedFlow';

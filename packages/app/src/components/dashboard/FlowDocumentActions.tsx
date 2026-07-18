@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { Link2, Pencil, Play, Trash2 } from 'lucide-react';
 import { ShareDocumentModal } from '@/components/share/ShareDocumentModal';
-import { getFlowDocument, saveFlowDocument } from '@/storage/flowLibraryDb';
+import { useCanDeleteLibraryItems } from '@/hooks/useSessionMode';
+import { getFlowDocument, saveFlowDocument } from '@/storage/libraryRouter';
 import { getDocumentPath } from '@/utils/shareLink';
 
 interface FlowDocumentActionsProps {
@@ -19,6 +20,7 @@ export const FlowDocumentActions = ({
   onRequestDelete,
 }: FlowDocumentActionsProps) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const canDelete = useCanDeleteLibraryItems();
 
   const containerClass =
     layout === 'stack'
@@ -50,6 +52,7 @@ export const FlowDocumentActions = ({
         >
           <Link2 className={ICON_CLASS} aria-hidden />
         </button>
+        {canDelete ? (
         <button
           type="button"
           onClick={onRequestDelete}
@@ -59,6 +62,7 @@ export const FlowDocumentActions = ({
         >
           <Trash2 className={ICON_CLASS} aria-hidden />
         </button>
+        ) : null}
       </div>
 
       <ShareDocumentModal

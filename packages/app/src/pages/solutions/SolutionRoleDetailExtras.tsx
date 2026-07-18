@@ -1,13 +1,15 @@
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles } from 'lucide-react';
-import type { SolutionRole } from './solutionsData';
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { ArrowRight, Sparkles } from "lucide-react";
+import type { SolutionRole } from "./solutionsData";
 
 interface SolutionRoleDetailExtrasProps {
   role: SolutionRole;
 }
 
-export const SolutionRoleDetailExtras = ({ role }: SolutionRoleDetailExtrasProps) => (
+export const SolutionRoleDetailExtras = ({
+  role,
+}: SolutionRoleDetailExtrasProps) => (
   <>
     <section id="workflows" className="landing-section-light scroll-mt-36">
       <div className="landing-section-inner">
@@ -37,8 +39,12 @@ export const SolutionRoleDetailExtras = ({ role }: SolutionRoleDetailExtrasProps
               <span className="inline-flex rounded-xl bg-peacock-50 p-2.5 text-peacock-600 ring-1 ring-peacock-100">
                 <Sparkles className="h-5 w-5" aria-hidden />
               </span>
-              <h3 className="mt-4 text-base font-semibold text-slate-900">{useCase.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">{useCase.description}</p>
+              <h3 className="mt-4 text-base font-semibold text-slate-900">
+                {useCase.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                {useCase.description}
+              </p>
             </motion.article>
           ))}
         </div>
@@ -47,12 +53,12 @@ export const SolutionRoleDetailExtras = ({ role }: SolutionRoleDetailExtrasProps
 
     <section id="impact" className="landing-section-dark scroll-mt-36">
       <div className="landing-section-inner">
-        <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="lg:items-center">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.35 }}
-            className="max-w-2xl"
+            className="max-w-2xl mb-5"
           >
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-cyan">
               Business outcomes
@@ -61,8 +67,8 @@ export const SolutionRoleDetailExtras = ({ role }: SolutionRoleDetailExtrasProps
               What changes for your team
             </h2>
             <p className="mt-4 text-base leading-relaxed text-slate-300">
-              Practical results teams report after replacing manual screenshots, ad hoc
-              recordings, and one-off decks with Peacock.
+              Practical results teams report after replacing manual screenshots,
+              ad hoc recordings, and one-off decks with Peacock.
             </p>
           </motion.div>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:min-w-[28rem]">
@@ -114,8 +120,8 @@ export const SolutionRoleDetailExtras = ({ role }: SolutionRoleDetailExtrasProps
               Ready to build for {role.shortTitle.toLowerCase()}?
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/90">
-              Record your first workflow, then compose an adoption tour — local-first, no backend
-              setup required.
+              Record your first workflow, then compose an adoption tour —
+              local-first, no backend setup required.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link

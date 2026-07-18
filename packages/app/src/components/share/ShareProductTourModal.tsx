@@ -4,14 +4,15 @@ import { Loader2, X } from 'lucide-react';
 import { ShareMethodPicker, type ShareMethod } from '@/components/share/ShareMethodPicker';
 import { PdfExportBlockingOverlay } from '@/components/share/PdfExportBlockingOverlay';
 import { exportProductTourPdf, tourHasExportableDemos } from '@/pdf/exportProductTourPdf';
-import { getProductTour } from '@/storage/flowLibraryDb';
+import { getProductTour } from '@/storage/libraryRouter';
 import type { ProductTour } from '@/types/productTour';
 import {
-  buildSharedProductTourUrl,
   copyTextToClipboard,
   getProductTourEmbedCodePlaceholder,
   type ShareLinkAccessMode,
 } from '@/utils/shareLink';
+import { createProductTourShareUrl } from '@/services/shareLinkService';
+import { isCloudSyncEnabled } from '@/cloud/config';
 
 interface ShareProductTourModalProps {
   isOpen: boolean;
@@ -32,11 +33,10 @@ export const ShareProductTourModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [loadedTour, setLoadedTour] = useState<ProductTour | null>(null);
+  const [shareUrl, setShareUrl] = useState('');
+  const [isShareUrlLoading, setIsShareUrlLoading] = useState(false);
 
   const tour = tourProp ?? loadedTour;
-  const shareUrl = buildSharedProductTourUrl(tourId, accessMode, {
-    presenter: presenterLink && accessMode === 'readonly',
-  });
   const canExportPdf = tour ? tourHasExportableDemos(tour) : false;
 
   useEffect(() => {
@@ -71,6 +71,28 @@ export const ShareProductTourModal = ({
     };
   }, [isOpen, tourId, tourProp]);
 
+  useEffect(() => {
+    if (!isOpen || method !== 'link') return;
+
+    let cancelled = false;
+    setIsShareUrlLoading(true);
+
+    void createProductTourShareUrl(tourId, {
+      accessMode,
+      presenter: presenterLink && accessMode === 'readonly',
+    })
+      .then((url) => {
+        if (!cancelled) setShareUrl(url);
+      })
+      .finally(() => {
+        if (!cancelled) setIsShareUrlLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, method, tourId, accessMode, presenterLink]);
+
   const handleClose = () => {
     if (isExporting) return;
     onClose();
@@ -89,14 +111,22 @@ export const ShareProductTourModal = ({
       onClose();
       return;
     }
-    await copyTextToClipboard(shareUrl);
+    await copyTextToClipboard(
+      await createProductTourShareUrl(tourId, {
+        accessMode,
+        presenter: presenterLink && accessMode === 'readonly',
+      }),
+    );
     handleClose();
   };
 
   if (!isOpen) return null;
 
   const primaryDisabled =
-    method === 'embed' || isLoading || isExporting || (method === 'pdf' && (!tour || !canExportPdf));
+    method === 'embed' ||
+    isLoading ||
+    isExporting ||
+    (method === 'link' && isShareUrlLoading) || (method === 'pdf' && (!tour || !canExportPdf));
 
   return createPortal(
     <>
@@ -164,8 +194,17 @@ export const ShareProductTourModal = ({
                         </button>
                       ))}
                     </div>
-                  </div>
-                  {accessMode === 'readonly' ? (
+                      <p className="text-xs text-slate-500">
+                        {accessMode === 'readonly'
+                          ? isCloudSyncEnabled()
+                            ? 'Anyone with the link can view this tour without signing in.'
+                            : 'Viewers can read the tour but cannot edit it.'
+                          : isCloudSyncEnabled()
+                            ? 'Signed-in workspace members can open the editor via this link.'
+                            : 'Anyone with the link can open the editor for this tour.'}
+                      </p>
+                    </div>
+                    {accessMode === 'readonly' ? (
                     <label className="flex items-center gap-2 text-sm text-slate-700">
                       <input
                         type="checkbox"
@@ -180,7 +219,7 @@ export const ShareProductTourModal = ({
                       Link preview
                     </p>
                     <p className="mt-2 break-all rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-                      {shareUrl}
+                      {isShareUrlLoading ? 'Generating share link…' : shareUrl || 'Share link unavailable'}
                     </p>
                   </div>
                 </div>

@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion'
+import { CloudUserButton } from '@/components/auth/CloudUserButton'
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding'
+import { isCloudSyncEnabled } from '@/cloud/config'
 import { getGreeting } from '@/utils/dashboardLibrary'
 import type { DashboardStats as DashboardStatsModel } from '@/utils/dashboardStats'
 
@@ -10,6 +12,7 @@ interface DashboardHeroProps {
 
 export const DashboardHero = ({ stats, documentCount }: DashboardHeroProps) => (
   <section className="relative overflow-hidden bg-gradient-to-br from-peacock-700 via-peacock-800 to-brand-violet px-6 pb-24 pt-10">
+    <CloudUserButton />
     <motion.div
       aria-hidden
       className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-3xl"
@@ -49,9 +52,9 @@ export const DashboardHero = ({ stats, documentCount }: DashboardHeroProps) => (
           Documentation workspace
         </h1>
         <p className="mt-3 max-w-xl text-base leading-relaxed text-peacock-100/90">
-          Capture flows with the browser extension, refine them in the editor,
-          and share polished step-by-step guides — all stored locally on this
-          device.
+          {isCloudSyncEnabled()
+            ? 'Capture flows with the browser extension, refine them in the editor, and share polished step-by-step guides — synced to your cloud library.'
+            : 'Capture flows with the browser extension, refine them in the editor, and share polished step-by-step guides — all stored locally on this device.'}
         </p>
       </motion.div>
 

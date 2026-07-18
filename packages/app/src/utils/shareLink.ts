@@ -1,6 +1,16 @@
 export type SharedDocumentViewMode = 'doc' | 'player';
 export type ShareLinkAccessMode = 'readonly' | 'editable';
 
+export const PUBLIC_SHARE_PATH = '/s' as const;
+
+export function getPublicSharePath(token: string, editable = false): string {
+  return editable ? `${PUBLIC_SHARE_PATH}/${token}/edit` : `${PUBLIC_SHARE_PATH}/${token}`;
+}
+
+export function buildPublicShareUrl(token: string, options: { editable?: boolean } = {}): string {
+  return `${window.location.origin}${getPublicSharePath(token, options.editable ?? false)}`;
+}
+
 export function getDocumentEditPath(documentId: string): string {
   return `/docs/${documentId}/edit`;
 }

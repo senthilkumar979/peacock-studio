@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { DASHBOARD_PATH } from '@/constants/routes';
+import { GuestDocumentGate } from '@/components/auth/GuestDocumentGate';
 import { EmptyFlowState } from '@/components/EmptyFlowState';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { useSavedDocument } from '@/hooks/useSavedDocument';
@@ -78,8 +79,16 @@ export const Player = () => {
   }
 
   if (viewMode === 'player') {
-    return <PlayerView documentId={documentId} onModeChange={handleModeChange} />;
+    return (
+      <GuestDocumentGate documentId={documentId}>
+        <PlayerView documentId={documentId} onModeChange={handleModeChange} />
+      </GuestDocumentGate>
+    );
   }
 
-  return <DocumentView documentId={documentId} onModeChange={handleModeChange} />;
+  return (
+    <GuestDocumentGate documentId={documentId}>
+      <DocumentView documentId={documentId} onModeChange={handleModeChange} />
+    </GuestDocumentGate>
+  );
 };

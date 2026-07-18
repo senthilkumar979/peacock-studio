@@ -308,6 +308,26 @@ export async function deleteProductTour(id: string): Promise<void> {
   await db.delete('productTours', id);
 }
 
+export async function clearLocalLibrary(): Promise<void> {
+  const db = await getDb();
+
+  const documents = await db.getAll('documents');
+  for (const doc of documents) {
+    await db.delete('documents', doc.id);
+  }
+
+  const tours = await db.getAll('productTours');
+  for (const tour of tours) {
+    await db.delete('productTours', tour.id);
+  }
+
+  const personas = await db.getAll('personas');
+  for (const persona of personas) {
+    if (persona.id === DEFAULT_PERSONA_ID) continue;
+    await db.delete('personas', persona.id);
+  }
+}
+
 export function collectProductTourDocumentIds(tour: ProductTour): string[] {
   const seen = new Set<string>();
   const ids: string[] = [];

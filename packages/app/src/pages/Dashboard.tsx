@@ -8,6 +8,7 @@ import { DeleteProductTourConfirmContent } from "@/components/dashboard/DeletePr
 import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { DashboardFeaturedDoc } from "@/components/dashboard/DashboardFeaturedDoc";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
+import { GuestLibraryHiddenNotice } from "@/components/dashboard/GuestLibraryHiddenNotice";
 import { DashboardLibraryToolbar } from "@/components/dashboard/DashboardLibraryToolbar";
 import { DashboardProductToursSection } from "@/components/dashboard/DashboardProductToursSection";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
@@ -17,6 +18,9 @@ import {
   readDashboardViewMode,
   writeDashboardViewMode,
 } from "@/constants/dashboard";
+import { getGuestVisibleDocLimit } from "@/cloud/planLimits";
+import { useCloudInitError } from "@/hooks/useCloudInitError";
+import { useIsGuestSession, useSessionMode } from "@/hooks/useSessionMode";
 import { useFlowLibrary } from "@/hooks/useFlowLibrary";
 import { useProductTourLibrary } from "@/hooks/useProductTourLibrary";
 import type { DashboardViewMode, SavedFlowSummary } from "@/types/savedFlow";
@@ -26,9 +30,14 @@ import {
   sortSummaries,
   type DashboardSortMode,
 } from "@/utils/dashboardLibrary";
+import { filterGuestVisibleSummaries } from "@/utils/guestDocumentVisibility";
+import { computeDashboardStats } from "@/utils/dashboardStats";
 
 export const Dashboard = () => {
-  const { summaries, stats, isLoading, error, deleteDocument } =
+  const sessionMode = useSessionMode();
+  const isGuest = useIsGuestSession();
+  const cloudInitError = useCloudInitError();
+  const { summaries: allSummaries, isLoading, error, deleteDocument } =
     useFlowLibrary();
   const {
     summaries: tourSummaries,
@@ -46,6 +55,13 @@ export const Dashboard = () => {
   );
   const [pendingTourDelete, setPendingTourDelete] =
     useState<ProductTourSummary | null>(null);
+
+  const summaries = useMemo(() => {
+    if (!isGuest) return allSummaries;
+    return filterGuestVisibleSummaries(allSummaries, getGuestVisibleDocLimit());
+  }, [allSummaries, isGuest]);
+
+  const stats = useMemo(() => computeDashboardStats(summaries), [summaries]);
 
   const displayedSummaries = useMemo(
     () => sortSummaries(filterSummaries(summaries, searchQuery), sortMode),
@@ -76,6 +92,33 @@ export const Dashboard = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100/80">
+      {sessionMode === 'connecting' ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-24 text-center">
+          {cloudInitError ? (
+            <>
+              <p className="max-w-lg text-sm font-medium text-red-700">{cloudInitError}</p>
+              <p className="max-w-lg text-xs text-slate-500">
+                Clerk setup:{' '}
+                <a
+                  href="https://dashboard.clerk.com/setup/supabase"
+                  className="font-medium text-peacock-700 underline"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Activate Supabase integration
+                </a>
+                . Supabase: Authentication → Third-party → add Clerk with your Clerk domain.
+              </p>
+            </>
+          ) : (
+            <>
+              <PeacockStudioLoader size={120} />
+              <p className="text-sm text-slate-500">Connecting your cloud library…</p>
+            </>
+          )}
+        </div>
+      ) : (
+      <>
       <div className="flex-1">
         <DashboardHero stats={stats} documentCount={summaries.length} />
 
@@ -112,10 +155,18 @@ export const Dashboard = () => {
                 viewMode={viewMode}
                 resultCount={displayedSummaries.length}
                 totalCount={summaries.length}
+                guestTotalCount={isGuest ? allSummaries.length : undefined}
                 onSearchChange={setSearchQuery}
                 onSortChange={setSortMode}
                 onViewChange={handleViewChange}
               />
+
+              {isGuest && allSummaries.length > summaries.length ? (
+                <GuestLibraryHiddenNotice
+                  visibleCount={summaries.length}
+                  totalCount={allSummaries.length}
+                />
+              ) : null}
 
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center gap-4 px-6 py-20">
@@ -177,6 +228,8 @@ export const Dashboard = () => {
       </div>
 
       <AppFooter />
+      </>
+      )}
 
       <ConfirmDialog
         isOpen={Boolean(pendingDelete)}

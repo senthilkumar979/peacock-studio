@@ -7,7 +7,7 @@ import {
   listProductTourSummaries,
   savePersona,
   saveProductTour,
-} from '@/storage/flowLibraryDb';
+} from '@/storage/libraryRouter';
 import { createEmptyProductTour, createPersonaFromInput } from '@/utils/createProductTour';
 import type { Persona, PersonaInput } from '@/types/persona';
 import type { ProductTour } from '@/types/productTour';

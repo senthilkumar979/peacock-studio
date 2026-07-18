@@ -8,14 +8,15 @@ import { SharePdfPathOptions } from '@/components/share/SharePdfPathOptions';
 import { PdfExportBlockingOverlay } from '@/components/share/PdfExportBlockingOverlay';
 import { exportFlowPdf } from '@/pdf/exportFlowPdf';
 import { getFlowDocument } from '@/services/flowLibraryService';
+import { createDocumentShareUrl } from '@/services/shareLinkService';
+import { isCloudSyncEnabled } from '@/cloud/config';
 import type { FlowShareSettings } from '@/types/savedFlow';
-import { buildShareQueryString, resolveShareSettings } from '@/utils/flowShareSettings';
+import { resolveShareSettings } from '@/utils/flowShareSettings';
 import {
   buildDefaultPdfPathSelections,
   hasCompletePdfPathSelections,
 } from '@/utils/pdfPathSelection';
 import {
-  buildSharedDocumentUrl,
   copyTextToClipboard,
   getEmbedCodePlaceholder,
   type ShareLinkAccessMode,
@@ -64,6 +65,8 @@ export const ShareDocumentModal = ({
     [steps, shareSettingsProp, loaded?.shareSettings],
   );
   const [branchSettings, setBranchSettings] = useState(defaultBranchSettings);
+  const [shareUrl, setShareUrl] = useState('');
+  const [isShareUrlLoading, setIsShareUrlLoading] = useState(false);
 
   const defaultPdfPathSelections = useMemo(
     () => buildDefaultPdfPathSelections(branches),
@@ -110,9 +113,33 @@ export const ShareDocumentModal = ({
     };
   }, [isOpen, documentId, flowProp, stepsProp]);
 
-  const branchingQuery =
-    hasBranches && accessMode === 'readonly' ? buildShareQueryString(branchSettings) : '';
-  const shareUrl = buildSharedDocumentUrl(documentId, { accessMode, query: branchingQuery });
+  useEffect(() => {
+    if (!isOpen || method !== 'link') return;
+
+    let cancelled = false;
+    setIsShareUrlLoading(true);
+
+    const branchShareSettings =
+      hasBranches && accessMode === 'readonly'
+        ? { ...branchSettings, includeMainFlow: true }
+        : undefined;
+
+    void createDocumentShareUrl(documentId, {
+      accessMode,
+      viewMode: 'doc',
+      shareSettings: branchShareSettings,
+    })
+      .then((url) => {
+        if (!cancelled) setShareUrl(url);
+      })
+      .finally(() => {
+        if (!cancelled) setIsShareUrlLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, method, documentId, accessMode, branchSettings, hasBranches]);
 
   const handleClose = () => {
     if (isExporting) return;
@@ -140,7 +167,16 @@ export const ShareDocumentModal = ({
     if (hasBranches && accessMode === 'readonly') {
       onShareSettingsSave?.({ ...branchSettings, includeMainFlow: true });
     }
-    await copyTextToClipboard(shareUrl);
+    const branchShareSettings =
+      hasBranches && accessMode === 'readonly'
+        ? { ...branchSettings, includeMainFlow: true }
+        : undefined;
+    const url = await createDocumentShareUrl(documentId, {
+      accessMode,
+      viewMode: 'doc',
+      shareSettings: branchShareSettings,
+    });
+    await copyTextToClipboard(url);
     handleClose();
   };
 
@@ -150,6 +186,7 @@ export const ShareDocumentModal = ({
     method === 'embed' ||
     isLoading ||
     isExporting ||
+    (method === 'link' && isShareUrlLoading) ||
     (method === 'pdf' && !flow) ||
     (method === 'pdf' && hasBranches && !hasCompletePdfPathSelections(branches, pdfPathSelections));
 
@@ -201,6 +238,8 @@ export const ShareDocumentModal = ({
                 <ShareLinkPanel
                   accessMode={accessMode}
                   shareUrl={shareUrl}
+                  usesTokenLinks={isCloudSyncEnabled()}
+                  isShareUrlLoading={isShareUrlLoading}
                   hasBranches={hasBranches}
                   branches={branches}
                   branchSettings={branchSettings}

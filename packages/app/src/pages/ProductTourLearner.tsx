@@ -30,10 +30,22 @@ import { TourDetailsPanel } from "@/product-tour-learner/TourDetailsPanel";
 import { TourDemoIntroPanel } from "@/product-tour-learner/TourDemoIntroPanel";
 import { TourBranchPointPanel } from "@/product-tour-learner/TourBranchPointPanel";
 
-export const ProductTourLearner = () => {
-  const { tourId } = useParams<{ tourId: string }>();
+interface ProductTourLearnerProps {
+  tourId?: string;
+  isPresenter?: boolean;
+  isPublicShare?: boolean;
+}
+
+export const ProductTourLearner = ({
+  tourId: tourIdProp,
+  isPresenter: isPresenterProp,
+  isPublicShare = false,
+}: ProductTourLearnerProps = {}) => {
+  const { tourId: routeTourId } = useParams<{ tourId: string }>();
   const [searchParams] = useSearchParams();
-  const isPresenter = searchParams.get("presenter") === "1";
+  const tourId = tourIdProp ?? routeTourId;
+  const isPresenter =
+    isPresenterProp ?? searchParams.get("presenter") === "1";
 
   const { tour, isLoading, isLoaded, error } = useSavedProductTour(tourId);
   const playback = useProductTourLearner(tour);
@@ -367,7 +379,7 @@ export const ProductTourLearner = () => {
     <div
       className={`flex h-screen flex-col overflow-hidden bg-slate-50 ${isPresenter ? "presenter-mode" : ""}`}
     >
-      {!isPresenter ? (
+      {!isPresenter && !isPublicShare ? (
         <AppHeader
           eyebrow="Product Tours"
           title={tour.title}
@@ -383,6 +395,17 @@ export const ProductTourLearner = () => {
             Edit tour
           </Link>
         </AppHeader>
+      ) : null}
+      {isPublicShare && !isPresenter ? (
+        <header className="shrink-0 border-b border-slate-200 bg-white px-6 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-peacock-600">
+            Shared product tour
+          </p>
+          <h1 className="mt-1 text-lg font-bold text-slate-900">{tour.title}</h1>
+          {tour.description ? (
+            <p className="mt-1 text-sm text-slate-600">{tour.description}</p>
+          ) : null}
+        </header>
       ) : null}
 
       <main className="mx-auto flex min-h-0 w-full max-w-8xl flex-1 gap-6 overflow-hidden px-4 py-6">

@@ -6,6 +6,8 @@ import type { ShareLinkAccessMode } from '@/utils/shareLink';
 interface ShareLinkPanelProps {
   accessMode: ShareLinkAccessMode;
   shareUrl: string;
+  usesTokenLinks?: boolean;
+  isShareUrlLoading?: boolean;
   hasBranches: boolean;
   branches: FlowBranch[];
   branchSettings: FlowShareSettings;
@@ -16,6 +18,8 @@ interface ShareLinkPanelProps {
 export const ShareLinkPanel = ({
   accessMode,
   shareUrl,
+  usesTokenLinks = false,
+  isShareUrlLoading = false,
   hasBranches,
   branches,
   branchSettings,
@@ -43,8 +47,12 @@ export const ShareLinkPanel = ({
       </div>
       <p className="mt-2 text-xs text-slate-500">
         {accessMode === 'readonly'
-          ? 'Viewers can read the guide but cannot edit it.'
-          : 'Anyone with the link can open the editor for this doc.'}
+          ? usesTokenLinks
+            ? 'Anyone with the link can view this guide without signing in.'
+            : 'Viewers can read the guide but cannot edit it.'
+          : usesTokenLinks
+            ? 'Signed-in workspace members can open the editor via this link.'
+            : 'Anyone with the link can open the editor for this doc.'}
       </p>
     </div>
 
@@ -59,7 +67,7 @@ export const ShareLinkPanel = ({
     <div>
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Link preview</p>
       <p className="mt-2 break-all rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-        {shareUrl}
+        {isShareUrlLoading ? 'Generating share link…' : shareUrl || 'Share link unavailable'}
       </p>
     </div>
   </div>

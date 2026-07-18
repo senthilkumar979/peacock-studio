@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { Clock, Layers, Link2, Pencil, Play, Trash2 } from 'lucide-react';
 import { ShareProductTourModal } from '@/components/share/ShareProductTourModal';
+import { useCanDeleteLibraryItems } from '@/hooks/useSessionMode';
 import type { ProductTourSummary } from '@/types/productTour';
 
 interface ProductTourDocumentActionsProps {
@@ -14,6 +15,7 @@ const ACTION_CLASS =
 
 export const ProductTourDocumentActions = ({ tourId, onRequestDelete }: ProductTourDocumentActionsProps) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const canDelete = useCanDeleteLibraryItems();
 
   return (
     <>
@@ -34,13 +36,15 @@ export const ProductTourDocumentActions = ({ tourId, onRequestDelete }: ProductT
         >
           <Link2 className="h-4 w-4" aria-hidden />
         </button>
-        <button
-          type="button"
-          onClick={onRequestDelete}
-          className={`${ACTION_CLASS} border-red-200 text-red-700 hover:bg-red-50`}
-        >
-          <Trash2 className="h-4 w-4" aria-hidden />
-        </button>
+        {canDelete ? (
+          <button
+            type="button"
+            onClick={onRequestDelete}
+            className={`${ACTION_CLASS} border-red-200 text-red-700 hover:bg-red-50`}
+          >
+            <Trash2 className="h-4 w-4" aria-hidden />
+          </button>
+        ) : null}
       </div>
       <ShareProductTourModal
         isOpen={isShareModalOpen}

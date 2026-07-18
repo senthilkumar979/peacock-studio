@@ -1,5 +1,5 @@
 import { collectAllBranches } from '@peacock/shared';
-import { collectProductTourDocumentIds, getProductTour } from '@/storage/flowLibraryDb';
+import { collectProductTourDocumentIds, getProductTour } from '@/storage/libraryRouter';
 import type { ProductTour } from '@/types/productTour';
 import { exportFlowPdf } from '@/pdf/exportFlowPdf';
 import { getFlowDocument } from '@/services/flowLibraryService';

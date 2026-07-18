@@ -5,6 +5,7 @@ import { Canvas } from '@/editor/Canvas';
 import { BranchPanel } from '@/editor/BranchPanel';
 import { FlowBranchCard } from '@/editor/FlowBranchCard';
 import { LinkPeacockDocModal } from '@/editor/LinkPeacockDocModal';
+import { GuestDocumentGate } from '@/components/auth/GuestDocumentGate';
 import { StepList } from '@/editor/StepList';
 import { StepPanel } from '@/editor/StepPanel';
 import { Toolbar } from '@/editor/Toolbar';
@@ -63,7 +64,7 @@ export const Editor = () => {
     if (id) await persistCurrentFlow(id);
   };
 
-  return (
+  const editorBody = (
     <div className="flex h-screen flex-col overflow-hidden">
       <Toolbar documentId={documentId} />
 
@@ -143,4 +144,10 @@ export const Editor = () => {
       />
     </div>
   );
+
+  if (documentId) {
+    return <GuestDocumentGate documentId={documentId}>{editorBody}</GuestDocumentGate>;
+  }
+
+  return editorBody;
 };

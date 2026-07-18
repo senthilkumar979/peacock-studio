@@ -11,6 +11,7 @@ interface DashboardLibraryToolbarProps {
   viewMode: DashboardViewMode;
   resultCount: number;
   totalCount: number;
+  guestTotalCount?: number;
   onSearchChange: (value: string) => void;
   onSortChange: (mode: DashboardSortMode) => void;
   onViewChange: (mode: DashboardViewMode) => void;
@@ -29,6 +30,7 @@ export const DashboardLibraryToolbar = ({
   viewMode,
   resultCount,
   totalCount,
+  guestTotalCount,
   onSearchChange,
   onSortChange,
   onViewChange,
@@ -41,14 +43,24 @@ export const DashboardLibraryToolbar = ({
             <FolderOpen className="h-5 w-5 text-peacock-600" aria-hidden />
             Your documentations
           </h2>
-          <span className="rounded-full bg-peacock-50 px-2.5 py-0.5 text-xs font-semibold text-peacock-700 ring-1 ring-peacock-100">
-            {resultCount === totalCount
-              ? `${totalCount} total`
-              : `${resultCount} of ${totalCount}`}
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${
+              guestTotalCount !== undefined && guestTotalCount > totalCount
+                ? 'bg-amber-50 text-amber-800 ring-amber-200'
+                : 'bg-peacock-50 text-peacock-700 ring-peacock-100'
+            }`}
+          >
+            {guestTotalCount !== undefined && guestTotalCount > totalCount
+              ? `Showing ${totalCount} of ${guestTotalCount} on device`
+              : resultCount === totalCount
+                ? `${totalCount} total`
+                : `${resultCount} of ${totalCount}`}
           </span>
         </div>
         <p className="mt-1 text-sm text-slate-500">
-          Record with the extension — new flows appear here automatically.
+          {guestTotalCount !== undefined && guestTotalCount > totalCount
+            ? 'Some recordings are saved locally but hidden until you sign up.'
+            : 'Record with the extension — new flows appear here automatically.'}
         </p>
       </div>
 
