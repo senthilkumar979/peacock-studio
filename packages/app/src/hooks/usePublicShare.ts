@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { resolvePublicShareLink } from '@/cloud/publicShareClient';
 import { setPublicShareToken } from '@/cloud/publicShareContext';
+import { recordShareEvent } from '@/cloud/repositories/analyticsRepository';
 import { isCloudSyncEnabled } from '@/cloud/config';
+import { getReferrerDomain, getUtmParams } from '@/utils/referrer';
 import type { ResolvedShareLink } from '@/types/shareLink';
 
 export function usePublicShare(token: string | undefined) {
@@ -38,6 +40,10 @@ export function usePublicShare(token: string | undefined) {
           return;
         }
         setLink(resolved);
+        void recordShareEvent(token, 'share_view', getReferrerDomain(), {
+          resourceType: resolved.resourceType,
+          ...getUtmParams(),
+        });
       })
       .catch((resolveError) => {
         console.error('[Peacock] Failed to resolve share link', resolveError);

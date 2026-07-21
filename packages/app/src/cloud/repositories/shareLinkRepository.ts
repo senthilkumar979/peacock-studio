@@ -1,5 +1,6 @@
 import { requireCloudAuthContext } from '@/cloud/authContext';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
+import { recordOrgEvent } from '@/cloud/repositories/analyticsRepository';
 import type {
   CreateShareLinkInput,
   ShareLinkRecord,
@@ -75,6 +76,13 @@ export async function createOrUpdateShareLink(input: CreateShareLinkInput): Prom
     .single();
 
   if (error) throw error;
+
+  void recordOrgEvent('share_link_created', {
+    resourceType: input.resourceType,
+    resourceId: input.resourceId,
+    metadata: { accessMode: input.accessMode },
+  });
+
   return mapShareLinkRow(data as ShareLinkRow);
 }
 

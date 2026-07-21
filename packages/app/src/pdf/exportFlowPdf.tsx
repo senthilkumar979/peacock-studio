@@ -4,6 +4,7 @@ import { FlowDocument } from './FlowDocument';
 import { getPdfLogoUrl } from './pdfConstants';
 import { registerPdfFonts } from './registerPdfFonts';
 import { renderPdfBlob } from './renderPdfBlob';
+import { recordOrgEvent } from '@/cloud/repositories/analyticsRepository';
 import {
   buildDefaultPdfPathSelections,
   type PdfPathSelections,
@@ -54,4 +55,6 @@ export async function exportFlowPdf({
   link.download = `${sanitizeFilename(flow.flow.title)}.pdf`;
   link.click();
   URL.revokeObjectURL(url);
+
+  void recordOrgEvent('pdf_export', { metadata: { stepCount } });
 }
