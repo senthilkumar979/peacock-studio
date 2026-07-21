@@ -1,42 +1,39 @@
 import { useEffect, useState } from 'react';
 import { fetchOrgAnalyticsSummary } from '@/cloud/repositories/analyticsRepository';
-import { isCloudLibraryActive } from '@/cloud/authContext';
+import { useSessionMode } from '@/hooks/useSessionMode';
 import { EMPTY_ANALYTICS_SUMMARY, type OrgAnalyticsSummary } from '@/types/analytics';
 
 interface UseOrgAnalyticsResult {
   summary: OrgAnalyticsSummary;
   isLoading: boolean;
   isAvailable: boolean;
-  error: string | null;
 }
 
 /**
  * Loads the aggregated analytics summary for the active organization. Only
- * active when the cloud library is connected; otherwise reports unavailable so
- * the dashboard can hide the section for local-only sessions.
+ * fetches when the cloud library is connected; otherwise reports unavailable so
+ * the dashboard can hide the section for local-only sessions. Failures soft-fail
+ * to an empty summary (e.g. analytics migration not applied yet).
  */
 export function useOrgAnalytics(days = 30): UseOrgAnalyticsResult {
-  const available = isCloudLibraryActive();
+  const sessionMode = useSessionMode();
+  const available = sessionMode === 'cloud';
   const [summary, setSummary] = useState<OrgAnalyticsSummary>(EMPTY_ANALYTICS_SUMMARY);
   const [isLoading, setIsLoading] = useState(available);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!available) {
+      setSummary(EMPTY_ANALYTICS_SUMMARY);
       setIsLoading(false);
       return;
     }
 
     let cancelled = false;
     setIsLoading(true);
-    setError(null);
 
     fetchOrgAnalyticsSummary(days)
       .then((result) => {
         if (!cancelled) setSummary(result);
-      })
-      .catch(() => {
-        if (!cancelled) setError('Could not load analytics right now.');
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -47,5 +44,5 @@ export function useOrgAnalytics(days = 30): UseOrgAnalyticsResult {
     };
   }, [available, days]);
 
-  return { summary, isLoading, isAvailable: available, error };
+  return { summary, isLoading, isAvailable: available };
 }

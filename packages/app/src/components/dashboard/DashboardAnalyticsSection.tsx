@@ -17,7 +17,7 @@ interface DashboardAnalyticsSectionProps {
 }
 
 export const DashboardAnalyticsSection = ({ documentCount }: DashboardAnalyticsSectionProps) => {
-  const { summary, isLoading, isAvailable, error } = useOrgAnalytics(30);
+  const { summary, isLoading, isAvailable } = useOrgAnalytics(30);
 
   // Local-only sessions have no cloud analytics; hide the section entirely.
   if (!isAvailable) return null;
@@ -44,10 +44,6 @@ export const DashboardAnalyticsSection = ({ documentCount }: DashboardAnalyticsS
         <div className="flex justify-center py-10">
           <PeacockStudioLoader size={80} />
         </div>
-      ) : error ? (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          {error}
-        </p>
       ) : (
         <>
           <AnalyticsSummaryCards summary={summary} avgViewsPerDoc={avgViewsPerDoc} />

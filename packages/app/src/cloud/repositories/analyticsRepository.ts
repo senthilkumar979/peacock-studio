@@ -64,21 +64,30 @@ export async function recordOrgEvent(
 
 /**
  * Fetches the aggregated analytics summary for the active organization over the
- * last `days` days. Returns an empty summary when cloud is inactive or on error
- * so the dashboard can render gracefully.
+ * last `days` days. Returns an empty summary when cloud is inactive, the RPC is
+ * missing (migration not applied), or the request fails — never throws.
  */
 export async function fetchOrgAnalyticsSummary(days = 30): Promise<OrgAnalyticsSummary> {
   const context = getCloudAuthContext();
   if (!context) return EMPTY_ANALYTICS_SUMMARY;
 
-  const supabase = getAuthenticatedSupabaseClient();
-  const { data, error } = await supabase.rpc('get_org_analytics_summary', {
-    p_organization_id: context.organizationId,
-    p_days: days,
-  });
+  try {
+    const supabase = getAuthenticatedSupabaseClient();
+    const { data, error } = await supabase.rpc('get_org_analytics_summary', {
+      p_organization_id: context.organizationId,
+      p_days: days,
+    });
 
-  if (error) throw error;
-  if (!data) return EMPTY_ANALYTICS_SUMMARY;
+    if (error) {
+      // Common before `supabase db push` applies the analytics migration.
+      console.warn('[Peacock] Analytics summary unavailable:', error.message);
+      return EMPTY_ANALYTICS_SUMMARY;
+    }
 
-  return data as OrgAnalyticsSummary;
+    if (!data) return EMPTY_ANALYTICS_SUMMARY;
+    return data as OrgAnalyticsSummary;
+  } catch (error) {
+    console.warn('[Peacock] Analytics summary failed:', error);
+    return EMPTY_ANALYTICS_SUMMARY;
+  }
 }
