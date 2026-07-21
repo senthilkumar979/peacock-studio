@@ -5,6 +5,7 @@ import {
   FLOW_MAPS_PATH,
   LANDING_PATH,
   PLAYWRIGHT_TESTS_PATH,
+  PRICING_PATH,
   PRIVACY_PATH,
   PRODUCT_TOURS_PATH,
   TERMS_PATH,
@@ -27,6 +28,7 @@ import { Products } from '@/pages/Products';
 import { ProductDetail } from '@/pages/ProductDetail';
 import { Solutions } from '@/pages/Solutions';
 import { SolutionRole } from '@/pages/SolutionRole';
+import { Pricing } from '@/pages/Pricing';
 import { SignInPage } from '@/pages/SignInPage';
 import { SignUpPage } from '@/pages/SignUpPage';
 import { PublicSharePage } from '@/pages/PublicSharePage';
@@ -50,6 +52,7 @@ export const App = () => (
     <Route path="/products/:productSlug" element={<ProductDetail />} />
     <Route path="/solutions" element={<Solutions />} />
     <Route path="/solutions/:roleSlug" element={<SolutionRole />} />
+    <Route path={PRICING_PATH} element={<Pricing />} />
     <Route path={PRIVACY_PATH} element={<PrivacyPolicy />} />
     <Route path={TERMS_PATH} element={<TermsAndConditions />} />
     <Route path={TEST_CASES_PATH} element={<TestCasesLibraryPage />} />

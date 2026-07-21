@@ -41,6 +41,7 @@ interface TawkApi {
   onLoad?: () => void;
   hideWidget?: () => void;
   showWidget?: () => void;
+  maximize?: () => void;
   setAttributes?: (attributes: Record<string, string>, callback?: (error?: unknown) => void) => void;
   visitor?: Record<string, string>;
 }

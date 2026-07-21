@@ -1,10 +1,12 @@
 import { NavLink, Link } from 'react-router-dom';
+import { LifeBuoy } from 'lucide-react';
 import { SignInButton, SignUpButton, UserButton } from '@clerk/react';
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
 import { isCloudSyncEnabled } from '@/cloud/config';
 import { LIBRARY_NAV_ITEMS } from '@/constants/libraryNav';
 import { DASHBOARD_PATH } from '@/constants/routes';
 import { useSessionMode } from '@/hooks/useSessionMode';
+import { openSupportChat } from '@/utils/support';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
@@ -41,6 +43,15 @@ export const LibraryNav = () => {
           );
         })}
       </nav>
+
+      <button
+        type="button"
+        onClick={openSupportChat}
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+      >
+        <LifeBuoy className="h-4 w-4 shrink-0" aria-hidden />
+        <span className="hidden lg:inline">Support</span>
+      </button>
 
       {isCloudSyncEnabled() ? (
         <div className="relative flex shrink-0 items-center gap-2">
