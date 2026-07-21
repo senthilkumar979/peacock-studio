@@ -582,6 +582,45 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
   return true;
 });
 
+/** Web pages listed in externally_connectable talk to the extension here. */
+chrome.runtime.onMessageExternal.addListener((message: ExtensionMessage, _sender, sendResponse) => {
+  void (async () => {
+    try {
+      switch (message.type) {
+        case 'PING':
+          sendResponse({ success: true });
+          break;
+
+        case 'APP_READY':
+        case 'GET_PENDING_HANDOFF': {
+          const handoff = await deliverPendingHandoff();
+          sendResponse(
+            handoff
+              ? { payload: handoff.payload, screenshotUrls: handoff.screenshotUrls }
+              : { payload: null },
+          );
+          break;
+        }
+
+        case 'GET_CAPTURE_RESULT': {
+          const handoff = await buildCaptureResultHandoff(message.captureId);
+          sendResponse(handoff);
+          break;
+        }
+
+        default:
+          sendResponse({ error: 'Unsupported external message type' });
+      }
+    } catch (error) {
+      const messageText = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[Peacock] external message failed', message.type, error);
+      sendResponse({ error: messageText });
+    }
+  })();
+
+  return true;
+});
+
 chrome.tabs.onActivated.addListener(() => {
   void getRecordingStatus();
 });

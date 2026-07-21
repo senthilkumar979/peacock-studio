@@ -7,6 +7,7 @@ export * from './types/messages';
 export * from './types/dataClassification';
 export * from './constants/handoff';
 export * from './constants/captureHandoff';
+export * from './constants/extensionPing';
 export * from './constants/captureBackgrounds';
 export * from './types/capture';
 export * from './constants/limits';

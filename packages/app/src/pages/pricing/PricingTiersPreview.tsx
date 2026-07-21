@@ -1,6 +1,6 @@
-import { Check } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { PRICING_TIERS } from './pricingData';
+import { Check } from "lucide-react";
+import { motion } from "framer-motion";
+import { PRICING_TIERS } from "./pricingData";
 
 /**
  * Blurred, non-interactive preview of the future paid tiers. Communicates the
@@ -14,11 +14,11 @@ export const PricingTiersPreview = () => (
           A look ahead
         </p>
         <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
-          Planned plans (pricing to be decided)
+          Planned plans
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-600">
-          Here's the shape of what's coming. Numbers are intentionally hidden while we're in beta —
-          early adopters lock in a better rate regardless.
+          Here's the shape of what's coming. Numbers are intentionally hidden
+          while we're in beta — early adopters lock in a better rate regardless.
         </p>
       </div>
 
@@ -32,7 +32,9 @@ export const PricingTiersPreview = () => (
               viewport={{ once: true }}
               transition={{ delay: index * 0.06 }}
               className={`flex h-full flex-col rounded-2xl border bg-white p-6 shadow-sm ${
-                tier.highlight ? 'border-peacock-300 ring-2 ring-peacock-200' : 'border-slate-200'
+                tier.highlight
+                  ? "border-peacock-300 ring-2 ring-peacock-200"
+                  : "border-slate-200"
               }`}
             >
               {tier.highlight ? (
@@ -52,8 +54,14 @@ export const PricingTiersPreview = () => (
 
               <ul className="mt-5 space-y-2.5">
                 {tier.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2 text-sm text-slate-600">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-peacock-600" aria-hidden />
+                  <li
+                    key={feature}
+                    className="flex items-start gap-2 text-sm text-slate-600"
+                  >
+                    <Check
+                      className="mt-0.5 h-4 w-4 shrink-0 text-peacock-600"
+                      aria-hidden
+                    />
                     <span>{feature}</span>
                   </li>
                 ))}

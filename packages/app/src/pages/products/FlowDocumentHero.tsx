@@ -4,6 +4,7 @@ import { ArrowRight, Check, FileText } from 'lucide-react';
 import type { Product } from './productsData';
 import { FLOW_DOCUMENT_HERO_IMAGE, FLOW_DOCUMENT_PAGE } from './flowDocumentsData';
 import { ProductFeatureImage } from './ProductFeatureImage';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 
 interface FlowDocumentHeroProps {
   product: Product;
@@ -47,7 +48,7 @@ export const FlowDocumentHero = ({ product }: FlowDocumentHeroProps) => {
               {FLOW_DOCUMENT_PAGE.intro}
             </p>
             <Link
-              to="/editor"
+              to={getExtensionGatePath("/editor")}
               className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-peacock-800 shadow-lg transition hover:bg-slate-100"
             >
               <FileText className="h-4 w-4" aria-hidden />

@@ -7,6 +7,7 @@ import { DASHBOARD_PATH } from '@/constants/routes';
 import { BetaPromiseSection } from '@/pages/pricing/BetaPromiseSection';
 import { PricingTiersPreview } from '@/pages/pricing/PricingTiersPreview';
 import { BETA_HERO } from '@/pages/pricing/pricingData';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 
 export const Pricing = () => {
   const EyebrowIcon = BETA_HERO.eyebrowIcon;
@@ -55,7 +56,7 @@ export const Pricing = () => {
             className="mt-8 flex flex-wrap items-center justify-center gap-3"
           >
             <Link
-              to={DASHBOARD_PATH}
+              to={getExtensionGatePath(DASHBOARD_PATH)}
               className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-peacock-800 shadow-sm transition hover:bg-slate-100"
             >
               Start using Peacock free

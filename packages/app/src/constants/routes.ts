@@ -11,6 +11,9 @@ export const PRODUCT_TOURS_PATH = '/product-tours' as const;
 /** Marketing pricing / beta page */
 export const PRICING_PATH = '/pricing' as const;
 
+/** Chrome extension install gate (redirects to next when installed) */
+export const EXTENSION_INSTALL_PATH = '/install-extension' as const;
+
 /** Legal pages */
 export const PRIVACY_PATH = '/privacy' as const;
 export const TERMS_PATH = '/terms' as const;

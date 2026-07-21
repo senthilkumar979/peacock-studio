@@ -13,7 +13,8 @@ export const PRICING_TIERS: PricingTier[] = [
   {
     name: 'Personal',
     audience: 'Solo creators documenting their own flows',
-    features: ['Unlimited local flows', 'PDF export', 'Public share links', 'Community support'],
+    features: ['Unlimited local flows', 'PDF export', 'Public share links', 'Community support',
+      'Cloud sync & workspaces'],
   },
   {
     name: 'Team',
@@ -21,10 +22,10 @@ export const PRICING_TIERS: PricingTier[] = [
     highlight: true,
     features: [
       'Everything in Personal',
-      'Cloud sync & workspaces',
       'Roles & permissions',
       'View analytics',
       'Priority support',
+      'Custom branding',
     ],
   },
   {
@@ -34,7 +35,6 @@ export const PRICING_TIERS: PricingTier[] = [
       'Everything in Team',
       'SSO & audit logs',
       'PII detection & retention',
-      'Custom branding',
       'Dedicated support',
     ],
   },

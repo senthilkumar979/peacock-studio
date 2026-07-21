@@ -4,6 +4,7 @@ import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import type { ProductTourSummary } from '@/types/productTour';
 import { ProductTourLibraryCards } from './ProductTourLibraryCards';
 import { FirstTimeTooltip } from '@/components/onboarding/FirstTimeTooltip';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 
 interface DashboardProductToursSectionProps {
   summaries: ProductTourSummary[];
@@ -44,7 +45,7 @@ export const DashboardProductToursSection = ({
         </p>
       </div>
       <Link
-        to="/tours/new"
+        to={getExtensionGatePath("/tours/new")}
         className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-violet to-peacock-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-violet/25 transition hover:brightness-105"
       >
         <Plus className="h-4 w-4" aria-hidden />
@@ -73,7 +74,7 @@ export const DashboardProductToursSection = ({
           Build a persona-led tour with features and linked demos.
         </p>
         <Link
-          to="/tours/new"
+          to={getExtensionGatePath("/tours/new")}
           className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
           <Plus className="h-4 w-4" aria-hidden />

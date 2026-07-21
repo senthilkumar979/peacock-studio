@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle2, FileText, Route } from 'lucide-react';
 import type { SolutionBenefit, SolutionRole } from './solutionsData';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 
 interface SolutionProductModuleProps {
   role: SolutionRole;
@@ -86,7 +87,7 @@ export const SolutionProductModules = ({ role }: SolutionProductModuleProps) => 
             ringClass="hover:ring-1 hover:ring-peacock-100"
           />
           <Link
-            to="/editor"
+            to={getExtensionGatePath("/editor")}
             className="relative mt-6 inline-flex items-center gap-2 rounded-lg bg-peacock-50 px-4 py-2.5 text-sm font-semibold text-peacock-800 transition hover:bg-peacock-100"
           >
             Start a flow document
@@ -119,7 +120,7 @@ export const SolutionProductModules = ({ role }: SolutionProductModuleProps) => 
             ringClass="hover:ring-1 hover:ring-brand-violet/20"
           />
           <Link
-            to="/tours/new"
+            to={getExtensionGatePath("/tours/new")}
             className="relative mt-6 inline-flex items-center gap-2 rounded-lg bg-brand-violet/10 px-4 py-2.5 text-sm font-semibold text-brand-violet transition hover:bg-brand-violet/15"
           >
             Create a product tour

@@ -4,6 +4,7 @@ import { ArrowRight, Check, Route } from 'lucide-react';
 import type { Product } from './productsData';
 import { PRODUCT_TOUR_HERO_IMAGE, PRODUCT_TOUR_PAGE } from './productToursData';
 import { ProductFeatureImage } from './ProductFeatureImage';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 
 interface ProductTourHeroProps {
   product: Product;
@@ -47,7 +48,7 @@ export const ProductTourHero = ({ product }: ProductTourHeroProps) => {
               {PRODUCT_TOUR_PAGE.intro}
             </p>
             <Link
-              to="/tours/new"
+              to={getExtensionGatePath("/tours/new")}
               className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-brand-violet shadow-lg transition hover:bg-slate-100"
             >
               <Route className="h-4 w-4" aria-hidden />

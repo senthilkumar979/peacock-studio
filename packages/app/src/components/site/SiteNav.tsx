@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Menu, X } from 'lucide-react';
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
 import { DASHBOARD_PATH, LANDING_PATH, PRICING_PATH } from '@/constants/routes';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 import { SiteNavDropdown } from './SiteNavDropdown';
 import { PRODUCT_NAV_ITEMS, SOLUTION_NAV_ITEMS } from './siteNavData';
 
@@ -63,7 +64,7 @@ export const SiteNav = ({ visible = true }: SiteNavProps) => {
 
         <div className="flex items-center gap-2">
           <Link
-            to={DASHBOARD_PATH}
+            to={getExtensionGatePath(DASHBOARD_PATH)}
             className="hidden items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-xs font-semibold text-peacock-800 shadow-sm transition hover:bg-slate-100 md:inline-flex"
           >
             Open App
@@ -103,7 +104,7 @@ export const SiteNav = ({ visible = true }: SiteNavProps) => {
                 </Link>
               ))}
               <Link
-                to={DASHBOARD_PATH}
+                to={getExtensionGatePath(DASHBOARD_PATH)}
                 onClick={() => setMenuOpen(false)}
                 className="mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-peacock-800"
               >

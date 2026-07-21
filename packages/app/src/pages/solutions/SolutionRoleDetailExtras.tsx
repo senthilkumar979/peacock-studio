@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import type { SolutionRole } from "./solutionsData";
+import { getExtensionGatePath } from '@/utils/extensionGate';
 
 interface SolutionRoleDetailExtrasProps {
   role: SolutionRole;
@@ -125,14 +126,14 @@ export const SolutionRoleDetailExtras = ({
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                to="/editor"
+                to={getExtensionGatePath("/editor")}
                 className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-peacock-800 shadow-lg transition hover:bg-slate-100"
               >
                 Capture a flow
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
               <Link
-                to="/tours/new"
+                to={getExtensionGatePath("/tours/new")}
                 className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
               >
                 Build a product tour

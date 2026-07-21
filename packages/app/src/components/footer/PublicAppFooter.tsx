@@ -1,17 +1,18 @@
-import { Copyright } from "lucide-react";
-import { Link } from "react-router-dom";
-import { SignInButton, SignUpButton } from "@clerk/react";
-import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from "@/constants/branding";
-import { isCloudSyncEnabled } from "@/cloud/config";
-import { DASHBOARD_PATH } from "@/constants/routes";
+import { Copyright } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { SignInButton, SignUpButton } from '@clerk/react';
+import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
+import { isCloudSyncEnabled } from '@/cloud/config';
+import { DASHBOARD_PATH } from '@/constants/routes';
+import { ChromeWebStoreLink } from '@/components/extension/ChromeWebStoreLink';
 import {
   FOOTER_TAGLINE,
   getFooterCopyrightLabel,
   PUBLIC_EXPLORE_LINKS,
   PUBLIC_PRODUCT_LINKS,
   PUBLIC_SOLUTION_LINKS,
-} from "@/components/footer/footerData";
-import { FooterLegalLinks } from "@/components/footer/FooterLegalLinks";
+} from '@/components/footer/footerData';
+import { FooterLegalLinks } from '@/components/footer/FooterLegalLinks';
 
 export const PublicAppFooter = () => {
   const year = new Date().getFullYear();
@@ -26,24 +27,18 @@ export const PublicAppFooter = () => {
               to="/"
               className="inline-flex items-center gap-2.5 rounded-lg outline-none ring-peacock-500 focus-visible:ring-2"
             >
-              <img
-                src={PEACOCK_LOGO_SRC}
-                alt=""
-                className="h-9 w-9 object-contain"
-              />
-              <span className="text-sm font-semibold text-slate-900">
-                {PEACOCK_APP_NAME}
-              </span>
+              <img src={PEACOCK_LOGO_SRC} alt="" className="h-9 w-9 object-contain" />
+              <span className="text-sm font-semibold text-slate-900">{PEACOCK_APP_NAME}</span>
             </Link>
-            <p className="mt-3 max-w-xs text-sm leading-relaxed text-slate-600">
-              {FOOTER_TAGLINE}
-            </p>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-slate-600">{FOOTER_TAGLINE}</p>
+            <ChromeWebStoreLink
+              showIcon
+              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-peacock-700 transition hover:text-peacock-900"
+            />
           </div>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-900">
-              Explore
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-900">Explore</p>
             <ul className="mt-3 space-y-2">
               {PUBLIC_EXPLORE_LINKS.map((link) => (
                 <li key={link.href}>
@@ -59,9 +54,7 @@ export const PublicAppFooter = () => {
           </div>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-900">
-              Products
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-900">Products</p>
             <ul className="mt-3 space-y-2">
               {PUBLIC_PRODUCT_LINKS.map((link) => (
                 <li key={link.href}>
@@ -77,9 +70,7 @@ export const PublicAppFooter = () => {
           </div>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-900">
-              Solutions
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-900">Solutions</p>
             <ul className="mt-3 space-y-2">
               {PUBLIC_SOLUTION_LINKS.map((link) => (
                 <li key={link.href}>
@@ -97,13 +88,8 @@ export const PublicAppFooter = () => {
 
         <div className="mt-10 flex flex-col gap-4 border-t border-slate-200/80 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="inline-flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-            <Copyright
-              className="h-3.5 w-3.5 shrink-0 text-slate-400"
-              aria-hidden
-            />
-            <span className="font-medium text-slate-600">
-              {getFooterCopyrightLabel(year)}
-            </span>
+            <Copyright className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
+            <span className="font-medium text-slate-600">{getFooterCopyrightLabel(year)}</span>
           </p>
 
           <div className="flex flex-col gap-3 sm:items-end">

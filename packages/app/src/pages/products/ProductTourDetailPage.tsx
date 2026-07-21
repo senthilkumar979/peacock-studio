@@ -10,6 +10,7 @@ import { ProductTourHero } from './ProductTourHero';
 import { ProductTourPersonaBenefits } from './ProductTourPersonaBenefits';
 import { ProductTourStructureExample } from './ProductTourStructureExample';
 import { ProductTourTraditionalGap } from './ProductTourTraditionalGap';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 
 interface ProductTourDetailPageProps {
   product: Product;
@@ -47,7 +48,7 @@ export const ProductTourDetailPage = ({ product }: ProductTourDetailPageProps) =
               tour to a persona — ready for sales, onboarding, or support playback.
             </p>
             <Link
-              to="/tours/new"
+              to={getExtensionGatePath("/tours/new")}
               className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-brand-violet shadow-lg transition hover:bg-slate-100"
             >
               <Route className="h-4 w-4" aria-hidden />
