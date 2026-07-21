@@ -1,4 +1,5 @@
 import type { FlowCaptureEnvironment } from './captureEnvironment';
+import type { DataClassification } from './dataClassification';
 
 export type EventType = 'click' | 'input' | 'navigation' | 'tab-switch' | 'scroll';
 
@@ -52,6 +53,10 @@ export interface ElementSnapshot {
   innerHTML: string | null;
   label: LabelInfo;
   valuePreview: string | null;
+  /** Sensitivity level of the captured value; drives masking downstream. */
+  classification: DataClassification;
+  /** Pre-computed masked preview for `sensitive` fields; null otherwise. */
+  maskedValue: string | null;
   dataAttributes: DataAttributes;
   ariaDescription: string | null;
   parent: ParentElementSnapshot | null;

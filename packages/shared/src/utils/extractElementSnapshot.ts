@@ -12,7 +12,8 @@ import type {
   LabelInfo,
   ParentElementSnapshot,
 } from '../types/events';
-import { isSensitiveField, maskValue, shouldCaptureInnerHtml } from './masking';
+import { classifyField } from './classifyField';
+import { isSensitiveField, maskSensitiveValue, maskValue, shouldCaptureInnerHtml } from './masking';
 import { getUniqueSelector } from './selector';
 import { getXPath } from './xpath';
 
@@ -212,7 +213,7 @@ export function extractElementSnapshot(el: HTMLElement): ElementSnapshot {
   const parentEl = el.parentElement;
   const grandparentEl = parentEl?.parentElement ?? null;
 
-  return {
+  const snapshot: ElementSnapshot = {
     tagName,
     type,
     id: el.id ?? '',
@@ -225,10 +226,35 @@ export function extractElementSnapshot(el: HTMLElement): ElementSnapshot {
     innerHTML: captureInnerHtml(el),
     label: resolveLabelInfo(el),
     valuePreview: captureValuePreview(el),
+    classification: 'public',
+    maskedValue: null,
     dataAttributes: extractDataAttributes(el),
     ariaDescription: el.getAttribute('aria-description'),
     parent: extractParentSnapshot(parentEl),
     grandparent: extractParentSnapshot(grandparentEl),
     ...roles,
   };
+
+  return applyClassification(snapshot);
+}
+
+/**
+ * Assigns a data classification and enforces the masking policy for that level.
+ * `secret` values are dropped entirely; `sensitive` values keep a masked preview.
+ */
+function applyClassification(snapshot: ElementSnapshot): ElementSnapshot {
+  const { classification } = classifyField(snapshot);
+  snapshot.classification = classification;
+
+  if (classification === 'secret') {
+    snapshot.valuePreview = null;
+    snapshot.maskedValue = null;
+    return snapshot;
+  }
+
+  if (classification === 'sensitive' && snapshot.valuePreview) {
+    snapshot.maskedValue = maskSensitiveValue(snapshot.valuePreview);
+  }
+
+  return snapshot;
 }

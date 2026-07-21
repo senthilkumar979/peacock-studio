@@ -48,6 +48,24 @@ function findDataAttribute(snapshot: ElementSnapshot, key: string): string | und
   return undefined;
 }
 
+/**
+ * Ordered data-attribute keys that carry meaningful step context. The first
+ * match wins so the most specific hint (e.g. country) surfaces in the copy.
+ */
+const CONTEXT_DATA_KEYS = ['country', 'region', 'state', 'category', 'section', 'tab', 'step'];
+
+function resolveContextHint(snapshot: ElementSnapshot): string | null {
+  for (const key of CONTEXT_DATA_KEYS) {
+    const value = findDataAttribute(snapshot, key);
+    if (value) {
+      const cleaned = cleanLabel(value) || value;
+      return `${sentenceCase(key)}: ${cleaned}`;
+    }
+  }
+
+  return null;
+}
+
 function resolveFieldLabel(snapshot: ElementSnapshot): string {
   const candidates = [
     snapshot.label.text,
@@ -148,7 +166,6 @@ export function isInsideForm(snapshot: ElementSnapshot): boolean {
 export function resolveStepLabels(snapshot: ElementSnapshot, event: FlowEvent): StepLabels {
   const kind = getControlKind(snapshot);
   const value = getRecordedValue(snapshot, event);
-  const country = findDataAttribute(snapshot, 'country');
 
   return {
     target:
@@ -160,7 +177,7 @@ export function resolveStepLabels(snapshot: ElementSnapshot, event: FlowEvent): 
       : null,
     value,
     pageTitle: getPageTitle(event),
-    contextHint: country ? `Country: ${country}` : null,
+    contextHint: resolveContextHint(snapshot),
   };
 }
 

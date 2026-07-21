@@ -6,6 +6,7 @@ import {
   isSensitiveField,
   normalizePosition,
   type ClickEvent,
+  type ElementSnapshot,
   type PageViewEvent,
   type ExtensionMessage,
   type FlowEvent,
@@ -208,6 +209,17 @@ async function handleClick(event: MouseEvent): Promise<void> {
   await storeEvent(clickEvent);
 }
 
+/**
+ * Resolves the value to persist on an input event while honoring the field's
+ * data classification. `secret` never yields a value, `sensitive` yields only
+ * the masked preview, and `public` keeps the captured (or raw) value.
+ */
+function resolveCapturedValue(element: ElementSnapshot, rawValue: string): string {
+  if (element.classification === 'secret') return '';
+  if (element.classification === 'sensitive') return element.maskedValue ?? '';
+  return element.valuePreview ?? rawValue;
+}
+
 async function flushInput(target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): Promise<void> {
   if (!(await isRecordingActive())) return;
   if (isSensitiveField(target)) return;
@@ -218,7 +230,7 @@ async function flushInput(target: HTMLInputElement | HTMLTextAreaElement | HTMLS
   const centerX = rect.left + rect.width / 2;
   const centerY = rect.top + rect.height / 2;
   const element = extractElementSnapshot(target);
-  const valuePreview = element.valuePreview ?? target.value ?? '';
+  const valuePreview = resolveCapturedValue(element, target.value ?? '');
 
   const inputEvent: InputEvent = {
     id: createId(),
