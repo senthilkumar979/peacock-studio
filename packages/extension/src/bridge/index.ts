@@ -1,14 +1,24 @@
 import {
   CAPTURE_HANDOFF_REQUEST,
   CAPTURE_HANDOFF_RESPONSE,
+  EXTENSION_PING_REQUEST,
+  EXTENSION_PING_RESPONSE,
   HANDOFF_REQUEST,
   HANDOFF_RESPONSE,
   type CaptureHandoffBridgeMessage,
   type CaptureHandoffRequestMessage,
+  type ExtensionPingResponseMessage,
   type HandoffBridgeMessage,
 } from '@peacock/shared';
 
-function postToPage(message: HandoffBridgeMessage | CaptureHandoffBridgeMessage): void {
+/** Read by the web app to detect that this content script is present. */
+const EXTENSION_DOM_MARKER = 'data-peacock-extension';
+
+document.documentElement.setAttribute(EXTENSION_DOM_MARKER, 'installed');
+
+function postToPage(
+  message: HandoffBridgeMessage | CaptureHandoffBridgeMessage | ExtensionPingResponseMessage,
+): void {
   window.postMessage(message, window.location.origin);
 }
 
@@ -49,6 +59,11 @@ window.addEventListener('message', (event) => {
 
   const data = event.data as CaptureHandoffRequestMessage | { type: string } | undefined;
   if (!data?.type) return;
+
+  if (data.type === EXTENSION_PING_REQUEST) {
+    postToPage({ type: EXTENSION_PING_RESPONSE, ok: true });
+    return;
+  }
 
   if (data.type === HANDOFF_REQUEST) {
     fetchAndPostHandoff();

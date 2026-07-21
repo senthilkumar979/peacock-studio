@@ -8,6 +8,7 @@ import { FLOW_DOCUMENT_CAPABILITY_GROUPS, FLOW_DOCUMENT_IMAGE_BASE } from './flo
 import { FlowDocumentHero } from './FlowDocumentHero';
 import { FlowDocumentLifecycle } from './FlowDocumentLifecycle';
 import { ProductCapabilityGroupSection } from './ProductCapabilityGroupSection';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 
 interface FlowDocumentDetailPageProps {
   product: Product;
@@ -87,7 +88,7 @@ export const FlowDocumentDetailPage = ({ product }: FlowDocumentDetailPageProps)
               editor before opening doc view or player.
             </p>
             <Link
-              to="/editor"
+              to={getExtensionGatePath("/editor")}
               className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-peacock-800 shadow-lg transition hover:bg-slate-100"
             >
               Open flow editor

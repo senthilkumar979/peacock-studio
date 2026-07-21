@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { AppFooter } from '@/components/AppFooter';
+import { ChromeWebStoreLink } from '@/components/extension/ChromeWebStoreLink';
 import { SiteNav } from '@/components/site/SiteNav';
 import { CaptureEditorDetailPage } from '@/pages/products/CaptureEditorDetailPage';
 import { FlowDocumentDetailPage } from '@/pages/products/FlowDocumentDetailPage';
@@ -10,6 +11,7 @@ import { ProductTourDetailPage } from '@/pages/products/ProductTourDetailPage';
 import { DASHBOARD_PATH } from '@/constants/routes';
 import { ProductScreenshotPlaceholder } from '@/pages/products/ProductScreenshotPlaceholder';
 import { getProductBySlug } from '@/pages/products/productsData';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 
 export const ProductDetail = () => {
   const { productSlug } = useParams<{ productSlug: string }>();
@@ -97,10 +99,13 @@ export const ProductDetail = () => {
         <div className="landing-section-inner flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-slate-900">Ready to try {product.shortName}?</p>
-            <p className="mt-1 text-sm text-slate-600">Open the app and start from your first capture.</p>
+            <p className="mt-1 text-sm text-slate-600">
+              Install the Chrome extension, then open the app to start from your first capture.
+            </p>
+            <ChromeWebStoreLink className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-peacock-700 hover:text-peacock-900" />
           </div>
           <Link
-            to={DASHBOARD_PATH}
+            to={getExtensionGatePath(DASHBOARD_PATH)}
             className="inline-flex items-center gap-2 rounded-xl bg-peacock-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-peacock-800"
           >
             Open App

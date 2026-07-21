@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
 import { CircleDot, Puzzle, Share2 } from 'lucide-react';
 import { PEACOCK_LOGO_SRC } from '@/constants/branding';
+import { ChromeWebStoreLink } from '@/components/extension/ChromeWebStoreLink';
 import { FirstTimeTooltip } from '@/components/onboarding/FirstTimeTooltip';
 
 interface OnboardingStep {
@@ -15,7 +16,7 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     step: '01',
     title: 'Install the extension',
-    description: 'Load the Peacock extension in Chrome and pin it to your toolbar for quick access.',
+    description: 'Install Peacock Studio from the Chrome Web Store and pin it to your toolbar.',
     icon: Puzzle,
   },
   {
@@ -76,6 +77,7 @@ export const DashboardEmptyState = ({
         Your library is empty. Record a browser flow and Peacock will turn it into a polished,
         step-by-step guide stored securely on this device.
       </p>
+      <ChromeWebStoreLink className="mt-5 inline-flex items-center gap-2 rounded-xl bg-peacock-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-peacock-800" />
     </motion.div>
 
     <div className="grid gap-px border-t border-slate-200 bg-slate-200 sm:grid-cols-3">

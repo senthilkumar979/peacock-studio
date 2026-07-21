@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, FileText, Route } from 'lucide-react';
+import { FileText, Route } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ChromeWebStoreLink } from '@/components/extension/ChromeWebStoreLink';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 import { LANDING_CATEGORY } from './landingData';
 import { HeroWorkflowVisual } from './HeroWorkflowVisual';
 
@@ -38,26 +40,29 @@ export const HeroSection = () => (
         </p>
 
         <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-400">
-          Peacock captures clicks, inputs, and screenshots from any website, then turns them into
-          editable Flow Documents and Product Tours — local-first, no account required.
+          Peacock captures clicks, inputs, and screenshots from any website via the free Chrome
+          extension, then turns them into editable Flow Documents and Product Tours — local-first,
+          no account required.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link
-            to="/editor"
+            to={getExtensionGatePath('/editor')}
             className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-peacock-800 shadow-lg shadow-peacock-900/30 transition hover:bg-slate-100"
           >
             <FileText className="h-4 w-4" aria-hidden />
             Capture a workflow
           </Link>
           <Link
-            to="/tours/new"
+            to={getExtensionGatePath('/tours/new')}
             className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
           >
             <Route className="h-4 w-4" aria-hidden />
             Build a product tour
           </Link>
         </div>
+
+        <ChromeWebStoreLink className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-brand-cyan transition hover:text-cyan-300" />
 
         <dl className="mt-10 grid grid-cols-3 gap-4 border-t border-white/10 pt-8">
           {[

@@ -8,6 +8,7 @@ import {
   PlayerPreviewMock,
   TourBuilderPreviewMock,
 } from './PreviewSectionMocks';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 
 const PREVIEW_SURFACES = ['Flow editor', 'Tour builder', 'Interactive player'] as const;
 
@@ -69,11 +70,11 @@ export const PreviewSection = () => (
       className="mt-8 text-center text-sm text-slate-500"
     >
       Same surfaces inside the app —{' '}
-      <Link to="/editor" className="font-semibold text-peacock-700 hover:text-peacock-900">
+      <Link to={getExtensionGatePath('/editor')} className="font-semibold text-peacock-700 hover:text-peacock-900">
         open the editor
       </Link>{' '}
       or{' '}
-      <Link to="/tours/new" className="font-semibold text-peacock-700 hover:text-peacock-900">
+      <Link to={getExtensionGatePath('/tours/new')} className="font-semibold text-peacock-700 hover:text-peacock-900">
         start a product tour
       </Link>
       .

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FileText, Route, Check } from 'lucide-react';
 import type { SolutionRole } from './solutionsData';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 
 interface SolutionRoleHeroProps {
   role: SolutionRole;
@@ -67,14 +68,14 @@ export const SolutionRoleHero = ({ role }: SolutionRoleHeroProps) => {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                to="/editor"
+                to={getExtensionGatePath("/editor")}
                 className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-peacock-800 shadow-lg shadow-black/20 transition hover:bg-slate-100"
               >
                 <FileText className="h-4 w-4" aria-hidden />
                 Capture a flow
               </Link>
               <Link
-                to="/tours/new"
+                to={getExtensionGatePath("/tours/new")}
                 className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
               >
                 <Route className="h-4 w-4" aria-hidden />

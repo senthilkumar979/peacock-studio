@@ -4,7 +4,9 @@ import {
   FLOW_DOCS_PATH,
   FLOW_MAPS_PATH,
   LANDING_PATH,
+  EXTENSION_INSTALL_PATH,
   PLAYWRIGHT_TESTS_PATH,
+  PRICING_PATH,
   PRIVACY_PATH,
   PRODUCT_TOURS_PATH,
   TERMS_PATH,
@@ -16,6 +18,7 @@ import { ProductToursLibraryPage } from '@/pages/ProductToursLibraryPage';
 import { Landing } from '@/pages/Landing';
 import { CompareDocs } from '@/pages/CompareDocs';
 import { Editor } from '@/pages/Editor';
+import { ExtensionInstallPage } from '@/pages/ExtensionInstallPage';
 import { LegacyRouteRedirect } from '@/pages/LegacyRouteRedirect';
 import { NewProductTour } from '@/pages/NewProductTour';
 import { Player } from '@/pages/Player';
@@ -27,6 +30,7 @@ import { Products } from '@/pages/Products';
 import { ProductDetail } from '@/pages/ProductDetail';
 import { Solutions } from '@/pages/Solutions';
 import { SolutionRole } from '@/pages/SolutionRole';
+import { Pricing } from '@/pages/Pricing';
 import { SignInPage } from '@/pages/SignInPage';
 import { SignUpPage } from '@/pages/SignUpPage';
 import { PublicSharePage } from '@/pages/PublicSharePage';
@@ -50,6 +54,8 @@ export const App = () => (
     <Route path="/products/:productSlug" element={<ProductDetail />} />
     <Route path="/solutions" element={<Solutions />} />
     <Route path="/solutions/:roleSlug" element={<SolutionRole />} />
+    <Route path={PRICING_PATH} element={<Pricing />} />
+    <Route path={EXTENSION_INSTALL_PATH} element={<ExtensionInstallPage />} />
     <Route path={PRIVACY_PATH} element={<PrivacyPolicy />} />
     <Route path={TERMS_PATH} element={<TermsAndConditions />} />
     <Route path={TEST_CASES_PATH} element={<TestCasesLibraryPage />} />

@@ -13,6 +13,7 @@ import {
   CAPTURE_EDITOR_IMAGE_BASE,
 } from './captureEditorData';
 import { ProductCapabilityGroupSection } from './ProductCapabilityGroupSection';
+import { getExtensionGatePath } from '@/utils/extensionGate';
 
 interface CaptureEditorDetailPageProps {
   product: Product;
@@ -92,7 +93,7 @@ export const CaptureEditorDetailPage = ({ product }: CaptureEditorDetailPageProp
               polish in the editor before pasting into Teams, Slack, or Confluence.
             </p>
             <Link
-              to={DASHBOARD_PATH}
+              to={getExtensionGatePath(DASHBOARD_PATH)}
               className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-lg transition hover:bg-slate-100"
             >
               <Camera className="h-4 w-4" aria-hidden />

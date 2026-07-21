@@ -13,6 +13,11 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_ANON_KEY?: string;
   readonly VITE_GUEST_VISIBLE_DOC_LIMIT?: string;
   readonly VITE_FREE_ACCOUNT_DOC_LIMIT?: string;
+  readonly VITE_POSTHOG_KEY?: string;
+  readonly VITE_POSTHOG_HOST?: string;
+  readonly VITE_SENTRY_DSN?: string;
+  readonly VITE_TAWK_PROPERTY_ID?: string;
+  readonly VITE_TAWK_WIDGET_ID?: string;
 }
 
 interface ImportMeta {
@@ -32,9 +37,20 @@ interface ChromeApi {
   runtime?: ChromeRuntime;
 }
 
+interface TawkApi {
+  onLoad?: () => void;
+  hideWidget?: () => void;
+  showWidget?: () => void;
+  maximize?: () => void;
+  setAttributes?: (attributes: Record<string, string>, callback?: (error?: unknown) => void) => void;
+  visitor?: Record<string, string>;
+}
+
 declare global {
   interface Window {
     chrome?: ChromeApi;
+    Tawk_API?: TawkApi;
+    Tawk_LoadStart?: Date;
   }
 }
 

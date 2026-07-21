@@ -18,6 +18,23 @@ function getNavigationRedirectPageName(event: Extract<FlowEvent, { type: 'page-v
   return title || 'the new page';
 }
 
+/**
+ * Renders a URL as a compact, human-friendly location: the host plus a short
+ * path (e.g. `example.com/checkout`). Falls back to the raw string if parsing
+ * fails so we never surface an empty description.
+ */
+function formatLocation(url: string): string {
+  if (!url) return 'the previous page';
+
+  try {
+    const parsed = new URL(url);
+    const path = parsed.pathname.replace(/\/+$/, '');
+    return path && path !== '/' ? `${parsed.host}${path}` : parsed.host;
+  } catch {
+    return url;
+  }
+}
+
 function titleForButton(labels: ReturnType<typeof resolveStepLabels>): string {
   return `Click ${labels.target}`;
 }
@@ -135,7 +152,7 @@ export function generateStepTitle(snapshot: ElementSnapshot, event: FlowEvent): 
 
 export function generateStepDescription(snapshot: ElementSnapshot, event: FlowEvent): string {
   if (event.type === 'navigation') {
-    return `Navigate from ${event.fromUrl} to ${event.toUrl}.`;
+    return `Navigate from ${formatLocation(event.fromUrl)} to ${formatLocation(event.toUrl)}.`;
   }
 
   if (event.type === 'page-view') {

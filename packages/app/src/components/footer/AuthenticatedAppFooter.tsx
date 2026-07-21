@@ -4,6 +4,7 @@ import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
 import { isCloudSyncEnabled } from '@/cloud/config';
 import { DASHBOARD_PATH } from '@/constants/routes';
 import { LIBRARY_NAV_ITEMS } from '@/constants/libraryNav';
+import { ChromeWebStoreLink } from '@/components/extension/ChromeWebStoreLink';
 import { FOOTER_TAGLINE, getFooterCopyrightLabel } from '@/components/footer/footerData';
 import { FooterLegalLinks } from '@/components/footer/FooterLegalLinks';
 import { useSessionMode } from '@/hooks/useSessionMode';
@@ -52,6 +53,10 @@ export const AuthenticatedAppFooter = () => {
             </Link>
 
             <p className="mt-5 text-sm leading-relaxed text-slate-500">{FOOTER_TAGLINE}</p>
+            <ChromeWebStoreLink
+              showIcon
+              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-peacock-700 transition hover:text-peacock-900"
+            />
           </div>
 
           <div className="min-w-0 flex-1 lg:pt-1">

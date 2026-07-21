@@ -9,11 +9,7 @@ import {
 } from '@peacock/shared';
 import { saveNewFlowFromStore } from '@/services/flowLibraryService';
 import { useFlowStore } from '@/store/flowStore';
-
-function getExtensionId(): string | null {
-  const fromEnv = import.meta.env.VITE_EXTENSION_ID?.trim();
-  return fromEnv || null;
-}
+import { getExtensionId } from '@/utils/getExtensionId';
 
 function notifyExtensionAppReady(extensionId: string): void {
   const runtime = window.chrome?.runtime;

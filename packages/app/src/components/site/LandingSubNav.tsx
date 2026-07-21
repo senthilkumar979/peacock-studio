@@ -1,5 +1,6 @@
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from "@/constants/branding";
 import { DASHBOARD_PATH, LANDING_PATH } from "@/constants/routes";
+import { getExtensionGatePath } from "@/utils/extensionGate";
 import { useActiveSection } from "@/pages/solutions/useActiveSection";
 import { Link } from "react-router-dom";
 import { LANDING_SUB_NAV_ITEMS } from "./siteNavData";
@@ -59,7 +60,7 @@ export const LandingSubNav = ({ visible = false }: LandingSubNavProps) => {
           })}
         </div>
         <Link
-          to={DASHBOARD_PATH}
+          to={getExtensionGatePath(DASHBOARD_PATH)}
           className="rounded-lg bg-peacock-500 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-peacock-600"
         >
           Open App
