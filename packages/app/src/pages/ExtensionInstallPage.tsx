@@ -131,7 +131,10 @@ export const ExtensionInstallPage = () => {
             <h3 className="mt-4 text-lg font-semibold text-slate-900">After you install</h3>
             <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-600">
               <li>Pin Peacock Studio to your Chrome toolbar.</li>
-              <li>Return to this tab and click &ldquo;check again&rdquo; (or refresh).</li>
+              <li>
+                Reload this tab (or click &ldquo;check again&rdquo;) so Peacock can detect the
+                extension on <span className="font-medium text-slate-800">localhost:5173</span>.
+              </li>
               <li>
                 We&apos;ll take you to{' '}
                 <span className="font-medium text-slate-800">{nextPath}</span> to continue.

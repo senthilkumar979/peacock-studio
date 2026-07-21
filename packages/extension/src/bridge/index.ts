@@ -11,6 +11,11 @@ import {
   type HandoffBridgeMessage,
 } from '@peacock/shared';
 
+/** Read by the web app to detect that this content script is present. */
+const EXTENSION_DOM_MARKER = 'data-peacock-extension';
+
+document.documentElement.setAttribute(EXTENSION_DOM_MARKER, 'installed');
+
 function postToPage(
   message: HandoffBridgeMessage | CaptureHandoffBridgeMessage | ExtensionPingResponseMessage,
 ): void {
