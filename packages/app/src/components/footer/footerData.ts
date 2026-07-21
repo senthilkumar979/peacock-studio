@@ -8,7 +8,6 @@ export const PUBLIC_EXPLORE_LINKS = [
   { label: 'Home', href: LANDING_PATH },
   { label: 'Products', href: '/products' },
   { label: 'Solutions', href: '/solutions' },
-  { label: 'Open app', href: DASHBOARD_PATH },
 ] as const;
 
 export const PUBLIC_PRODUCT_LINKS = PRODUCT_NAV_ITEMS.map(({ label, href }) => ({

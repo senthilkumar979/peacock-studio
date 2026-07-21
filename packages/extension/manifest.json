@@ -1,9 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "Peacock",
-  "version": "0.1.0",
-  "description": "Browser flow recorder",
-  "permissions": ["activeTab", "clipboardWrite", "scripting", "storage", "tabs"],
+  "name": "Peacock Studio",
+  "version": "1.0.1",
+  "description": "Record clicks and screenshots on any site, then turn your workflow into step-by-step guides in Peacock Studio.",
+  "permissions": [
+    "activeTab",
+    "clipboardWrite",
+    "scripting",
+    "storage",
+    "tabs"
+  ],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background/index.js",

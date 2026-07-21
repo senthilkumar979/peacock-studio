@@ -92,13 +92,27 @@ Optional: also export 16, 48, and 128 PNGs if you later split manifest icon size
 
 ### Extension name
 
-**Peacock Studio — Flow Recorder**
+**Peacock Studio**
 
-(You may shorten to **Peacock Studio** if the dashboard limits length. Manifest name is currently `Peacock`.)
+Manifest `name` is already set to `Peacock Studio`. The store listing title can match or use **Peacock Studio — Flow Recorder** if you want extra clarity in search results.
+
+### Manifest description (in `manifest.json`, ≤ 132 characters)
+
+This appears in Chrome’s extension management UI (`chrome://extensions`) and in the packaged extension metadata. Keep it plain and benefit-focused:
+
+```
+Record clicks and screenshots on any site, then turn your workflow into step-by-step guides in Peacock Studio.
+```
+
+Rebuild after changing `packages/extension/manifest.json` so `dist/manifest.json` picks up the new text.
 
 ### Summary (short description, ≤ 132 characters)
 
-Record clicks, inputs, and screenshots on any site. Turn live workflows into editable docs in Peacock Studio.
+Use the same wording as the manifest description, or this variant for the store listing:
+
+```
+Record clicks and screenshots on any site, then turn your workflow into step-by-step guides in Peacock Studio.
+```
 
 ### Detailed description
 
@@ -308,17 +322,19 @@ Check the certification box only after the privacy policy at `https://peacock-st
 
 ---
 
-## Optional: align manifest before next release
+## Manifest fields (source of truth)
 
-Consider updating `manifest.json` for a stronger store presence (not required for first draft if listing fields are filled in the dashboard):
+Keep `packages/extension/manifest.json` aligned with the store listing before each release:
 
 ```json
 {
   "name": "Peacock Studio",
-  "description": "Record browser workflows and turn them into step-by-step documentation with screenshots.",
-  "version": "0.1.0"
+  "description": "Record clicks and screenshots on any site, then turn your workflow into step-by-step guides in Peacock Studio.",
+  "version": "1.0.1-beta"
 }
 ```
+
+Chrome limits `description` to **132 characters**. Bump `version` for every new upload to the Web Store.
 
 Ensure `icons` entries point to appropriately sized PNGs (16, 48, 128) for crisp toolbar display.
 
