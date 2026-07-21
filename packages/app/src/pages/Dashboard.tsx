@@ -6,6 +6,7 @@ import { DeleteDocumentConfirmContent } from '@/components/dashboard/DeleteDocum
 import { DeleteProductTourConfirmContent } from '@/components/dashboard/DeleteProductTourConfirmContent';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
+import { DashboardAnalyticsSection } from '@/components/dashboard/DashboardAnalyticsSection';
 import { FlowLibrarySection } from '@/components/dashboard/FlowLibrarySection';
 import { ProductTourLibraryCards } from '@/components/dashboard/ProductTourLibraryCards';
 import { ViewModeToggle } from '@/components/dashboard/ViewModeToggle';
@@ -99,6 +100,8 @@ export const Dashboard = () => {
           <div className="relative z-10 mx-auto w-full max-w-8xl px-4 pb-12 sm:px-6 lg:px-8">
             <div className="-mt-14 space-y-8">
               <DashboardStats stats={stats} />
+
+              <DashboardAnalyticsSection documentCount={stats.totalDocuments} />
 
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
