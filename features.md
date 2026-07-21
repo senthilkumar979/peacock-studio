@@ -1,5 +1,18 @@
 # Peacock Beta Launch Enhancement Plan
 
+## Implementation status (branch `cursor/beta-enhancements-378a`)
+
+All planned items are implemented and validated (monorepo typecheck, 38 shared tests, and app production build all pass):
+
+- Data classification (public/internal/sensitive/secret) + expanded sensitive-field detection in `@peacock/shared`; extension stores classification-aware values (no secret/sensitive leaks).
+- Enhanced step transcriptions: broader context hints and human-readable navigation copy.
+- Observability: PostHog sink (consent-gated), Sentry init, Tawk.to support widget (hidden on public share routes).
+- Analytics: `analytics_events` migration with RLS + security-definer RPCs (`record_share_event`, `record_org_event`, `get_org_analytics_summary`); repository + referrer/UTM capture; PDF-export and share-link-created events.
+- Dashboard engagement analytics: summary cards + lazy-loaded Recharts (area + bar).
+- Marketing: `/pricing` beta page (blurred tier preview, early-adopter promise, founding-user capture) and a modernized `SiteNav` (mobile drawer, active indicator) + `LibraryNav` Support button.
+
+Notable deviations from the original draft: local storage uses `idb` (not Dexie); helpdesk chosen is Tawk.to (free, unlimited agents); GA/Hotjar/DataDog intentionally skipped in favor of PostHog + Sentry; analytics aggregation runs server-side via an RPC rather than a materialized view. Env vars are documented in `packages/app/.env.example`.
+
 ## 1. Navigation Redesign
 
 ### Current State
