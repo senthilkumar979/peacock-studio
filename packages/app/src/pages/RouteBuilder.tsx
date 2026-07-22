@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { DASHBOARD_PATH } from "@/constants/routes";
-import { EmptyFlowState } from "@/components/EmptyFlowState";
+import { useParams } from "react-router-dom";
+import { ResourceNotFoundPage } from "@/components/errors/ResourceNotFoundPage";
 import { PeacockStudioLoader } from "@/components/PeacockStudioLoader";
 import { usePersistRoute } from "@/hooks/usePersistRoute";
 import { useSavedRoute } from "@/hooks/useSavedRoute";
@@ -43,7 +42,7 @@ export const RouteBuilder = () => {
 
   if (!routeId) {
     return (
-      <EmptyFlowState
+      <ResourceNotFoundPage
         title="Invalid route"
         description="Open a route from your dashboard or create a new one."
       />
@@ -51,16 +50,7 @@ export const RouteBuilder = () => {
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-slate-50">
-        <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800">
-          {error}{" "}
-          <Link to={DASHBOARD_PATH} className="font-medium underline">
-            Go to dashboard
-          </Link>
-        </div>
-      </div>
-    );
+    return <ResourceNotFoundPage title="Route not found" description={error} />;
   }
 
   if (isLoading || !isLoaded || !route) {

@@ -11,7 +11,7 @@ import type {
   WorkflowArtifactSummary,
   WorkflowArtifactType,
 } from '@/types/workflowArtifact';
-import { GENERIC_USER_ERROR_MESSAGE, logAppError } from '@/utils/appError';
+import { reportAppError } from '@/utils/appError';
 
 export function useWorkflowArtifactLibrary(artifactType: WorkflowArtifactType) {
   const [artifacts, setArtifacts] = useState<WorkflowArtifactSummary[]>([]);
@@ -32,8 +32,7 @@ export function useWorkflowArtifactLibrary(artifactType: WorkflowArtifactType) {
       const next = await listWorkflowArtifacts(artifactType);
       setArtifacts(next);
     } catch (loadError) {
-      logAppError('Failed to load workflow artifacts', loadError);
-      setError(GENERIC_USER_ERROR_MESSAGE);
+      setError(reportAppError('Failed to load workflow artifacts', loadError).userMessage);
       setArtifacts([]);
     } finally {
       setIsLoading(false);
@@ -68,8 +67,7 @@ export function useWorkflowArtifactDetail(
       const next = await getWorkflowArtifact(documentId, artifactType);
       setArtifact(next ?? null);
     } catch (loadError) {
-      logAppError('Failed to load workflow artifact', loadError);
-      setError(GENERIC_USER_ERROR_MESSAGE);
+      setError(reportAppError('Failed to load workflow artifact', loadError).userMessage);
       setArtifact(null);
     } finally {
       setIsLoading(false);
@@ -100,8 +98,9 @@ export function useDocumentArtifactStatuses(documentId: string | undefined) {
       const next = await listDocumentArtifactStatuses(documentId);
       setStatuses(next);
     } catch (loadError) {
-      logAppError('Failed to load document artifact statuses', loadError);
-      setError(GENERIC_USER_ERROR_MESSAGE);
+      setError(
+        reportAppError('Failed to load document artifact statuses', loadError).userMessage,
+      );
       setStatuses([]);
     } finally {
       setIsLoading(false);

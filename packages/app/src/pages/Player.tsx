@@ -1,12 +1,11 @@
 import { useEffect, useMemo } from 'react';
-import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
-import { DASHBOARD_PATH } from '@/constants/routes';
+import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 import {
   getHintStepLabel,
   getPlayerHintSequence,
 } from '@/constants/firstTimeHints';
 import { GuestDocumentGate } from '@/components/auth/GuestDocumentGate';
-import { EmptyFlowState } from '@/components/EmptyFlowState';
+import { ResourceNotFoundPage } from '@/components/errors/ResourceNotFoundPage';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import type { PageHintControl } from '@/components/onboarding/HintAnchor';
 import { recordOrgEvent } from '@/cloud/repositories/analyticsRepository';
@@ -44,7 +43,7 @@ export const Player = () => {
       resourceId: documentId,
       metadata: { view: resolvedView },
     });
-  }, [documentId, isLoaded]);
+  }, [documentId, isLoaded, resolvedView]);
 
   const handleModeChange = (mode: SharedDocumentViewMode) => {
     const next = new URLSearchParams(searchParams);
@@ -83,7 +82,7 @@ export const Player = () => {
 
   if (!documentId) {
     return (
-      <EmptyFlowState
+      <ResourceNotFoundPage
         title="Invalid link"
         description="Open documentation from your dashboard or use a shared link."
       />
@@ -92,14 +91,7 @@ export const Player = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800">
-          {error}{' '}
-          <Link to={DASHBOARD_PATH} className="font-medium underline">
-            Go to dashboard
-          </Link>
-        </div>
-      </div>
+      <ResourceNotFoundPage title="Documentation not found" description={error} />
     );
   }
 
@@ -114,9 +106,9 @@ export const Player = () => {
 
   if (!isLoaded) {
     return (
-      <EmptyFlowState
+      <ResourceNotFoundPage
         title="Documentation not found"
-        description="It may have been deleted from this browser."
+        description="This documentation was not found. It may have been deleted."
       />
     );
   }

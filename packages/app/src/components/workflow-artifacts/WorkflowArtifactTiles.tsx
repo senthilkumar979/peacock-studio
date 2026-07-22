@@ -10,7 +10,7 @@ import {
   WORKFLOW_ARTIFACT_TYPES,
   type WorkflowArtifactType,
 } from "@/types/workflowArtifact";
-import { logAppError } from "@/utils/appError";
+import { notifyPromise } from "@/utils/notify";
 
 interface WorkflowArtifactTilesProps {
   documentId: string;
@@ -65,9 +65,13 @@ export const WorkflowArtifactTiles = ({
     setHasGenerateError(false);
     setPendingType(artifactType);
     try {
-      await generate(artifactType);
-    } catch (generateError) {
-      logAppError("Failed to generate workflow artifact", generateError);
+      await notifyPromise(generate(artifactType), {
+        loading: 'Generating artifact…',
+        success: 'Artifact ready',
+        successDescription: 'Open it from the library when you are ready.',
+        context: 'Generate workflow artifact',
+      });
+    } catch {
       setHasGenerateError(true);
     } finally {
       setPendingType(null);

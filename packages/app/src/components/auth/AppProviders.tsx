@@ -1,6 +1,9 @@
 import { ClerkProvider } from '@clerk/react';
 import { BrowserRouter } from 'react-router-dom';
+import { GooeyToaster } from 'goey-toast';
+import 'goey-toast/styles.css';
 import { AppErrorBoundary } from '@/components/errors/AppErrorBoundary';
+import { GlobalErrorListeners } from '@/components/errors/GlobalErrorListeners';
 import { CloudSyncProvider } from '@/components/auth/CloudSyncProvider';
 import { CloudSyncBanner } from '@/components/auth/CloudSyncBanner';
 import { CookieConsentBanner } from '@/components/consent/CookieConsentBanner';
@@ -21,12 +24,22 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
     <BrowserRouter>
       <AppErrorBoundary>
         <CloudSyncProvider>
+          <GlobalErrorListeners />
           {children}
           <AnalyticsTracker />
           <SupportWidget />
           <CloudSyncBanner />
           <CookieConsentBanner />
           <CookiePreferencesModal />
+          <GooeyToaster
+            position="bottom-right"
+            preset="smooth"
+            closeButton="top-right"
+            showTimestamp={false}
+            showProgress
+            theme="light"
+            offset="24px"
+          />
         </CloudSyncProvider>
       </AppErrorBoundary>
     </BrowserRouter>

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { deleteRoute, listRouteSummaries } from '@/services/routeLibraryService';
 import type { SavedRouteSummary } from '@/types/route';
+import { reportAppError } from '@/utils/appError';
+import { notifyError, notifyPromise } from '@/utils/notify';
 
 export function useRouteLibrary() {
   const [summaries, setSummaries] = useState<SavedRouteSummary[]>([]);
@@ -14,8 +16,9 @@ export function useRouteLibrary() {
       const next = await listRouteSummaries();
       setSummaries(next);
     } catch (err) {
-      console.error('[Peacock] Failed to load routes', err);
-      setError('Could not load saved routes.');
+      const classified = reportAppError('Failed to load routes', err);
+      setError(classified.userMessage);
+      notifyError(classified.title, classified.userMessage);
     } finally {
       setIsLoading(false);
     }
@@ -27,10 +30,14 @@ export function useRouteLibrary() {
 
   const deleteRouteById = useCallback(
     async (id: string) => {
-      await deleteRoute(id);
-      await refresh();
+      await notifyPromise(deleteRoute(id).then(() => refresh()), {
+        loading: 'Deleting route…',
+        success: 'Route deleted',
+        successDescription: 'Removed from your library.',
+        context: 'Delete route',
+      });
     },
-    [refresh]
+    [refresh],
   );
 
   return { summaries, isLoading, error, refresh, deleteRouteById };

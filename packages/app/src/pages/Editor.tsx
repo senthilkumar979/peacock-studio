@@ -14,6 +14,7 @@ import { BranchPanel } from '@/editor/BranchPanel';
 import { FlowBranchCard } from '@/editor/FlowBranchCard';
 import { LinkPeacockDocModal } from '@/editor/LinkPeacockDocModal';
 import { GuestDocumentGate } from '@/components/auth/GuestDocumentGate';
+import { ResourceNotFoundPage } from '@/components/errors/ResourceNotFoundPage';
 import { StepList } from '@/editor/StepList';
 import { StepPanel } from '@/editor/StepPanel';
 import { Toolbar } from '@/editor/Toolbar';
@@ -82,6 +83,15 @@ export const Editor = () => {
     setIsLinkModalOpen(true);
   };
 
+  if (error) {
+    return (
+      <ResourceNotFoundPage
+        title={isExtensionHandoff ? 'Could not load capture' : 'Documentation not found'}
+        description={error}
+      />
+    );
+  }
+
   const handleLinkConfirm = async (input: {
     targetDocumentId: string;
     targetTitle: string;
@@ -106,15 +116,6 @@ export const Editor = () => {
         onEditorHintsReady={setEditorHintsReady}
         editorHints={editorHints}
       />
-
-      {error && (
-        <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800">
-          {error}{' '}
-          <Link to={DASHBOARD_PATH} className="font-medium underline">
-            Go to dashboard
-          </Link>
-        </div>
-      )}
 
       {isLoading && (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-12">

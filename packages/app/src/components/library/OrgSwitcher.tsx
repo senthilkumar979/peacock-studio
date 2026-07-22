@@ -2,7 +2,7 @@ import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { refreshCloudMemberships } from '@/components/auth/CloudSyncProvider';
 import { useActiveOrganization } from '@/hooks/useOrganization';
-import { logAppError } from '@/utils/appError';
+import { notifyPromise } from '@/utils/notify';
 
 export const OrgSwitcher = () => {
   const { memberships, organizationId, organizationName } = useActiveOrganization();
@@ -50,11 +50,18 @@ export const OrgSwitcher = () => {
                     }
                     setBusy(true);
                     try {
-                      await refreshCloudMemberships(membership.organizationId);
+                      await notifyPromise(
+                        refreshCloudMemberships(membership.organizationId),
+                        {
+                          loading: 'Switching workspace…',
+                          success: `Switched to ${membership.organizationName}`,
+                          context: 'Switch organization',
+                        },
+                      );
                       setOpen(false);
                       window.location.assign('/dashboard');
-                    } catch (err) {
-                      logAppError('Failed to switch organization', err);
+                    } catch {
+                      // Toast already shown
                     } finally {
                       setBusy(false);
                     }

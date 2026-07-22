@@ -13,7 +13,8 @@ import { DASHBOARD_PATH, LANDING_PATH, ORG_ADMIN_PATH } from '@/constants/routes
 import { useCloudAuthContext, useNeedsWorkspaceOnboarding } from '@/hooks/useOrganization';
 import { useSessionMode } from '@/hooks/useSessionMode';
 import type { PendingInvitation } from '@/cloud/types/organization';
-import { GENERIC_USER_ERROR_MESSAGE, logAppError } from '@/utils/appError';
+import { reportAppError } from '@/utils/appError';
+import { notifyError, notifyPromise } from '@/utils/notify';
 
 type ChooserMode = 'choose' | 'team-form';
 
@@ -53,8 +54,11 @@ export const WorkspaceChooserPage = () => {
         const invites = await listMyPendingInvitations();
         if (!cancelled) setPendingInvites(invites);
       } catch (err) {
-        logAppError('Failed to load pending invitations', err);
-        if (!cancelled) setError(GENERIC_USER_ERROR_MESSAGE);
+        const classified = reportAppError('Failed to load pending invitations', err);
+        if (!cancelled) {
+          setError(classified.userMessage);
+          notifyError(classified.title, classified.userMessage);
+        }
       } finally {
         if (!cancelled) setLoadingInvites(false);
       }
@@ -85,12 +89,21 @@ export const WorkspaceChooserPage = () => {
     setBusy(true);
     setError(null);
     try {
-      const orgId = await createPersonalWorkspace(context?.userDisplayName ?? null);
-      await refreshCloudMemberships(orgId);
+      const orgId = await notifyPromise(
+        createPersonalWorkspace(context?.userDisplayName ?? null).then(async (id) => {
+          await refreshCloudMemberships(id);
+          return id;
+        }),
+        {
+          loading: 'Creating workspace…',
+          success: 'Personal workspace ready',
+          context: 'Create personal workspace',
+        },
+      );
+      void orgId;
       navigate(DASHBOARD_PATH, { replace: true });
     } catch (err) {
-      logAppError('Failed to create personal workspace', err);
-      setError(GENERIC_USER_ERROR_MESSAGE);
+      setError(reportAppError('Failed to create personal workspace', err).userMessage);
     } finally {
       setBusy(false);
     }
@@ -101,12 +114,22 @@ export const WorkspaceChooserPage = () => {
     setBusy(true);
     setError(null);
     try {
-      const orgId = await createTeamWorkspace(companyName, website);
-      await refreshCloudMemberships(orgId);
+      const orgId = await notifyPromise(
+        createTeamWorkspace(companyName, website).then(async (id) => {
+          await refreshCloudMemberships(id);
+          return id;
+        }),
+        {
+          loading: 'Creating organization…',
+          success: 'Team workspace created',
+          successDescription: 'Invite teammates from Admin when you are ready.',
+          context: 'Create team workspace',
+        },
+      );
+      void orgId;
       navigate(ORG_ADMIN_PATH, { replace: true });
     } catch (err) {
-      logAppError('Failed to create organization', err);
-      setError(GENERIC_USER_ERROR_MESSAGE);
+      setError(reportAppError('Failed to create organization', err).userMessage);
     } finally {
       setBusy(false);
     }
@@ -116,12 +139,21 @@ export const WorkspaceChooserPage = () => {
     setBusy(true);
     setError(null);
     try {
-      const orgId = await acceptOrganizationInvitation(token);
-      await refreshCloudMemberships(orgId);
+      const orgId = await notifyPromise(
+        acceptOrganizationInvitation(token).then(async (id) => {
+          await refreshCloudMemberships(id);
+          return id;
+        }),
+        {
+          loading: 'Joining workspace…',
+          success: 'You joined the workspace',
+          context: 'Accept organization invitation',
+        },
+      );
+      void orgId;
       navigate(DASHBOARD_PATH, { replace: true });
     } catch (err) {
-      logAppError('Failed to accept invitation', err);
-      setError(GENERIC_USER_ERROR_MESSAGE);
+      setError(reportAppError('Failed to accept invitation', err).userMessage);
     } finally {
       setBusy(false);
     }

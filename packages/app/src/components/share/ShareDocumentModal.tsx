@@ -22,6 +22,7 @@ import {
   type ShareLinkAccessMode,
 } from '@/utils/shareLink';
 import { useCanEmbed, useCanExport, useCanShare } from '@/hooks/useOrganization';
+import { notifyError, notifyInfo, notifyPromise } from '@/utils/notify';
 
 interface ShareDocumentModalProps {
   isOpen: boolean;
@@ -145,6 +146,12 @@ export const ShareDocumentModal = ({
       .then((url) => {
         if (!cancelled) setShareUrl(url);
       })
+      .catch((error) => {
+        if (!cancelled) {
+          notifyError(error, 'Create document share link');
+          setShareUrl('');
+        }
+      })
       .finally(() => {
         if (!cancelled) setIsShareUrlLoading(false);
       });
@@ -160,37 +167,66 @@ export const ShareDocumentModal = ({
   };
 
   const handlePrimaryAction = async () => {
-    if (method === 'embed') return;
+    if (method === 'embed') {
+      notifyInfo('Embed coming soon', 'Embed publishing is not available yet for this workspace.');
+      return;
+    }
     if (method === 'pdf') {
       if (!flow) return;
       setIsExporting(true);
       try {
-        await exportFlowPdf({
-          flow,
-          steps,
-          screenshotUrls,
-          pathSelections: hasBranches ? pdfPathSelections : undefined,
-        });
+        await notifyPromise(
+          exportFlowPdf({
+            flow,
+            steps,
+            screenshotUrls,
+            pathSelections: hasBranches ? pdfPathSelections : undefined,
+          }),
+          {
+            loading: 'Exporting PDF…',
+            success: 'PDF exported',
+            successDescription: 'Your download should start shortly.',
+            context: 'Export flow PDF',
+          },
+        );
+        onClose();
+      } catch {
+        // Toast already shown
       } finally {
         setIsExporting(false);
       }
-      onClose();
       return;
     }
-    if (hasBranches && accessMode === 'readonly') {
-      onShareSettingsSave?.({ ...branchSettings, includeMainFlow: true });
+    try {
+      if (hasBranches && accessMode === 'readonly') {
+        onShareSettingsSave?.({ ...branchSettings, includeMainFlow: true });
+      }
+      const branchShareSettings =
+        hasBranches && accessMode === 'readonly'
+          ? { ...branchSettings, includeMainFlow: true }
+          : undefined;
+      const url = await notifyPromise(
+        (async () => {
+          const created = await createDocumentShareUrl(documentId, {
+            accessMode,
+            viewMode: 'doc',
+            shareSettings: branchShareSettings,
+          });
+          await copyTextToClipboard(created);
+          return created;
+        })(),
+        {
+          loading: 'Creating share link…',
+          success: 'Link copied',
+          successDescription: 'Share URL is on your clipboard.',
+          context: 'Create document share link',
+        },
+      );
+      void url;
+      handleClose();
+    } catch {
+      // Toast already shown
     }
-    const branchShareSettings =
-      hasBranches && accessMode === 'readonly'
-        ? { ...branchSettings, includeMainFlow: true }
-        : undefined;
-    const url = await createDocumentShareUrl(documentId, {
-      accessMode,
-      viewMode: 'doc',
-      shareSettings: branchShareSettings,
-    });
-    await copyTextToClipboard(url);
-    handleClose();
   };
 
   if (!isOpen) return null;

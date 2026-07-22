@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { persistRoute } from '@/services/routeLibraryService';
 import { useRouteBuilderStore } from '@/store/routeBuilderStore';
+import { notifyPersistError } from '@/utils/notify';
 
 const PERSIST_DEBOUNCE_MS = 1500;
 
@@ -16,7 +17,7 @@ export function usePersistRoute(enabled: boolean): void {
 
     timerRef.current = window.setTimeout(() => {
       void persistRoute(route).catch((error) => {
-        console.error('[Peacock] Failed to persist route', error);
+        notifyPersistError(error, 'Save route');
       });
     }, PERSIST_DEBOUNCE_MS);
 

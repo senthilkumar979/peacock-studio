@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getPlayableStepRange, type FlowStep } from "@peacock/shared";
-import { DASHBOARD_PATH } from "@/constants/routes";
 import {
   getHintStepLabel,
   getProductTourLearnerHintSequence,
   PRODUCT_TOUR_LEARNER_HINT_IDS,
 } from "@/constants/firstTimeHints";
-import { EmptyFlowState } from "@/components/EmptyFlowState";
+import { ResourceNotFoundPage } from "@/components/errors/ResourceNotFoundPage";
 import { PeacockStudioLoader } from "@/components/PeacockStudioLoader";
 import { AppHeader } from "@/components/AppHeader";
 import { HintAnchor, type PageHintControl } from "@/components/onboarding/HintAnchor";
@@ -223,7 +222,7 @@ export const ProductTourLearner = ({
 
   if (!tourId) {
     return (
-      <EmptyFlowState
+      <ResourceNotFoundPage
         title="Invalid tour"
         description="Open a product tour from your dashboard."
       />
@@ -231,11 +230,7 @@ export const ProductTourLearner = ({
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-slate-50 px-6 py-8 text-sm text-amber-800">
-        {error} <Link to={DASHBOARD_PATH}>Go to dashboard</Link>
-      </div>
-    );
+    return <ResourceNotFoundPage title="Product tour not found" description={error} />;
   }
 
   if (isLoading || !isLoaded || !tour || playback.isLoading || !persona) {

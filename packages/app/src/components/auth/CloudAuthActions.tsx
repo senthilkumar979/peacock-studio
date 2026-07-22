@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { SignInButton, SignUpButton, UserButton } from '@clerk/react';
+import { SignInButton, SignUpButton } from '@clerk/react';
 import { isCloudSyncEnabled } from '@/cloud/config';
 import { CloudSignInCallout } from '@/components/auth/CloudSignInCallout';
+import { SignedInUserButton } from '@/components/auth/SignedInUserButton';
 import { useSessionMode } from '@/hooks/useSessionMode';
 
 interface CloudAuthActionsProps {
@@ -38,13 +39,7 @@ export const CloudAuthActions = ({
     if (variant !== 'hero') return null;
     return (
       <div className="absolute right-6 top-6 z-10">
-        <UserButton
-          appearance={{
-            elements: {
-              avatarBox: 'h-9 w-9 ring-2 ring-white/30',
-            },
-          }}
-        />
+        <SignedInUserButton />
       </div>
     );
   }

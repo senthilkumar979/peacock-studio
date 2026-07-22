@@ -14,6 +14,7 @@ import {
 import { createProductTourShareUrl } from '@/services/shareLinkService';
 import { isCloudSyncEnabled } from '@/cloud/config';
 import { useCanEmbed, useCanExport, useCanShare } from '@/hooks/useOrganization';
+import { notifyInfo, notifyPromise } from '@/utils/notify';
 
 interface ShareProductTourModalProps {
   isOpen: boolean;
@@ -112,25 +113,50 @@ export const ShareProductTourModal = ({
   };
 
   const handlePrimaryAction = async () => {
-    if (method === 'embed') return;
+    if (method === 'embed') {
+      notifyInfo('Embed coming soon', 'Embed publishing is not available yet for this workspace.');
+      return;
+    }
     if (method === 'pdf') {
       if (!tour) return;
       setIsExporting(true);
       try {
-        await exportProductTourPdf(tour);
+        await notifyPromise(exportProductTourPdf(tour), {
+          loading: 'Exporting PDF…',
+          success: 'PDF exported',
+          successDescription: 'Your download should start shortly.',
+          context: 'Export product tour PDF',
+        });
+        onClose();
+      } catch {
+        // Toast already shown
       } finally {
         setIsExporting(false);
       }
-      onClose();
       return;
     }
-    await copyTextToClipboard(
-      await createProductTourShareUrl(tourId, {
-        accessMode,
-        presenter: presenterLink && accessMode === 'readonly',
-      }),
-    );
-    handleClose();
+    try {
+      const url = await notifyPromise(
+        (async () => {
+          const created = await createProductTourShareUrl(tourId, {
+            accessMode,
+            presenter: presenterLink && accessMode === 'readonly',
+          });
+          await copyTextToClipboard(created);
+          return created;
+        })(),
+        {
+          loading: 'Creating share link…',
+          success: 'Link copied',
+          successDescription: 'Share URL is on your clipboard.',
+          context: 'Create product tour share link',
+        },
+      );
+      void url;
+      handleClose();
+    } catch {
+      // Toast already shown
+    }
   };
 
   if (!isOpen) return null;

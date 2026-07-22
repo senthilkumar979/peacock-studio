@@ -3,9 +3,12 @@ import { useAuth } from '@clerk/react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { resolvePublicShareLink, verifyEditableShareLink } from '@/cloud/publicShareClient';
 import { isCloudSyncEnabled } from '@/cloud/config';
+import { HardErrorPage } from '@/components/errors/HardErrorPage';
 import { useCloudLibraryReady } from '@/hooks/useCloudLibraryReady';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
+import { DASHBOARD_PATH } from '@/constants/routes';
 import type { EditableShareVerification } from '@/types/shareLink';
+import { reportAppError } from '@/utils/appError';
 
 interface EditableShareRedirectProps {
   token: string;
@@ -17,6 +20,7 @@ const EditableShareRedirectInner = ({ token }: EditableShareRedirectProps) => {
   const { isReady: isCloudReady } = useCloudLibraryReady();
   const [verification, setVerification] = useState<EditableShareVerification | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorTitle, setErrorTitle] = useState('Share link error');
   const [isEditableLink, setIsEditableLink] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -29,15 +33,18 @@ const EditableShareRedirectInner = ({ token }: EditableShareRedirectProps) => {
       .then((link) => {
         if (cancelled) return;
         if (!link || link.accessMode !== 'editable') {
+          setErrorTitle('Edit access unavailable');
           setError('This link does not grant edit access.');
           setIsEditableLink(false);
           return;
         }
         setIsEditableLink(true);
       })
-      .catch(() => {
+      .catch((resolveError) => {
         if (!cancelled) {
-          setError('Could not load this share link.');
+          const classified = reportAppError('Resolve editable share link', resolveError);
+          setErrorTitle(classified.title);
+          setError(classified.userMessage);
           setIsEditableLink(false);
         }
       });
@@ -56,14 +63,18 @@ const EditableShareRedirectInner = ({ token }: EditableShareRedirectProps) => {
       .then((result) => {
         if (cancelled) return;
         if (!result) {
+          setErrorTitle('Permission denied');
           setError('You do not have permission to edit this shared item.');
           return;
         }
         setVerification(result);
       })
       .catch((verifyError) => {
-        console.error('[Peacock] Failed to verify editable share link', verifyError);
-        if (!cancelled) setError('Could not verify edit access.');
+        if (!cancelled) {
+          const classified = reportAppError('Verify editable share link', verifyError);
+          setErrorTitle(classified.title);
+          setError(classified.userMessage);
+        }
       });
 
     return () => {
@@ -82,9 +93,12 @@ const EditableShareRedirectInner = ({ token }: EditableShareRedirectProps) => {
 
   if (isEditableLink === false || error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6 text-center text-sm text-slate-600">
-        {error ?? 'This link does not grant edit access.'}
-      </div>
+      <HardErrorPage
+        title={errorTitle}
+        description={error ?? 'This link does not grant edit access.'}
+        homePath={DASHBOARD_PATH}
+        homeLabel="Go to dashboard"
+      />
     );
   }
 
@@ -111,9 +125,12 @@ const EditableShareRedirectInner = ({ token }: EditableShareRedirectProps) => {
 export const EditableShareRedirect = ({ token }: EditableShareRedirectProps) => {
   if (!isCloudSyncEnabled()) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6 text-center text-sm text-slate-600">
-        Editable share links require cloud sync to be enabled.
-      </div>
+      <HardErrorPage
+        title="Cloud sync required"
+        description="Editable share links require cloud sync to be enabled."
+        homePath={DASHBOARD_PATH}
+        homeLabel="Go to dashboard"
+      />
     );
   }
 

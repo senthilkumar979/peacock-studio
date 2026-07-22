@@ -1,8 +1,8 @@
-import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
-import { LANDING_PATH } from '@/constants/routes';
+import { useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { HardErrorPage } from '@/components/errors/HardErrorPage';
 import { EditableShareRedirect } from '@/components/share/EditableShareRedirect';
-import { EmptyFlowState } from '@/components/EmptyFlowState';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
+import { LANDING_PATH } from '@/constants/routes';
 import { useFlowDocDefaultView } from '@/hooks/useFlowDocDefaultView';
 import { usePublicShare } from '@/hooks/usePublicShare';
 import { usePublicSharedDocument } from '@/hooks/usePublicSharedDocument';
@@ -21,7 +21,7 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultView = useFlowDocDefaultView();
-  const { link, isLoading, error } = usePublicShare(token);
+  const { link, isLoading, error, errorTitle } = usePublicShare(token);
   const { shareLinkViewMode, isReady: isDocumentReady } = usePublicSharedDocument(link);
   const resolvedView = resolveFlowDocView(
     searchParams,
@@ -45,9 +45,11 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
   if (mode === 'edit') {
     if (!token) {
       return (
-        <EmptyFlowState
+        <HardErrorPage
           title="Invalid link"
           description="This edit link is missing a share token."
+          homePath={LANDING_PATH}
+          homeLabel="Go home"
         />
       );
     }
@@ -64,24 +66,15 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
     );
   }
 
-  if (error) {
+  if (error || !link) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800">
-          {error}{' '}
-          <Link to={LANDING_PATH} className="font-medium underline">
-            Go to Peacock Studio
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (!link) {
-    return (
-      <EmptyFlowState
-        title="Share link not found"
-        description="This link may have expired or been revoked."
+      <HardErrorPage
+        title={errorTitle ?? 'Share link not found'}
+        description={
+          error ?? 'This link may have expired or been revoked. Ask the owner for a new link.'
+        }
+        homePath={LANDING_PATH}
+        homeLabel="Go home"
       />
     );
   }

@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { DASHBOARD_PATH } from "@/constants/routes";
+import { useParams } from "react-router-dom";
 import {
   PRODUCT_TOUR_HINT_IDS,
   PRODUCT_TOUR_HINT_SEQUENCE,
   getHintStepLabel,
 } from "@/constants/firstTimeHints";
 import { useFirstTimeHintTour } from "@/hooks/useFirstTimeHint";
-import { EmptyFlowState } from "@/components/EmptyFlowState";
+import { ResourceNotFoundPage } from "@/components/errors/ResourceNotFoundPage";
 import { PeacockStudioLoader } from "@/components/PeacockStudioLoader";
 import { HintAnchor, type PageHintControl } from "@/components/onboarding/HintAnchor";
 import { usePersistProductTour } from "@/hooks/usePersistProductTour";
@@ -49,7 +48,7 @@ export const ProductTourBuilder = () => {
 
   if (!tourId) {
     return (
-      <EmptyFlowState
+      <ResourceNotFoundPage
         title="Invalid tour"
         description="Create a product tour from the dashboard."
       />
@@ -57,11 +56,7 @@ export const ProductTourBuilder = () => {
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-slate-50 px-6 py-8 text-sm text-amber-800">
-        {error} <Link to={DASHBOARD_PATH}>Go to dashboard</Link>
-      </div>
-    );
+    return <ResourceNotFoundPage title="Product tour not found" description={error} />;
   }
 
   if (isLoading || !isLoaded || !tour) {

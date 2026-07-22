@@ -22,7 +22,8 @@ import type {
   OrganizationInvitationRecord,
   OrganizationMemberRecord,
 } from '@/cloud/types/organization';
-import { GENERIC_USER_ERROR_MESSAGE, logAppError } from '@/utils/appError';
+import { reportAppError } from '@/utils/appError';
+import { notifyError, notifyPromise } from '@/utils/notify';
 
 interface OrgAdminMembersPanelProps {
   organizationId: string;
@@ -54,8 +55,9 @@ export const OrgAdminMembersPanel = ({
       setInvites(inviteRows);
       setError(null);
     } catch (err) {
-      logAppError('Failed to load members', err);
-      setError(GENERIC_USER_ERROR_MESSAGE);
+      const classified = reportAppError('Failed to load members', err);
+      setError(classified.userMessage);
+      notifyError(classified.title, classified.userMessage);
     } finally {
       setLoading(false);
     }
@@ -75,8 +77,10 @@ export const OrgAdminMembersPanel = ({
       await action();
       await reload();
     } catch (err) {
-      logAppError('Members action failed', err);
-      setError(err instanceof Error ? err.message : GENERIC_USER_ERROR_MESSAGE);
+      const classified = reportAppError('Members action failed', err);
+      setError(classified.userMessage);
+      // Soft actions should toast themselves (notifyPromise / notifyError).
+      // Avoid double toasts here.
     } finally {
       setBusy(false);
     }
@@ -154,19 +158,30 @@ export const OrgAdminMembersPanel = ({
           capabilities: MemberCapabilities;
         }) => {
           await runBusy(async () => {
-            const created = await createOrganizationInvitation({
-              organizationId,
-              email: input.email,
-              role: input.role,
-              capabilities: input.capabilities,
-            });
-            await sendOrgInviteEmail({
-              toEmail: created.email,
-              organizationName,
-              inviterName,
-              inviteToken: created.token,
-              expiresAt: created.expiresAt,
-            });
+            await notifyPromise(
+              (async () => {
+                const created = await createOrganizationInvitation({
+                  organizationId,
+                  email: input.email,
+                  role: input.role,
+                  capabilities: input.capabilities,
+                });
+                await sendOrgInviteEmail({
+                  toEmail: created.email,
+                  organizationName,
+                  inviterName,
+                  inviteToken: created.token,
+                  expiresAt: created.expiresAt,
+                });
+                return created;
+              })(),
+              {
+                loading: 'Sending invitation…',
+                success: 'Invitation sent',
+                successDescription: `Invite emailed to ${input.email.trim().toLowerCase()} (expires in 7 days).`,
+                context: 'Create organization invitation',
+              },
+            );
           });
         }}
       />
@@ -176,19 +191,34 @@ export const OrgAdminMembersPanel = ({
         busy={busy}
         onResend={async (inviteId) => {
           await runBusy(async () => {
-            const resent = await resendOrganizationInvitation(inviteId);
-            await sendOrgInviteEmail({
-              toEmail: resent.email,
-              organizationName,
-              inviterName,
-              inviteToken: resent.token,
-              expiresAt: resent.expiresAt,
-            });
+            await notifyPromise(
+              (async () => {
+                const resent = await resendOrganizationInvitation(inviteId);
+                await sendOrgInviteEmail({
+                  toEmail: resent.email,
+                  organizationName,
+                  inviterName,
+                  inviteToken: resent.token,
+                  expiresAt: resent.expiresAt,
+                });
+                return resent;
+              })(),
+              {
+                loading: 'Resending invitation…',
+                success: 'Invitation resent',
+                successDescription: 'Expiry reset to 7 days from now.',
+                context: 'Resend organization invitation',
+              },
+            );
           });
         }}
         onRevoke={async (inviteId) => {
           await runBusy(async () => {
-            await revokeOrganizationInvitation(inviteId);
+            await notifyPromise(revokeOrganizationInvitation(inviteId), {
+              loading: 'Revoking invitation…',
+              success: 'Invitation revoked',
+              context: 'Revoke organization invitation',
+            });
           });
         }}
       />
@@ -199,7 +229,11 @@ export const OrgAdminMembersPanel = ({
         busy={busy}
         onUpdateCapabilities={async (memberId, capabilities) => {
           await runBusy(async () => {
-            await updateMemberCapabilities(memberId, capabilities);
+            await notifyPromise(updateMemberCapabilities(memberId, capabilities), {
+              loading: 'Updating permissions…',
+              success: 'Permissions updated',
+              context: 'Update member capabilities',
+            });
             const member = members.find((m) => m.id === memberId);
             if (member?.clerkUserId === currentClerkUserId) {
               await refreshCloudMemberships(organizationId);
@@ -208,8 +242,16 @@ export const OrgAdminMembersPanel = ({
         }}
         onDisable={async (memberId) => {
           await runBusy(async () => {
-            await setMemberStatus(memberId, 'disabled');
-            await refreshCloudMemberships(organizationId);
+            await notifyPromise(
+              setMemberStatus(memberId, 'disabled').then(() =>
+                refreshCloudMemberships(organizationId),
+              ),
+              {
+                loading: 'Disabling member…',
+                success: 'Member disabled',
+                context: 'Disable organization member',
+              },
+            );
           });
         }}
       />

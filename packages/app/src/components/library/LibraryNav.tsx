@@ -2,7 +2,8 @@ import type { LucideIcon } from "lucide-react";
 import { NavLink, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { LifeBuoy, Settings2 } from "lucide-react";
-import { SignInButton, SignUpButton, UserButton } from "@clerk/react";
+import { SignInButton, SignUpButton } from "@clerk/react";
+import { SignedInUserButton } from "@/components/auth/SignedInUserButton";
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from "@/constants/branding";
 import { isCloudSyncEnabled } from "@/cloud/config";
 import { LIBRARY_NAV_ITEMS } from "@/constants/libraryNav";
@@ -127,13 +128,7 @@ export const LibraryNav = () => {
           {isCloudSyncEnabled() ? (
             <div className="flex shrink-0 items-center gap-2">
               {sessionMode === "cloud" ? (
-                <UserButton
-                  appearance={{
-                    elements: {
-                      avatarBox: "h-9 w-9 ring-2 ring-peacock-100",
-                    },
-                  }}
-                />
+                <SignedInUserButton avatarClassName="h-9 w-9 ring-2 ring-peacock-100" />
               ) : sessionMode === "guest" ? (
                 <>
                   <SignInButton

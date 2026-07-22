@@ -3,7 +3,8 @@ import { useSessionMode } from '@/hooks/useSessionMode';
 import { listFlowSummaries, removeFlowDocument } from '@/services/flowLibraryService';
 import { computeDashboardStats, type DashboardStats } from '@/utils/dashboardStats';
 import type { SavedFlowSummary } from '@/types/savedFlow';
-import { GENERIC_USER_ERROR_MESSAGE, logAppError } from '@/utils/appError';
+import { reportAppError } from '@/utils/appError';
+import { notifyError, notifyPromise } from '@/utils/notify';
 
 export function useFlowLibrary() {
   const sessionMode = useSessionMode();
@@ -25,8 +26,9 @@ export function useFlowLibrary() {
       setSummaries(next);
       setStats(computeDashboardStats(next));
     } catch (err) {
-      logAppError('Failed to load flow library', err);
-      setError(GENERIC_USER_ERROR_MESSAGE);
+      const classified = reportAppError('Failed to load flow library', err);
+      setError(classified.userMessage);
+      notifyError(classified.title, classified.userMessage);
     } finally {
       setIsLoading(false);
     }
@@ -40,8 +42,12 @@ export function useFlowLibrary() {
   const deleteDocument = useCallback(
     async (id: string) => {
       if (sessionMode === 'guest') return;
-      await removeFlowDocument(id);
-      await refresh();
+      await notifyPromise(removeFlowDocument(id).then(() => refresh()), {
+        loading: 'Deleting document…',
+        success: 'Document deleted',
+        successDescription: 'Removed from your library.',
+        context: 'Delete flow document',
+      });
     },
     [refresh, sessionMode],
   );

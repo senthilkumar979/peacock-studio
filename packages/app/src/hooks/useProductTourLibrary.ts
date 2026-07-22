@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSessionMode } from '@/hooks/useSessionMode';
 import { deleteProductTour, listProductTourSummaries } from '@/services/productTourLibraryService';
 import type { ProductTourSummary } from '@/types/productTour';
+import { reportAppError } from '@/utils/appError';
+import { notifyError, notifyPromise } from '@/utils/notify';
 
 export function useProductTourLibrary() {
   const sessionMode = useSessionMode();
@@ -21,8 +23,9 @@ export function useProductTourLibrary() {
       const next = await listProductTourSummaries();
       setSummaries(next);
     } catch (err) {
-      console.error('[Peacock] Failed to load product tours', err);
-      setError('Could not load product tours.');
+      const classified = reportAppError('Failed to load product tours', err);
+      setError(classified.userMessage);
+      notifyError(classified.title, classified.userMessage);
     } finally {
       setIsLoading(false);
     }
@@ -36,8 +39,12 @@ export function useProductTourLibrary() {
   const deleteTourById = useCallback(
     async (id: string) => {
       if (sessionMode === 'guest') return;
-      await deleteProductTour(id);
-      await refresh();
+      await notifyPromise(deleteProductTour(id).then(() => refresh()), {
+        loading: 'Deleting tour…',
+        success: 'Tour deleted',
+        successDescription: 'Removed from your library.',
+        context: 'Delete product tour',
+      });
     },
     [refresh, sessionMode],
   );

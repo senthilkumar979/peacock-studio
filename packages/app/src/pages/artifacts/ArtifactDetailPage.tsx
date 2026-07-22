@@ -14,7 +14,7 @@ import { useSessionMode } from '@/hooks/useSessionMode';
 import { generateWorkflowArtifact } from '@/services/workflowArtifactService';
 import type { WorkflowArtifactType } from '@/types/workflowArtifact';
 import { WORKFLOW_ARTIFACT_TYPES } from '@/types/workflowArtifact';
-import { logAppError } from '@/utils/appError';
+import { notifyError, notifyPromise, notifySuccess } from '@/utils/notify';
 import { downloadTextFile } from '@/utils/downloadTextFile';
 import { getDocumentPath } from '@/utils/shareLink';
 import { buildFlowMapPngFilename } from '@/workflow-artifacts/exportFlowMapCanvasPng';
@@ -41,11 +41,22 @@ export const ArtifactDetailPage = ({ artifactType }: ArtifactDetailPageProps) =>
     if (!artifact) return;
 
     if (artifactType === WORKFLOW_ARTIFACT_TYPES.flowMap) {
+      const canvas = flowMapCanvasRef.current;
+      if (!canvas) {
+        notifyError(
+          'Canvas not ready',
+          'Wait for the flow map to finish rendering, then try downloading again.',
+        );
+        return;
+      }
       setIsDownloading(true);
       try {
-        await flowMapCanvasRef.current?.downloadPng(buildFlowMapPngFilename(artifact.flowTitle));
-      } catch (downloadError) {
-        logAppError('Failed to download flow map PNG', downloadError);
+        await notifyPromise(canvas.downloadPng(buildFlowMapPngFilename(artifact.flowTitle)), {
+          loading: 'Preparing PNG…',
+          success: 'PNG downloaded',
+          context: 'Download flow map PNG',
+        });
+      } catch {
         setHasActionError(true);
       } finally {
         setIsDownloading(false);
@@ -57,6 +68,7 @@ export const ArtifactDetailPage = ({ artifactType }: ArtifactDetailPageProps) =>
       artifact.content,
       `${artifact.flowTitle.replace(/\s+/g, '-').toLowerCase()}.${config.fileExtension}`,
     );
+    notifySuccess('File downloaded');
   };
 
   const handleRegenerate = async () => {
@@ -64,10 +76,15 @@ export const ArtifactDetailPage = ({ artifactType }: ArtifactDetailPageProps) =>
     setHasActionError(false);
     setIsRegenerating(true);
     try {
-      await generateWorkflowArtifact(documentId, artifactType);
-      await refresh();
-    } catch (regenerateError) {
-      logAppError('Failed to regenerate workflow artifact', regenerateError);
+      await notifyPromise(
+        generateWorkflowArtifact(documentId, artifactType).then(() => refresh()),
+        {
+          loading: 'Regenerating…',
+          success: 'Artifact regenerated',
+          context: 'Regenerate workflow artifact',
+        },
+      );
+    } catch {
       setHasActionError(true);
     } finally {
       setIsRegenerating(false);

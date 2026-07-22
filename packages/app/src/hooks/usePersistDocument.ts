@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { persistCurrentFlow } from '@/services/flowLibraryService';
 import { useFlowStore } from '@/store/flowStore';
+import { notifyPersistError } from '@/utils/notify';
 
 const PERSIST_DEBOUNCE_MS = 1500;
 
@@ -26,7 +27,7 @@ export function usePersistDocument(enabled: boolean, routeDocumentId?: string): 
 
     timerRef.current = window.setTimeout(() => {
       void persistCurrentFlow(documentId).catch((error) => {
-        console.error('[Peacock] Failed to persist flow document', error);
+        notifyPersistError(error, 'Save documentation');
       });
     }, PERSIST_DEBOUNCE_MS);
 

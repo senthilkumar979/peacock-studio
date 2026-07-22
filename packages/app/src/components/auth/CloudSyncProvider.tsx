@@ -25,7 +25,9 @@ import { resetSupabaseClientCache } from '@/cloud/supabaseClient';
 import { setSessionAuthState } from '@/cloud/sessionState';
 import { getCloudEnvValidationError } from '@/cloud/validateCloudEnv';
 import { clearLocalLibrary } from '@/storage/flowLibraryDb';
-import { GENERIC_USER_ERROR_MESSAGE, logAppError } from '@/utils/appError';
+import { consumeIntentionalSignOut } from '@/cloud/sessionIntent';
+import { GENERIC_USER_ERROR_MESSAGE, logAppError, reportAppError } from '@/utils/appError';
+import { notifyError, notifyWarning } from '@/utils/notify';
 
 interface CloudSyncProviderProps {
   children: React.ReactNode;
@@ -37,6 +39,7 @@ const CloudSyncProviderInner = ({ children }: CloudSyncProviderProps) => {
   const { user } = useUser();
   const syncedUserIdRef = useRef<string | null>(null);
   const localImportDoneRef = useRef(false);
+  const hadCloudSessionRef = useRef(false);
 
   const userEmail = user?.primaryEmailAddress?.emailAddress?.trim() ?? '';
   const userDisplayName = resolveClerkDisplayName(user) ?? userEmail;
@@ -53,6 +56,13 @@ const CloudSyncProviderInner = ({ children }: CloudSyncProviderProps) => {
       setSessionAuthState(true, Boolean(isSignedIn && userId));
 
       if (!isSignedIn || !userId) {
+        if (hadCloudSessionRef.current && !consumeIntentionalSignOut()) {
+          notifyWarning(
+            'Session ended',
+            'Your session expired or you were signed out. Sign in again to use the cloud library.',
+          );
+        }
+        hadCloudSessionRef.current = false;
         syncedUserIdRef.current = null;
         localImportDoneRef.current = false;
         setCloudAuthContext(null);
@@ -62,11 +72,14 @@ const CloudSyncProviderInner = ({ children }: CloudSyncProviderProps) => {
         return;
       }
 
+      hadCloudSessionRef.current = true;
+
       const envError = getCloudEnvValidationError();
       if (envError) {
         logAppError('Cloud environment validation failed', envError);
         setCloudAuthContext(null);
         setCloudInitError(GENERIC_USER_ERROR_MESSAGE);
+        notifyError('Cloud setup incomplete', GENERIC_USER_ERROR_MESSAGE);
         return;
       }
 
@@ -79,6 +92,10 @@ const CloudSyncProviderInner = ({ children }: CloudSyncProviderProps) => {
         );
         setCloudAuthContext(null);
         setCloudInitError(GENERIC_USER_ERROR_MESSAGE);
+        notifyWarning(
+          'Email required',
+          'A verified primary email is required for cloud sync.',
+        );
         return;
       }
 
@@ -192,12 +209,13 @@ const CloudSyncProviderInner = ({ children }: CloudSyncProviderProps) => {
           }
         }
       } catch (error) {
-        logAppError('Failed to initialize cloud library', error);
+        const classified = reportAppError('Failed to initialize cloud library', error);
         setCloudAuthContext(null);
-        setCloudInitError(GENERIC_USER_ERROR_MESSAGE);
+        setCloudInitError(classified.userMessage);
+        notifyError(classified.title, classified.userMessage);
         setCloudSyncState({
           phase: 'error',
-          message: GENERIC_USER_ERROR_MESSAGE,
+          message: classified.userMessage,
           importedDocuments: 0,
           exceedsFreeLimit: false,
         });

@@ -4,6 +4,7 @@ import { WorkspaceOnboardingGate } from '@/components/auth/WorkspaceOnboardingGa
 import {
   ACCEPT_INVITE_PATH,
   DASHBOARD_PATH,
+  ERROR_PATH,
   FLOW_DOCS_PATH,
   FLOW_MAPS_PATH,
   LANDING_PATH,
@@ -19,6 +20,7 @@ import {
 } from '@/constants/routes';
 import { LibraryLayout } from '@/layouts/LibraryLayout';
 import { Dashboard } from '@/pages/Dashboard';
+import { ErrorPage } from '@/pages/ErrorPage';
 import { FlowDocsLibraryPage } from '@/pages/FlowDocsLibraryPage';
 import { ProductToursLibraryPage } from '@/pages/ProductToursLibraryPage';
 import { Landing } from '@/pages/Landing';
@@ -86,6 +88,7 @@ export const App = () => {
               isCloudSyncEnabled() ? <AcceptInvitePage /> : <Navigate to={LANDING_PATH} replace />
             }
           />
+          <Route path={ERROR_PATH} element={<ErrorPage />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:productSlug" element={<ProductDetail />} />
           <Route path="/solutions" element={<Solutions />} />

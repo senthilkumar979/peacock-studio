@@ -14,6 +14,7 @@ import {
   getRouteEmbedCodePlaceholder,
   type ShareLinkAccessMode,
 } from '@/utils/shareLink';
+import { notifyInfo, notifyPromise } from '@/utils/notify';
 
 interface ShareRouteModalProps {
   isOpen: boolean;
@@ -81,20 +82,39 @@ export const ShareRouteModal = ({
   };
 
   const handlePrimaryAction = async () => {
-    if (method === 'embed') return;
+    if (method === 'embed') {
+      notifyInfo('Embed coming soon', 'Embed publishing is not available yet for this workspace.');
+      return;
+    }
     if (method === 'pdf') {
       if (!route) return;
       setIsExporting(true);
       try {
-        await exportRoutePdf(route);
+        await notifyPromise(exportRoutePdf(route), {
+          loading: 'Exporting PDF…',
+          success: 'PDF exported',
+          successDescription: 'Your download should start shortly.',
+          context: 'Export route PDF',
+        });
+        onClose();
+      } catch {
+        // Toast already shown
       } finally {
         setIsExporting(false);
       }
-      onClose();
       return;
     }
-    await copyTextToClipboard(shareUrl);
-    handleClose();
+    try {
+      await notifyPromise(copyTextToClipboard(shareUrl), {
+        loading: 'Copying link…',
+        success: 'Link copied',
+        successDescription: 'Share URL is on your clipboard.',
+        context: 'Copy route share link',
+      });
+      handleClose();
+    } catch {
+      // Toast already shown
+    }
   };
 
   if (!isOpen) return null;

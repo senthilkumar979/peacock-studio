@@ -15,7 +15,8 @@ import { DASHBOARD_PATH } from '@/constants/routes';
 import { useOrgAnalytics } from '@/hooks/useOrgAnalytics';
 import { useActiveOrganization, useCloudAuthContext } from '@/hooks/useOrganization';
 import { useSessionMode } from '@/hooks/useSessionMode';
-import { GENERIC_USER_ERROR_MESSAGE, logAppError } from '@/utils/appError';
+import { reportAppError } from '@/utils/appError';
+import { notifyError } from '@/utils/notify';
 
 type AdminTab = 'overview' | 'members' | 'activity';
 
@@ -127,8 +128,11 @@ const ActivityTab = ({ organizationId }: { organizationId: string }) => {
           setDomains(domainData);
         }
       } catch (err) {
-        logAppError('Failed to load admin activity', err);
-        if (!cancelled) setError(GENERIC_USER_ERROR_MESSAGE);
+        const classified = reportAppError('Failed to load admin activity', err);
+        if (!cancelled) {
+          setError(classified.userMessage);
+          notifyError(classified.title, classified.userMessage);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }

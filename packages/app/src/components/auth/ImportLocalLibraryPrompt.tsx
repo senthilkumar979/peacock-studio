@@ -10,6 +10,8 @@ import {
   type LocalLibraryImportCounts,
 } from '@/cloud/importLocalLibrary';
 import { isCloudSyncEnabled } from '@/cloud/config';
+import { reportAppError } from '@/utils/appError';
+import { notifyPromise } from '@/utils/notify';
 
 const ImportLocalLibraryPromptInner = () => {
   const { isSignedIn } = useAuth();
@@ -49,12 +51,17 @@ const ImportLocalLibraryPromptInner = () => {
     setIsImporting(true);
     setError(null);
     try {
-      await importLocalLibraryToCloud();
+      await notifyPromise(importLocalLibraryToCloud(), {
+        loading: 'Importing local library…',
+        success: 'Library imported',
+        successDescription: 'Reloading so your cloud library is ready.',
+        context: 'Import local library to cloud',
+      });
       setIsOpen(false);
       window.location.reload();
     } catch (importError) {
-      console.error('[Peacock] Local library import failed', importError);
-      setError('Import failed. Check your connection and try again.');
+      const classified = reportAppError('Local library import failed', importError);
+      setError(classified.userMessage);
     } finally {
       setIsImporting(false);
     }

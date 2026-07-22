@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { DASHBOARD_PATH } from '@/constants/routes';
 import { AppHeader } from '@/components/AppHeader';
+import { ResourceNotFoundPage } from '@/components/errors/ResourceNotFoundPage';
 import { EmptyFlowState } from '@/components/EmptyFlowState';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { useRouteLearner } from '@/hooks/useRouteLearner';
@@ -14,21 +14,15 @@ export const RouteLearner = () => {
 
   if (!learner.routeId) {
     return (
-      <EmptyFlowState title="Invalid route" description="Open a route from your dashboard." />
+      <ResourceNotFoundPage
+        title="Invalid route"
+        description="Open a route from your dashboard."
+      />
     );
   }
 
   if (learner.error) {
-    return (
-      <div className="min-h-screen bg-slate-50">
-        <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800">
-          {learner.error}{' '}
-          <Link to={DASHBOARD_PATH} className="font-medium underline">
-            Go to dashboard
-          </Link>
-        </div>
-      </div>
-    );
+    return <ResourceNotFoundPage title="Route not found" description={learner.error} />;
   }
 
   if (learner.isLoading || !learner.isLoaded || !learner.route || !learner.state) {

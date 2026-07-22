@@ -3,6 +3,7 @@ import { isCloudSyncEnabled } from '@/cloud/config';
 import {
   ACCEPT_INVITE_PATH,
   DASHBOARD_PATH,
+  ERROR_PATH,
   WORKSPACE_ONBOARDING_PATH,
 } from '@/constants/routes';
 import { useSessionMode } from '@/hooks/useSessionMode';
@@ -22,8 +23,10 @@ export const WorkspaceOnboardingGate = ({ children }: WorkspaceOnboardingGatePro
   const path = location.pathname;
   const isOnboardingRoute =
     path.startsWith(WORKSPACE_ONBOARDING_PATH) || path.startsWith(ACCEPT_INVITE_PATH);
+  const isErrorRoute = path.startsWith(ERROR_PATH);
 
   if (!isCloudSyncEnabled()) return children;
+  if (isErrorRoute) return children;
 
   if (sessionMode === 'onboarding' && !isOnboardingRoute) {
     return <Navigate to={WORKSPACE_ONBOARDING_PATH} replace />;
