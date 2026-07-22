@@ -69,3 +69,16 @@ export function getPlayerControlsProgressLabel(playback: BranchingPlayback): str
 
   return `${playback.currentIndex + 1} of ${playback.totalNavigableSegments} in guide`;
 }
+
+export function getPlayerProgressPercent(playback: BranchingPlayback): number {
+  if (playback.isAtFinale) return 100;
+
+  if (playback.linkedPlayback) {
+    const { stepIndex, steps } = playback.linkedPlayback;
+    if (steps.length === 0) return 0;
+    return Math.round(((stepIndex + 1) / steps.length) * 100);
+  }
+
+  if (playback.totalNavigableSegments <= 1) return 0;
+  return Math.round(((playback.currentIndex + 1) / playback.totalNavigableSegments) * 100);
+}

@@ -21,8 +21,8 @@ const variantStyles: Record<
     padding: "px-6 py-9 sm:px-8 sm:py-10",
   },
   player: {
-    shell: "max-w-2xl w-full",
-    title: "text-3xl sm:text-4xl",
+    shell: "mx-auto w-full max-w-xl",
+    title: "text-2xl sm:text-3xl",
     padding: "px-8 py-10 sm:px-10 sm:py-12",
   },
   editor: {
@@ -31,6 +31,51 @@ const variantStyles: Record<
     padding: "px-6 py-8",
   },
 };
+
+interface PlayerChapterBodyProps {
+  section: FlowSection;
+  sectionLabel: string;
+  hasDescription: boolean;
+  titleClass: string;
+}
+
+const PlayerChapterBody = ({
+  section,
+  sectionLabel,
+  hasDescription,
+  titleClass,
+}: PlayerChapterBodyProps) => (
+  <div className="flex flex-col items-center text-center">
+    <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-peacock-600 to-brand-violet text-white shadow-lg shadow-peacock-600/30">
+      <BookMarked className="h-8 w-8" aria-hidden />
+    </span>
+
+    <span className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-brand-violet/20 bg-brand-violet/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-violet">
+      <Sparkles className="h-3.5 w-3.5" aria-hidden />
+      {sectionLabel}
+    </span>
+
+    <h2 className={`mt-4 font-bold tracking-tight text-slate-900 ${titleClass}`}>
+      {section.title}
+    </h2>
+
+    {hasDescription ? (
+      <p className="mt-4 max-w-md text-base leading-relaxed text-slate-600">
+        {section.description}
+      </p>
+    ) : (
+      <p className="mt-4 text-sm italic text-slate-400">No section description yet.</p>
+    )}
+
+    <p className="mt-8 w-full border-t border-slate-200/80 pt-6 text-sm text-slate-500">
+      Press{" "}
+      <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
+        →
+      </kbd>{" "}
+      or <span className="font-medium text-slate-700">Next</span> to begin this chapter.
+    </p>
+  </div>
+);
 
 export const FlowSectionCard = ({
   section,
@@ -43,6 +88,28 @@ export const FlowSectionCard = ({
   const hasDescription = Boolean(section.description.trim());
   const sectionLabel =
     sectionIndex !== undefined ? `Chapter ${sectionIndex + 1}` : "Chapter";
+
+  if (variant === "player") {
+    return (
+      <article
+        id={anchorId}
+        className={`relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xl shadow-slate-200/50 ${styles.shell}`}
+      >
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-brand-violet/10 via-peacock-50/60 to-transparent"
+          aria-hidden
+        />
+        <div className={`relative ${styles.padding}`}>
+          <PlayerChapterBody
+            section={section}
+            sectionLabel={sectionLabel}
+            hasDescription={hasDescription}
+            titleClass={styles.title}
+          />
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article
@@ -99,17 +166,6 @@ export const FlowSectionCard = ({
             )}
           </div>
         </div>
-
-        {variant === "player" ? (
-          <p className="mt-8 border-t border-slate-200/80 pt-6 text-center text-sm text-slate-500">
-            Press{" "}
-            <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
-              →
-            </kbd>{" "}
-            or <span className="font-medium text-slate-700">Next</span> to begin
-            the steps in this chapter.
-          </p>
-        ) : null}
       </div>
     </article>
   );

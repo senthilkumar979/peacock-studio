@@ -12,6 +12,7 @@ import { PlayerControls } from './PlayerControls';
 import {
   getPlayerControlsPosition,
   getPlayerControlsProgressLabel,
+  getPlayerProgressPercent,
 } from './playerControlsPosition';
 import { PlayerFinale } from './PlayerFinale';
 import { PlayerStep } from './PlayerStep';
@@ -84,13 +85,16 @@ export const PlayerView = ({
 
   const position = getPlayerControlsPosition(playback);
   const progressLabel = getPlayerControlsProgressLabel(playback);
+  const progressPercent = getPlayerProgressPercent(playback);
 
   const handleReplay = () => {
     playback.replay();
     setIsPlaying(false);
   };
 
-  const isScrollableMain = atBranch || playback.isAtFinale;
+  const isScrollableMain = atBranch;
+  const isCenteredPlayerContent =
+    playback.isAtFinale || playback.currentSegment?.type === 'section';
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
@@ -111,7 +115,9 @@ export const PlayerView = ({
         className={`flex min-h-0 flex-1 px-3 py-3 md:px-6 md:py-4 ${
           isScrollableMain
             ? 'items-start overflow-y-auto overscroll-contain'
-            : 'items-start justify-center overflow-hidden'
+            : isCenteredPlayerContent
+              ? 'items-center justify-center overflow-y-auto overscroll-contain'
+              : 'items-start justify-center overflow-hidden'
         }`}
       >
         {playback.isAtFinale ? (
@@ -143,7 +149,13 @@ export const PlayerView = ({
             onSelect={playback.selectBranchPath}
           />
         ) : playback.currentSegment?.type === 'section' ? (
-          <FlowSectionCard section={playback.currentSegment.section} variant="player" />
+          <FlowSectionCard
+            section={playback.currentSegment.section}
+            variant="player"
+            sectionIndex={playback.segments
+              .slice(0, playback.currentIndex)
+              .filter((segment) => segment.type === 'section').length}
+          />
         ) : playback.currentSegment?.type === 'step' ? (
           <PlayerStep
             step={playback.currentSegment.step}
@@ -156,6 +168,7 @@ export const PlayerView = ({
       <PlayerControls
         position={position}
         progressLabel={progressLabel}
+        progressPercent={progressPercent}
         currentIndex={playback.currentIndex}
         totalSegments={playback.totalNavigableSegments}
         isPlaying={isPlaying}

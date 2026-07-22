@@ -24,9 +24,18 @@ function isPublicRoute(pathname: string): boolean {
   return pathname.startsWith('/s/');
 }
 
+/** Immersive flow doc viewer (hub, guide, player) — not the editor. */
+function isFlowDocViewRoute(pathname: string): boolean {
+  return /^\/docs\/[^/]+$/.test(pathname);
+}
+
+function shouldHideSupportWidget(pathname: string): boolean {
+  return isPublicRoute(pathname) || isFlowDocViewRoute(pathname);
+}
+
 /**
  * Loads the Tawk.to live-chat widget when configured and toggles its
- * visibility so it never appears on public share pages. Renders nothing.
+ * visibility so it never appears on public share or flow doc view pages. Renders nothing.
  */
 export const SupportWidget = () => {
   const config = getTawkConfig();
@@ -41,7 +50,7 @@ export const SupportWidget = () => {
 
   useEffect(() => {
     if (!config) return;
-    const hidden = isPublicRoute(location.pathname);
+    const hidden = shouldHideSupportWidget(location.pathname);
 
     const applyVisibility = () => {
       if (hidden) window.Tawk_API?.hideWidget?.();
