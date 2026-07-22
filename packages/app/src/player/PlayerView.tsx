@@ -57,23 +57,16 @@ export const PlayerView = ({
     playback.isAtFinale,
   ]);
 
-  const keyboardHandlers = useMemo(
-    () => ({
-      ArrowRight: () => playback.goNext(),
-      ArrowLeft: () => playback.goPrevious(),
-      Space: () => setIsPlaying((playing) => !playing),
-    }),
-    [playback],
-  );
-
-  useKeyboard(keyboardHandlers);
-
   useEffect(() => {
     if (!isPlaying || playback.linkedPlayback || playback.isAtFinale) return;
     if (playback.currentSegment?.type === 'branch') return;
+    if (playback.currentIndex >= playback.totalNavigableSegments - 2) {
+      setIsPlaying(false);
+      return;
+    }
 
     const timer = window.setTimeout(() => {
-      if (playback.currentIndex < playback.totalNavigableSegments - 1) {
+      if (playback.currentIndex < playback.totalNavigableSegments - 2) {
         playback.goNext();
         return;
       }
@@ -82,6 +75,26 @@ export const PlayerView = ({
 
     return () => window.clearTimeout(timer);
   }, [isPlaying, playback]);
+
+  useEffect(() => {
+    if (playback.currentIndex >= playback.totalNavigableSegments - 2) {
+      setIsPlaying(false);
+    }
+  }, [playback.currentIndex, playback.totalNavigableSegments]);
+
+  const keyboardHandlers = useMemo(
+    () => ({
+      ArrowRight: () => playback.goNext(),
+      ArrowLeft: () => playback.goPrevious(),
+      Space: () => {
+        if (playback.currentIndex >= playback.totalNavigableSegments - 2) return;
+        setIsPlaying((playing) => !playing);
+      },
+    }),
+    [playback],
+  );
+
+  useKeyboard(keyboardHandlers);
 
   const position = getPlayerControlsPosition(playback);
   const progressLabel = getPlayerControlsProgressLabel(playback);
