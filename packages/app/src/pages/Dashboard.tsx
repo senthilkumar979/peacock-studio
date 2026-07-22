@@ -24,7 +24,7 @@ import { useCloudInitError } from '@/hooks/useCloudInitError';
 import { useIsGuestSession, useSessionMode } from '@/hooks/useSessionMode';
 import { useFlowLibrary } from '@/hooks/useFlowLibrary';
 import { useProductTourLibrary } from '@/hooks/useProductTourLibrary';
-import { LibraryLayout } from '@/layouts/LibraryLayout';
+import { SmoothLoadReveal } from '@/components/motion/SmoothLoadReveal';
 import type { ProductTourSummary } from '@/types/productTour';
 import type { DashboardViewMode, SavedFlowSummary } from '@/types/savedFlow';
 import { sortSummaries } from '@/utils/dashboardLibrary';
@@ -82,20 +82,23 @@ export const Dashboard = () => {
   };
 
   return (
-    <LibraryLayout>
+    <>
       <ExtensionMissingBanner />
-      {sessionMode === 'connecting' ? (
-        <div className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
-          {cloudInitError ? (
-            <GenericErrorPage compact onRetry={() => window.location.reload()} />
-          ) : (
-            <>
-              <PeacockStudioLoader size={120} />
-              <p className="text-sm text-slate-500">Connecting your cloud library…</p>
-            </>
-          )}
-        </div>
-      ) : (
+      <SmoothLoadReveal
+        isLoading={sessionMode === 'connecting'}
+        loading={
+          <div className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
+            {cloudInitError ? (
+              <GenericErrorPage compact onRetry={() => window.location.reload()} />
+            ) : (
+              <>
+                <PeacockStudioLoader size={120} />
+                <p className="text-sm text-slate-500">Connecting your cloud library…</p>
+              </>
+            )}
+          </div>
+        }
+      >
         <div className="flex-1">
           <DashboardHero />
 
@@ -176,7 +179,7 @@ export const Dashboard = () => {
             </div>
           </div>
         </div>
-      )}
+      </SmoothLoadReveal>
 
       <ConfirmDialog
         isOpen={Boolean(pendingDocDelete)}
@@ -209,6 +212,6 @@ export const Dashboard = () => {
           />
         ) : null}
       </ConfirmDialog>
-    </LibraryLayout>
+    </>
   );
 };

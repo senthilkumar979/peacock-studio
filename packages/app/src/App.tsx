@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { AppRouteTransition } from '@/components/motion/AppRouteTransition';
 import {
   DASHBOARD_PATH,
   FLOW_DOCS_PATH,
@@ -12,6 +13,7 @@ import {
   TERMS_PATH,
   TEST_CASES_PATH,
 } from '@/constants/routes';
+import { LibraryLayout } from '@/layouts/LibraryLayout';
 import { Dashboard } from '@/pages/Dashboard';
 import { FlowDocsLibraryPage } from '@/pages/FlowDocsLibraryPage';
 import { ProductToursLibraryPage } from '@/pages/ProductToursLibraryPage';
@@ -44,47 +46,61 @@ import { FlowMapsLibraryPage } from '@/pages/FlowMapsLibraryPage';
 import { FlowMapsDetailPage } from '@/pages/FlowMapsDetailPage';
 import { isCloudSyncEnabled } from '@/cloud/config';
 
-export const App = () => (
-  <Routes>
-    <Route path={LANDING_PATH} element={<Landing />} />
-    <Route path="/landing" element={<Navigate to={LANDING_PATH} replace />} />
-    <Route path="/sign-in/*" element={isCloudSyncEnabled() ? <SignInPage /> : <Navigate to={LANDING_PATH} replace />} />
-    <Route path="/sign-up/*" element={isCloudSyncEnabled() ? <SignUpPage /> : <Navigate to={LANDING_PATH} replace />} />
-    <Route path="/products" element={<Products />} />
-    <Route path="/products/:productSlug" element={<ProductDetail />} />
-    <Route path="/solutions" element={<Solutions />} />
-    <Route path="/solutions/:roleSlug" element={<SolutionRole />} />
-    <Route path={PRICING_PATH} element={<Pricing />} />
-    <Route path={EXTENSION_INSTALL_PATH} element={<ExtensionInstallPage />} />
-    <Route path={PRIVACY_PATH} element={<PrivacyPolicy />} />
-    <Route path={TERMS_PATH} element={<TermsAndConditions />} />
-    <Route path={TEST_CASES_PATH} element={<TestCasesLibraryPage />} />
-    <Route path={`${TEST_CASES_PATH}/:documentId`} element={<TestCasesDetailPage />} />
-    <Route path={PLAYWRIGHT_TESTS_PATH} element={<PlaywrightTestsLibraryPage />} />
-    <Route path={`${PLAYWRIGHT_TESTS_PATH}/:documentId`} element={<PlaywrightTestsDetailPage />} />
-    <Route path={FLOW_MAPS_PATH} element={<FlowMapsLibraryPage />} />
-    <Route path={`${FLOW_MAPS_PATH}/:documentId`} element={<FlowMapsDetailPage />} />
-    <Route path="/s/:token/edit" element={<PublicSharePage mode="edit" />} />
-    <Route path="/s/:token" element={<PublicSharePage mode="view" />} />
-    <Route path={DASHBOARD_PATH} element={<Dashboard />} />
-    <Route path={FLOW_DOCS_PATH} element={<FlowDocsLibraryPage />} />
-    <Route path={PRODUCT_TOURS_PATH} element={<ProductToursLibraryPage />} />
-    <Route path="/compare" element={<CompareDocs />} />
-    <Route path="/editor" element={<Editor />} />
-    <Route path="/tours/new" element={<NewProductTour />} />
-    <Route path="/tours/:tourId/edit" element={<ProductTourBuilder />} />
-    <Route path="/tours/:tourId" element={<ProductTourLearner />} />
-    <Route path="/routes/new" element={<LegacyRouteRedirect mode="new" />} />
-    <Route path="/routes/:routeId/edit" element={<LegacyRouteRedirect mode="edit" />} />
-    <Route path="/routes/:routeId" element={<LegacyRouteRedirect mode="view" />} />
-    <Route path="/docs/:documentId" element={<Player />} />
-    <Route path="/docs/:documentId/edit" element={<Editor />} />
-    <Route path="/capture/:captureId/edit" element={<CaptureEditor />} />
-    <Route
-      path="/editor/capture/:captureId/edit"
-      element={<CaptureEditorLegacyRedirect />}
-    />
-    <Route path="/player" element={<Navigate to={DASHBOARD_PATH} replace />} />
-    <Route path="*" element={<Navigate to={LANDING_PATH} replace />} />
-  </Routes>
-);
+export const App = () => {
+  const location = useLocation();
+
+  return (
+    <AppRouteTransition>
+      <Routes location={location}>
+        <Route path={LANDING_PATH} element={<Landing />} />
+        <Route path="/landing" element={<Navigate to={LANDING_PATH} replace />} />
+        <Route
+          path="/sign-in/*"
+          element={isCloudSyncEnabled() ? <SignInPage /> : <Navigate to={LANDING_PATH} replace />}
+        />
+        <Route
+          path="/sign-up/*"
+          element={isCloudSyncEnabled() ? <SignUpPage /> : <Navigate to={LANDING_PATH} replace />}
+        />
+        <Route path="/products" element={<Products />} />
+        <Route path="/products/:productSlug" element={<ProductDetail />} />
+        <Route path="/solutions" element={<Solutions />} />
+        <Route path="/solutions/:roleSlug" element={<SolutionRole />} />
+        <Route path={PRICING_PATH} element={<Pricing />} />
+        <Route path={EXTENSION_INSTALL_PATH} element={<ExtensionInstallPage />} />
+        <Route path={PRIVACY_PATH} element={<PrivacyPolicy />} />
+        <Route path={TERMS_PATH} element={<TermsAndConditions />} />
+        <Route path={`${TEST_CASES_PATH}/:documentId`} element={<TestCasesDetailPage />} />
+        <Route path={`${PLAYWRIGHT_TESTS_PATH}/:documentId`} element={<PlaywrightTestsDetailPage />} />
+        <Route path={`${FLOW_MAPS_PATH}/:documentId`} element={<FlowMapsDetailPage />} />
+        <Route path="/s/:token/edit" element={<PublicSharePage mode="edit" />} />
+        <Route path="/s/:token" element={<PublicSharePage mode="view" />} />
+        <Route element={<LibraryLayout />}>
+          <Route path={DASHBOARD_PATH} element={<Dashboard />} />
+          <Route path={FLOW_DOCS_PATH} element={<FlowDocsLibraryPage />} />
+          <Route path={PRODUCT_TOURS_PATH} element={<ProductToursLibraryPage />} />
+          <Route path={TEST_CASES_PATH} element={<TestCasesLibraryPage />} />
+          <Route path={PLAYWRIGHT_TESTS_PATH} element={<PlaywrightTestsLibraryPage />} />
+          <Route path={FLOW_MAPS_PATH} element={<FlowMapsLibraryPage />} />
+        </Route>
+        <Route path="/compare" element={<CompareDocs />} />
+        <Route path="/editor" element={<Editor />} />
+        <Route path="/tours/new" element={<NewProductTour />} />
+        <Route path="/tours/:tourId/edit" element={<ProductTourBuilder />} />
+        <Route path="/tours/:tourId" element={<ProductTourLearner />} />
+        <Route path="/routes/new" element={<LegacyRouteRedirect mode="new" />} />
+        <Route path="/routes/:routeId/edit" element={<LegacyRouteRedirect mode="edit" />} />
+        <Route path="/routes/:routeId" element={<LegacyRouteRedirect mode="view" />} />
+        <Route path="/docs/:documentId" element={<Player />} />
+        <Route path="/docs/:documentId/edit" element={<Editor />} />
+        <Route path="/capture/:captureId/edit" element={<CaptureEditor />} />
+        <Route
+          path="/editor/capture/:captureId/edit"
+          element={<CaptureEditorLegacyRedirect />}
+        />
+        <Route path="/player" element={<Navigate to={DASHBOARD_PATH} replace />} />
+        <Route path="*" element={<Navigate to={LANDING_PATH} replace />} />
+      </Routes>
+    </AppRouteTransition>
+  );
+};
