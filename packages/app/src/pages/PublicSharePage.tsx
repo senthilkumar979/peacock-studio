@@ -1,13 +1,15 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { LANDING_PATH } from '@/constants/routes';
 import { EditableShareRedirect } from '@/components/share/EditableShareRedirect';
 import { EmptyFlowState } from '@/components/EmptyFlowState';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
+import { useFlowDocDefaultView } from '@/hooks/useFlowDocDefaultView';
 import { usePublicShare } from '@/hooks/usePublicShare';
 import { usePublicSharedDocument } from '@/hooks/usePublicSharedDocument';
 import { ProductTourLearner } from '@/pages/ProductTourLearner';
-import { DocumentView } from '@/player/DocumentView';
-import { PlayerView } from '@/player/PlayerView';
+import { FlowDocExperienceViews } from '@/player/FlowDocExperienceViews';
+import { resolveFlowDocView } from '@/utils/resolveFlowDocView';
+import type { SharedDocumentViewMode } from '@/utils/shareLink';
 import type { ResolvedShareLink } from '@/types/shareLink';
 
 interface PublicSharePageProps {
@@ -16,8 +18,29 @@ interface PublicSharePageProps {
 
 export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
   const { token } = useParams<{ token: string }>();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const defaultView = useFlowDocDefaultView();
   const { link, isLoading, error } = usePublicShare(token);
-  const { viewMode, isReady: isDocumentReady } = usePublicSharedDocument(link);
+  const { shareLinkViewMode, isReady: isDocumentReady } = usePublicSharedDocument(link);
+  const resolvedView = resolveFlowDocView(
+    searchParams,
+    location.hash,
+    defaultView,
+    shareLinkViewMode,
+  );
+
+  const handleModeChange = (nextMode: SharedDocumentViewMode) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('view', nextMode);
+    setSearchParams(next, { replace: true });
+  };
+
+  const handleHubNavigation = () => {
+    const next = new URLSearchParams(searchParams);
+    next.set('view', 'hub');
+    setSearchParams(next, { replace: true });
+  };
 
   if (mode === 'edit') {
     if (!token) {
@@ -76,11 +99,15 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
     );
   }
 
-  if (viewMode === 'player') {
-    return <PlayerView documentId={link.resourceId} onModeChange={() => undefined} />;
-  }
-
-  return <DocumentView documentId={link.resourceId} onModeChange={() => undefined} />;
+  return (
+    <FlowDocExperienceViews
+      documentId={link.resourceId}
+      resolvedView={resolvedView}
+      onModeChange={handleModeChange}
+      onOverview={handleHubNavigation}
+      showOwnerActions={false}
+    />
+  );
 };
 
 interface PublicTourShareViewProps {

@@ -47,7 +47,7 @@ export const FlowDetailsContextPanel = ({
         <div className="pointer-events-none absolute -right-10 top-0 h-32 w-32 rounded-full bg-peacock-400/20 blur-3xl" />
         <div className="relative flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-peacock-300">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/70">
               Flow intelligence
             </p>
             <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold text-white sm:text-xl">

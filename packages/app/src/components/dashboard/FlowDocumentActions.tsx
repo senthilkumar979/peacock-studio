@@ -36,7 +36,7 @@ export const FlowDocumentActions = ({
     <>
       <div className={containerClass}>
         <Link
-          to={getDocumentPath(documentId, 'player')}
+          to={getDocumentPath(documentId)}
           state={navigationState}
           className={`${actionClass} border-slate-300 text-slate-700 hover:bg-white`}
         >

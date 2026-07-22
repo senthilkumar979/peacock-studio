@@ -1,4 +1,5 @@
 export type SharedDocumentViewMode = 'doc' | 'player';
+export type FlowDocViewMode = 'hub' | SharedDocumentViewMode;
 export type ShareLinkAccessMode = 'readonly' | 'editable';
 
 export const PUBLIC_SHARE_PATH = '/s' as const;
@@ -17,13 +18,17 @@ export function getDocumentEditPath(documentId: string): string {
 
 export function getDocumentPath(
   documentId: string,
-  viewMode: SharedDocumentViewMode = 'doc',
+  viewMode?: FlowDocViewMode,
 ): string {
-  if (viewMode === 'player') {
-    return `/docs/${documentId}?view=player`;
+  if (!viewMode || viewMode === 'hub') {
+    return `/docs/${documentId}`;
   }
 
-  return `/docs/${documentId}`;
+  return `/docs/${documentId}?view=${viewMode}`;
+}
+
+export function getDocumentHubPath(documentId: string): string {
+  return `/docs/${documentId}?view=hub`;
 }
 
 export function buildSharedDocumentUrl(

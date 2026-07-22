@@ -8,6 +8,7 @@ import {
 } from '@peacock/shared';
 import type { LinkedPathContent } from '@/hooks/useDocumentBranchPaths';
 import type { DocumentStepIndexItem } from '@/player/DocumentStepIndex';
+import { getDocumentStepIndexItemId } from '@/player/documentStepIndexTypes';
 import {
   FLOW_DETAILS_OUTLINE_ID,
   getDocumentStepAnchor,
@@ -29,6 +30,7 @@ interface BuildDocumentIndexItemsOptions {
   flowDetailsAnchor: string;
   selectedPathByBranchId: Record<string, string>;
   linkedContentByPathId: Record<string, LinkedPathContent>;
+  includeOverview?: boolean;
 }
 
 export function buildDocumentIndexItems({
@@ -37,6 +39,7 @@ export function buildDocumentIndexItems({
   flowDetailsAnchor,
   selectedPathByBranchId,
   linkedContentByPathId,
+  includeOverview = true,
 }: BuildDocumentIndexItemsOptions): DocumentStepIndexItem[] {
   const overviewItem: DocumentStepIndexItem = {
     type: 'overview',
@@ -113,7 +116,7 @@ export function buildDocumentIndexItems({
     }
   }
 
-  return [overviewItem, ...outlineItems];
+  return includeOverview ? [overviewItem, ...outlineItems] : outlineItems;
 }
 
 export function countDocumentViewPlayableSteps(
@@ -131,6 +134,30 @@ export function countDocumentViewPlayableSteps(
   }
 
   return count;
+}
+
+const GUIDE_COMPLETE_OUTLINE_ID = 'guide-complete';
+
+export function getDocumentGuideViewedStepCount(
+  indexItems: DocumentStepIndexItem[],
+  activeItemId: string | null,
+): number {
+  if (!activeItemId || indexItems.length === 0) return 0;
+
+  const totalSteps = indexItems.reduce(
+    (count, item) => (item.type === 'step' ? count + 1 : count),
+    0,
+  );
+
+  if (activeItemId === GUIDE_COMPLETE_OUTLINE_ID) return totalSteps;
+
+  let lastStepNumber = 0;
+  for (const item of indexItems) {
+    if (item.type === 'step') lastStepNumber = item.stepNumber;
+    if (getDocumentStepIndexItemId(item) === activeItemId) break;
+  }
+
+  return lastStepNumber;
 }
 
 interface BranchRenderContext {

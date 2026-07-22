@@ -1,4 +1,4 @@
-import { CalendarDays, Layers3, Sparkles } from 'lucide-react';
+import { CalendarDays, GitBranch, Layers3, LayoutList, Sparkles } from 'lucide-react';
 import { FlowVersionBadge } from '@/components/dashboard/FlowVersionBadge';
 import { formatFlowDate } from '@/utils/formatFlowDate';
 import { FlowDetailsGuideHints } from '@/player/FlowDetailsGuideHints';
@@ -10,7 +10,9 @@ interface FlowDetailsIntroProps {
   version: string;
   createdAt?: number;
   stepCount?: number;
-  variant: 'doc' | 'player';
+  sectionCount?: number;
+  branchCount?: number;
+  variant: 'doc' | 'player' | 'hub';
   fillHeight?: boolean;
   isActive?: boolean;
 }
@@ -21,12 +23,16 @@ export const FlowDetailsIntro = ({
   version,
   createdAt,
   stepCount,
+  sectionCount,
+  branchCount,
   variant,
   fillHeight = false,
   isActive = false,
 }: FlowDetailsIntroProps) => {
   const trimmedDescription = description.trim();
   const isPlayer = variant === 'player';
+  const isHub = variant === 'hub';
+  const badgeLabel = isHub ? 'Flow overview' : isPlayer ? 'Flow overview' : 'Flow details';
 
   return (
     <article
@@ -46,14 +52,14 @@ export const FlowDetailsIntro = ({
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-peacock-200/80 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-peacock-800 shadow-sm">
             <Sparkles className="h-3 w-3" aria-hidden />
-            {isPlayer ? 'Flow overview' : 'Flow details'}
+            {badgeLabel}
           </span>
           <FlowVersionBadge version={version} />
         </div>
 
         <h2
           className={`mt-5 font-bold tracking-tight text-slate-900 ${
-            isPlayer ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'
+            isPlayer || isHub ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'
           }`}
         >
           {title}
@@ -62,7 +68,7 @@ export const FlowDetailsIntro = ({
         {trimmedDescription ? (
           <p
             className={`mt-3 leading-relaxed text-slate-600 ${
-              isPlayer ? 'text-base sm:text-lg' : 'text-sm sm:text-base'
+              isPlayer || isHub ? 'text-base sm:text-lg' : 'text-sm sm:text-base'
             }`}
           >
             {trimmedDescription}
@@ -79,6 +85,20 @@ export const FlowDetailsIntro = ({
               value={`${stepCount} ${stepCount === 1 ? 'step' : 'steps'}`}
             />
           ) : null}
+          {typeof sectionCount === 'number' && sectionCount > 0 ? (
+            <FlowDetailsStatChip
+              icon={LayoutList}
+              label="Sections"
+              value={`${sectionCount} ${sectionCount === 1 ? 'section' : 'sections'}`}
+            />
+          ) : null}
+          {typeof branchCount === 'number' && branchCount > 0 ? (
+            <FlowDetailsStatChip
+              icon={GitBranch}
+              label="Branches"
+              value={`${branchCount} ${branchCount === 1 ? 'branch' : 'branches'}`}
+            />
+          ) : null}
           {createdAt ? (
             <FlowDetailsStatChip
               icon={CalendarDays}
@@ -89,7 +109,7 @@ export const FlowDetailsIntro = ({
         </div>
 
         <div className="mt-4">
-          <FlowDetailsGuideHints variant={variant} stepCount={stepCount} />
+          {!isHub ? <FlowDetailsGuideHints variant={variant} stepCount={stepCount} /> : null}
         </div>
       </div>
     </article>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { DASHBOARD_PATH } from '@/constants/routes';
 import {
   getHintStepLabel,
@@ -11,21 +11,23 @@ import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import type { PageHintControl } from '@/components/onboarding/HintAnchor';
 import { useFirstTimeHintTour } from '@/hooks/useFirstTimeHint';
 import { useSavedDocument } from '@/hooks/useSavedDocument';
-import { DocumentView } from '@/player/DocumentView';
-import { PlayerView } from '@/player/PlayerView';
+import { useFlowDocDefaultView } from '@/hooks/useFlowDocDefaultView';
+import { FlowDocExperienceViews } from '@/player/FlowDocExperienceViews';
 import { useFlowStore } from '@/store/flowStore';
 import { parseShareSearchParams } from '@/utils/flowShareSettings';
+import { resolveFlowDocView } from '@/utils/resolveFlowDocView';
 import type { SharedDocumentViewMode } from '@/utils/shareLink';
 
 export const Player = () => {
   const { documentId } = useParams<{ documentId: string }>();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const defaultView = useFlowDocDefaultView();
   const { isLoading, isLoaded, error } = useSavedDocument(documentId);
   const rawSteps = useFlowStore((state) => state.steps);
   const shareSettings = useFlowStore((state) => state.shareSettings);
   const setViewerFilter = useFlowStore((state) => state.setViewerFilter);
-  const viewMode: SharedDocumentViewMode =
-    searchParams.get('view') === 'player' ? 'player' : 'doc';
+  const resolvedView = resolveFlowDocView(searchParams, location.hash, defaultView);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -36,17 +38,19 @@ export const Player = () => {
 
   const handleModeChange = (mode: SharedDocumentViewMode) => {
     const next = new URLSearchParams(searchParams);
-    if (mode === 'doc') {
-      next.delete('view');
-    } else {
-      next.set('view', 'player');
-    }
+    next.set('view', mode);
+    setSearchParams(next, { replace: true });
+  };
+
+  const handleHubNavigation = () => {
+    const next = new URLSearchParams(searchParams);
+    next.set('view', 'hub');
     setSearchParams(next, { replace: true });
   };
 
   const playerHintSequence = useMemo(
-    () => getPlayerHintSequence(viewMode),
-    [viewMode],
+    () => getPlayerHintSequence(resolvedView === 'player' ? 'player' : 'doc'),
+    [resolvedView],
   );
   const { activeHintId, dismissHint } = useFirstTimeHintTour(playerHintSequence, {
     ready: isLoaded,
@@ -100,23 +104,13 @@ export const Player = () => {
     );
   }
 
-  if (viewMode === 'player') {
-    return (
-      <GuestDocumentGate documentId={documentId}>
-        <PlayerView
-          documentId={documentId}
-          onModeChange={handleModeChange}
-          pageHints={pageHints}
-        />
-      </GuestDocumentGate>
-    );
-  }
-
   return (
     <GuestDocumentGate documentId={documentId}>
-      <DocumentView
+      <FlowDocExperienceViews
         documentId={documentId}
+        resolvedView={resolvedView}
         onModeChange={handleModeChange}
+        onOverview={handleHubNavigation}
         pageHints={pageHints}
       />
     </GuestDocumentGate>

@@ -55,15 +55,25 @@ export const DocumentStepCard = ({
     <article
       id={anchorId}
       data-step-id={step.id}
-      className={`scroll-mt-24 overflow-hidden rounded-2xl border bg-white shadow-sm transition ${
+      className={`scroll-mt-24 overflow-hidden rounded-2xl border-2 bg-white shadow-sm transition duration-200 ${
         isActive
-          ? "border-peacock-300 ring-2 ring-peacock-100"
+          ? "border-peacock-500 shadow-lg shadow-peacock-500/15 ring-4 ring-peacock-200/70"
           : "border-slate-200"
       }`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 bg-peacock-50">
+      <div
+        className={`flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4 ${
+          isActive
+            ? "border-peacock-200 bg-peacock-100/90"
+            : "border-slate-100 bg-peacock-50"
+        }`}
+      >
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-peacock-600">
+          <p
+            className={`text-xs font-semibold uppercase tracking-[0.18em] ${
+              isActive ? "text-peacock-800" : "text-peacock-600"
+            }`}
+          >
             Step {stepNumber}
           </p>
           <h2 className="mt-1 text-lg font-semibold text-slate-900">

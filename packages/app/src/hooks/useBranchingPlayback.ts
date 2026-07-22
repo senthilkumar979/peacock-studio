@@ -22,7 +22,6 @@ interface UseBranchingPlaybackResult {
   currentSegment: PlayerOutlineSegment | null;
   currentIndex: number;
   totalNavigableSegments: number;
-  isAtIntro: boolean;
   isAtFinale: boolean;
   linkedPlayback: LinkedPlayback | null;
   isLoadingLinked: boolean;
@@ -40,7 +39,7 @@ interface UseBranchingPlaybackResult {
 }
 
 function getSegmentIndex(currentIndex: number): number {
-  return currentIndex - 1;
+  return currentIndex;
 }
 
 export function useBranchingPlayback(): UseBranchingPlaybackResult {
@@ -67,13 +66,12 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
     [segments],
   );
 
-  const finaleIndex = segments.length + 1;
-  const totalNavigableSegments = segments.length + 2;
-  const isAtIntro = !linkedPlayback && currentIndex === 0;
+  const finaleIndex = segments.length;
+  const totalNavigableSegments = segments.length + 1;
   const isAtFinale = !linkedPlayback && currentIndex >= finaleIndex;
   const segmentIndex = getSegmentIndex(currentIndex);
   const currentSegment =
-    linkedPlayback || isAtIntro || isAtFinale ? null : (segments[segmentIndex] ?? null);
+    linkedPlayback || isAtFinale ? null : (segments[segmentIndex] ?? null);
 
   useEffect(() => {
     for (const segment of segments) {
@@ -188,7 +186,6 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
     currentSegment,
     currentIndex,
     totalNavigableSegments,
-    isAtIntro,
     isAtFinale,
     linkedPlayback,
     isLoadingLinked,

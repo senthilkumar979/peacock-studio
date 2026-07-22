@@ -4,7 +4,6 @@ import { loadFlowIntoStore } from '@/services/flowLibraryService';
 import { getFlowDocument } from '@/storage/libraryRouter';
 import { useFlowStore } from '@/store/flowStore';
 import type { ResolvedShareLink } from '@/types/shareLink';
-import type { SharedDocumentViewMode } from '@/utils/shareLink';
 
 function buildViewerFilterFromShareLink(link: ResolvedShareLink): FlowViewerFilter | null {
   const shareSettings = link.settings.shareSettings;
@@ -42,12 +41,12 @@ export function usePublicSharedDocument(link: ResolvedShareLink | null) {
     };
   }, [link, setViewerFilter]);
 
-  const viewMode: SharedDocumentViewMode = link?.settings.viewMode ?? 'doc';
+  const shareLinkViewMode = link?.settings.viewMode ?? null;
   const isReady =
     Boolean(link) &&
     link?.resourceType === 'document' &&
     isLoaded &&
     storeDocumentId === link.resourceId;
 
-  return { viewMode, isReady };
+  return { shareLinkViewMode, isReady };
 }

@@ -1,7 +1,7 @@
 import { BookOpen, MousePointerClick, PlayCircle } from 'lucide-react';
 
 interface FlowDetailsGuideHintsProps {
-  variant: 'doc' | 'player';
+  variant: 'doc' | 'player' | 'hub';
   stepCount?: number;
 }
 
@@ -41,13 +41,36 @@ const PLAYER_HINTS = [
   },
 ];
 
+const HUB_HINTS = [
+  {
+    icon: BookOpen,
+    title: 'Guide mode',
+    detail: 'Scroll the full documentation with outline navigation and branch paths.',
+  },
+  {
+    icon: PlayCircle,
+    title: 'Player mode',
+    detail: 'Walk through screenshots step by step with keyboard and auto-play controls.',
+  },
+  {
+    icon: MousePointerClick,
+    title: 'Deliverables & environment',
+    detail: 'Generate QA artifacts and review the browser session captured with this flow.',
+  },
+];
+
 export const FlowDetailsGuideHints = ({ variant, stepCount }: FlowDetailsGuideHintsProps) => {
-  const hints = variant === 'player' ? PLAYER_HINTS : DOC_HINTS;
+  const hints =
+    variant === 'player' ? PLAYER_HINTS : variant === 'hub' ? HUB_HINTS : DOC_HINTS;
 
   return (
     <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 ring-1 ring-white/80 backdrop-blur-sm">
       <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-        {variant === 'player' ? 'Before you start' : 'How to use this guide'}
+        {variant === 'player'
+          ? 'Before you start'
+          : variant === 'hub'
+            ? 'What you can do here'
+            : 'How to use this guide'}
       </p>
       {typeof stepCount === 'number' ? (
         <p className="mt-1 text-sm font-semibold text-slate-900">

@@ -8,7 +8,6 @@ import { useKeyboard } from '@/hooks/useKeyboard';
 import { useFlowStore } from '@/store/flowStore';
 import type { SharedDocumentViewMode } from '@/utils/shareLink';
 import { FlowBranchChoicePanel } from './FlowBranchChoicePanel';
-import { FlowDetailsOverviewLayout } from '@/components/flow/FlowDetailsOverviewLayout';
 import { PlayerControls } from './PlayerControls';
 import {
   getPlayerControlsPosition,
@@ -22,13 +21,17 @@ const AUTO_PLAY_MS = 2500;
 interface PlayerViewProps {
   documentId: string;
   onModeChange: (mode: SharedDocumentViewMode) => void;
+  onOverview?: () => void;
   pageHints?: PageHintControl;
+  showOwnerActions?: boolean;
 }
 
 export const PlayerView = ({
   documentId,
   onModeChange,
+  onOverview,
   pageHints,
+  showOwnerActions = true,
 }: PlayerViewProps) => {
   const location = useLocation();
   const libraryBackState = location.state;
@@ -51,7 +54,6 @@ export const PlayerView = ({
     atBranch?.id,
     playback.linkedPlayback?.path.id,
     playback.isAtFinale,
-    playback.isAtIntro,
   ]);
 
   const keyboardHandlers = useMemo(
@@ -88,8 +90,7 @@ export const PlayerView = ({
     setIsPlaying(false);
   };
 
-  const isScrollableMain =
-    playback.isAtIntro || atBranch || playback.isAtFinale;
+  const isScrollableMain = atBranch || playback.isAtFinale;
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
@@ -98,9 +99,11 @@ export const PlayerView = ({
         title={flow?.flow.title ?? 'Untitled Flow'}
         viewMode="player"
         onViewModeChange={onModeChange}
+        onOverview={onOverview}
         editHref={`/docs/${documentId}/edit`}
         editLinkState={libraryBackState}
         pageHints={pageHints}
+        showOwnerActions={showOwnerActions}
       />
 
       <main
@@ -120,19 +123,6 @@ export const PlayerView = ({
             sectionCount={playback.sectionCount}
             onReplay={handleReplay}
           />
-        ) : playback.isAtIntro ? (
-          <div className="w-full self-stretch">
-            <FlowDetailsOverviewLayout
-            variant="player"
-            documentId={documentId}
-            title={flow?.flow.title ?? 'Untitled Flow'}
-            description={flow?.flow.description ?? ''}
-            version={flow?.flow.version ?? ''}
-            captureEnvironment={flow?.metadata.captureEnvironment ?? null}
-            createdAt={flow?.metadata.createdAt}
-            stepCount={playback.playableStepCount}
-          />
-          </div>
         ) : playback.isLoadingLinked ? (
           <p className="text-sm text-slate-500">Loading linked demo…</p>
         ) : playback.linkedError ? (

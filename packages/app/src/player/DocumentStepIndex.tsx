@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
+import { LayoutGrid } from 'lucide-react';
 import { DocumentOutlineLinkedPathGroup } from './DocumentOutlineLinkedPathGroup';
 import { DocumentOutlineNavItem } from './DocumentOutlineNavItem';
 import {
@@ -20,6 +21,7 @@ interface DocumentStepIndexProps {
   onSelectSection: (anchorId: string, sectionId: string) => void;
   onSelectBranch: (anchorId: string, branchId: string) => void;
   onSelectLinkedPath: (anchorId: string, itemId: string) => void;
+  onOpenOverview?: () => void;
 }
 
 export const DocumentStepIndex = ({
@@ -30,6 +32,7 @@ export const DocumentStepIndex = ({
   onSelectSection,
   onSelectBranch,
   onSelectLinkedPath,
+  onOpenOverview,
 }: DocumentStepIndexProps) => {
   const activeItemRef = useRef<HTMLLIElement>(null);
   const entries = useMemo(() => groupDocumentStepIndexItems(items), [items]);
@@ -44,6 +47,16 @@ export const DocumentStepIndex = ({
         <p className="shrink-0 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
           Outline
         </p>
+        {onOpenOverview ? (
+          <button
+            type="button"
+            onClick={onOpenOverview}
+            className="mt-3 inline-flex w-full items-center gap-2 rounded-xl border border-peacock-200/80 bg-peacock-50/80 px-3 py-2.5 text-left text-sm font-semibold text-peacock-800 transition hover:bg-peacock-100"
+          >
+            <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
+            Flow overview
+          </button>
+        ) : null}
         <nav className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
           <ol className="space-y-2 px-1 py-2">
             {entries.map((entry) => {

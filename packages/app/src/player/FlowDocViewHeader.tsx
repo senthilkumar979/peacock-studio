@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Link2, Pencil } from 'lucide-react';
+import { ArrowLeft, LayoutGrid, Link2, Pencil } from 'lucide-react';
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
-import { DASHBOARD_PATH } from '@/constants/routes';
+import { DASHBOARD_PATH, LANDING_PATH } from '@/constants/routes';
 import { HintAnchor, type PageHintControl } from '@/components/onboarding/HintAnchor';
 import { PLAYER_HINT_IDS } from '@/constants/firstTimeHints';
 import { useDocumentShareModal } from '@/hooks/useDocumentShareModal';
@@ -14,9 +14,12 @@ interface FlowDocViewHeaderProps {
   title: string;
   viewMode: SharedDocumentViewMode;
   onViewModeChange: (mode: SharedDocumentViewMode) => void;
+  onOverview?: () => void;
   editHref: string;
   editLinkState?: unknown;
   pageHints?: PageHintControl;
+  showOwnerActions?: boolean;
+  guideProgressPercent?: number;
 }
 
 const actionClass =
@@ -27,9 +30,12 @@ export const FlowDocViewHeader = ({
   title,
   viewMode,
   onViewModeChange,
+  onOverview,
   editHref,
   editLinkState,
   pageHints,
+  showOwnerActions = true,
+  guideProgressPercent,
 }: FlowDocViewHeaderProps) => {
   const backLink = useLibraryBackLink();
   const { openShare, shareModal } = useDocumentShareModal(documentId);
@@ -37,27 +43,29 @@ export const FlowDocViewHeader = ({
 
   return (
     <>
-      <header className="relative sticky top-0 z-50 shrink-0 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-white/80">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-peacock-300/50 to-transparent"
-        />
-
+      <header
+        data-flow-doc-sticky-header
+        className="relative sticky top-0 z-50 shrink-0 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-white/80"
+      >
         <div className="relative flex items-center justify-between gap-3 px-4 py-2.5 sm:px-5">
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-            <Link
-              to={backLink.from}
-              className={`${actionClass} shrink-0 px-2.5`}
-              aria-label={`Back to ${backLink.fromLabel}`}
-            >
-              <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="hidden sm:inline">{backLink.fromLabel}</span>
-            </Link>
+            {showOwnerActions ? (
+              <>
+                <Link
+                  to={backLink.from}
+                  className={`${actionClass} shrink-0 px-2.5`}
+                  aria-label={`Back to ${backLink.fromLabel}`}
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+                  <span className="hidden sm:inline">{backLink.fromLabel}</span>
+                </Link>
 
-            <div className="hidden h-6 w-px shrink-0 bg-slate-200 sm:block" aria-hidden />
+                <div className="hidden h-6 w-px shrink-0 bg-slate-200 sm:block" aria-hidden />
+              </>
+            ) : null}
 
             <Link
-              to={DASHBOARD_PATH}
+              to={showOwnerActions ? DASHBOARD_PATH : LANDING_PATH}
               className="group hidden shrink-0 items-center gap-2 rounded-xl outline-none ring-peacock-500 focus-visible:ring-2 sm:inline-flex"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-peacock-500 to-peacock-700 p-1 shadow-md shadow-peacock-500/20 ring-1 ring-peacock-600/10">
@@ -79,6 +87,13 @@ export const FlowDocViewHeader = ({
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            {onOverview ? (
+              <button type="button" onClick={onOverview} className={actionClass}>
+                <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
+                <span className="hidden sm:inline">Overview</span>
+              </button>
+            ) : null}
+
             <HintAnchor
               hints={pageHints}
               hintId={PLAYER_HINT_IDS.viewToggle}
@@ -88,29 +103,54 @@ export const FlowDocViewHeader = ({
               <SharedViewToggle mode={viewMode} onChange={onViewModeChange} />
             </HintAnchor>
 
-            <button type="button" onClick={openShare} className={actionClass}>
-              <Link2 className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="hidden sm:inline">Share</span>
-            </button>
+            {showOwnerActions ? (
+              <>
+                <button type="button" onClick={openShare} className={actionClass}>
+                  <Link2 className="h-4 w-4 shrink-0" aria-hidden />
+                  <span className="hidden sm:inline">Share</span>
+                </button>
 
-            <HintAnchor
-              hints={pageHints}
-              hintId={PLAYER_HINT_IDS.editFlow}
-              title="Edit this flow"
-              description="Jump back to the editor to update steps, branching, and screenshots."
-              placement="bottom"
-            >
-              <Link
-                to={editHref}
-                state={editLinkState}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-semibold text-peacock-800 shadow-sm transition hover:bg-peacock-100"
-              >
-                <Pencil className="h-4 w-4 shrink-0" aria-hidden />
-                <span className="hidden sm:inline">Edit</span>
-              </Link>
-            </HintAnchor>
+                <HintAnchor
+                  hints={pageHints}
+                  hintId={PLAYER_HINT_IDS.editFlow}
+                  title="Edit this flow"
+                  description="Jump back to the editor to update steps, branching, and screenshots."
+                  placement="bottom"
+                >
+                  <Link
+                    to={editHref}
+                    state={editLinkState}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-semibold text-peacock-800 shadow-sm transition hover:bg-peacock-100"
+                  >
+                    <Pencil className="h-4 w-4 shrink-0" aria-hidden />
+                    <span className="hidden sm:inline">Edit</span>
+                  </Link>
+                </HintAnchor>
+              </>
+            ) : null}
           </div>
         </div>
+
+        {guideProgressPercent !== undefined ? (
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-1 bg-slate-100"
+            role="progressbar"
+            aria-valuenow={guideProgressPercent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Guide reading progress"
+          >
+            <div
+              className="h-full rounded-r-full bg-gradient-to-r from-peacock-500 to-brand-violet transition-[width] duration-300 ease-out"
+              style={{ width: `${guideProgressPercent}%` }}
+            />
+          </div>
+        ) : (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-peacock-300/50 to-transparent"
+          />
+        )}
       </header>
       {shareModal}
     </>

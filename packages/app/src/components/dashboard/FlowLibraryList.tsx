@@ -28,7 +28,7 @@ export const FlowLibraryList = ({ summaries, onRequestDelete }: FlowLibraryListP
             <FileText className="h-4 w-4" aria-hidden />
           </span>
           <Link
-            to={getDocumentPath(summary.id, 'player')}
+            to={getDocumentPath(summary.id)}
             state={navigationState}
             className="group min-w-0 flex-1 rounded-lg outline-none ring-peacock-500 focus-visible:ring-2"
           >

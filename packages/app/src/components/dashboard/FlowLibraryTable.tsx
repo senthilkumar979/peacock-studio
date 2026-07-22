@@ -52,7 +52,7 @@ export const FlowLibraryTable = ({ summaries, onRequestDelete }: FlowLibraryTabl
           <tr key={summary.id} className="hover:bg-slate-50/80">
             <td className="px-4 py-3">
               <Link
-                to={getDocumentPath(summary.id, 'player')}
+                to={getDocumentPath(summary.id)}
                 state={navigationState}
                 className="group block min-w-0 rounded-lg outline-none ring-peacock-500 focus-visible:ring-2"
               >

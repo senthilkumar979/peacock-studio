@@ -12,7 +12,9 @@ interface FlowDetailsOverviewLayoutProps {
   version: string;
   createdAt?: number;
   stepCount?: number;
-  variant: 'doc' | 'player';
+  sectionCount?: number;
+  branchCount?: number;
+  variant: 'doc' | 'player' | 'hub';
   anchorId?: string;
   isActive?: boolean;
   documentId?: string;
@@ -25,6 +27,8 @@ export const FlowDetailsOverviewLayout = ({
   version,
   createdAt,
   stepCount,
+  sectionCount,
+  branchCount,
   variant,
   anchorId,
   isActive = false,
@@ -32,6 +36,7 @@ export const FlowDetailsOverviewLayout = ({
   captureEnvironment,
 }: FlowDetailsOverviewLayoutProps) => {
   const isPlayer = variant === 'player';
+  const isHub = variant === 'hub';
   const hasMetadata = hasFlowDetailsMetadata(documentId, captureEnvironment);
 
   const grid = (
@@ -49,6 +54,8 @@ export const FlowDetailsOverviewLayout = ({
         version={version}
         createdAt={createdAt}
         stepCount={stepCount}
+        sectionCount={sectionCount}
+        branchCount={branchCount}
         fillHeight={hasMetadata}
         isActive={isActive}
       />
@@ -61,7 +68,11 @@ export const FlowDetailsOverviewLayout = ({
     </div>
   );
 
-  const footerHint = isPlayer ? (
+  const footerHint = isHub ? (
+    <p className="mt-5 text-sm text-slate-500">
+      Review deliverables and captured environment above, then choose Guide or Player below.
+    </p>
+  ) : isPlayer ? (
     <p className="mt-5 inline-flex items-center gap-2 text-sm text-slate-500">
       <Keyboard className="h-4 w-4 text-peacock-600" aria-hidden />
       Press Next or use arrow keys to begin the guided walkthrough.
@@ -73,7 +84,7 @@ export const FlowDetailsOverviewLayout = ({
     </p>
   );
 
-  if (isPlayer) {
+  if (isPlayer || isHub) {
     return (
       <div className="mx-auto w-full max-w-7xl">
         {grid}

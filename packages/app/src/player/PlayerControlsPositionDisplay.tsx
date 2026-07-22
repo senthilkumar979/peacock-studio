@@ -13,13 +13,6 @@ const POSITION_KIND_STYLES: Record<
   Exclude<PlayerControlsPositionKind, 'step' | 'status'>,
   PositionKindStyle
 > = {
-  intro: {
-    label: 'Overview',
-    icon: FileText,
-    iconWrap: 'bg-peacock-100',
-    iconColor: 'text-peacock-700',
-    labelColor: 'text-peacock-700',
-  },
   finale: {
     label: 'Complete',
     icon: FileText,

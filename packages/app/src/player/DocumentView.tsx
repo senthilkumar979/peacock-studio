@@ -1,4 +1,7 @@
-import { HintAnchor, type PageHintControl } from "@/components/onboarding/HintAnchor";
+import {
+  HintAnchor,
+  type PageHintControl,
+} from "@/components/onboarding/HintAnchor";
 import { PLAYER_HINT_IDS } from "@/constants/firstTimeHints";
 import {
   collectAllBranches,
@@ -9,9 +12,11 @@ import {
   type LinkedPeacockPath,
 } from "@peacock/shared";
 import { useDocumentBranchPaths } from "@/hooks/useDocumentBranchPaths";
+import { useDocumentGuideProgress } from "@/hooks/useDocumentGuideProgress";
 import {
   scrollDocumentPaneToAnchor,
   useDocumentOutlineScrollSpy,
+  useDocumentWindowOutlineScrollSpy,
 } from "@/hooks/useDocumentOutlineScrollSpy";
 import { useDocumentHashNavigation } from "@/hooks/useDocumentHashNavigation";
 import { useFlowStore, useViewerOutline } from "@/store/flowStore";
@@ -23,13 +28,21 @@ import {
 } from "./documentOutline";
 import { DocumentLinkedPathSteps } from "./DocumentLinkedPathSteps";
 import {
-  FLOW_DETAILS_OUTLINE_ID,
   getDocumentFlowDetailsAnchor,
   getDocumentStepAnchor,
   type SharedDocumentViewMode,
 } from "@/utils/shareLink";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useLocation } from "react-router-dom";
+import { DocumentGuideCompleteCard } from "@/player/DocumentGuideCompleteCard";
+import { DocumentGuideOverviewBanner } from "@/player/DocumentGuideOverviewBanner";
 import { FlowDocViewHeader } from "@/player/FlowDocViewHeader";
 import { DocumentSectionCard } from "./DocumentSectionCard";
 import { DocumentStepCard } from "./DocumentStepCard";
@@ -38,18 +51,21 @@ import {
   type DocumentStepIndexItem,
 } from "./DocumentStepIndex";
 import { getDocumentStepIndexItemId } from "./documentStepIndexTypes";
-import { FlowDetailsOverviewLayout } from "@/components/flow/FlowDetailsOverviewLayout";
 
 interface DocumentViewProps {
   documentId: string;
   onModeChange: (mode: SharedDocumentViewMode) => void;
+  onOverview?: () => void;
   pageHints?: PageHintControl;
+  showOwnerActions?: boolean;
 }
 
 export const DocumentView = ({
   documentId,
   onModeChange,
+  onOverview,
   pageHints,
+  showOwnerActions = true,
 }: DocumentViewProps) => {
   const location = useLocation();
   const libraryBackState = location.state;
@@ -85,6 +101,7 @@ export const DocumentView = ({
         flowDetailsAnchor,
         selectedPathByBranchId,
         linkedContentByPathId,
+        includeOverview: false,
       }),
     [
       steps,
@@ -95,14 +112,25 @@ export const DocumentView = ({
     ],
   );
 
+  const initialActiveItemId = useMemo(
+    () => (indexItems[0] ? getDocumentStepIndexItemId(indexItems[0]) : null),
+    [indexItems],
+  );
+
   const [activeItemId, setActiveItemId] = useState<string | null>(
-    FLOW_DETAILS_OUTLINE_ID,
+    initialActiveItemId,
+  );
+  const { progressPercent } = useDocumentGuideProgress(
+    indexItems,
+    activeItemId,
+    playableStepCount,
   );
   const [desktopPaneHeight, setDesktopPaneHeight] = useState<number | null>(
     null,
   );
   const layoutRef = useRef<HTMLDivElement | null>(null);
   const contentScrollRef = useRef<HTMLDivElement | null>(null);
+  const contentRootRef = useRef<HTMLDivElement | null>(null);
   const indexItemsRef = useRef(indexItems);
   const scrollSpyPausedRef = useRef(false);
   const pendingPathScrollRestoreRef = useRef<number | null>(null);
@@ -122,9 +150,22 @@ export const DocumentView = ({
     setActiveItemId(itemId);
   }, []);
 
+  const sectionCount = useMemo(
+    () => steps.filter((item) => isFlowSection(item)).length,
+    [steps],
+  );
+
   useDocumentOutlineScrollSpy(
     contentScrollRef,
     isDesktopPane,
+    handleOutlineActiveItemChange,
+    indexItems.map((item) => getDocumentStepIndexItemId(item)).join("|"),
+    scrollSpyPausedRef,
+  );
+
+  useDocumentWindowOutlineScrollSpy(
+    contentRootRef,
+    !isDesktopPane,
     handleOutlineActiveItemChange,
     indexItems.map((item) => getDocumentStepIndexItemId(item)).join("|"),
     scrollSpyPausedRef,
@@ -164,7 +205,7 @@ export const DocumentView = ({
 
   useEffect(() => {
     setActiveItemId((current) => {
-      if (!current) return FLOW_DETAILS_OUTLINE_ID;
+      if (!current) return initialActiveItemId;
       const isKnownItem = indexItems.some(
         (item) => getDocumentStepIndexItemId(item) === current,
       );
@@ -172,9 +213,17 @@ export const DocumentView = ({
       if (steps.some((item) => isFlowBranch(item) && item.id === current)) {
         return current;
       }
-      return FLOW_DETAILS_OUTLINE_ID;
+      if (current === "guide-complete") return current;
+      return initialActiveItemId;
     });
-  }, [indexItems, steps]);
+  }, [indexItems, steps, initialActiveItemId]);
+
+  useEffect(() => {
+    if (!onOverview) return;
+    const hash = window.location.hash.replace(/^#/, "");
+    if (hash !== flowDetailsAnchor) return;
+    onOverview();
+  }, [flowDetailsAnchor, onOverview]);
 
   useEffect(() => {
     const updateDesktopPaneHeight = () => {
@@ -199,6 +248,27 @@ export const DocumentView = ({
     return () => window.removeEventListener("resize", updateDesktopPaneHeight);
   }, [steps.length]);
 
+  const handleViewFromBeginning = useCallback(() => {
+    const firstItem = indexItems[0];
+    if (firstItem) {
+      setActiveItemId(getDocumentStepIndexItemId(firstItem));
+    }
+
+    scrollSpyPausedRef.current = true;
+
+    if (isDesktopPane && contentScrollRef.current) {
+      contentScrollRef.current.scrollTo({ top: 0, behavior: "auto" });
+    }
+    window.scrollTo({ top: 0, behavior: "auto" });
+
+    window.requestAnimationFrame(() => {
+      scrollSpyPausedRef.current = false;
+    });
+
+    const path = `${window.location.pathname}${window.location.search}`;
+    window.history.replaceState(null, "", path);
+  }, [indexItems, isDesktopPane]);
+
   useDocumentHashNavigation({
     branches,
     selectedPathByBranchId,
@@ -216,9 +286,14 @@ export const DocumentView = ({
         title={flow?.flow.title ?? "Untitled Flow"}
         viewMode="doc"
         onViewModeChange={onModeChange}
+        onOverview={onOverview}
         editHref={`/docs/${documentId}/edit`}
         editLinkState={libraryBackState}
         pageHints={pageHints}
+        showOwnerActions={showOwnerActions}
+        guideProgressPercent={
+          playableStepCount > 0 ? progressPercent : undefined
+        }
       />
 
       <main className="mx-auto flex w-full max-w-8xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
@@ -253,6 +328,7 @@ export const DocumentView = ({
                 onSelectLinkedPath={(anchorId, itemId) =>
                   scrollToAnchor(anchorId, itemId)
                 }
+                onOpenOverview={onOverview}
               />
             </HintAnchor>
           </div>
@@ -261,21 +337,17 @@ export const DocumentView = ({
             ref={contentScrollRef}
             className="min-h-0 h-full overflow-y-auto"
           >
-            <div className="flex min-w-0 flex-col gap-5 pr-1 ">
-              <div data-outline-id={FLOW_DETAILS_OUTLINE_ID}>
-                <FlowDetailsOverviewLayout
-                  variant="doc"
-                  documentId={documentId}
-                  anchorId={flowDetailsAnchor}
-                  isActive={activeItemId === FLOW_DETAILS_OUTLINE_ID}
+            <div
+              ref={contentRootRef}
+              className="flex min-w-0 flex-col gap-5 pr-1 "
+            >
+              {onOverview ? (
+                <DocumentGuideOverviewBanner
                   title={flow?.flow.title ?? "Untitled Flow"}
-                  description={flow?.flow.description ?? ""}
-                  version={flow?.flow.version ?? ""}
-                  captureEnvironment={flow?.metadata.captureEnvironment ?? null}
-                  createdAt={flow?.metadata.createdAt}
                   stepCount={playableStepCount}
+                  onOpenOverview={onOverview}
                 />
-              </div>
+              ) : null}
 
               {(() => {
                 let stepNumber = 0;
@@ -319,7 +391,9 @@ export const DocumentView = ({
                           anchorId={anchorId}
                           isActive={item.id === activeItemId}
                           selectedPathId={branchContext.selectedPathId}
-                          onSelectPath={(path) => handleSelectPath(item.id, path)}
+                          onSelectPath={(path) =>
+                            handleSelectPath(item.id, path)
+                          }
                         />
                         {branchContext.loading ? (
                           <p className="mt-4 text-sm text-slate-500">
@@ -369,6 +443,14 @@ export const DocumentView = ({
                   );
                 });
               })()}
+
+              <DocumentGuideCompleteCard
+                title={flow?.flow.title ?? "Untitled Flow"}
+                stepCount={playableStepCount}
+                sectionCount={sectionCount}
+                branchCount={branches.length}
+                onViewFromBeginning={handleViewFromBeginning}
+              />
             </div>
           </div>
         </div>

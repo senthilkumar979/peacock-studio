@@ -1,7 +1,6 @@
 import type { useBranchingPlayback } from '@/hooks/useBranchingPlayback';
 
 export type PlayerControlsPositionKind =
-  | 'intro'
   | 'finale'
   | 'section'
   | 'branch'
@@ -21,10 +20,6 @@ type BranchingPlayback = ReturnType<typeof useBranchingPlayback>;
 export function getPlayerControlsPosition(playback: BranchingPlayback): PlayerControlsPosition {
   if (playback.isAtFinale) {
     return { kind: 'finale', title: 'Guide complete' };
-  }
-
-  if (playback.isAtIntro) {
-    return { kind: 'intro', title: 'Flow overview' };
   }
 
   if (playback.isLoadingLinked) {
