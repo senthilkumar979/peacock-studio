@@ -12,7 +12,7 @@ const TOGGLE_OPTIONS: Array<{ id: SharedDocumentViewMode; label: string }> = [
 
 export const SharedViewToggle = ({ mode, onChange }: SharedViewToggleProps) => (
   <div
-    className="inline-flex items-center rounded-lg border border-slate-300 bg-white p-1 shadow-sm"
+    className="inline-flex items-center gap-0.5 rounded-xl bg-slate-100/90 p-1 ring-1 ring-inset ring-slate-200/70"
     role="tablist"
     aria-label="Shared guide view"
   >
@@ -26,10 +26,10 @@ export const SharedViewToggle = ({ mode, onChange }: SharedViewToggleProps) => (
           role="tab"
           aria-selected={isActive}
           onClick={() => onChange(option.id)}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+          className={`rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all sm:px-3 ${
             isActive
-              ? 'bg-peacock-600 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              ? 'bg-white text-peacock-700 shadow-sm ring-1 ring-slate-200/80'
+              : 'text-slate-600 hover:bg-white/60 hover:text-slate-900'
           }`}
         >
           {option.label}

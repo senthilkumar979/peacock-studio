@@ -1,4 +1,3 @@
-import { AppHeader } from "@/components/AppHeader";
 import { HintAnchor, type PageHintControl } from "@/components/onboarding/HintAnchor";
 import { PLAYER_HINT_IDS } from "@/constants/firstTimeHints";
 import {
@@ -30,7 +29,8 @@ import {
   type SharedDocumentViewMode,
 } from "@/utils/shareLink";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { FlowDocViewHeader } from "@/player/FlowDocViewHeader";
 import { DocumentSectionCard } from "./DocumentSectionCard";
 import { DocumentStepCard } from "./DocumentStepCard";
 import {
@@ -39,7 +39,6 @@ import {
 } from "./DocumentStepIndex";
 import { getDocumentStepIndexItemId } from "./documentStepIndexTypes";
 import { FlowDetailsOverviewLayout } from "@/components/flow/FlowDetailsOverviewLayout";
-import { SharedViewToggle } from "./SharedViewToggle";
 
 interface DocumentViewProps {
   documentId: string;
@@ -212,37 +211,15 @@ export const DocumentView = ({
 
   return (
     <div className="flex min-h-screen[calc(100vh-128px)] flex-col bg-slate-50">
-      <AppHeader
-        eyebrow="Peacock Shared Guide"
-        title={flow?.flow.title ?? "Untitled Flow"}
-        description={flow?.flow.description || undefined}
-        homeLink
+      <FlowDocViewHeader
         documentId={documentId}
-      >
-        <HintAnchor
-          hints={pageHints}
-          hintId={PLAYER_HINT_IDS.viewToggle}
-          title="Doc or Player"
-          description="Switch between a scrollable guide and a step-by-step player. Share either view with your audience."
-        >
-          <SharedViewToggle mode="doc" onChange={onModeChange} />
-        </HintAnchor>
-        <HintAnchor
-          hints={pageHints}
-          hintId={PLAYER_HINT_IDS.editFlow}
-          title="Edit this flow"
-          description="Jump back to the editor to update steps, branching, and screenshots."
-          placement="bottom"
-        >
-          <Link
-            to={`/docs/${documentId}/edit`}
-            state={libraryBackState}
-            className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800 hover:bg-peacock-100"
-          >
-            Edit flow
-          </Link>
-        </HintAnchor>
-      </AppHeader>
+        title={flow?.flow.title ?? "Untitled Flow"}
+        viewMode="doc"
+        onViewModeChange={onModeChange}
+        editHref={`/docs/${documentId}/edit`}
+        editLinkState={libraryBackState}
+        pageHints={pageHints}
+      />
 
       <main className="mx-auto flex w-full max-w-8xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
         <div

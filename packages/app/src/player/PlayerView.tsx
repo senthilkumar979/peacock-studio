@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { AppHeader } from '@/components/AppHeader';
+import { useLocation } from 'react-router-dom';
 import { FlowSectionCard } from '@/components/FlowSectionCard';
-import { HintAnchor, type PageHintControl } from '@/components/onboarding/HintAnchor';
-import { PLAYER_HINT_IDS } from '@/constants/firstTimeHints';
+import type { PageHintControl } from '@/components/onboarding/HintAnchor';
+import { FlowDocViewHeader } from '@/player/FlowDocViewHeader';
 import { useBranchingPlayback } from '@/hooks/useBranchingPlayback';
 import { useKeyboard } from '@/hooks/useKeyboard';
 import { useFlowStore } from '@/store/flowStore';
@@ -17,7 +16,6 @@ import {
 } from './playerControlsPosition';
 import { PlayerFinale } from './PlayerFinale';
 import { PlayerStep } from './PlayerStep';
-import { SharedViewToggle } from './SharedViewToggle';
 
 const AUTO_PLAY_MS = 2500;
 
@@ -95,37 +93,15 @@ export const PlayerView = ({
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
-      <AppHeader
-        eyebrow="Peacock Studio Player"
-        title={flow?.flow.title ?? 'Untitled Flow'}
-        description={flow?.flow.description || undefined}
-        homeLink
+      <FlowDocViewHeader
         documentId={documentId}
-      >
-        <HintAnchor
-          hints={pageHints}
-          hintId={PLAYER_HINT_IDS.viewToggle}
-          title="Doc or Player"
-          description="Switch between a scrollable guide and a step-by-step player. Share either view with your audience."
-        >
-          <SharedViewToggle mode="player" onChange={onModeChange} />
-        </HintAnchor>
-        <HintAnchor
-          hints={pageHints}
-          hintId={PLAYER_HINT_IDS.editFlow}
-          title="Edit this flow"
-          description="Jump back to the editor to update steps, branching, and screenshots."
-          placement="bottom"
-        >
-          <Link
-            to={`/docs/${documentId}/edit`}
-            state={libraryBackState}
-            className="rounded-lg border border-peacock-200 bg-peacock-50 px-3 py-2 text-sm font-medium text-peacock-800 hover:bg-peacock-100"
-          >
-            Edit flow
-          </Link>
-        </HintAnchor>
-      </AppHeader>
+        title={flow?.flow.title ?? 'Untitled Flow'}
+        viewMode="player"
+        onViewModeChange={onModeChange}
+        editHref={`/docs/${documentId}/edit`}
+        editLinkState={libraryBackState}
+        pageHints={pageHints}
+      />
 
       <main
         ref={mainRef}
