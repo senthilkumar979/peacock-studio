@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { DASHBOARD_PATH } from '@/constants/routes';
+import { useParams } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
+import { ResourceNotFoundPage } from '@/components/errors/ResourceNotFoundPage';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { CaptureEditorCanvas } from '@/capture-editor/CaptureEditorCanvas';
 import { CaptureEditorSidebar } from '@/capture-editor/CaptureEditorSidebar';
@@ -91,15 +91,10 @@ export const CaptureEditor = () => {
 
   if (error || !source) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <div className="mx-auto max-w-lg px-6 py-16 text-center">
-          <h1 className="text-lg font-semibold text-slate-900">Could not open capture editor</h1>
-          <p className="mt-2 text-sm text-slate-600">{error ?? 'Unknown error'}</p>
-          <Link to={DASHBOARD_PATH} className="btn-peacock mt-6 inline-block">
-            Back to dashboard
-          </Link>
-        </div>
-      </div>
+      <ResourceNotFoundPage
+        title="Could not open capture editor"
+        description={error ?? 'This capture was not found or is no longer available.'}
+      />
     );
   }
 
