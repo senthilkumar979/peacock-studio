@@ -1,5 +1,5 @@
 import { normalizeProfileEmail } from '@/cloud/audit';
-import { requireCloudAuthContext } from '@/cloud/authContext';
+import { requireCloudAuthSession } from '@/cloud/authContext';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
 
 export interface UserProfile {
@@ -56,9 +56,9 @@ export async function fetchDisplayNamesByEmail(
 
   if (unique.length === 0) return {};
 
-  // Cloud inactive (guest): nothing to resolve.
+  // Cloud inactive (guest) or still onboarding: nothing to resolve.
   try {
-    requireCloudAuthContext();
+    requireCloudAuthSession();
   } catch {
     return {};
   }

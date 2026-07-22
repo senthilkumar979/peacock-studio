@@ -13,6 +13,7 @@ import {
 } from '@/utils/shareLink';
 import { createProductTourShareUrl } from '@/services/shareLinkService';
 import { isCloudSyncEnabled } from '@/cloud/config';
+import { useCanEmbed, useCanExport, useCanShare } from '@/hooks/useOrganization';
 
 interface ShareProductTourModalProps {
   isOpen: boolean;
@@ -27,6 +28,9 @@ export const ShareProductTourModal = ({
   tour: tourProp,
   onClose,
 }: ShareProductTourModalProps) => {
+  const canShare = useCanShare();
+  const canExport = useCanExport();
+  const canEmbed = useCanEmbed();
   const [method, setMethod] = useState<ShareMethod>('link');
   const [accessMode, setAccessMode] = useState<ShareLinkAccessMode>('readonly');
   const [presenterLink, setPresenterLink] = useState(false);
@@ -41,10 +45,19 @@ export const ShareProductTourModal = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    setMethod('link');
+    const preferred: ShareMethod = canShare ? 'link' : canExport ? 'pdf' : 'embed';
+    setMethod(preferred);
     setAccessMode('readonly');
     setPresenterLink(false);
-  }, [isOpen]);
+  }, [isOpen, canShare, canExport]);
+
+  useEffect(() => {
+    if (method === 'link' && !canShare) setMethod(canExport ? 'pdf' : 'embed');
+    if (method === 'pdf' && !canExport) setMethod(canShare ? 'link' : 'embed');
+    if (method === 'embed' && !canEmbed && (canShare || canExport)) {
+      setMethod(canShare ? 'link' : 'pdf');
+    }
+  }, [method, canShare, canExport, canEmbed]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -72,7 +85,7 @@ export const ShareProductTourModal = ({
   }, [isOpen, tourId, tourProp]);
 
   useEffect(() => {
-    if (!isOpen || method !== 'link') return;
+    if (!isOpen || method !== 'link' || !canShare) return;
 
     let cancelled = false;
     setIsShareUrlLoading(true);
@@ -91,7 +104,7 @@ export const ShareProductTourModal = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, method, tourId, accessMode, presenterLink]);
+  }, [isOpen, method, tourId, accessMode, presenterLink, canShare]);
 
   const handleClose = () => {
     if (isExporting) return;
@@ -160,7 +173,16 @@ export const ShareProductTourModal = ({
             </div>
           ) : (
             <>
-              <ShareMethodPicker value={method} onChange={setMethod} disabled={isExporting} />
+              <ShareMethodPicker
+                value={method}
+                onChange={setMethod}
+                disabled={isExporting}
+                disabledMethods={{
+                  link: !canShare,
+                  pdf: !canExport || !canExportPdf,
+                  embed: !canEmbed,
+                }}
+              />
               {method === 'embed' ? (
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">

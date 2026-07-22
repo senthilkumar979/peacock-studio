@@ -4,6 +4,7 @@ import { FlowDocument } from './FlowDocument';
 import { getPdfLogoUrl } from './pdfConstants';
 import { registerPdfFonts } from './registerPdfFonts';
 import { renderPdfBlob } from './renderPdfBlob';
+import { isCloudLibraryActive, requireCapability } from '@/cloud/authContext';
 import { recordOrgEvent } from '@/cloud/repositories/analyticsRepository';
 import {
   buildDefaultPdfPathSelections,
@@ -27,6 +28,9 @@ export async function exportFlowPdf({
   screenshotUrls,
   pathSelections: pathSelectionsInput,
 }: ExportFlowPdfParams): Promise<void> {
+  if (isCloudLibraryActive()) {
+    requireCapability('export');
+  }
   registerPdfFonts();
 
   const branches = collectAllBranches(steps);

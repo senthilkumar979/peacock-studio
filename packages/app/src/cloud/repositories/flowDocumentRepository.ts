@@ -1,6 +1,7 @@
 import type { FlowOutlineItem, FlowPayload } from '@peacock/shared';
+import { countStepDomains } from '@peacock/shared';
 import { isoToMs, msToIso, stampAuditForCloudWrite } from '@/cloud/audit';
-import { requireCloudAuthContext } from '@/cloud/authContext';
+import { requireCapability, requireCloudAuthContext } from '@/cloud/authContext';
 import {
   deleteDocumentScreenshots,
   resolveScreenshotUrls,
@@ -73,6 +74,15 @@ export async function cloudSaveFlowDocument(
   options: { preserveUpdatedAt?: boolean } = {},
 ): Promise<void> {
   const { organizationId } = requireCloudAuthContext();
+  // Lightweight existence check without loading screenshots
+  const supabaseCheck = getAuthenticatedSupabaseClient();
+  const { data: existingRow } = await supabaseCheck
+    .from('flow_documents')
+    .select('id')
+    .eq('organization_id', organizationId)
+    .eq('id', doc.id)
+    .maybeSingle();
+  requireCapability(existingRow ? 'edit' : 'create');
   const supabase = getAuthenticatedSupabaseClient();
   const audit = stampAuditForCloudWrite(
     {
@@ -96,6 +106,7 @@ export async function cloudSaveFlowDocument(
       flow: doc.flow,
       steps: doc.steps,
       share_settings: doc.shareSettings ?? null,
+      domain_counts: countStepDomains(doc.steps),
     },
     { onConflict: 'id' },
   );
@@ -106,6 +117,7 @@ export async function cloudSaveFlowDocument(
 }
 
 export async function cloudDeleteFlowDocument(id: string): Promise<void> {
+  requireCapability('delete');
   await deleteDocumentScreenshots(id);
 
   const { organizationId } = requireCloudAuthContext();

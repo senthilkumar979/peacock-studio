@@ -1,5 +1,5 @@
 import { isoToMs, msToIso, stampAuditForCloudWrite } from '@/cloud/audit';
-import { requireCloudAuthContext } from '@/cloud/authContext';
+import { requireCapability, requireCloudAuthContext } from '@/cloud/authContext';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
 import type { ProductTour, ProductTourCompletionCta, ProductTourSummary, TourFeature } from '@/types/productTour';
 import { countTourDemos, sortTourFeatures } from '@/utils/createProductTour';
@@ -57,6 +57,13 @@ export async function cloudSaveProductTour(
 ): Promise<void> {
   const { organizationId } = requireCloudAuthContext();
   const supabase = getAuthenticatedSupabaseClient();
+  const { data: existingRow } = await supabase
+    .from('product_tours')
+    .select('id')
+    .eq('organization_id', organizationId)
+    .eq('id', tour.id)
+    .maybeSingle();
+  requireCapability(existingRow ? 'edit' : 'create');
   const audit = stampAuditForCloudWrite(
     {
       createdAt: tour.createdAt,
@@ -91,6 +98,7 @@ export async function cloudSaveProductTour(
 }
 
 export async function cloudDeleteProductTour(id: string): Promise<void> {
+  requireCapability('delete');
   const { organizationId } = requireCloudAuthContext();
   const supabase = getAuthenticatedSupabaseClient();
 

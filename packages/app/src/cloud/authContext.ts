@@ -1,3 +1,10 @@
+import type {
+  MemberCapabilities,
+  MemberRole,
+  OrgMembership,
+} from '@/cloud/types/organization';
+import { ALL_CAPABILITIES_TRUE } from '@/cloud/types/organization';
+
 export interface CloudAuthContext {
   clerkUserId: string;
   /** Primary email from Clerk — stable audit key for created_by / updated_by. */
@@ -5,6 +12,18 @@ export interface CloudAuthContext {
   /** Display name from Clerk — shown in UI as Last updated by. */
   userDisplayName: string;
   organizationId: string;
+  organizationName: string;
+  workspaceType: 'personal' | 'team' | null;
+  role: MemberRole | null;
+  capabilities: MemberCapabilities | null;
+  memberships: OrgMembership[];
+  /**
+   * True only after memberships have been fetched and the list is empty.
+   * Never true while still resolving (avoids flashing the workspace chooser on refresh).
+   */
+  needsWorkspaceOnboarding: boolean;
+  /** False until listMyMemberships completes for this signed-in session. */
+  workspaceResolved: boolean;
   getAccessToken: () => Promise<string | null>;
 }
 
@@ -37,7 +56,8 @@ export function getCloudAuthContext(): CloudAuthContext | null {
   return activeContext;
 }
 
-export function requireCloudAuthContext(): CloudAuthContext {
+/** Signed-in cloud session (may still need workspace onboarding). */
+export function requireCloudAuthSession(): CloudAuthContext {
   const context = activeContext;
   if (!context) {
     throw new Error('Cloud library is not ready. Sign in and wait for sync to initialize.');
@@ -45,8 +65,25 @@ export function requireCloudAuthContext(): CloudAuthContext {
   return context;
 }
 
+export function requireCloudAuthContext(): CloudAuthContext {
+  const context = requireCloudAuthSession();
+  if (
+    !context.workspaceResolved ||
+    context.needsWorkspaceOnboarding ||
+    !context.organizationId
+  ) {
+    throw new Error('Choose or join a workspace before using the cloud library.');
+  }
+  return context;
+}
+
 export function isCloudLibraryActive(): boolean {
-  return activeContext !== null;
+  return (
+    activeContext !== null &&
+    activeContext.workspaceResolved &&
+    !activeContext.needsWorkspaceOnboarding &&
+    Boolean(activeContext.organizationId)
+  );
 }
 
 export function subscribeCloudAuthContext(listener: () => void): () => void {
@@ -55,11 +92,24 @@ export function subscribeCloudAuthContext(listener: () => void): () => void {
 }
 
 export function getCloudLibraryActiveSnapshot(): boolean {
-  return activeContext !== null;
+  return isCloudLibraryActive();
 }
 
 export function getCloudInitErrorSnapshot(): string | null {
   return cloudInitError;
+}
+
+export function hasCapability(capability: keyof MemberCapabilities): boolean {
+  const context = activeContext;
+  if (!context || !context.workspaceResolved || context.needsWorkspaceOnboarding) return false;
+  if (!isCloudLibraryActive()) return false;
+  return Boolean(context.capabilities?.[capability]);
+}
+
+export function requireCapability(capability: keyof MemberCapabilities): void {
+  if (!hasCapability(capability)) {
+    throw new Error(`You do not have permission to ${capability} in this workspace.`);
+  }
 }
 
 /** Prefer Clerk full name; fall back to first+last, then email. */
@@ -80,4 +130,30 @@ export function resolveClerkDisplayName(user: {
   if (composed) return composed;
 
   return user?.primaryEmailAddress?.emailAddress?.trim() || null;
+}
+
+export function buildCloudAuthContext(input: {
+  clerkUserId: string;
+  userEmail: string;
+  userDisplayName: string;
+  memberships: OrgMembership[];
+  activeMembership: OrgMembership | null;
+  workspaceResolved: boolean;
+  getAccessToken: () => Promise<string | null>;
+}): CloudAuthContext {
+  const active = input.activeMembership;
+  return {
+    clerkUserId: input.clerkUserId,
+    userEmail: input.userEmail,
+    userDisplayName: input.userDisplayName,
+    organizationId: active?.organizationId ?? '',
+    organizationName: active?.organizationName ?? '',
+    workspaceType: active?.workspaceType ?? null,
+    role: active?.role ?? null,
+    capabilities: active?.capabilities ?? (active ? ALL_CAPABILITIES_TRUE : null),
+    memberships: input.memberships,
+    workspaceResolved: input.workspaceResolved,
+    needsWorkspaceOnboarding: input.workspaceResolved && input.memberships.length === 0,
+    getAccessToken: input.getAccessToken,
+  };
 }

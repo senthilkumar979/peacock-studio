@@ -49,13 +49,15 @@ export const CloudAuthActions = ({
     );
   }
 
-  if (sessionMode === 'loading' || sessionMode === 'connecting') {
+  if (sessionMode === 'loading' || sessionMode === 'connecting' || sessionMode === 'onboarding') {
     if (variant !== 'callout') return null;
     return (
       <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600">
-        {sessionMode === 'connecting'
-          ? 'Finishing cloud library setup…'
-          : 'Checking sign-in status…'}
+        {sessionMode === 'onboarding'
+          ? 'Finish setting up your workspace to use the cloud library…'
+          : sessionMode === 'connecting'
+            ? 'Finishing cloud library setup…'
+            : 'Checking sign-in status…'}
       </div>
     );
   }

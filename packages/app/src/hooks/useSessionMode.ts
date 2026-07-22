@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { hasCapability } from '@/cloud/authContext';
 import { isCloudSyncEnabled } from '@/cloud/config';
 import {
   getSessionModeSnapshot,
@@ -21,10 +22,12 @@ export function useIsGuestSession(): boolean {
 export function useIsAuthenticatedAppUser(): boolean {
   const sessionMode = useSessionMode();
   if (!isCloudSyncEnabled()) return true;
-  return sessionMode === 'cloud' || sessionMode === 'connecting';
+  return sessionMode === 'cloud' || sessionMode === 'connecting' || sessionMode === 'onboarding';
 }
 
 export function useCanDeleteLibraryItems(): boolean {
   const mode = useSessionMode();
-  return mode === 'local' || mode === 'cloud';
+  if (mode === 'local') return true;
+  if (mode !== 'cloud') return false;
+  return hasCapability('delete');
 }

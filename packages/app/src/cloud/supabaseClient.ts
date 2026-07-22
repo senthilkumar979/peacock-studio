@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getSupabaseAnonKey, getSupabaseUrl } from '@/cloud/config';
-import { requireCloudAuthContext } from '@/cloud/authContext';
+import { requireCloudAuthSession } from '@/cloud/authContext';
 
 let cachedClient: SupabaseClient | null = null;
 let cachedTokenUserId: string | null = null;
@@ -14,7 +14,7 @@ export function createAuthenticatedSupabaseClient(
 }
 
 export function getAuthenticatedSupabaseClient(): SupabaseClient {
-  const { clerkUserId, getAccessToken } = requireCloudAuthContext();
+  const { clerkUserId, getAccessToken } = requireCloudAuthSession();
 
   if (!cachedClient || cachedTokenUserId !== clerkUserId) {
     cachedClient = createAuthenticatedSupabaseClient(getAccessToken);

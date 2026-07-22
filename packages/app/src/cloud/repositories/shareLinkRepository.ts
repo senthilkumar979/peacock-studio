@@ -1,4 +1,4 @@
-import { requireCloudAuthContext } from '@/cloud/authContext';
+import { requireCapability, requireCloudAuthContext } from '@/cloud/authContext';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
 import { recordOrgEvent } from '@/cloud/repositories/analyticsRepository';
 import type {
@@ -28,6 +28,7 @@ function createShareToken(): string {
 }
 
 export async function createOrUpdateShareLink(input: CreateShareLinkInput): Promise<ShareLinkRecord> {
+  requireCapability('share');
   const { organizationId, userEmail } = requireCloudAuthContext();
   const supabase = getAuthenticatedSupabaseClient();
 

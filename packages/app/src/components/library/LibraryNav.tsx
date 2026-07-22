@@ -1,14 +1,16 @@
-import type { LucideIcon } from 'lucide-react';
-import { NavLink, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { LifeBuoy } from 'lucide-react';
-import { SignInButton, SignUpButton, UserButton } from '@clerk/react';
-import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
-import { isCloudSyncEnabled } from '@/cloud/config';
-import { LIBRARY_NAV_ITEMS } from '@/constants/libraryNav';
-import { DASHBOARD_PATH } from '@/constants/routes';
-import { useSessionMode } from '@/hooks/useSessionMode';
-import { openSupportChat } from '@/utils/support';
+import type { LucideIcon } from "lucide-react";
+import { NavLink, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { LifeBuoy, Settings2 } from "lucide-react";
+import { SignInButton, SignUpButton, UserButton } from "@clerk/react";
+import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from "@/constants/branding";
+import { isCloudSyncEnabled } from "@/cloud/config";
+import { LIBRARY_NAV_ITEMS } from "@/constants/libraryNav";
+import { DASHBOARD_PATH, ORG_ADMIN_PATH } from "@/constants/routes";
+import { OrgSwitcher } from "@/components/library/OrgSwitcher";
+import { useActiveOrganization } from "@/hooks/useOrganization";
+import { useSessionMode } from "@/hooks/useSessionMode";
+import { openSupportChat } from "@/utils/support";
 
 interface LibraryNavLinkProps {
   to: string;
@@ -17,22 +19,27 @@ interface LibraryNavLinkProps {
   end?: boolean;
 }
 
-const LibraryNavLink = ({ to, label, icon: Icon, end }: LibraryNavLinkProps) => (
+const LibraryNavLink = ({
+  to,
+  label,
+  icon: Icon,
+  end,
+}: LibraryNavLinkProps) => (
   <NavLink
     to={to}
     end={end}
     className={({ isActive }) =>
       `relative inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
         isActive
-          ? 'bg-white text-peacock-700 shadow-sm ring-1 ring-slate-200/80'
-          : 'text-slate-600 hover:bg-white/60 hover:text-slate-900'
+          ? "bg-white text-peacock-700 shadow-sm ring-1 ring-slate-200/80"
+          : "text-slate-600 hover:bg-white/60 hover:text-slate-900"
       }`
     }
   >
     {({ isActive }) => (
       <>
         <Icon
-          className={`h-4 w-4 shrink-0 ${isActive ? 'text-peacock-600' : 'text-slate-400'}`}
+          className={`h-4 w-4 shrink-0 ${isActive ? "text-peacock-600" : "text-slate-400"}`}
           aria-hidden
         />
         <span className="whitespace-nowrap">{label}</span>
@@ -49,6 +56,7 @@ const LibraryNavLink = ({ to, label, icon: Icon, end }: LibraryNavLinkProps) => 
 
 export const LibraryNav = () => {
   const sessionMode = useSessionMode();
+  const { isAdmin } = useActiveOrganization();
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-white/80">
@@ -92,28 +100,46 @@ export const LibraryNav = () => {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2 border-l border-slate-200/80 pl-2 sm:pl-3">
-          <button
+          {sessionMode === "cloud" ? <OrgSwitcher /> : null}
+
+          {sessionMode === "cloud" && isAdmin ? (
+            <Link
+              to={ORG_ADMIN_PATH}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
+            >
+              <Settings2
+                className="h-4 w-4 shrink-0 text-slate-500"
+                aria-hidden
+              />
+              <span className="hidden lg:inline">Admin</span>
+            </Link>
+          ) : null}
+
+          {/* <button
             type="button"
             onClick={openSupportChat}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
           >
             <LifeBuoy className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
             <span className="hidden lg:inline">Support</span>
-          </button>
+          </button> */}
 
           {isCloudSyncEnabled() ? (
             <div className="flex shrink-0 items-center gap-2">
-              {sessionMode === 'cloud' ? (
+              {sessionMode === "cloud" ? (
                 <UserButton
                   appearance={{
                     elements: {
-                      avatarBox: 'h-9 w-9 ring-2 ring-peacock-100',
+                      avatarBox: "h-9 w-9 ring-2 ring-peacock-100",
                     },
                   }}
                 />
-              ) : sessionMode === 'guest' ? (
+              ) : sessionMode === "guest" ? (
                 <>
-                  <SignInButton mode="redirect" forceRedirectUrl={DASHBOARD_PATH}>
+                  <SignInButton
+                    mode="redirect"
+                    forceRedirectUrl={DASHBOARD_PATH}
+                  >
                     <button
                       type="button"
                       className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
@@ -121,7 +147,10 @@ export const LibraryNav = () => {
                       Sign in
                     </button>
                   </SignInButton>
-                  <SignUpButton mode="redirect" forceRedirectUrl={DASHBOARD_PATH}>
+                  <SignUpButton
+                    mode="redirect"
+                    forceRedirectUrl={DASHBOARD_PATH}
+                  >
                     <button
                       type="button"
                       className="rounded-xl bg-peacock-600 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-peacock-600/20 transition hover:bg-peacock-700"

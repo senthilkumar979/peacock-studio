@@ -21,6 +21,7 @@ import {
   getEmbedCodePlaceholder,
   type ShareLinkAccessMode,
 } from '@/utils/shareLink';
+import { useCanEmbed, useCanExport, useCanShare } from '@/hooks/useOrganization';
 
 interface ShareDocumentModalProps {
   isOpen: boolean;
@@ -43,6 +44,9 @@ export const ShareDocumentModal = ({
   shareSettings: shareSettingsProp,
   onShareSettingsSave,
 }: ShareDocumentModalProps) => {
+  const canShare = useCanShare();
+  const canExport = useCanExport();
+  const canEmbed = useCanEmbed();
   const [method, setMethod] = useState<ShareMethod>('link');
   const [accessMode, setAccessMode] = useState<ShareLinkAccessMode>('readonly');
   const [isLoading, setIsLoading] = useState(false);
@@ -76,11 +80,20 @@ export const ShareDocumentModal = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    setMethod('link');
+    const preferred: ShareMethod = canShare ? 'link' : canExport ? 'pdf' : 'embed';
+    setMethod(preferred);
     setAccessMode('readonly');
     setBranchSettings(defaultBranchSettings);
     setPdfPathSelections(defaultPdfPathSelections);
-  }, [isOpen, defaultBranchSettings, defaultPdfPathSelections]);
+  }, [isOpen, defaultBranchSettings, defaultPdfPathSelections, canShare, canExport]);
+
+  useEffect(() => {
+    if (method === 'link' && !canShare) setMethod(canExport ? 'pdf' : 'embed');
+    if (method === 'pdf' && !canExport) setMethod(canShare ? 'link' : 'embed');
+    if (method === 'embed' && !canEmbed && (canShare || canExport)) {
+      setMethod(canShare ? 'link' : 'pdf');
+    }
+  }, [method, canShare, canExport, canEmbed]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -114,7 +127,7 @@ export const ShareDocumentModal = ({
   }, [isOpen, documentId, flowProp, stepsProp]);
 
   useEffect(() => {
-    if (!isOpen || method !== 'link') return;
+    if (!isOpen || method !== 'link' || !canShare) return;
 
     let cancelled = false;
     setIsShareUrlLoading(true);
@@ -139,7 +152,7 @@ export const ShareDocumentModal = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, method, documentId, accessMode, branchSettings, hasBranches]);
+  }, [isOpen, method, documentId, accessMode, branchSettings, hasBranches, canShare]);
 
   const handleClose = () => {
     if (isExporting) return;
@@ -222,7 +235,16 @@ export const ShareDocumentModal = ({
             </div>
           ) : (
             <>
-              <ShareMethodPicker value={method} onChange={setMethod} disabled={isExporting} />
+              <ShareMethodPicker
+                value={method}
+                onChange={setMethod}
+                disabled={isExporting}
+                disabledMethods={{
+                  link: !canShare,
+                  pdf: !canExport,
+                  embed: !canEmbed,
+                }}
+              />
               {method === 'embed' ? (
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">

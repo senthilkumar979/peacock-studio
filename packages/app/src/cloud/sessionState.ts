@@ -1,7 +1,11 @@
-import { isCloudLibraryActive, subscribeCloudAuthContext } from '@/cloud/authContext';
+import {
+  getCloudAuthContext,
+  isCloudLibraryActive,
+  subscribeCloudAuthContext,
+} from '@/cloud/authContext';
 import { isCloudSyncEnabled } from '@/cloud/config';
 
-export type SessionMode = 'local' | 'loading' | 'guest' | 'connecting' | 'cloud';
+export type SessionMode = 'local' | 'loading' | 'guest' | 'connecting' | 'onboarding' | 'cloud';
 
 let authLoaded = false;
 let isSignedIn = false;
@@ -34,6 +38,9 @@ export function getSessionModeSnapshot(): SessionMode {
   if (!isCloudSyncEnabled()) return 'local';
   if (!authLoaded) return 'loading';
   if (!isSignedIn) return 'guest';
+  const context = getCloudAuthContext();
+  if (!context || !context.workspaceResolved) return 'connecting';
+  if (context.needsWorkspaceOnboarding) return 'onboarding';
   if (!isCloudLibraryActive()) return 'connecting';
   return 'cloud';
 }
