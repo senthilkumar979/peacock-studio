@@ -1,4 +1,5 @@
 import type { FlowOutlineItem, FlowPayload } from '@peacock/shared';
+import { isoToMs, msToIso, stampAuditForCloudWrite } from '@/cloud/audit';
 import { requireCloudAuthContext } from '@/cloud/authContext';
 import {
   deleteDocumentScreenshots,
@@ -12,8 +13,11 @@ import { countPlayableSteps } from '@/utils/flowDocumentSnapshot';
 interface FlowDocumentRow {
   id: string;
   organization_id: string;
-  saved_at: number;
-  updated_at: number;
+  saved_at: string | number;
+  updated_at: string | number;
+  created_at?: string | number;
+  created_by?: string | null;
+  updated_by?: string | null;
   flow: FlowPayload;
   steps: FlowOutlineItem[];
   share_settings: FlowShareSettings | null;
@@ -25,7 +29,7 @@ export async function cloudListFlowSummaries(): Promise<SavedFlowSummary[]> {
 
   const { data, error } = await supabase
     .from('flow_documents')
-    .select('id, saved_at, updated_at, flow, steps')
+    .select('id, saved_at, updated_at, created_by, updated_by, flow, steps')
     .eq('organization_id', organizationId)
     .order('updated_at', { ascending: false });
 
@@ -40,7 +44,7 @@ export async function cloudGetFlowDocument(id: string): Promise<SavedFlowDocumen
 
   const { data, error } = await supabase
     .from('flow_documents')
-    .select('id, saved_at, updated_at, flow, steps, share_settings')
+    .select('id, saved_at, updated_at, created_by, updated_by, flow, steps, share_settings')
     .eq('organization_id', organizationId)
     .eq('id', id)
     .maybeSingle();
@@ -49,28 +53,46 @@ export async function cloudGetFlowDocument(id: string): Promise<SavedFlowDocumen
   if (!data) return undefined;
 
   const screenshotUrls = await resolveScreenshotUrls(id);
+  const row = data as FlowDocumentRow;
 
   return {
-    id: data.id,
-    savedAt: Number(data.saved_at),
-    updatedAt: Number(data.updated_at),
-    flow: data.flow as FlowPayload,
-    steps: data.steps as FlowOutlineItem[],
-    shareSettings: (data.share_settings as FlowShareSettings | null) ?? undefined,
+    id: row.id,
+    savedAt: isoToMs(row.saved_at),
+    updatedAt: isoToMs(row.updated_at),
+    createdBy: row.created_by ?? null,
+    updatedBy: row.updated_by ?? null,
+    flow: row.flow as FlowPayload,
+    steps: row.steps as FlowOutlineItem[],
+    shareSettings: row.share_settings ?? undefined,
     screenshotUrls,
   };
 }
 
-export async function cloudSaveFlowDocument(doc: SavedFlowDocument): Promise<void> {
+export async function cloudSaveFlowDocument(
+  doc: SavedFlowDocument,
+  options: { preserveUpdatedAt?: boolean } = {},
+): Promise<void> {
   const { organizationId } = requireCloudAuthContext();
   const supabase = getAuthenticatedSupabaseClient();
+  const audit = stampAuditForCloudWrite(
+    {
+      createdAt: doc.savedAt,
+      updatedAt: doc.updatedAt,
+      createdBy: doc.createdBy,
+      updatedBy: doc.updatedBy,
+    },
+    options,
+  );
 
   const { error } = await supabase.from('flow_documents').upsert(
     {
       id: doc.id,
       organization_id: organizationId,
-      saved_at: doc.savedAt,
-      updated_at: doc.updatedAt,
+      saved_at: msToIso(audit.createdAt),
+      created_at: msToIso(audit.createdAt),
+      updated_at: msToIso(audit.updatedAt),
+      created_by: audit.createdBy,
+      updated_by: audit.updatedBy,
       flow: doc.flow,
       steps: doc.steps,
       share_settings: doc.shareSettings ?? null,
@@ -108,7 +130,9 @@ function toFlowSummary(row: FlowDocumentRow): SavedFlowSummary {
     description: flow.flow.description.trim(),
     version: flow.flow.version?.trim() ?? '',
     generatedAt: flow.metadata.createdAt,
-    updatedAt: Number(row.updated_at),
+    updatedAt: isoToMs(row.updated_at),
+    createdBy: row.created_by ?? null,
+    updatedBy: row.updated_by ?? null,
     stepCount: countPlayableSteps(row.steps),
   };
 }

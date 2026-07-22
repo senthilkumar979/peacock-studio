@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import type { DashboardViewMode, SavedFlowSummary } from '@/types/savedFlow';
+import { useProfileDisplayNames } from '@/hooks/useProfileDisplayNames';
 import { FlowLibraryCards } from './FlowLibraryCards';
 import { FlowLibraryList } from './FlowLibraryList';
 import { FlowLibraryTable } from './FlowLibraryTable';
@@ -14,13 +16,37 @@ export const FlowLibrarySection = ({
   summaries,
   onRequestDelete,
 }: FlowLibrarySectionProps) => {
+  const emails = useMemo(
+    () => summaries.flatMap((summary) => [summary.updatedBy, summary.createdBy]),
+    [summaries],
+  );
+  const displayNamesByEmail = useProfileDisplayNames(emails);
+
   if (viewMode === 'card') {
-    return <FlowLibraryCards summaries={summaries} onRequestDelete={onRequestDelete} />;
+    return (
+      <FlowLibraryCards
+        summaries={summaries}
+        displayNamesByEmail={displayNamesByEmail}
+        onRequestDelete={onRequestDelete}
+      />
+    );
   }
 
   if (viewMode === 'list') {
-    return <FlowLibraryList summaries={summaries} onRequestDelete={onRequestDelete} />;
+    return (
+      <FlowLibraryList
+        summaries={summaries}
+        displayNamesByEmail={displayNamesByEmail}
+        onRequestDelete={onRequestDelete}
+      />
+    );
   }
 
-  return <FlowLibraryTable summaries={summaries} onRequestDelete={onRequestDelete} />;
+  return (
+    <FlowLibraryTable
+      summaries={summaries}
+      displayNamesByEmail={displayNamesByEmail}
+      onRequestDelete={onRequestDelete}
+    />
+  );
 };

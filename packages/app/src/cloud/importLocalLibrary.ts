@@ -54,17 +54,17 @@ export async function importLocalLibraryToCloud(): Promise<LocalLibraryImportCou
   ]);
 
   for (const persona of localPersonas) {
-    await savePersona(persona);
+    await savePersona(persona, { preserveUpdatedAt: true });
   }
 
   for (const summary of localDocs) {
     const doc = await localGetFlowDocument(summary.id);
-    if (doc) await saveFlowDocument(doc);
+    if (doc) await saveFlowDocument(doc, { preserveUpdatedAt: true });
   }
 
   for (const summary of localTourSummaries) {
     const tour = await localGetProductTour(summary.id);
-    if (tour) await saveProductTour(tour);
+    if (tour) await saveProductTour(tour, { preserveUpdatedAt: true });
   }
 
   const counts = {

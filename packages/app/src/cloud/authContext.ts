@@ -1,5 +1,9 @@
 export interface CloudAuthContext {
   clerkUserId: string;
+  /** Primary email from Clerk — stable audit key for created_by / updated_by. */
+  userEmail: string;
+  /** Display name from Clerk — shown in UI as Last updated by. */
+  userDisplayName: string;
   organizationId: string;
   getAccessToken: () => Promise<string | null>;
 }
@@ -56,4 +60,24 @@ export function getCloudLibraryActiveSnapshot(): boolean {
 
 export function getCloudInitErrorSnapshot(): string | null {
   return cloudInitError;
+}
+
+/** Prefer Clerk full name; fall back to first+last, then email. */
+export function resolveClerkDisplayName(user: {
+  fullName?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  primaryEmailAddress?: { emailAddress?: string | null } | null;
+} | null | undefined): string | null {
+  const fullName = user?.fullName?.trim();
+  if (fullName) return fullName;
+
+  const composed = [user?.firstName, user?.lastName]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+  if (composed) return composed;
+
+  return user?.primaryEmailAddress?.emailAddress?.trim() || null;
 }

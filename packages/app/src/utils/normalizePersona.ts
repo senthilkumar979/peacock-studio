@@ -17,5 +17,7 @@ export function normalizePersona(raw: Persona & LegacyPersonaRecord): Persona {
     company: raw.company,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
+    createdBy: raw.createdBy ?? null,
+    updatedBy: raw.updatedBy ?? null,
   };
 }

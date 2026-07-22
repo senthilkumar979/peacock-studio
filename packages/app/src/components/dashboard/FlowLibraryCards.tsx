@@ -10,16 +10,22 @@ import {
 import type { SavedFlowSummary } from '@/types/savedFlow'
 import { useLibraryNavigationState } from '@/hooks/useLibraryBackState'
 import { formatFlowDate } from '@/utils/formatFlowDate'
+import {
+  formatUpdatedByLine,
+  resolveDisplayNameFromEmails,
+} from '@/utils/formatUpdatedByLine'
 import { FlowDocumentActions } from './FlowDocumentActions'
 import { FlowVersionBadge } from './FlowVersionBadge'
 
 interface FlowLibraryCardsProps {
   summaries: SavedFlowSummary[]
+  displayNamesByEmail?: Record<string, string>
   onRequestDelete: (summary: SavedFlowSummary) => void
 }
 
 export const FlowLibraryCards = ({
   summaries,
+  displayNamesByEmail = {},
   onRequestDelete,
 }: FlowLibraryCardsProps) => (
   <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -28,6 +34,7 @@ export const FlowLibraryCards = ({
         key={summary.id}
         summary={summary}
         index={index}
+        displayNamesByEmail={displayNamesByEmail}
         onRequestDelete={() => onRequestDelete(summary)}
       />
     ))}
@@ -37,15 +44,22 @@ export const FlowLibraryCards = ({
 interface FlowLibraryCardProps {
   summary: SavedFlowSummary
   index: number
+  displayNamesByEmail: Record<string, string>
   onRequestDelete: () => void
 }
 
 const FlowLibraryCard = ({
   summary,
   index,
+  displayNamesByEmail,
   onRequestDelete,
 }: FlowLibraryCardProps) => {
   const wasUpdated = summary.updatedAt > summary.generatedAt + 60_000
+  const auditName = resolveDisplayNameFromEmails(
+    summary.updatedBy,
+    summary.createdBy,
+    displayNamesByEmail,
+  )
   const navigationState = useLibraryNavigationState()
 
   return (
@@ -104,13 +118,19 @@ const FlowLibraryCard = ({
             />
             Generated {formatFlowDate(summary.generatedAt)}
           </span>
-          {wasUpdated ? (
-            <span className="inline-flex items-center gap-1.5">
+          {(wasUpdated || auditName) ? (
+            <span className="inline-flex min-w-0 items-center gap-1.5 truncate">
               <RefreshCw
                 className="h-3.5 w-3.5 shrink-0 text-slate-400"
                 aria-hidden
               />
-              Updated {formatFlowDate(summary.updatedAt)}
+              {formatUpdatedByLine(
+                summary.updatedAt,
+                summary.updatedBy,
+                formatFlowDate,
+                summary.createdBy,
+                displayNamesByEmail,
+              )}
             </span>
           ) : null}
         </div>

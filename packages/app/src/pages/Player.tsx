@@ -9,6 +9,7 @@ import { GuestDocumentGate } from '@/components/auth/GuestDocumentGate';
 import { EmptyFlowState } from '@/components/EmptyFlowState';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import type { PageHintControl } from '@/components/onboarding/HintAnchor';
+import { recordOrgEvent } from '@/cloud/repositories/analyticsRepository';
 import { useFirstTimeHintTour } from '@/hooks/useFirstTimeHint';
 import { useSavedDocument } from '@/hooks/useSavedDocument';
 import { useFlowDocDefaultView } from '@/hooks/useFlowDocDefaultView';
@@ -36,10 +37,26 @@ export const Player = () => {
     return () => setViewerFilter(null);
   }, [isLoaded, searchParams, rawSteps, shareSettings, setViewerFilter]);
 
+  useEffect(() => {
+    if (!isLoaded || !documentId) return;
+    void recordOrgEvent('document_view', {
+      resourceType: 'document',
+      resourceId: documentId,
+      metadata: { view: resolvedView },
+    });
+  }, [documentId, isLoaded]);
+
   const handleModeChange = (mode: SharedDocumentViewMode) => {
     const next = new URLSearchParams(searchParams);
     next.set('view', mode);
     setSearchParams(next, { replace: true });
+    if (documentId) {
+      void recordOrgEvent('document_mode_change', {
+        resourceType: 'document',
+        resourceId: documentId,
+        metadata: { view: mode },
+      });
+    }
   };
 
   const handleHubNavigation = () => {

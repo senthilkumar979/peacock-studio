@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { SavedFlowSummary } from '@/types/savedFlow';
 import { useLibraryNavigationState } from '@/hooks/useLibraryBackState';
 import { formatFlowDate } from '@/utils/formatFlowDate';
+import { formatUpdatedByLine } from '@/utils/formatUpdatedByLine';
 import { getDocumentPath } from '@/utils/shareLink';
 import { FlowDocumentActions } from './FlowDocumentActions';
 import { FlowStepCountBadge } from './FlowStepCountBadge';
@@ -10,10 +11,15 @@ import { FlowVersionBadge } from './FlowVersionBadge';
 
 interface FlowLibraryTableProps {
   summaries: SavedFlowSummary[];
+  displayNamesByEmail?: Record<string, string>;
   onRequestDelete: (summary: SavedFlowSummary) => void;
 }
 
-export const FlowLibraryTable = ({ summaries, onRequestDelete }: FlowLibraryTableProps) => {
+export const FlowLibraryTable = ({
+  summaries,
+  displayNamesByEmail = {},
+  onRequestDelete,
+}: FlowLibraryTableProps) => {
   const navigationState = useLibraryNavigationState();
 
   return (
@@ -38,6 +44,9 @@ export const FlowLibraryTable = ({ summaries, onRequestDelete }: FlowLibraryTabl
               <Calendar className="h-3.5 w-3.5 text-slate-400" aria-hidden />
               Generated
             </span>
+          </th>
+          <th className="px-4 py-3 text-left font-semibold text-slate-700">
+            Last updated
           </th>
           <th className="px-4 py-3 text-right font-semibold text-slate-700">
             <span className="inline-flex items-center justify-end gap-1.5">
@@ -72,6 +81,15 @@ export const FlowLibraryTable = ({ summaries, onRequestDelete }: FlowLibraryTabl
             </td>
             <td className="whitespace-nowrap px-4 py-3 text-slate-600">
               {formatFlowDate(summary.generatedAt)}
+            </td>
+            <td className="max-w-[14rem] truncate px-4 py-3 text-slate-600">
+              {formatUpdatedByLine(
+                summary.updatedAt,
+                summary.updatedBy,
+                formatFlowDate,
+                summary.createdBy,
+                displayNamesByEmail,
+              )}
             </td>
             <td className="whitespace-nowrap px-4 py-3">
               <div className="flex justify-end">

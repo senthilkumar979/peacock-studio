@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAuth, useSession, useUser } from '@clerk/react';
-import { setCloudAuthContext, setCloudInitError } from '@/cloud/authContext';
+import { setCloudAuthContext, setCloudInitError, resolveClerkDisplayName } from '@/cloud/authContext';
 import { fetchClerkSupabaseAccessToken } from '@/cloud/clerkSupabaseToken';
 import {
   importLocalLibraryToCloud,
@@ -9,6 +9,7 @@ import {
 import { getFreeAccountDocLimit } from '@/cloud/planLimits';
 import { setCloudSyncState, resetCloudSyncState } from '@/cloud/cloudSyncState';
 import { isCloudSyncEnabled } from '@/cloud/config';
+import { upsertUserProfile } from '@/cloud/repositories/profileRepository';
 import { ensureOrganization } from '@/cloud/ensureOrganization';
 import { resetSupabaseClientCache } from '@/cloud/supabaseClient';
 import { setSessionAuthState } from '@/cloud/sessionState';
@@ -59,6 +60,12 @@ const CloudSyncProviderInner = ({ children }: CloudSyncProviderProps) => {
       try {
         setCloudInitError(null);
 
+        const userEmail = user?.primaryEmailAddress?.emailAddress?.trim();
+        if (!userEmail) {
+          throw new Error('A verified primary email is required for cloud sync.');
+        }
+        const userDisplayName = resolveClerkDisplayName(user) ?? userEmail;
+
         const getSessionToken = () => session.getToken();
         await fetchClerkSupabaseAccessToken(getSessionToken);
         if (cancelled) return;
@@ -66,15 +73,24 @@ const CloudSyncProviderInner = ({ children }: CloudSyncProviderProps) => {
         const organization = await ensureOrganization(
           userId,
           getSessionToken,
-          user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? null,
+          userDisplayName,
+          userEmail,
         );
 
         if (cancelled) return;
 
         setCloudAuthContext({
           clerkUserId: userId,
+          userEmail,
+          userDisplayName,
           organizationId: organization.id,
           getAccessToken: () => fetchClerkSupabaseAccessToken(getSessionToken),
+        });
+
+        await upsertUserProfile({
+          email: userEmail,
+          clerkUserId: userId,
+          displayName: userDisplayName,
         });
 
         const localCounts = await countLocalLibraryItems();
@@ -128,7 +144,10 @@ const CloudSyncProviderInner = ({ children }: CloudSyncProviderProps) => {
     isLoaded,
     isSignedIn,
     session,
+    user,
     user?.fullName,
+    user?.firstName,
+    user?.lastName,
     user?.primaryEmailAddress?.emailAddress,
     userId,
   ]);

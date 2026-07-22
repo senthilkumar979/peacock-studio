@@ -1,3 +1,4 @@
+import { isoToMs } from '@/cloud/audit';
 import type { FlowOutlineItem, FlowPayload } from '@peacock/shared';
 import { SCREENSHOTS_BUCKET, SIGNED_URL_TTL_SECONDS } from '@/cloud/config';
 import { getPublicSupabaseClient } from '@/cloud/publicSupabaseClient';
@@ -11,8 +12,10 @@ import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
 
 interface SharedFlowDocumentPayload {
   id: string;
-  savedAt: number;
-  updatedAt: number;
+  savedAt: string | number;
+  updatedAt: string | number;
+  createdBy?: string | null;
+  updatedBy?: string | null;
   flow: FlowPayload;
   steps: FlowOutlineItem[];
   shareSettings?: FlowShareSettings;
@@ -51,8 +54,10 @@ export async function fetchPublicFlowDocument(
 
   return {
     id: payload.id,
-    savedAt: Number(payload.savedAt),
-    updatedAt: Number(payload.updatedAt),
+    savedAt: isoToMs(payload.savedAt),
+    updatedAt: isoToMs(payload.updatedAt),
+    createdBy: payload.createdBy ?? null,
+    updatedBy: payload.updatedBy ?? null,
     flow: payload.flow,
     steps: payload.steps,
     shareSettings: payload.shareSettings,
@@ -78,8 +83,10 @@ export async function fetchPublicProductTour(token: string): Promise<ProductTour
     features: row.features as TourFeature[],
     completionCta: (row.completionCta as ProductTourCompletionCta | null) ?? undefined,
     migratedFromRoute: Boolean(row.migratedFromRoute),
-    createdAt: Number(row.createdAt),
-    updatedAt: Number(row.updatedAt),
+    createdAt: isoToMs(row.createdAt as string | number),
+    updatedAt: isoToMs(row.updatedAt as string | number),
+    createdBy: row.createdBy ? String(row.createdBy) : null,
+    updatedBy: row.updatedBy ? String(row.updatedBy) : null,
   });
 }
 
@@ -107,8 +114,10 @@ export async function fetchPublicPersona(
     gender: row.gender as Persona['gender'],
     avatarId: String(row.avatarId),
     company: row.company ? String(row.company) : undefined,
-    createdAt: Number(row.createdAt),
-    updatedAt: Number(row.updatedAt),
+    createdAt: isoToMs(row.createdAt as string | number),
+    updatedAt: isoToMs(row.updatedAt as string | number),
+    createdBy: row.createdBy ? String(row.createdBy) : null,
+    updatedBy: row.updatedBy ? String(row.updatedBy) : null,
   });
 }
 

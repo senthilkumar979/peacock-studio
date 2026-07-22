@@ -2,9 +2,11 @@
 export type OrgAnalyticsEventType =
   | 'pdf_export'
   | 'document_view'
+  | 'document_mode_change'
   | 'tour_view'
   | 'tour_complete'
-  | 'share_link_created';
+  | 'share_link_created'
+  | 'artifact_export';
 
 /** Public share event names recorded via `record_share_event`. */
 export type ShareAnalyticsEventType = 'share_view' | 'embed_view';

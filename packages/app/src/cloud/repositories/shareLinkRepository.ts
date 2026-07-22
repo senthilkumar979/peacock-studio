@@ -18,6 +18,7 @@ interface ShareLinkRow {
   expires_at: string | null;
   revoked_at: string | null;
   created_by: string;
+  updated_by?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -27,7 +28,7 @@ function createShareToken(): string {
 }
 
 export async function createOrUpdateShareLink(input: CreateShareLinkInput): Promise<ShareLinkRecord> {
-  const { organizationId, clerkUserId } = requireCloudAuthContext();
+  const { organizationId, userEmail } = requireCloudAuthContext();
   const supabase = getAuthenticatedSupabaseClient();
 
   const { data: existing, error: existingError } = await supabase
@@ -51,6 +52,7 @@ export async function createOrUpdateShareLink(input: CreateShareLinkInput): Prom
       .update({
         settings,
         updated_at: now,
+        updated_by: userEmail,
       })
       .eq('id', existing.id)
       .select('*')
@@ -69,7 +71,8 @@ export async function createOrUpdateShareLink(input: CreateShareLinkInput): Prom
       resource_id: input.resourceId,
       access_mode: input.accessMode,
       settings,
-      created_by: clerkUserId,
+      created_by: userEmail,
+      updated_by: userEmail,
       updated_at: now,
     })
     .select('*')

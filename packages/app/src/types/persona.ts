@@ -13,6 +13,8 @@ export interface Persona {
   company?: string;
   createdAt: number;
   updatedAt: number;
+  createdBy?: string | null;
+  updatedBy?: string | null;
 }
 
 export interface PersonaInput {

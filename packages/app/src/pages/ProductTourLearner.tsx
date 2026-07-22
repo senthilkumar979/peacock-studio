@@ -11,6 +11,7 @@ import { EmptyFlowState } from "@/components/EmptyFlowState";
 import { PeacockStudioLoader } from "@/components/PeacockStudioLoader";
 import { AppHeader } from "@/components/AppHeader";
 import { HintAnchor, type PageHintControl } from "@/components/onboarding/HintAnchor";
+import { recordOrgEvent } from "@/cloud/repositories/analyticsRepository";
 import { useFirstTimeHintTour } from "@/hooks/useFirstTimeHint";
 import { useKeyboard } from "@/hooks/useKeyboard";
 import { useProductTourLearner } from "@/hooks/useProductTourLearner";
@@ -93,6 +94,23 @@ export const ProductTourLearner = ({
     void getPersona(tour.personaId).then((next) => setPersona(next ?? null));
     void estimateTourDurationMinutes(tour).then(setEstimatedMinutes);
   }, [tour]);
+
+  useEffect(() => {
+    if (!tour || isPublicShare) return;
+    void recordOrgEvent('tour_view', {
+      resourceType: 'tour',
+      resourceId: tour.id,
+    });
+  }, [tour?.id, isPublicShare]);
+
+  useEffect(() => {
+    if (!tour || isPublicShare) return;
+    if (playback.currentSegment?.type !== 'complete') return;
+    void recordOrgEvent('tour_complete', {
+      resourceType: 'tour',
+      resourceId: tour.id,
+    });
+  }, [tour?.id, isPublicShare, playback.currentSegment?.type]);
 
   const handleNext = useCallback(() => {
     if (!linkedPlayback) {

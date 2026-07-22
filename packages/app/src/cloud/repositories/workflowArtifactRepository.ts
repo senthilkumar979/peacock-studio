@@ -1,4 +1,5 @@
 import { requireCloudAuthContext } from '@/cloud/authContext';
+import { recordOrgEvent } from '@/cloud/repositories/analyticsRepository';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
 import type {
   WorkflowArtifact,
@@ -93,7 +94,7 @@ export async function cloudSaveWorkflowArtifact(input: {
   flowTitle: string;
   content: string;
 }): Promise<WorkflowArtifact> {
-  const { organizationId } = requireCloudAuthContext();
+  const { organizationId, userEmail } = requireCloudAuthContext();
   const supabase = getAuthenticatedSupabaseClient();
   const now = new Date().toISOString();
 
@@ -107,7 +108,10 @@ export async function cloudSaveWorkflowArtifact(input: {
         flow_title: input.flowTitle,
         content: input.content,
         generated_at: now,
+        created_at: now,
         updated_at: now,
+        created_by: userEmail,
+        updated_by: userEmail,
       },
       { onConflict: 'organization_id,document_id,artifact_type' },
     )
@@ -115,5 +119,12 @@ export async function cloudSaveWorkflowArtifact(input: {
     .single();
 
   if (error) throw error;
+
+  void recordOrgEvent('artifact_export', {
+    resourceType: 'document',
+    resourceId: input.documentId,
+    metadata: { artifactType: input.artifactType },
+  });
+
   return toArtifact(data as WorkflowArtifactRow);
 }

@@ -1,3 +1,4 @@
+import { isoToMs, msToIso, stampAuditForCloudWrite } from '@/cloud/audit';
 import { requireCloudAuthContext } from '@/cloud/authContext';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
 import { DEFAULT_PERSONA_ID } from '@/constants/personaAvatars';
@@ -15,8 +16,10 @@ interface PersonaRow {
   gender: Persona['gender'];
   avatar_id: string;
   company: string | null;
-  created_at: number;
-  updated_at: number;
+  created_at: string | number;
+  updated_at: string | number;
+  created_by?: string | null;
+  updated_by?: string | null;
 }
 
 export async function cloudListPersonas(): Promise<Persona[]> {
@@ -59,9 +62,21 @@ export async function cloudGetPersona(id: string): Promise<Persona | undefined> 
   return mapPersonaRow(data as PersonaRow);
 }
 
-export async function cloudSavePersona(persona: Persona): Promise<void> {
+export async function cloudSavePersona(
+  persona: Persona,
+  options: { preserveUpdatedAt?: boolean } = {},
+): Promise<void> {
   const { organizationId } = requireCloudAuthContext();
   const supabase = getAuthenticatedSupabaseClient();
+  const audit = stampAuditForCloudWrite(
+    {
+      createdAt: persona.createdAt,
+      updatedAt: persona.updatedAt,
+      createdBy: persona.createdBy,
+      updatedBy: persona.updatedBy,
+    },
+    options,
+  );
 
   const { error } = await supabase.from('personas').upsert(
     {
@@ -75,8 +90,10 @@ export async function cloudSavePersona(persona: Persona): Promise<void> {
       gender: persona.gender,
       avatar_id: persona.avatarId,
       company: persona.company ?? null,
-      created_at: persona.createdAt,
-      updated_at: persona.updatedAt,
+      created_at: msToIso(audit.createdAt),
+      updated_at: msToIso(audit.updatedAt),
+      created_by: audit.createdBy,
+      updated_by: audit.updatedBy,
     },
     { onConflict: 'id' },
   );
@@ -108,8 +125,10 @@ function mapPersonaRow(row: PersonaRow): Persona {
     gender: row.gender,
     avatarId: row.avatar_id,
     company: row.company ?? undefined,
-    createdAt: Number(row.created_at),
-    updatedAt: Number(row.updated_at),
+    createdAt: isoToMs(row.created_at),
+    updatedAt: isoToMs(row.updated_at),
+    createdBy: row.created_by ?? null,
+    updatedBy: row.updated_by ?? null,
   });
 }
 
@@ -121,6 +140,7 @@ async function ensureDefaultCloudPersona(): Promise<void> {
       ...createDefaultPersona(),
       createdAt: existing.createdAt,
       updatedAt: Date.now(),
+      createdBy: existing.createdBy,
     });
     return;
   }

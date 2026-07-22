@@ -1,7 +1,7 @@
+import { isoToMs, msToIso, stampAuditForCloudWrite } from '@/cloud/audit';
 import { requireCloudAuthContext } from '@/cloud/authContext';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
 import type { ProductTour, ProductTourCompletionCta, ProductTourSummary, TourFeature } from '@/types/productTour';
-import type { Persona } from '@/types/persona';
 import { countTourDemos, sortTourFeatures } from '@/utils/createProductTour';
 import { estimateTourDurationMinutes } from '@/utils/productTourLearner';
 
@@ -15,8 +15,10 @@ interface ProductTourRow {
   features: TourFeature[];
   completion_cta: ProductTourCompletionCta | null;
   migrated_from_route: boolean;
-  created_at: number;
-  updated_at: number;
+  created_at: string | number;
+  updated_at: string | number;
+  created_by?: string | null;
+  updated_by?: string | null;
 }
 
 export async function cloudListProductTourSummaries(): Promise<ProductTourSummary[]> {
@@ -49,9 +51,21 @@ export async function cloudGetProductTour(id: string): Promise<ProductTour | und
   return mapProductTourRow(data as ProductTourRow);
 }
 
-export async function cloudSaveProductTour(tour: ProductTour): Promise<void> {
+export async function cloudSaveProductTour(
+  tour: ProductTour,
+  options: { preserveUpdatedAt?: boolean } = {},
+): Promise<void> {
   const { organizationId } = requireCloudAuthContext();
   const supabase = getAuthenticatedSupabaseClient();
+  const audit = stampAuditForCloudWrite(
+    {
+      createdAt: tour.createdAt,
+      updatedAt: tour.updatedAt,
+      createdBy: tour.createdBy,
+      updatedBy: tour.updatedBy,
+    },
+    options,
+  );
 
   const { error } = await supabase.from('product_tours').upsert(
     {
@@ -65,8 +79,10 @@ export async function cloudSaveProductTour(tour: ProductTour): Promise<void> {
       features: tour.features,
       completion_cta: tour.completionCta ?? null,
       migrated_from_route: tour.migratedFromRoute ?? false,
-      created_at: tour.createdAt,
-      updated_at: tour.updatedAt,
+      created_at: msToIso(audit.createdAt),
+      updated_at: msToIso(audit.updatedAt),
+      created_by: audit.createdBy,
+      updated_by: audit.updatedBy,
     },
     { onConflict: 'id' },
   );
@@ -150,6 +166,8 @@ async function toProductTourSummary(
     estimatedMinutes,
     createdAt: tour.createdAt,
     updatedAt: tour.updatedAt,
+    createdBy: tour.createdBy ?? null,
+    updatedBy: tour.updatedBy ?? null,
   };
 }
 
@@ -164,7 +182,9 @@ function mapProductTourRow(row: ProductTourRow): ProductTour {
     features: row.features,
     completionCta: row.completion_cta ?? undefined,
     migratedFromRoute: row.migrated_from_route,
-    createdAt: Number(row.created_at),
-    updatedAt: Number(row.updated_at),
+    createdAt: isoToMs(row.created_at),
+    updatedAt: isoToMs(row.updated_at),
+    createdBy: row.created_by ?? null,
+    updatedBy: row.updated_by ?? null,
   };
 }

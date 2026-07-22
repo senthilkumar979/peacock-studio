@@ -10,6 +10,10 @@ export interface SavedFlowDocument {
   id: string;
   savedAt: number;
   updatedAt: number;
+  /** Email of creator when known (cloud); null for guest/legacy. */
+  createdBy?: string | null;
+  /** Email of last editor when known (cloud); null for guest/legacy. */
+  updatedBy?: string | null;
   flow: FlowPayload;
   steps: FlowOutlineItem[];
   screenshotUrls: Record<string, string>;
@@ -23,6 +27,8 @@ export interface SavedFlowSummary {
   version: string;
   generatedAt: number;
   updatedAt: number;
+  createdBy?: string | null;
+  updatedBy?: string | null;
   stepCount: number;
 }
 

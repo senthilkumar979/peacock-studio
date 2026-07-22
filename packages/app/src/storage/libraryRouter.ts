@@ -65,9 +65,12 @@ export async function getFlowDocument(id: string): Promise<SavedFlowDocument | u
   return localGetFlowDocument(id);
 }
 
-export async function saveFlowDocument(doc: SavedFlowDocument): Promise<void> {
+export async function saveFlowDocument(
+  doc: SavedFlowDocument,
+  options?: { preserveUpdatedAt?: boolean },
+): Promise<void> {
   if (useCloudLibrary()) {
-    await cloudSaveFlowDocument(doc);
+    await cloudSaveFlowDocument(doc, options);
     return;
   }
   await localSaveFlowDocument(doc);
@@ -100,9 +103,12 @@ export async function getPersona(id: string): Promise<Persona | undefined> {
   return localGetPersona(id);
 }
 
-export async function savePersona(persona: Persona): Promise<void> {
+export async function savePersona(
+  persona: Persona,
+  options?: { preserveUpdatedAt?: boolean },
+): Promise<void> {
   if (useCloudLibrary()) {
-    await cloudSavePersona(persona);
+    await cloudSavePersona(persona, options);
     return;
   }
   await localSavePersona(persona);
@@ -137,9 +143,12 @@ export async function getProductTour(id: string): Promise<ProductTour | undefine
   return localGetProductTour(id);
 }
 
-export async function saveProductTour(tour: ProductTour): Promise<void> {
+export async function saveProductTour(
+  tour: ProductTour,
+  options?: { preserveUpdatedAt?: boolean },
+): Promise<void> {
   if (useCloudLibrary()) {
-    await cloudSaveProductTour(tour);
+    await cloudSaveProductTour(tour, options);
     return;
   }
   await localSaveProductTour(tour);

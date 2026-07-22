@@ -34,6 +34,8 @@ export interface ProductTour {
   migratedFromRoute?: boolean;
   createdAt: number;
   updatedAt: number;
+  createdBy?: string | null;
+  updatedBy?: string | null;
 }
 
 export interface ProductTourSummary {
@@ -49,6 +51,8 @@ export interface ProductTourSummary {
   estimatedMinutes: number | null;
   createdAt: number;
   updatedAt: number;
+  createdBy?: string | null;
+  updatedBy?: string | null;
 }
 
 export type TourPersonaIntroSegment = { type: 'persona-intro' };

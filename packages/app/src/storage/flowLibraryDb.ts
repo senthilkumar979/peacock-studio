@@ -159,6 +159,8 @@ export function toFlowSummary(doc: SavedFlowDocument): SavedFlowSummary {
     version: doc.flow.flow.version?.trim() ?? '',
     generatedAt: doc.flow.metadata.createdAt,
     updatedAt: doc.updatedAt,
+    createdBy: doc.createdBy ?? null,
+    updatedBy: doc.updatedBy ?? null,
     stepCount: countPlayableSteps(doc.steps),
   };
 }
@@ -272,6 +274,8 @@ export async function toProductTourSummary(
     estimatedMinutes,
     createdAt: tour.createdAt,
     updatedAt: tour.updatedAt,
+    createdBy: tour.createdBy ?? null,
+    updatedBy: tour.updatedBy ?? null,
   };
 }
 

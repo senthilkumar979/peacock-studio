@@ -10,10 +10,14 @@ import { FlowVersionBadge } from './FlowVersionBadge';
 
 interface FlowLibraryListProps {
   summaries: SavedFlowSummary[];
+  displayNamesByEmail?: Record<string, string>;
   onRequestDelete: (summary: SavedFlowSummary) => void;
 }
 
-export const FlowLibraryList = ({ summaries, onRequestDelete }: FlowLibraryListProps) => {
+export const FlowLibraryList = ({
+  summaries,
+  onRequestDelete,
+}: FlowLibraryListProps) => {
   const navigationState = useLibraryNavigationState();
 
   return (
