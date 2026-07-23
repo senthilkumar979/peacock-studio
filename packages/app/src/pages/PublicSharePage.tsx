@@ -3,6 +3,7 @@ import { Navigate, useLocation, useParams, useSearchParams } from 'react-router-
 import { PeacockEmbedWatermark } from '@/components/embed/PeacockEmbedWatermark';
 import { HardErrorPage } from '@/components/errors/HardErrorPage';
 import { EditableShareRedirect } from '@/components/share/EditableShareRedirect';
+import { ShareAuthRequiredGate } from '@/components/share/ShareAuthRequiredGate';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { LANDING_PATH } from '@/constants/routes';
 import { useFlowDocDefaultView } from '@/hooks/useFlowDocDefaultView';
@@ -24,8 +25,12 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultView = useFlowDocDefaultView();
   const isEmbed = mode === 'embed';
-  const { link, isLoading, error, errorTitle } = usePublicShare(token, { isEmbed });
-  const { shareLinkViewMode, isReady: isDocumentReady } = usePublicSharedDocument(link);
+  const { link, isLoading, error, errorTitle, requiresSignIn } = usePublicShare(token, {
+    isEmbed,
+  });
+  const { shareLinkViewMode, isReady: isDocumentReady } = usePublicSharedDocument(
+    requiresSignIn ? null : link,
+  );
   const resolvedView = isEmbed
     ? 'player'
     : resolveFlowDocView(searchParams, location.hash, defaultView, shareLinkViewMode);
@@ -67,6 +72,10 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
         </p>
       </div>
     );
+  }
+
+  if (requiresSignIn) {
+    return <ShareAuthRequiredGate returnPath={location.pathname + location.search} />;
   }
 
   if (error || !link) {

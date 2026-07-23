@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, X } from 'lucide-react';
+import { ShareLinkManagePanel } from '@/components/share/ShareLinkManagePanel';
+import { ShareLinkSecurityOptions } from '@/components/share/ShareLinkSecurityOptions';
 import { ShareMethodPicker, type ShareMethod } from '@/components/share/ShareMethodPicker';
 import { PdfExportBlockingOverlay } from '@/components/share/PdfExportBlockingOverlay';
 import { Button } from '@/components/ui';
@@ -11,6 +13,7 @@ import {
   copyTextToClipboard,
   type ShareLinkAccessMode,
 } from '@/utils/shareLink';
+import { expiresAtFromPreset, type ShareExpiryPreset } from '@/utils/shareExpiry';
 import { createProductTourEmbedCode, createProductTourShareUrl } from '@/services/shareLinkService';
 import { isCloudSyncEnabled } from '@/cloud/config';
 import { useShareMethodAccess } from '@/hooks/useOrganization';
@@ -34,6 +37,9 @@ export const ShareProductTourModal = ({
   const [method, setMethod] = useState<ShareMethod>('link');
   const [accessMode, setAccessMode] = useState<ShareLinkAccessMode>('readonly');
   const [presenterLink, setPresenterLink] = useState(false);
+  const [expiryPreset, setExpiryPreset] = useState<ShareExpiryPreset>('never');
+  const [requiresAuth, setRequiresAuth] = useState(false);
+  const [manageRefreshKey, setManageRefreshKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [loadedTour, setLoadedTour] = useState<ProductTour | null>(null);
@@ -56,6 +62,8 @@ export const ShareProductTourModal = ({
     setMethod(preferred);
     setAccessMode('readonly');
     setPresenterLink(false);
+    setExpiryPreset('never');
+    setRequiresAuth(false);
     setEmbedCode('');
   }, [isOpen, canShare, canExport, canEmbed]);
 
@@ -107,9 +115,14 @@ export const ShareProductTourModal = ({
     void createProductTourShareUrl(tourId, {
       accessMode,
       presenter: presenterLink && accessMode === 'readonly',
+      expiresAt: expiresAtFromPreset(expiryPreset),
+      requiresAuth: accessMode === 'readonly' ? requiresAuth : false,
     })
       .then((url) => {
-        if (!cancelled) setShareUrl(url);
+        if (!cancelled) {
+          setShareUrl(url);
+          setManageRefreshKey((key) => key + 1);
+        }
       })
       .finally(() => {
         if (!cancelled) setIsShareUrlLoading(false);
@@ -118,7 +131,7 @@ export const ShareProductTourModal = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, method, tourId, accessMode, presenterLink, canShare]);
+  }, [isOpen, method, tourId, accessMode, presenterLink, canShare, expiryPreset, requiresAuth]);
 
   const handleClose = () => {
     if (isExporting) return;
@@ -177,6 +190,8 @@ export const ShareProductTourModal = ({
           const created = await createProductTourShareUrl(tourId, {
             accessMode,
             presenter: presenterLink && accessMode === 'readonly',
+            expiresAt: expiresAtFromPreset(expiryPreset),
+            requiresAuth: accessMode === 'readonly' ? requiresAuth : false,
           });
           await copyTextToClipboard(created);
           return created;
@@ -294,17 +309,28 @@ export const ShareProductTourModal = ({
                         </button>
                       ))}
                     </div>
-                      <p className="text-xs text-slate-500">
-                        {accessMode === 'readonly'
-                          ? isCloudSyncEnabled()
-                            ? 'Anyone with the link can view this tour without signing in.'
-                            : 'Viewers can read the tour but cannot edit it.'
-                          : isCloudSyncEnabled()
-                            ? 'Signed-in workspace members can open the editor via this link.'
-                            : 'Anyone with the link can open the editor for this tour.'}
-                      </p>
-                    </div>
-                    {accessMode === 'readonly' ? (
+                    <p className="mt-2 text-xs text-slate-500">
+                      {accessMode === 'readonly'
+                        ? isCloudSyncEnabled()
+                          ? requiresAuth
+                            ? 'Viewers must sign in before this tour loads.'
+                            : 'Anyone with the link can view until it expires or is revoked.'
+                          : 'Viewers can read the tour but cannot edit it.'
+                        : isCloudSyncEnabled()
+                          ? 'Signed-in workspace members can open the editor via this link.'
+                          : 'Anyone with the link can open the editor for this tour.'}
+                    </p>
+                  </div>
+                  {isCloudSyncEnabled() ? (
+                    <ShareLinkSecurityOptions
+                      accessMode={accessMode}
+                      expiryPreset={expiryPreset}
+                      requiresAuth={requiresAuth}
+                      onExpiryPresetChange={setExpiryPreset}
+                      onRequiresAuthChange={setRequiresAuth}
+                    />
+                  ) : null}
+                  {accessMode === 'readonly' ? (
                     <label className="flex items-center gap-2 text-sm text-slate-700">
                       <input
                         type="checkbox"
@@ -319,9 +345,18 @@ export const ShareProductTourModal = ({
                       Link preview
                     </p>
                     <p className="mt-2 break-all rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-                      {isShareUrlLoading ? 'Generating share link…' : shareUrl || 'Share link unavailable'}
+                      {isShareUrlLoading
+                        ? 'Generating share link…'
+                        : shareUrl || 'Share link unavailable'}
                     </p>
                   </div>
+                  {isCloudSyncEnabled() ? (
+                    <ShareLinkManagePanel
+                      resourceType="tour"
+                      resourceId={tourId}
+                      refreshKey={manageRefreshKey}
+                    />
+                  ) : null}
                 </div>
               ) : null}
               {method === 'pdf' ? (

@@ -24,7 +24,7 @@ export const SolutionSection = () => (
     tone="dark"
     eyebrow="The solution"
     title="One capture pipeline. Two formats your teams need."
-    description="Peacock Studio connects extension recording, structured editing, and guided playback — producing execution-grade Flow Documents and adoption-focused Product Tours from the same local-first library."
+    description="Peacock Studio connects extension recording, structured editing, and guided playback — producing execution-grade Flow Documents and adoption-focused Product Tours from the same library."
   >
     <div className="grid gap-6 lg:grid-cols-2">
       <motion.article

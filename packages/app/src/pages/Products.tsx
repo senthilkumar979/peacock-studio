@@ -18,7 +18,7 @@ export const Products = () => (
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-300">
             Flow Documents for execution, Product Tours for adoption, and Capture & Editor for
-            polished screenshots — one local-first library.
+            polished screenshots — one shared library.
           </p>
         </motion.div>
       </div>

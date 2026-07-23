@@ -73,6 +73,7 @@ export const OrgAdminPage = () => {
         <OrgAdminMembersPanel
           organizationId={organizationId}
           organizationName={organizationName ?? 'Organization'}
+          workspaceType={context.workspaceType === 'team' ? 'team' : 'personal'}
           inviterName={context.userDisplayName}
           currentClerkUserId={context.clerkUserId}
         />

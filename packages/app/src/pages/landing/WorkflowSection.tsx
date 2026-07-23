@@ -44,7 +44,7 @@ export const WorkflowSection = () => (
           </div>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
             Peacock connects extension capture, structured editing, and guided distribution in one
-            local-first workflow — producing assets teams reuse across sales, enablement, support, and QA.
+            capture-to-publish workflow — producing assets teams reuse across sales, enablement, support, and QA.
           </p>
         </div>
 

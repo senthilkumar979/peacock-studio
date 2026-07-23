@@ -23,6 +23,7 @@ export interface ShareLinkRecord {
   accessMode: ShareLinkAccessMode;
   channel: ShareLinkChannel;
   settings: ShareLinkSettings;
+  requiresAuth?: boolean;
   expiresAt: string | null;
   revokedAt: string | null;
   createdBy: string;
@@ -38,6 +39,8 @@ export interface ResolvedShareLink {
   accessMode: ShareLinkAccessMode;
   channel: ShareLinkChannel;
   settings: ShareLinkSettings;
+  requiresAuth?: boolean;
+  expiresAt?: string | null;
 }
 
 export interface EditableShareVerification {
@@ -52,4 +55,6 @@ export interface CreateShareLinkInput {
   accessMode: ShareLinkAccessMode;
   channel?: ShareLinkChannel;
   settings?: ShareLinkSettings;
+  expiresAt?: string | null;
+  requiresAuth?: boolean;
 }

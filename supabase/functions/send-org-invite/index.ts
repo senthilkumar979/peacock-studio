@@ -57,10 +57,13 @@ serve(async (req) => {
     const resendKey = Deno.env.get('RESEND_API_KEY');
     if (!resendKey) {
       console.warn('RESEND_API_KEY not set — invite email skipped');
-      return new Response(JSON.stringify({ ok: true, skipped: true }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'Invite email is not configured', skipped: true }),
+        {
+          status: 503,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     const from = Deno.env.get('RESEND_FROM') ?? 'Peacock Studio <onboarding@resend.dev>';

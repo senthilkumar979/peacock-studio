@@ -27,7 +27,7 @@ interface SharedScreenshotAsset {
 }
 
 export async function resolvePublicShareLink(token: string): Promise<ResolvedShareLink | null> {
-  const supabase = getPublicSupabaseClient();
+  const supabase = getShareSupabaseClient();
   const { data, error } = await supabase.rpc('resolve_share_link', { p_token: token });
 
   if (error) throw error;
@@ -40,14 +40,14 @@ export async function fetchPublicFlowDocument(
   token: string,
   documentId: string,
 ): Promise<SavedFlowDocument | undefined> {
-  const supabase = getPublicSupabaseClient();
+  const supabase = getShareSupabaseClient();
   const { data, error } = await supabase.rpc('get_shared_flow_document', {
     p_token: token,
     p_document_id: documentId,
   });
 
   if (error) throw error;
-  if (!data) return undefined;
+  if (!data || isAuthRequiredPayload(data)) return undefined;
 
   const payload = data as SharedFlowDocumentPayload;
   const screenshotUrls = await resolvePublicScreenshotUrls(token, documentId);
@@ -66,11 +66,11 @@ export async function fetchPublicFlowDocument(
 }
 
 export async function fetchPublicProductTour(token: string): Promise<ProductTour | undefined> {
-  const supabase = getPublicSupabaseClient();
+  const supabase = getShareSupabaseClient();
   const { data, error } = await supabase.rpc('get_shared_product_tour', { p_token: token });
 
   if (error) throw error;
-  if (!data) return undefined;
+  if (!data || isAuthRequiredPayload(data)) return undefined;
 
   const row = data as Record<string, unknown>;
   return normalizeProductTour({
@@ -94,14 +94,14 @@ export async function fetchPublicPersona(
   token: string,
   personaId: string,
 ): Promise<Persona | undefined> {
-  const supabase = getPublicSupabaseClient();
+  const supabase = getShareSupabaseClient();
   const { data, error } = await supabase.rpc('get_shared_persona', {
     p_token: token,
     p_persona_id: personaId,
   });
 
   if (error) throw error;
-  if (!data) return undefined;
+  if (!data || isAuthRequiredPayload(data)) return undefined;
 
   const row = data as Record<string, unknown>;
   return normalizePersona({
@@ -140,7 +140,7 @@ async function resolvePublicScreenshotUrls(
   token: string,
   documentId: string,
 ): Promise<Record<string, string>> {
-  const supabase = getPublicSupabaseClient();
+  const supabase = getShareSupabaseClient();
   const { data, error } = await supabase.rpc('list_shared_screenshot_assets', {
     p_token: token,
     p_document_id: documentId,
@@ -167,6 +167,24 @@ async function resolvePublicScreenshotUrls(
   return urls;
 }
 
+function getShareSupabaseClient() {
+  try {
+    return getAuthenticatedSupabaseClient();
+  } catch {
+    return getPublicSupabaseClient();
+  }
+}
+
+function isAuthRequiredPayload(data: unknown): boolean {
+  return Boolean(
+    data &&
+      typeof data === 'object' &&
+      'requiresAuth' in data &&
+      (data as { requiresAuth?: boolean }).requiresAuth === true &&
+      !('id' in data),
+  );
+}
+
 function mapResolvedShareLink(row: Record<string, unknown>): ResolvedShareLink {
   return {
     token: String(row.token),
@@ -176,5 +194,7 @@ function mapResolvedShareLink(row: Record<string, unknown>): ResolvedShareLink {
     accessMode: row.accessMode as ResolvedShareLink['accessMode'],
     channel: row.channel === 'embed' ? 'embed' : 'link',
     settings: (row.settings as ShareLinkSettings | null) ?? {},
+    requiresAuth: Boolean(row.requiresAuth),
+    expiresAt: (row.expiresAt as string | null | undefined) ?? null,
   };
 }

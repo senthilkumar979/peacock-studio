@@ -7,8 +7,8 @@ export const TrustArchitectureSection = () => (
     id="trust"
     tone="light"
     eyebrow="Architecture & trust"
-    title="Built for speed, structure, and privacy on device"
-    description="Peacock is local-first by design today — structured action data, not video files, stored in your browser until you choose to share."
+    title="Built for speed, structure, and trustworthy collaboration"
+    description="Start on-device as a guest, then sync to a cloud workspace for cross-device access, team invites, and secure share links — structured action data, not video files."
   >
     <div className="grid gap-5 sm:grid-cols-3">
       {ARCHITECTURE_POINTS.map((point, index) => {

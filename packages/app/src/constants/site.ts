@@ -11,7 +11,7 @@ export const SITE_NAME = PEACOCK_APP_NAME;
 
 /** Default meta description — also used in index.html */
 export const DEFAULT_META_DESCRIPTION =
-  'Peacock Studio turns real browser workflows into editable Flow Documents and Product Tours — interactive documentation with screenshots, branches, PDF export, and local-first storage.';
+  'Peacock Studio turns real browser workflows into editable Flow Documents and Product Tours — interactive documentation with screenshots, branches, PDF export, cloud sync, and team workspaces.';
 
 export const DEFAULT_DOCUMENT_TITLE = `${PEACOCK_APP_NAME} — Flow docs & product tours from real workflows`;
 

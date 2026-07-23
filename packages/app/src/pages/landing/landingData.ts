@@ -269,15 +269,15 @@ export const COMPARISON_ROWS = [
   { label: 'Consistency', manual: 'Varies by presenter', peacock: 'Same narrative every time' },
   { label: 'Branching', manual: 'Separate videos or docs', peacock: 'Built-in path selection' },
   { label: 'Persona targeting', manual: 'Custom decks per role', peacock: 'Structured product tours' },
-  { label: 'Data control', manual: 'Scattered files & drives', peacock: 'Local-first on device' },
+  { label: 'Data control', manual: 'Scattered files & drives', peacock: 'Guest local + cloud workspaces' },
   { label: 'Screenshot sync', manual: 'Manual paste & crop', peacock: 'Captured with each action' },
   { label: 'Release review', manual: 'Side-by-side guesswork', peacock: 'Compare Docs by step index' },
 ];
 
 export const ARCHITECTURE_POINTS = [
   {
-    title: 'Local-first storage',
-    copy: 'Documents, tours, and personas persist in IndexedDB on this device — no cloud dependency required.',
+    title: 'Guest preview, cloud library',
+    copy: 'Try Peacock in the browser without an account. Sign in to sync your library across devices and collaborate in a workspace.',
     icon: Shield,
   },
   {
@@ -301,12 +301,12 @@ export const LANDING_FAQS: LandingFaq[] = [
   {
     question: 'Do I need a backend or account to start?',
     answer:
-      'No. The current workflow is local-first. Your library is stored in the browser on this device using IndexedDB.',
+      'No account is required to try Peacock — a limited guest library stays in your browser. Sign in to unlock cloud sync, team workspaces, and secure share links.',
   },
   {
     question: 'Can I share guides with my team or customers?',
     answer:
-      'Yes. You can copy shareable links (readonly or editable) and export PDFs for documents and product tours. Embed widgets are planned but not yet available.',
+      'Yes. Signed-in workspaces can create tokenized share links and embeds, export PDFs, and manage access. Team workspaces support invites and role capabilities.',
   },
   {
     question: 'How do product tours differ from single documents?',
@@ -326,7 +326,7 @@ export const LANDING_FAQS: LandingFaq[] = [
   {
     question: 'What should I know about current limitations?',
     answer:
-      'Peacock is local-first today — no cloud sync or team workspace yet. Share links are URL-based, embed widgets are planned but not shipped, and Compare Docs aligns steps by index rather than semantic diff. Peacock excels at structured capture, editing, and privacy on device; cloud collaboration is the natural next chapter.',
+      'Compare Docs still aligns steps by index rather than semantic diff, and AI-assisted rewrite is on the roadmap. Cloud sync, team workspaces, embeds, and secure share links ship with accounts enabled for your deployment.',
   },
 ];
 

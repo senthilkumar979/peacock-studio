@@ -115,7 +115,7 @@ export const FeaturesSection = () => (
       {[
         `${LANDING_FEATURES.length} capabilities`,
         `${LANDING_FEATURE_CATEGORIES.length} workflow modules`,
-        'Ships today · local-first',
+        'Ships today · guest + cloud',
       ].map((label) => (
         <span
           key={label}

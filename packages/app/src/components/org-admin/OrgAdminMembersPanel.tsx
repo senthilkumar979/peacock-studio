@@ -7,7 +7,9 @@ import { MembersRoster } from '@/components/org-admin/MembersRoster';
 import { PendingInvitesSection } from '@/components/org-admin/PendingInvitesSection';
 import { refreshCloudMemberships } from '@/components/auth/CloudSyncProvider';
 import {
+  buildOrgInviteAcceptUrl,
   createOrganizationInvitation,
+  InviteEmailNotConfiguredError,
   listOrganizationInvitations,
   listOrganizationMembers,
   resendOrganizationInvitation,
@@ -21,14 +23,18 @@ import type {
   MemberRole,
   OrganizationInvitationRecord,
   OrganizationMemberRecord,
+  WorkspaceType,
 } from '@/cloud/types/organization';
 import { reportAppError } from '@/utils/appError';
-import { notifyError, notifyPromise } from '@/utils/notify';
+import { notifyError, notifyPromise, notifySuccess, notifyWarning } from '@/utils/notify';
 import { AnalyticsEvents } from '@/analytics/events';
+import { trackEvent } from '@/analytics/analyticsClient';
+import { copyTextToClipboard } from '@/utils/shareLink';
 
 interface OrgAdminMembersPanelProps {
   organizationId: string;
   organizationName: string;
+  workspaceType: WorkspaceType;
   inviterName: string;
   currentClerkUserId: string;
 }
@@ -36,6 +42,7 @@ interface OrgAdminMembersPanelProps {
 export const OrgAdminMembersPanel = ({
   organizationId,
   organizationName,
+  workspaceType,
   inviterName,
   currentClerkUserId,
 }: OrgAdminMembersPanelProps) => {
@@ -151,22 +158,32 @@ export const OrgAdminMembersPanel = ({
         </p>
       ) : null}
 
-      <InviteMemberForm
-        busy={busy}
-        onInvite={async (input: {
-          email: string;
-          role: MemberRole;
-          capabilities: MemberCapabilities;
-        }) => {
-          await runBusy(async () => {
-            await notifyPromise(
-              (async () => {
-                const created = await createOrganizationInvitation({
-                  organizationId,
-                  email: input.email,
-                  role: input.role,
-                  capabilities: input.capabilities,
-                });
+      {workspaceType === 'personal' ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Personal workspaces are single-user. Create or switch to a team workspace to invite
+          members and manage roles.
+        </div>
+      ) : (
+        <InviteMemberForm
+          busy={busy}
+          onInvite={async (input: {
+            email: string;
+            role: MemberRole;
+            capabilities: MemberCapabilities;
+          }) => {
+            await runBusy(async () => {
+              const created = await createOrganizationInvitation({
+                organizationId,
+                email: input.email,
+                role: input.role,
+                capabilities: input.capabilities,
+              });
+              const inviteUrl = buildOrgInviteAcceptUrl(created.token);
+              trackEvent(AnalyticsEvents.memberInvited, {
+                organization_id: organizationId,
+                role: input.role,
+              });
+              try {
                 await sendOrgInviteEmail({
                   toEmail: created.email,
                   organizationName,
@@ -174,47 +191,65 @@ export const OrgAdminMembersPanel = ({
                   inviteToken: created.token,
                   expiresAt: created.expiresAt,
                 });
-                return created;
-              })(),
-              {
-                loading: 'Sending invitation…',
-                success: 'Invitation sent',
-                successDescription: `Invite emailed to ${input.email.trim().toLowerCase()} (expires in 7 days).`,
-                context: 'Create organization invitation',
-                event: AnalyticsEvents.memberInvited,
-                eventProps: { organization_id: organizationId, role: input.role },
-              },
-            );
-          });
-        }}
-      />
+                notifySuccess(
+                  'Invitation sent',
+                  `Invite emailed to ${created.email} (expires in 7 days).`,
+                );
+              } catch (emailError) {
+                await copyTextToClipboard(inviteUrl);
+                if (emailError instanceof InviteEmailNotConfiguredError) {
+                  notifyWarning(
+                    'Invite created — email not configured',
+                    'Invite link copied. Send it manually to your teammate.',
+                  );
+                } else {
+                  notifyWarning(
+                    'Invite created — email failed',
+                    'Invite link copied. Share it manually with the teammate.',
+                  );
+                  reportAppError('Send invite email', emailError);
+                }
+              }
+            });
+          }}
+        />
+      )}
 
+      {workspaceType === 'team' ? (
       <PendingInvitesSection
         invites={invites}
         busy={busy}
         onResend={async (inviteId) => {
           await runBusy(async () => {
-            await notifyPromise(
-              (async () => {
-                const resent = await resendOrganizationInvitation(inviteId);
-                await sendOrgInviteEmail({
-                  toEmail: resent.email,
-                  organizationName,
-                  inviterName,
-                  inviteToken: resent.token,
-                  expiresAt: resent.expiresAt,
-                });
-                return resent;
-              })(),
-              {
-                loading: 'Resending invitation…',
-                success: 'Invitation resent',
-                successDescription: 'Expiry reset to 7 days from now.',
-                context: 'Resend organization invitation',
-                event: AnalyticsEvents.memberInviteResent,
-                eventProps: { organization_id: organizationId },
-              },
-            );
+            const resent = await resendOrganizationInvitation(inviteId);
+            const inviteUrl = buildOrgInviteAcceptUrl(resent.token);
+            trackEvent(AnalyticsEvents.memberInviteResent, {
+              organization_id: organizationId,
+            });
+            try {
+              await sendOrgInviteEmail({
+                toEmail: resent.email,
+                organizationName,
+                inviterName,
+                inviteToken: resent.token,
+                expiresAt: resent.expiresAt,
+              });
+              notifySuccess('Invitation resent', 'Expiry reset to 7 days from now.');
+            } catch (emailError) {
+              await copyTextToClipboard(inviteUrl);
+              if (emailError instanceof InviteEmailNotConfiguredError) {
+                notifyWarning(
+                  'Invite updated — email not configured',
+                  'Invite link copied. Send it manually.',
+                );
+              } else {
+                notifyWarning(
+                  'Invite updated — email failed',
+                  'Invite link copied. Share it manually.',
+                );
+                reportAppError('Resend invite email', emailError);
+              }
+            }
           });
         }}
         onRevoke={async (inviteId) => {
@@ -229,6 +264,7 @@ export const OrgAdminMembersPanel = ({
           });
         }}
       />
+      ) : null}
 
       <MembersRoster
         members={members}

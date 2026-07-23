@@ -32,10 +32,11 @@ export const CTASection = () => (
             </h2>
             <p className="mt-4 text-base leading-relaxed text-peacock-100/90">
               Install the free Chrome extension, capture a workflow, and publish a walkthrough or
-              product tour your entire team can reuse — no backend setup required.
+              product tour — start locally as a guest, then sync with an account when you need
+              cloud workspaces and secure sharing.
             </p>
             <ul className="mt-6 flex flex-wrap gap-3 text-sm text-white/90">
-              {['Local-first storage', 'Branching demos', 'PDF & share links'].map((item) => (
+              {['Guest preview', 'Cloud workspaces', 'PDF & share links'].map((item) => (
                 <li key={item} className="rounded-full border border-white/25 bg-white/10 px-3 py-1">
                   {item}
                 </li>

@@ -7,7 +7,7 @@ export const PrivacyPolicy = () => (
     variant="privacy"
     eyebrow="Legal"
     title="Privacy Policy"
-    intro="How Peacock handles your information. Peacock is local-first — your documentation stays in your browser by default unless you choose cloud sync."
+    intro="How Peacock handles your information. Try as a guest with data in your browser; sign in to sync a cloud library, use team workspaces, and share securely."
     sections={PRIVACY_SECTIONS}
     relatedPage={{
       label: 'Terms & Conditions',

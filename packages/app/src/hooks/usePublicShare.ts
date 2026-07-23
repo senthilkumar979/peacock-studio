@@ -3,6 +3,8 @@ import { resolvePublicShareLink } from '@/cloud/publicShareClient';
 import { setPublicShareToken } from '@/cloud/publicShareContext';
 import { recordShareEvent } from '@/cloud/repositories/analyticsRepository';
 import { isCloudSyncEnabled } from '@/cloud/config';
+import { useCloudAuthContext } from '@/hooks/useOrganization';
+import { useSessionMode } from '@/hooks/useSessionMode';
 import { getEmbedHostDomain, getReferrerDomain, getUtmParams } from '@/utils/referrer';
 import type { ResolvedShareLink } from '@/types/shareLink';
 import type { ShareAnalyticsEventType } from '@/types/analytics';
@@ -15,15 +17,22 @@ interface UsePublicShareOptions {
 
 export function usePublicShare(token: string | undefined, options: UsePublicShareOptions = {}) {
   const isEmbed = Boolean(options.isEmbed);
+  const sessionMode = useSessionMode();
+  const cloudAuth = useCloudAuthContext();
   const [link, setLink] = useState<ResolvedShareLink | null>(null);
   const [isLoading, setIsLoading] = useState(Boolean(token));
   const [error, setError] = useState<string | null>(null);
   const [errorTitle, setErrorTitle] = useState<string | null>(null);
+  const [requiresSignIn, setRequiresSignIn] = useState(false);
+
+  const authSettling = sessionMode === 'loading' || sessionMode === 'connecting';
+  const isSignedIn = Boolean(cloudAuth?.clerkUserId);
 
   useEffect(() => {
     if (!token) {
       setLink(null);
       setIsLoading(false);
+      setRequiresSignIn(false);
       setErrorTitle('Missing share link');
       setError('This share URL is incomplete. Ask for a new link.');
       return;
@@ -32,6 +41,7 @@ export function usePublicShare(token: string | undefined, options: UsePublicShar
     if (!isCloudSyncEnabled()) {
       setLink(null);
       setIsLoading(false);
+      setRequiresSignIn(false);
       setErrorTitle('Cloud sync required');
       setError('Public share links require cloud sync to be enabled.');
       return;
@@ -41,6 +51,7 @@ export function usePublicShare(token: string | undefined, options: UsePublicShar
     setIsLoading(true);
     setError(null);
     setErrorTitle(null);
+    setRequiresSignIn(false);
     setPublicShareToken(token);
 
     void resolvePublicShareLink(token)
@@ -52,10 +63,21 @@ export function usePublicShare(token: string | undefined, options: UsePublicShar
           setError('This share link is invalid or has expired.');
           return;
         }
+
+        if (resolved.requiresAuth && authSettling) {
+          setLink(resolved);
+          setIsLoading(true);
+          return;
+        }
+
+        if (resolved.requiresAuth && !isSignedIn) {
+          setLink(resolved);
+          setRequiresSignIn(true);
+          return;
+        }
+
         setLink(resolved);
 
-        // Embed-channel tokens are redirected to /s/:token/embed; skip counting here
-        // so we don't double-record share_view then embed_view.
         if (!isEmbed && resolved.channel === 'embed') return;
 
         const eventType: ShareAnalyticsEventType = isEmbed ? 'embed_view' : 'share_view';
@@ -83,7 +105,15 @@ export function usePublicShare(token: string | undefined, options: UsePublicShar
       cancelled = true;
       setPublicShareToken(null);
     };
-  }, [token, isEmbed]);
+  }, [token, isEmbed, authSettling, isSignedIn]);
 
-  return { link, isLoading, error, errorTitle };
+  const waitingForAuth = Boolean(link?.requiresAuth && authSettling && !isSignedIn);
+
+  return {
+    link,
+    isLoading: isLoading || waitingForAuth,
+    error,
+    errorTitle,
+    requiresSignIn,
+  };
 }

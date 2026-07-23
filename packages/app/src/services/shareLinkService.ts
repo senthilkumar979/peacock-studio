@@ -4,7 +4,6 @@ import { getFlowDocument } from '@/storage/libraryRouter';
 import { getProductTour } from '@/storage/libraryRouter';
 import type { CreateShareLinkInput, ShareLinkRecord } from '@/types/shareLink';
 import type { FlowShareSettings } from '@/types/savedFlow';
-import type { ProductTour } from '@/types/productTour';
 import { collectTourShareDocumentIds } from '@/utils/collectTourShareDocumentIds';
 import {
   buildEmbedIframeCode,
@@ -15,13 +14,18 @@ import {
   type SharedDocumentViewMode,
 } from '@/utils/shareLink';
 
-interface DocumentShareLinkOptions {
+interface ShareSecurityOptions {
+  expiresAt?: string | null;
+  requiresAuth?: boolean;
+}
+
+interface DocumentShareLinkOptions extends ShareSecurityOptions {
   accessMode: ShareLinkAccessMode;
   viewMode?: SharedDocumentViewMode;
   shareSettings?: FlowShareSettings;
 }
 
-interface ProductTourShareLinkOptions {
+interface ProductTourShareLinkOptions extends ShareSecurityOptions {
   accessMode: ShareLinkAccessMode;
   presenter?: boolean;
 }
@@ -47,6 +51,8 @@ export async function createDocumentShareUrl(
     resourceId: documentId,
     accessMode: options.accessMode,
     channel: 'link',
+    expiresAt: options.expiresAt,
+    requiresAuth: options.requiresAuth,
     settings: {
       viewMode: options.viewMode ?? 'doc',
       shareSettings: options.shareSettings,
@@ -103,6 +109,8 @@ export async function createProductTourShareUrl(
     resourceId: tourId,
     accessMode: options.accessMode,
     channel: 'link',
+    expiresAt: options.expiresAt,
+    requiresAuth: options.requiresAuth,
     settings: {
       presenter: options.presenter ?? false,
       allowedDocumentIds,

@@ -12,7 +12,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   {
     heading: 'Overview',
     paragraphs: [
-      `This policy explains how ${companyName} ("Peacock", "we") handles information when you use the Peacock web app and browser extension. Peacock is designed to be local-first: your recorded documentation is stored in your browser by default.`,
+      `This policy explains how ${companyName} ("Peacock", "we") handles information when you use the Peacock web app and browser extension. You can try Peacock as a guest with data stored in your browser; when you sign in, your library may sync to our cloud providers to support cross-device access, team workspaces, and sharing.`,
     ],
   },
   {
@@ -48,9 +48,9 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     ],
   },
   {
-    heading: 'Local storage & optional cloud sync',
+    heading: 'Local storage & cloud sync',
     paragraphs: [
-      'By default, saved documentation and screenshots stay in your browser (IndexedDB) on your device. If cloud sync is enabled for your deployment and you sign in, your library may be stored with our cloud provider to sync across devices and support sharing.',
+      'As a guest, saved documentation and screenshots stay in your browser (IndexedDB) on your device. When cloud sync is enabled for your deployment and you sign in, your library is stored with our cloud provider to sync across devices, support team workspaces, and power secure share links.',
     ],
   },
   {
@@ -97,7 +97,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
   {
     heading: 'Description of the service',
     paragraphs: [
-      'Peacock is a browser-based flow capture and documentation platform. It records browser workflows and turns them into editable documentation, players, product tours, PDFs, and shareable links. Some capabilities depend on the browser extension and, where enabled, optional cloud sync.',
+      'Peacock is a browser-based flow capture and documentation platform. It records browser workflows and turns them into editable documentation, players, product tours, PDFs, and shareable links. Some capabilities depend on the browser extension and cloud sync (accounts, workspaces, and tokenized share links).',
     ],
   },
   {
@@ -125,7 +125,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
   {
     heading: 'Third-party services',
     paragraphs: [
-      'Optional features may rely on third-party providers (for example, authentication or cloud storage when cloud sync is enabled). Your use of those features may also be subject to the providers’ terms.',
+      'Features such as authentication, cloud storage, and team collaboration rely on third-party providers when cloud sync is enabled. Your use of those features may also be subject to the providers’ terms.',
     ],
   },
   {

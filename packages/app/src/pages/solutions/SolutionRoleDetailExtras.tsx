@@ -122,7 +122,7 @@ export const SolutionRoleDetailExtras = ({
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/90">
               Record your first workflow, then compose an adoption tour —
-              local-first, no backend setup required.
+              guest preview available, no backend setup required.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link

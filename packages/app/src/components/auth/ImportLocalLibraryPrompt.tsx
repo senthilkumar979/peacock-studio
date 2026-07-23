@@ -9,10 +9,14 @@ import {
   importLocalLibraryToCloud,
   type LocalLibraryImportCounts,
 } from '@/cloud/importLocalLibrary';
+import { getFreeAccountDocLimit } from '@/cloud/planLimits';
+import { setCloudSyncState } from '@/cloud/cloudSyncState';
 import { isCloudSyncEnabled } from '@/cloud/config';
+import { clearLocalLibrary } from '@/storage/flowLibraryDb';
 import { reportAppError } from '@/utils/appError';
 import { notifyPromise } from '@/utils/notify';
 import { AnalyticsEvents } from '@/analytics/events';
+import { Button } from '@/components/ui';
 
 const ImportLocalLibraryPromptInner = () => {
   const { isSignedIn } = useAuth();
@@ -52,14 +56,28 @@ const ImportLocalLibraryPromptInner = () => {
     setIsImporting(true);
     setError(null);
     try {
-      await notifyPromise(importLocalLibraryToCloud(), {
-        loading: 'Importing local library…',
-        success: 'Library imported',
-        successDescription: 'Reloading so your cloud library is ready.',
-        context: 'Import local library to cloud',
-        event: AnalyticsEvents.localLibraryImported,
-      });
+      const counts = await notifyPromise(
+        (async () => {
+          const imported = await importLocalLibraryToCloud();
+          await clearLocalLibrary();
+          return imported;
+        })(),
+        {
+          loading: 'Importing local library…',
+          success: 'Library imported',
+          successDescription: 'Your local items are now in this cloud workspace.',
+          context: 'Import local library to cloud',
+          event: AnalyticsEvents.localLibraryImported,
+        },
+      );
       setIsOpen(false);
+      const exceedsFreeLimit = counts.documents > getFreeAccountDocLimit();
+      setCloudSyncState({
+        phase: 'success',
+        message: `Synced ${counts.documents} document${counts.documents === 1 ? '' : 's'} to your cloud library.`,
+        importedDocuments: counts.documents,
+        exceedsFreeLimit,
+      });
       window.location.reload();
     } catch (importError) {
       const classified = reportAppError('Local library import failed', importError);
@@ -87,8 +105,8 @@ const ImportLocalLibraryPromptInner = () => {
       <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-900/5">
         <h2 className="text-lg font-semibold text-slate-900">Import local library?</h2>
         <p className="mt-2 text-sm text-slate-600">
-          We found items saved in this browser. Import them to your cloud workspace so they
-          sync across devices.
+          We found items saved in this browser. Import them to your cloud workspace so they sync
+          across devices. After import, the local browser copy is cleared.
         </p>
         <ul className="mt-4 space-y-1 text-sm text-slate-700">
           <li>{localCounts.documents} flow document{localCounts.documents === 1 ? '' : 's'}</li>
@@ -97,22 +115,12 @@ const ImportLocalLibraryPromptInner = () => {
         </ul>
         {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
         <div className="mt-6 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={handleDismiss}
-            disabled={isImporting}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-          >
+          <Button type="button" variant="secondary" onClick={handleDismiss} disabled={isImporting}>
             Not now
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleImport()}
-            disabled={isImporting}
-            className="btn-peacock disabled:opacity-60"
-          >
+          </Button>
+          <Button type="button" onClick={() => void handleImport()} disabled={isImporting}>
             {isImporting ? 'Importing…' : 'Import to cloud'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -20,7 +20,7 @@ export const AutomationSection = () => (
     tone="muted"
     eyebrow="Smart defaults"
     title="Less manual work built into every capture"
-    description="Deterministic automation and privacy guardrails run across capture, library, and delivery — no AI required, no cloud dependency."
+    description="Deterministic automation and privacy guardrails run across capture, library, and delivery — no AI required to get started."
   >
     <motion.div
       initial={{ opacity: 0, y: 24 }}

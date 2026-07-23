@@ -1,7 +1,9 @@
 import type { FlowBranch } from '@peacock/shared';
 import type { FlowShareSettings } from '@/types/savedFlow';
 import { ShareBranchingOptions } from '@/components/share/ShareBranchingOptions';
+import { ShareLinkSecurityOptions } from '@/components/share/ShareLinkSecurityOptions';
 import type { ShareLinkAccessMode } from '@/utils/shareLink';
+import type { ShareExpiryPreset } from '@/utils/shareExpiry';
 
 interface ShareLinkPanelProps {
   accessMode: ShareLinkAccessMode;
@@ -11,8 +13,12 @@ interface ShareLinkPanelProps {
   hasBranches: boolean;
   branches: FlowBranch[];
   branchSettings: FlowShareSettings;
+  expiryPreset?: ShareExpiryPreset;
+  requiresAuth?: boolean;
   onAccessModeChange: (mode: ShareLinkAccessMode) => void;
   onBranchSettingsChange: (settings: FlowShareSettings) => void;
+  onExpiryPresetChange?: (preset: ShareExpiryPreset) => void;
+  onRequiresAuthChange?: (requiresAuth: boolean) => void;
 }
 
 export const ShareLinkPanel = ({
@@ -23,8 +29,12 @@ export const ShareLinkPanel = ({
   hasBranches,
   branches,
   branchSettings,
+  expiryPreset = 'never',
+  requiresAuth = false,
   onAccessModeChange,
   onBranchSettingsChange,
+  onExpiryPresetChange,
+  onRequiresAuthChange,
 }: ShareLinkPanelProps) => (
   <div className="space-y-4">
     <div>
@@ -48,13 +58,25 @@ export const ShareLinkPanel = ({
       <p className="mt-2 text-xs text-slate-500">
         {accessMode === 'readonly'
           ? usesTokenLinks
-            ? 'Anyone with the link can view this guide without signing in.'
+            ? requiresAuth
+              ? 'Viewers must sign in with a Peacock account before content loads.'
+              : 'Anyone with the link can view until it expires or is revoked.'
             : 'Viewers can read the guide but cannot edit it.'
           : usesTokenLinks
             ? 'Signed-in workspace members can open the editor via this link.'
             : 'Anyone with the link can open the editor for this doc.'}
       </p>
     </div>
+
+    {usesTokenLinks && onExpiryPresetChange && onRequiresAuthChange ? (
+      <ShareLinkSecurityOptions
+        accessMode={accessMode}
+        expiryPreset={expiryPreset}
+        requiresAuth={requiresAuth}
+        onExpiryPresetChange={onExpiryPresetChange}
+        onRequiresAuthChange={onRequiresAuthChange}
+      />
+    ) : null}
 
     {hasBranches && accessMode === 'readonly' ? (
       <ShareBranchingOptions

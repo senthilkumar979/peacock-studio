@@ -8,12 +8,7 @@ import {
   resolveClerkDisplayName,
 } from '@/cloud/authContext';
 import { fetchClerkSupabaseAccessToken } from '@/cloud/clerkSupabaseToken';
-import {
-  importLocalLibraryToCloud,
-  countLocalLibraryItems,
-} from '@/cloud/importLocalLibrary';
-import { getFreeAccountDocLimit } from '@/cloud/planLimits';
-import { setCloudSyncState, resetCloudSyncState } from '@/cloud/cloudSyncState';
+import { resetCloudSyncState } from '@/cloud/cloudSyncState';
 import { isCloudSyncEnabled } from '@/cloud/config';
 import { upsertUserProfile } from '@/cloud/repositories/profileRepository';
 import {
@@ -24,10 +19,10 @@ import {
 import { resetSupabaseClientCache } from '@/cloud/supabaseClient';
 import { setSessionAuthState } from '@/cloud/sessionState';
 import { getCloudEnvValidationError } from '@/cloud/validateCloudEnv';
-import { clearLocalLibrary } from '@/storage/flowLibraryDb';
 import { consumeIntentionalSignOut } from '@/cloud/sessionIntent';
 import { GENERIC_USER_ERROR_MESSAGE, logAppError, reportAppError } from '@/utils/appError';
 import { notifyError, notifyWarning } from '@/utils/notify';
+import { ImportLocalLibraryPrompt } from '@/components/auth/ImportLocalLibraryPrompt';
 
 interface CloudSyncProviderInnerProps {
   children: React.ReactNode;
@@ -39,7 +34,6 @@ export const CloudSyncProviderInner = ({ children }: CloudSyncProviderInnerProps
   const { session } = useSession();
   const { user } = useUser();
   const syncedUserIdRef = useRef<string | null>(null);
-  const localImportDoneRef = useRef(false);
   const hadCloudSessionRef = useRef(false);
 
   const userEmail = user?.primaryEmailAddress?.emailAddress?.trim() ?? '';
@@ -65,7 +59,6 @@ export const CloudSyncProviderInner = ({ children }: CloudSyncProviderInnerProps
         }
         hadCloudSessionRef.current = false;
         syncedUserIdRef.current = null;
-        localImportDoneRef.current = false;
         setCloudAuthContext(null);
         setCloudInitError(null);
         resetCloudSyncState();
@@ -172,54 +165,11 @@ export const CloudSyncProviderInner = ({ children }: CloudSyncProviderInnerProps
           }),
         );
         syncedUserIdRef.current = userId;
-
-        if (!activeMembership) {
-          return;
-        }
-
-        // Import local library at most once per signed-in session
-        if (localImportDoneRef.current) return;
-        localImportDoneRef.current = true;
-
-        const localCounts = await countLocalLibraryItems();
-        const hasLocalData =
-          localCounts.documents > 0 || localCounts.personas > 0 || localCounts.tours > 0;
-
-        if (hasLocalData) {
-          setCloudSyncState({
-            phase: 'syncing',
-            message: 'Syncing your library to the cloud…',
-            importedDocuments: 0,
-            exceedsFreeLimit: false,
-          });
-
-          const counts = await importLocalLibraryToCloud();
-          await clearLocalLibrary();
-
-          const exceedsFreeLimit = counts.documents > getFreeAccountDocLimit();
-
-          if (counts.documents > 0) {
-            setCloudSyncState({
-              phase: 'success',
-              message: `Synced ${counts.documents} document${counts.documents === 1 ? '' : 's'} to your cloud library.`,
-              importedDocuments: counts.documents,
-              exceedsFreeLimit,
-            });
-          } else {
-            resetCloudSyncState();
-          }
-        }
       } catch (error) {
         const classified = reportAppError('Failed to initialize cloud library', error);
         setCloudAuthContext(null);
         setCloudInitError(classified.userMessage);
         notifyError(classified.title, classified.userMessage);
-        setCloudSyncState({
-          phase: 'error',
-          message: classified.userMessage,
-          importedDocuments: 0,
-          exceedsFreeLimit: false,
-        });
         resetSupabaseClientCache();
       }
     };
@@ -231,5 +181,10 @@ export const CloudSyncProviderInner = ({ children }: CloudSyncProviderInnerProps
     };
   }, [isLoaded, isSignedIn, session, userId, userEmail, userDisplayName]);
 
-  return children;
+  return (
+    <>
+      {children}
+      <ImportLocalLibraryPrompt />
+    </>
+  );
 };

@@ -41,8 +41,8 @@ export const HeroSection = () => (
 
         <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-400">
           Peacock captures clicks, inputs, and screenshots from any website via the free Chrome
-          extension, then turns them into editable Flow Documents and Product Tours — local-first,
-          no account required.
+          extension, then turns them into editable Flow Documents and Product Tours — start as a
+          guest, sign in when you need cloud sync and team sharing.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">

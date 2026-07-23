@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Loader2, X } from 'lucide-react';
 import { collectAllBranches, type FlowOutlineItem, type FlowPayload } from '@peacock/shared';
 import { ShareLinkPanel } from '@/components/share/ShareLinkPanel';
+import { ShareLinkManagePanel } from '@/components/share/ShareLinkManagePanel';
 import { ShareMethodPicker, type ShareMethod } from '@/components/share/ShareMethodPicker';
 import { SharePdfPathOptions } from '@/components/share/SharePdfPathOptions';
 import { PdfExportBlockingOverlay } from '@/components/share/PdfExportBlockingOverlay';
@@ -21,6 +22,7 @@ import {
   copyTextToClipboard,
   type ShareLinkAccessMode,
 } from '@/utils/shareLink';
+import { expiresAtFromPreset, type ShareExpiryPreset } from '@/utils/shareExpiry';
 import { useShareMethodAccess } from '@/hooks/useOrganization';
 import { notifyError, notifyPromise } from '@/utils/notify';
 import { AnalyticsEvents } from '@/analytics/events';
@@ -49,6 +51,9 @@ export const ShareDocumentModal = ({
   const { canShare, canExport, canEmbed, disabledReasons } = useShareMethodAccess();
   const [method, setMethod] = useState<ShareMethod>('link');
   const [accessMode, setAccessMode] = useState<ShareLinkAccessMode>('readonly');
+  const [expiryPreset, setExpiryPreset] = useState<ShareExpiryPreset>('never');
+  const [requiresAuth, setRequiresAuth] = useState(false);
+  const [manageRefreshKey, setManageRefreshKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [loaded, setLoaded] = useState<{
@@ -90,6 +95,8 @@ export const ShareDocumentModal = ({
           : 'pdf';
     setMethod(preferred);
     setAccessMode('readonly');
+    setExpiryPreset('never');
+    setRequiresAuth(false);
     setBranchSettings(defaultBranchSettings);
     setPdfPathSelections(defaultPdfPathSelections);
     setEmbedCode('');
@@ -155,9 +162,14 @@ export const ShareDocumentModal = ({
       accessMode,
       viewMode: 'doc',
       shareSettings: branchShareSettings,
+      expiresAt: expiresAtFromPreset(expiryPreset),
+      requiresAuth: accessMode === 'readonly' ? requiresAuth : false,
     })
       .then((url) => {
-        if (!cancelled) setShareUrl(url);
+        if (!cancelled) {
+          setShareUrl(url);
+          setManageRefreshKey((key) => key + 1);
+        }
       })
       .catch((error) => {
         if (!cancelled) {
@@ -172,7 +184,17 @@ export const ShareDocumentModal = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, method, documentId, accessMode, branchSettings, hasBranches, canShare]);
+  }, [
+    isOpen,
+    method,
+    documentId,
+    accessMode,
+    branchSettings,
+    hasBranches,
+    canShare,
+    expiryPreset,
+    requiresAuth,
+  ]);
 
   const handleClose = () => {
     if (isExporting) return;
@@ -254,6 +276,8 @@ export const ShareDocumentModal = ({
             accessMode,
             viewMode: 'doc',
             shareSettings: branchShareSettings,
+            expiresAt: expiresAtFromPreset(expiryPreset),
+            requiresAuth: accessMode === 'readonly' ? requiresAuth : false,
           });
           await copyTextToClipboard(created);
           return created;
@@ -349,17 +373,30 @@ export const ShareDocumentModal = ({
                 )
               ) : null}
               {method === 'link' ? (
-                <ShareLinkPanel
-                  accessMode={accessMode}
-                  shareUrl={shareUrl}
-                  usesTokenLinks={isCloudSyncEnabled()}
-                  isShareUrlLoading={isShareUrlLoading}
-                  hasBranches={hasBranches}
-                  branches={branches}
-                  branchSettings={branchSettings}
-                  onAccessModeChange={setAccessMode}
-                  onBranchSettingsChange={setBranchSettings}
-                />
+                <div className="space-y-4">
+                  <ShareLinkPanel
+                    accessMode={accessMode}
+                    shareUrl={shareUrl}
+                    usesTokenLinks={isCloudSyncEnabled()}
+                    isShareUrlLoading={isShareUrlLoading}
+                    hasBranches={hasBranches}
+                    branches={branches}
+                    branchSettings={branchSettings}
+                    expiryPreset={expiryPreset}
+                    requiresAuth={requiresAuth}
+                    onAccessModeChange={setAccessMode}
+                    onBranchSettingsChange={setBranchSettings}
+                    onExpiryPresetChange={setExpiryPreset}
+                    onRequiresAuthChange={setRequiresAuth}
+                  />
+                  {isCloudSyncEnabled() ? (
+                    <ShareLinkManagePanel
+                      resourceType="document"
+                      resourceId={documentId}
+                      refreshKey={manageRefreshKey}
+                    />
+                  ) : null}
+                </div>
               ) : null}
               {method === 'pdf' ? (
                 <div className="space-y-4">

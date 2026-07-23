@@ -112,9 +112,9 @@ const LIBRARY_GUIDE_CONTENT: Record<LibraryGuideId, LibraryGuideContent> = {
         icon: Share2,
       },
       {
-        title: 'Local-first privacy',
+        title: 'Guest preview & cloud sync',
         description:
-          'Flows stay on this device by default. Cloud sync is optional when you need cross-device access.',
+          'Flows can stay on this device while you try Peacock. Sign in to sync across devices and collaborate in a workspace.',
         icon: Puzzle,
       },
     ],

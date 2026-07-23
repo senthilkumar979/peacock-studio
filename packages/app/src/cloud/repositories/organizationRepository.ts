@@ -359,18 +359,54 @@ export async function fetchOrgDomainUsage(
     .filter((row) => row.domain && row.count > 0);
 }
 
+export class InviteEmailNotConfiguredError extends Error {
+  readonly skipped = true as const;
+
+  constructor(message = 'Invite email is not configured') {
+    super(message);
+    this.name = 'InviteEmailNotConfiguredError';
+  }
+}
+
 export async function sendOrgInviteEmail(input: {
   toEmail: string;
   organizationName: string;
   inviterName: string;
   inviteToken: string;
   expiresAt: string;
-}): Promise<void> {
+}): Promise<{ sent: true } | { sent: false; skipped: true }> {
   const supabase = getAuthenticatedSupabaseClient();
-  const { error } = await supabase.functions.invoke('send-org-invite', {
+  const { data, error } = await supabase.functions.invoke('send-org-invite', {
     body: input,
   });
-  if (error) {
-    console.warn('[Peacock] Invite email failed:', error.message);
+
+  const payload = data as { skipped?: boolean; error?: string } | null;
+  if (payload?.skipped) {
+    throw new InviteEmailNotConfiguredError(payload.error ?? 'Invite email is not configured');
   }
+
+  if (error) {
+    const context = (error as { context?: Response }).context;
+    if (context) {
+      try {
+        const body = (await context.clone().json()) as { skipped?: boolean; error?: string };
+        if (body?.skipped) {
+          throw new InviteEmailNotConfiguredError(
+            body.error ?? 'Invite email is not configured',
+          );
+        }
+      } catch (parseError) {
+        if (parseError instanceof InviteEmailNotConfiguredError) throw parseError;
+      }
+    }
+    throw new Error(error.message || 'Failed to send invite email');
+  }
+
+  return { sent: true };
 }
+
+export function buildOrgInviteAcceptUrl(token: string): string {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${origin}/accept-invite?token=${encodeURIComponent(token)}`;
+}
+
