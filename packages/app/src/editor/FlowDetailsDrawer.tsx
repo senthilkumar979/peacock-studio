@@ -2,7 +2,8 @@ import { useEffect, useId, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { FlowCaptureEnvironment } from "@peacock/shared";
 import { X } from "lucide-react";
-import { CaptureEnvironmentPanel } from "@/components/flow/CaptureEnvironmentPanel";
+import { MinimalRichTextEditor } from "@/components/editor/MinimalRichTextEditor";
+import { normalizeRichText } from "@/utils/richText";
 
 const VERSION_HELPER_EXAMPLES =
   "1.0.0, 2.1.0, 1.4.3-beta, 1, 1a, 2026.1.0, v1.2.0-g4b2d9e1, 2.1a, 20260619.1";
@@ -20,6 +21,8 @@ export interface FlowDetailsInput {
 
 interface FlowDetailsDrawerProps {
   isOpen: boolean;
+  /** Remounts the editor and resets drafts when the flow/document changes. */
+  contentKey?: string;
   initialTitle: string;
   initialDescription: string;
   initialVersion: string;
@@ -29,29 +32,53 @@ interface FlowDetailsDrawerProps {
   onClose: () => void;
 }
 
+interface FlowDetailsDraft {
+  contentKey: string;
+  isOpen: boolean;
+  title: string;
+  description: string;
+  version: string;
+}
+
 export const FlowDetailsDrawer = ({
   isOpen,
+  contentKey,
   initialTitle,
   initialDescription,
   initialVersion,
-  captureEnvironment,
+  captureEnvironment: _captureEnvironment,
   confirmLabel = "Save",
   onSave,
   onClose,
 }: FlowDetailsDrawerProps) => {
   const titleId = useId();
-  const [title, setTitle] = useState(initialTitle);
-  const [description, setDescription] = useState(initialDescription);
-  const [version, setVersion] = useState(initialVersion);
+  const resolvedKey = contentKey ?? "flow";
+  const [draft, setDraft] = useState<FlowDetailsDraft>(() => ({
+    contentKey: resolvedKey,
+    isOpen,
+    title: initialTitle,
+    description: initialDescription,
+    version: initialVersion,
+  }));
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    setTitle(initialTitle);
-    setDescription(initialDescription);
-    setVersion(initialVersion);
-    setError(null);
-  }, [isOpen, initialTitle, initialDescription, initialVersion]);
+  // Reset draft during render when opening or switching docs — avoids one frame of
+  // stale TipTap content from the previous flow (useEffect would be too late).
+  if (isOpen) {
+    const needsReset = !draft.isOpen || draft.contentKey !== resolvedKey;
+    if (needsReset) {
+      setDraft({
+        contentKey: resolvedKey,
+        isOpen: true,
+        title: initialTitle,
+        description: initialDescription,
+        version: initialVersion,
+      });
+      setError(null);
+    }
+  } else if (draft.isOpen) {
+    setDraft((prev) => ({ ...prev, isOpen: false }));
+  }
 
   useEffect(() => {
     if (!isOpen) return;
@@ -71,7 +98,7 @@ export const FlowDetailsDrawer = ({
   }, [isOpen, onClose]);
 
   const handleSubmit = () => {
-    const trimmedTitle = title.trim();
+    const trimmedTitle = draft.title.trim();
     if (!trimmedTitle) {
       setError("Flow title is required.");
       return;
@@ -79,8 +106,8 @@ export const FlowDetailsDrawer = ({
 
     onSave({
       title: trimmedTitle,
-      description: description.trim(),
-      version: version.trim(),
+      description: normalizeRichText(draft.description),
+      version: draft.version.trim(),
     });
   };
 
@@ -139,9 +166,9 @@ export const FlowDetailsDrawer = ({
                 <label className="flex flex-col gap-1.5 text-sm">
                   <span className="font-medium text-slate-700">Flow title</span>
                   <input
-                    value={title}
+                    value={draft.title}
                     onChange={(event) => {
-                      setTitle(event.target.value);
+                      setDraft((prev) => ({ ...prev, title: event.target.value }));
                       setError(null);
                     }}
                     placeholder="e.g. Create a new order"
@@ -152,18 +179,19 @@ export const FlowDetailsDrawer = ({
                   ) : null}
                 </label>
 
-                <label className="flex flex-col gap-1.5 text-sm">
+                <div className="flex flex-col gap-1.5 text-sm">
                   <span className="font-medium text-slate-700">
                     Description
                   </span>
-                  <textarea
-                    value={description}
-                    onChange={(event) => setDescription(event.target.value)}
-                    rows={8}
+                  <MinimalRichTextEditor
+                    key={resolvedKey}
+                    value={draft.description}
+                    onChange={(description) =>
+                      setDraft((prev) => ({ ...prev, description }))
+                    }
                     placeholder="What does this flow help someone accomplish?"
-                    className="resize-none rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2"
                   />
-                </label>
+                </div>
 
                 <label className="flex flex-col gap-1.5 text-sm">
                   <span className="font-medium text-slate-700">Version</span>
@@ -171,8 +199,10 @@ export const FlowDetailsDrawer = ({
                     Ex: {VERSION_HELPER_EXAMPLES}
                   </span>
                   <input
-                    value={version}
-                    onChange={(event) => setVersion(event.target.value)}
+                    value={draft.version}
+                    onChange={(event) =>
+                      setDraft((prev) => ({ ...prev, version: event.target.value }))
+                    }
                     placeholder="e.g. 1.0.0"
                     className="rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2"
                   />

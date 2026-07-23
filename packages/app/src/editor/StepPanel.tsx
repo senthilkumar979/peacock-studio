@@ -34,7 +34,7 @@ export const StepPanel = ({ step }: StepPanelProps) => {
           Step details
         </h2>
 
-        <label className="flex flex-col gap-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm px-1">
           <span className="font-medium text-slate-700">Title</span>
           <input
             value={step.title}
@@ -43,7 +43,7 @@ export const StepPanel = ({ step }: StepPanelProps) => {
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm px-1">
           <span className="font-medium text-slate-700">Notes</span>
           <span className="text-xs text-slate-500">
             Leave blank to use the auto-generated description below.

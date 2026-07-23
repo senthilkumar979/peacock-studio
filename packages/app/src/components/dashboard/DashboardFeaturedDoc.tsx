@@ -4,6 +4,7 @@ import { Calendar, Layers, Pencil, Play, Sparkles } from 'lucide-react';
 import type { SavedFlowSummary } from '@/types/savedFlow';
 import { useLibraryNavigationState } from '@/hooks/useLibraryBackState';
 import { formatFlowDate } from '@/utils/formatFlowDate';
+import { stripHtmlTags } from '@/utils/richText';
 import { getDocumentPath } from '@/utils/shareLink';
 
 interface DashboardFeaturedDocProps {
@@ -12,6 +13,7 @@ interface DashboardFeaturedDocProps {
 
 export const DashboardFeaturedDoc = ({ summary }: DashboardFeaturedDocProps) => {
   const navigationState = useLibraryNavigationState();
+  const plainDescription = stripHtmlTags(summary.description);
 
   return (
   <motion.section
@@ -46,9 +48,9 @@ export const DashboardFeaturedDoc = ({ summary }: DashboardFeaturedDocProps) => 
           Latest documentation
         </p>
         <h2 className="mt-2 truncate text-xl font-bold text-slate-900">{summary.title}</h2>
-        {summary.description ? (
+        {plainDescription ? (
           <p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-relaxed text-slate-600">
-            {summary.description}
+            {plainDescription}
           </p>
         ) : (
           <p className="mt-2 text-sm italic text-slate-400">No description added yet</p>

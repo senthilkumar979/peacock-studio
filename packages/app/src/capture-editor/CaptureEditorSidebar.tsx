@@ -27,7 +27,7 @@ export const CaptureEditorSidebar = () => {
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
           Caption
         </p>
-        <label className="block text-xs text-slate-600">
+        <label className="block text-xs text-slate-600 px-1">
           Title
           <input
             type="text"
@@ -40,7 +40,7 @@ export const CaptureEditorSidebar = () => {
             className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-900"
           />
         </label>
-        <label className="block text-xs text-slate-600">
+        <label className="block text-xs text-slate-600 px-1">
           Description
           <textarea
             value={settings.description}

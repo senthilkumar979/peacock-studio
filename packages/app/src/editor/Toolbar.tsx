@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { persistCurrentFlow } from "@/services/flowLibraryService";
 import { useFlowStore, usePlayableSteps } from "@/store/flowStore";
 import { getDocumentPath } from "@/utils/shareLink";
+import { stripHtmlTags } from "@/utils/richText";
 import { FlowDetailsDrawer, type FlowDetailsInput } from "./FlowDetailsDrawer";
 import { FirstTimeTooltip } from "@/components/onboarding/FirstTimeTooltip";
 import { EDITOR_HINT_IDS } from "@/constants/firstTimeHints";
@@ -74,6 +75,7 @@ export const Toolbar = ({
 
   const flowTitle = flow?.flow.title ?? "Untitled Flow";
   const flowDescription = flow?.flow.description ?? "";
+  const flowDescriptionPlain = stripHtmlTags(flowDescription);
   const flowVersion = flow?.flow.version ?? "";
   const captureEnvironment = flow?.metadata.captureEnvironment ?? null;
   const playerPath = documentId ? getDocumentPath(documentId, "player") : "/";
@@ -83,7 +85,7 @@ export const Toolbar = ({
       <AppHeader
         eyebrow="Peacock Studio Editor"
         title={flowTitle}
-        description={flowDescription || undefined}
+        description={flowDescriptionPlain || undefined}
         homeLink
         documentId={documentId}
       >
@@ -132,6 +134,7 @@ export const Toolbar = ({
 
       <FlowDetailsDrawer
         isOpen={isFlowDetailsOpen}
+        contentKey={documentId ?? flow?.metadata.createdAt?.toString()}
         initialTitle={flowTitle}
         initialDescription={flowDescription}
         initialVersion={flowVersion}

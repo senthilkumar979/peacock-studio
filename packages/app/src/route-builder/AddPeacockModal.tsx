@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { FlowVersionBadge } from '@/components/dashboard/FlowVersionBadge';
 import type { SavedFlowSummary } from '@/types/savedFlow';
+import { stripHtmlTags } from '@/utils/richText';
 
 interface AddPeacockModalProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ export const AddPeacockModal = ({
       if (!normalized) return true;
       return (
         summary.title.toLowerCase().includes(normalized) ||
-        summary.description.toLowerCase().includes(normalized) ||
+        stripHtmlTags(summary.description).toLowerCase().includes(normalized) ||
         summary.version.toLowerCase().includes(normalized)
       );
     });

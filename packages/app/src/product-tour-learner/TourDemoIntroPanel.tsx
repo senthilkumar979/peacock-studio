@@ -3,7 +3,9 @@ import { ArrowRight, GitBranch, Play } from 'lucide-react';
 import type { SavedFlowDocument } from '@/types/savedFlow';
 import { getFlowDocument } from '@/services/flowLibraryService';
 import type { TourDemoRef } from '@/types/productTour';
+import { RichTextContent } from '@/components/editor/RichTextContent';
 import type { DemoBranchMeta } from '@/utils/productTourLearner';
+import { isEmptyRichText } from '@/utils/richText';
 
 interface TourDemoIntroPanelProps {
   featureNumber: number;
@@ -75,8 +77,11 @@ export const TourDemoIntroPanel = ({
 
         <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{title}</h2>
 
-        {description ? (
-          <p className="mt-3 text-base leading-relaxed text-slate-600">{description}</p>
+        {!isEmptyRichText(description) ? (
+          <RichTextContent
+            html={description}
+            className="mt-3 text-base text-slate-600"
+          />
         ) : null}
 
         {isLoading ? (

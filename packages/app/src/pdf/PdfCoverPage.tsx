@@ -1,5 +1,6 @@
 import { Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import type { FlowPayload } from '@peacock/shared';
+import { stripHtmlTags } from '@/utils/richText';
 import { PdfPageFooter } from './PdfPageChrome';
 import { PDF_COLORS, PDF_FONT_FAMILY } from './pdfTheme';
 import { hasPdfCaptureEnvironment } from './pdfCaptureEnvironment';
@@ -110,7 +111,7 @@ export const PdfCoverPage = ({ flow, stepCount, logoSrc }: PdfCoverPageProps) =>
     day: 'numeric',
   });
   const version = flow.flow.version.trim();
-  const description = flow.flow.description.trim();
+  const description = stripHtmlTags(flow.flow.description);
 
   return (
     <Page size="A4" style={styles.page}>

@@ -1,6 +1,8 @@
 import { CalendarDays, GitBranch, Layers3, LayoutList, Sparkles } from 'lucide-react';
 import { FlowVersionBadge } from '@/components/dashboard/FlowVersionBadge';
+import { RichTextContent } from '@/components/editor/RichTextContent';
 import { formatFlowDate } from '@/utils/formatFlowDate';
+import { isEmptyRichText } from '@/utils/richText';
 import { FlowDetailsGuideHints } from '@/player/FlowDetailsGuideHints';
 import { FlowDetailsStatChip } from '@/player/FlowDetailsStatChip';
 
@@ -29,7 +31,7 @@ export const FlowDetailsIntro = ({
   fillHeight = false,
   isActive = false,
 }: FlowDetailsIntroProps) => {
-  const trimmedDescription = description.trim();
+  const hasDescription = !isEmptyRichText(description);
   const isPlayer = variant === 'player';
   const isHub = variant === 'hub';
   const badgeLabel = isHub ? 'Flow overview' : isPlayer ? 'Flow overview' : 'Flow details';
@@ -65,14 +67,13 @@ export const FlowDetailsIntro = ({
           {title}
         </h2>
 
-        {trimmedDescription ? (
-          <p
-            className={`mt-3 leading-relaxed text-slate-600 ${
+        {hasDescription ? (
+          <RichTextContent
+            html={description}
+            className={`mt-3 text-slate-600 ${
               isPlayer || isHub ? 'text-base sm:text-lg' : 'text-sm sm:text-base'
             }`}
-          >
-            {trimmedDescription}
-          </p>
+          />
         ) : (
           <p className="mt-3 text-sm italic text-slate-500">No description provided.</p>
         )}

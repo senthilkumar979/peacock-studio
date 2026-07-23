@@ -7,6 +7,12 @@ function hasQuotes(value: string): boolean {
 
 /** Returns a user-facing message when cloud env vars look misconfigured. */
 export function getCloudEnvValidationError(): string | null {
+  const leakedSecret = (import.meta.env as Record<string, string | undefined>)
+    .VITE_CLERK_SECRET_KEY?.trim();
+  if (leakedSecret) {
+    return 'Remove VITE_CLERK_SECRET_KEY from the client env. Secret keys must never use the VITE_ prefix (they ship in the browser bundle). Use CLERK_SECRET_KEY only in server/CI, rotate the leaked key in Clerk, and redeploy.';
+  }
+
   const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY?.trim();
   if (!clerkKey) {
     return 'VITE_CLERK_PUBLISHABLE_KEY is missing. Copy the publishable key from Clerk → API keys.';

@@ -1,12 +1,19 @@
-import { useLocation } from 'react-router-dom';
 import { SignUp } from '@clerk/react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { ClerkAuthWidget } from '@/components/auth/ClerkAuthWidget';
+import { CloudAuthConfigError } from '@/components/auth/CloudAuthConfigError';
+import {
+  getClerkPublishableKey,
+  getCloudSyncMissingConfigMessage,
+} from '@/cloud/config';
 import { DASHBOARD_PATH, LANDING_PATH } from '@/constants/routes';
 
 export const SignUpPage = () => {
   const location = useLocation();
   const redirectUrl =
     (location.state as { from?: string } | null)?.from ?? DASHBOARD_PATH;
+  const configError = getCloudSyncMissingConfigMessage();
+  const clerkKey = getClerkPublishableKey();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 py-12">
@@ -19,7 +26,25 @@ export const SignUpPage = () => {
           Free tier includes cloud sync for your workflow library.
         </p>
       </div>
-      <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" forceRedirectUrl={redirectUrl} />
+
+      {configError || !clerkKey ? (
+        <CloudAuthConfigError
+          title="Cloud sign-up is not configured"
+          message={
+            configError ??
+            'VITE_CLERK_PUBLISHABLE_KEY is missing from this build. Add the publishable key in Vercel and redeploy.'
+          }
+        />
+      ) : (
+        <ClerkAuthWidget loadingLabel="Loading sign-up…">
+          <SignUp
+            routing="path"
+            path="/sign-up"
+            signInUrl="/sign-in"
+            forceRedirectUrl={redirectUrl}
+          />
+        </ClerkAuthWidget>
+      )}
     </div>
   );
 };

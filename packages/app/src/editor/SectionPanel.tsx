@@ -51,7 +51,7 @@ export const SectionPanel = ({ section }: SectionPanelProps) => {
           </span>
         </div>
 
-        <label className="flex flex-col gap-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm px-1">
           <span className="font-medium text-slate-700">Title</span>
           <input
             value={section.title}
@@ -62,7 +62,7 @@ export const SectionPanel = ({ section }: SectionPanelProps) => {
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm px-1">
           <span className="font-medium text-slate-700">Description</span>
           <textarea
             value={section.description}

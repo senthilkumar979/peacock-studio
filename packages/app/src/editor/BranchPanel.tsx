@@ -81,7 +81,7 @@ export const BranchPanel = ({ branch, onAddPath }: BranchPanelProps) => {
           </span>
         </div>
 
-        <label className="block text-sm font-medium text-slate-700">
+        <label className="block text-sm font-medium text-slate-700 px-1">
           Title
           <input
             value={branch.title}
@@ -92,7 +92,7 @@ export const BranchPanel = ({ branch, onAddPath }: BranchPanelProps) => {
           />
         </label>
 
-        <label className="block text-sm font-medium text-slate-700">
+        <label className="block text-sm font-medium text-slate-700 px-1">
           Description
           <textarea
             value={branch.description}

@@ -1,4 +1,5 @@
 import type { SavedFlowSummary } from '@/types/savedFlow';
+import { stripHtmlTags } from '@/utils/richText';
 
 export type DashboardSortMode = 'newest' | 'oldest' | 'mostSteps' | 'title';
 
@@ -10,7 +11,8 @@ export function filterSummaries(
   if (!normalized) return summaries;
 
   return summaries.filter((item) => {
-    const haystack = `${item.title} ${item.description} ${item.version}`.toLowerCase();
+    const haystack =
+      `${item.title} ${stripHtmlTags(item.description)} ${item.version}`.toLowerCase();
     return haystack.includes(normalized);
   });
 }

@@ -53,7 +53,7 @@ import { FlowMapsDetailPage } from '@/pages/FlowMapsDetailPage';
 import { WorkspaceChooserPage } from '@/pages/WorkspaceChooserPage';
 import { AcceptInvitePage } from '@/pages/AcceptInvitePage';
 import { OrgAdminPage } from '@/pages/OrgAdminPage';
-import { isCloudSyncEnabled } from '@/cloud/config';
+import { isCloudSyncEnabled, isCloudSyncFlagEnabled } from '@/cloud/config';
 
 export const App = () => {
   const location = useLocation();
@@ -66,11 +66,15 @@ export const App = () => {
           <Route path="/landing" element={<Navigate to={LANDING_PATH} replace />} />
           <Route
             path="/sign-in/*"
-            element={isCloudSyncEnabled() ? <SignInPage /> : <Navigate to={LANDING_PATH} replace />}
+            element={
+              isCloudSyncFlagEnabled() ? <SignInPage /> : <Navigate to={LANDING_PATH} replace />
+            }
           />
           <Route
             path="/sign-up/*"
-            element={isCloudSyncEnabled() ? <SignUpPage /> : <Navigate to={LANDING_PATH} replace />}
+            element={
+              isCloudSyncFlagEnabled() ? <SignUpPage /> : <Navigate to={LANDING_PATH} replace />
+            }
           />
           <Route
             path={WORKSPACE_ONBOARDING_PATH}

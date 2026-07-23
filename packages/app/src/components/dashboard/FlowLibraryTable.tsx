@@ -4,6 +4,7 @@ import type { SavedFlowSummary } from '@/types/savedFlow';
 import { useLibraryNavigationState } from '@/hooks/useLibraryBackState';
 import { formatFlowDate } from '@/utils/formatFlowDate';
 import { formatUpdatedByLine } from '@/utils/formatUpdatedByLine';
+import { stripHtmlTags } from '@/utils/richText';
 import { getDocumentPath } from '@/utils/shareLink';
 import { FlowDocumentActions } from './FlowDocumentActions';
 import { FlowStepCountBadge } from './FlowStepCountBadge';
@@ -57,7 +58,9 @@ export const FlowLibraryTable = ({
         </tr>
       </thead>
       <tbody className="divide-y divide-slate-100">
-        {summaries.map((summary) => (
+        {summaries.map((summary) => {
+          const plainDescription = stripHtmlTags(summary.description);
+          return (
           <tr key={summary.id} className="hover:bg-slate-50/80">
             <td className="px-4 py-3">
               <Link
@@ -68,8 +71,10 @@ export const FlowLibraryTable = ({
                 <p className="font-medium text-slate-900 transition-colors group-hover:text-peacock-700">
                   {summary.title}
                 </p>
-                {summary.description ? (
-                  <p className="mt-0.5 line-clamp-1 text-slate-500">{summary.description}</p>
+                {plainDescription ? (
+                  <p className="mt-0.5 line-clamp-1 text-slate-500">
+                    {plainDescription}
+                  </p>
                 ) : null}
                 <div className="mt-2">
                   <FlowStepCountBadge stepCount={summary.stepCount} />
@@ -100,7 +105,8 @@ export const FlowLibraryTable = ({
               </div>
             </td>
           </tr>
-        ))}
+          );
+        })}
       </tbody>
     </table>
   </div>

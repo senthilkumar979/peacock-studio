@@ -10,6 +10,7 @@ import {
 import type { SavedFlowSummary } from '@/types/savedFlow'
 import { useLibraryNavigationState } from '@/hooks/useLibraryBackState'
 import { formatFlowDate } from '@/utils/formatFlowDate'
+import { stripHtmlTags } from '@/utils/richText'
 import {
   formatUpdatedByLine,
   resolveDisplayNameFromEmails,
@@ -61,6 +62,7 @@ const FlowLibraryCard = ({
     displayNamesByEmail,
   )
   const navigationState = useLibraryNavigationState()
+  const plainDescription = stripHtmlTags(summary.description)
 
   return (
     <motion.article
@@ -95,9 +97,9 @@ const FlowLibraryCard = ({
               aria-hidden
             />
           </h3>
-          {summary.description ? (
+          {plainDescription ? (
             <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-600">
-              {summary.description}
+              {plainDescription}
             </p>
           ) : (
             <p className="mt-2 text-sm italic text-slate-400">
