@@ -3,6 +3,7 @@ import { EmbedGrowthCta } from "@/components/embed/EmbedGrowthCta";
 import { PersonaAvatar } from "@/components/persona/PersonaAvatar";
 import type { Persona } from "@/types/persona";
 import type { ProductTour } from "@/types/productTour";
+import { stripHtmlTags } from "@/utils/richText";
 
 interface TourCompletePanelProps {
   tour: ProductTour;
@@ -38,7 +39,7 @@ export const TourCompletePanel = ({
             </p>
             <h2 className="mt-1 text-3xl font-bold text-slate-900">{tour.title}</h2>
             {tour.description ? (
-              <p className="mt-3 text-base text-slate-800">{tour.description}</p>
+              <p className="mt-3 text-base text-slate-800">{stripHtmlTags(tour.description)}</p>
             ) : null}
           </div>
         </div>

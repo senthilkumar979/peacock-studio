@@ -1,5 +1,6 @@
 import { Clock, Layers, Map, Sparkles } from 'lucide-react';
 import type { ProductTour } from '@/types/productTour';
+import { stripHtmlTags } from '@/utils/richText';
 
 interface TourDetailsPanelProps {
   tour: ProductTour;
@@ -32,7 +33,7 @@ export const TourDetailsPanel = ({
           </h2>
           {tour.description ? (
             <p className="mt-3 text-base leading-relaxed text-slate-600">
-              {tour.description}
+              {stripHtmlTags(tour.description)}
             </p>
           ) : null}
         </div>

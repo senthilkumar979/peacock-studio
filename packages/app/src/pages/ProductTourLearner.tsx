@@ -36,6 +36,7 @@ import { TourPersonaIntroPanel } from "@/product-tour-learner/TourPersonaIntroPa
 import { TourDetailsPanel } from "@/product-tour-learner/TourDetailsPanel";
 import { TourDemoIntroPanel } from "@/product-tour-learner/TourDemoIntroPanel";
 import { TourBranchPointPanel } from "@/product-tour-learner/TourBranchPointPanel";
+import { stripHtmlTags } from "@/utils/richText";
 
 export interface ProductTourLearnerProps {
   tourId?: string;
@@ -451,7 +452,7 @@ export const ProductTourLearner = ({
           </p>
           <h1 className="mt-1 text-lg font-bold text-slate-900">{tour.title}</h1>
           {tour.description && !isEmbed ? (
-            <p className="mt-1 text-sm text-slate-600">{tour.description}</p>
+            <p className="mt-1 text-sm text-slate-600">{stripHtmlTags(tour.description)}</p>
           ) : null}
         </header>
       ) : null}

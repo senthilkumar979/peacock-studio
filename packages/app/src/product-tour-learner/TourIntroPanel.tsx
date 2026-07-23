@@ -2,6 +2,7 @@ import { Clock } from 'lucide-react';
 import { PersonaAvatar } from '@/components/persona/PersonaAvatar';
 import type { Persona } from '@/types/persona';
 import type { ProductTour } from '@/types/productTour';
+import { stripHtmlTags } from '@/utils/richText';
 
 interface TourIntroPanelProps {
   tour: ProductTour;
@@ -33,7 +34,9 @@ export const TourIntroPanel = ({
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Product tour</p>
       <h3 className="mt-2 text-3xl font-bold text-slate-900">{tour.title}</h3>
       {tour.description ? (
-        <p className="mt-3 text-base leading-relaxed text-slate-600">{tour.description}</p>
+        <p className="mt-3 text-base leading-relaxed text-slate-600">
+          {stripHtmlTags(tour.description)}
+        </p>
       ) : null}
       {persona.shortBio ? (
         <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">{persona.shortBio}</p>

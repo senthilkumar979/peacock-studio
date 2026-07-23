@@ -6,6 +6,8 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { EmbedGrowthCta } from '@/components/embed/EmbedGrowthCta';
+import { RichTextContent } from '@/components/editor/RichTextContent';
+import { isEmptyRichText } from '@/utils/richText';
 
 interface PlayerFinaleProps {
   title: string;
@@ -26,7 +28,7 @@ export const PlayerFinale = ({
   onReplay,
   isEmbed = false,
 }: PlayerFinaleProps) => {
-  const hasDescription = Boolean(description);
+  const hasDescription = !isEmptyRichText(description);
 
   return (
     <div className={`mx-auto w-full space-y-4 ${isEmbed ? 'max-w-2xl' : 'max-w-xl'}`}>
@@ -50,9 +52,10 @@ export const PlayerFinale = ({
           </h2>
 
           {hasDescription ? (
-            <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-slate-600">
-              {description}
-            </p>
+            <RichTextContent
+              html={description}
+              className="mx-auto mt-4 max-w-md text-left text-base text-slate-600 sm:text-center [&_p]:sm:text-center"
+            />
           ) : (
             <p className="mt-4 text-sm italic text-slate-400">No description provided.</p>
           )}

@@ -449,6 +449,7 @@ export const DocumentView = ({
 
               <DocumentGuideCompleteCard
                 title={flow?.flow.title ?? "Untitled Flow"}
+                description={flow?.flow.description ?? ""}
                 stepCount={playableStepCount}
                 sectionCount={sectionCount}
                 branchCount={branches.length}

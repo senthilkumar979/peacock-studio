@@ -12,6 +12,7 @@ import { persistCurrentFlow } from '@/services/flowLibraryService';
 import { useFlowStore } from '@/store/flowStore';
 import type { ProductTour } from '@/types/productTour';
 import type { SavedRoute } from '@/types/route';
+import { isEmptyRichText, stripHtmlTags } from '@/utils/richText';
 
 interface AppHeaderProps {
   eyebrow?: string;
@@ -52,6 +53,9 @@ export const AppHeader = ({
 
   const canShare = Boolean(documentId || routeId || tourId);
   const hasActions = Boolean(children) || canShare;
+  // Navbar is single-line truncated — plain text is correct; full HTML renders elsewhere.
+  const plainDescription = description ? stripHtmlTags(description) : '';
+  const hasDescription = !isEmptyRichText(description ?? '');
 
   const logoMark = (
     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-peacock-500 to-peacock-700 p-1.5 shadow-md shadow-peacock-500/20 ring-1 ring-peacock-600/10 transition-shadow group-hover:shadow-lg group-hover:shadow-peacock-500/25">
@@ -84,7 +88,7 @@ export const AppHeader = ({
     </div>
   );
 
-  const hasContext = Boolean(eyebrow || title || description);
+  const hasContext = Boolean(eyebrow || title || hasDescription);
 
   return (
     <header className="sticky top-0 z-50 shrink-0 border-b border-slate-200/70 bg-white/90 shadow-sm backdrop-blur-lg supports-[backdrop-filter]:bg-white/80">
@@ -118,9 +122,9 @@ export const AppHeader = ({
                 <h1 className="truncate text-base font-bold leading-tight text-slate-900 sm:text-lg">
                   {title}
                 </h1>
-                {description ? (
+                {hasDescription ? (
                   <p className="mt-0.5 line-clamp-1 text-xs text-slate-500 sm:text-sm">
-                    {description}
+                    {plainDescription}
                   </p>
                 ) : null}
               </div>

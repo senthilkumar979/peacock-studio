@@ -1,6 +1,7 @@
 import { captureBackgroundUsesLightHeaderText, type CaptureEditorSettings } from '@peacock/shared';
 import type { CaptureLayout } from './computeCaptureLayout';
 import { getCaptureHeaderTypography } from './captureHeaderTypography';
+import { stripHtmlTags } from '@/utils/richText';
 
 type PaintContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -55,7 +56,7 @@ export function drawCaptureHeader(
   settings: CaptureEditorSettings,
 ): void {
   const title = settings.title.trim();
-  const description = settings.description.trim();
+  const description = stripHtmlTags(settings.description).trim();
   if (!title && !description) return;
 
   const x = layout.imageLeft;

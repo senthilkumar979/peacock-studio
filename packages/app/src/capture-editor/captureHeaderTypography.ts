@@ -1,5 +1,7 @@
 /** Scales caption type with screenshot width so exports stay readable at any resolution. */
 
+import { stripHtmlTags } from '@/utils/richText';
+
 export interface CaptureHeaderTypography {
   titleSize: number;
   descSize: number;
@@ -52,7 +54,7 @@ export function computeCaptureHeaderHeight(
   contentWidth: number,
 ): number {
   const trimmedTitle = title.trim();
-  const trimmedDesc = description.trim();
+  const trimmedDesc = stripHtmlTags(description).trim();
   if (!trimmedTitle && !trimmedDesc) return 0;
 
   const typo = getCaptureHeaderTypography(contentWidth);

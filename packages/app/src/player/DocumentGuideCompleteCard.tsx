@@ -6,9 +6,12 @@ import {
   ListOrdered,
 } from 'lucide-react';
 import { EmbedGrowthCta } from '@/components/embed/EmbedGrowthCta';
+import { RichTextContent } from '@/components/editor/RichTextContent';
+import { isEmptyRichText } from '@/utils/richText';
 
 interface DocumentGuideCompleteCardProps {
   title: string;
+  description?: string;
   stepCount: number;
   sectionCount: number;
   branchCount: number;
@@ -34,6 +37,7 @@ const CompleteStat = ({ icon: Icon, label, value }: CompleteStatProps) => (
 
 export const DocumentGuideCompleteCard = ({
   title,
+  description = '',
   stepCount,
   sectionCount,
   branchCount,
@@ -56,9 +60,16 @@ export const DocumentGuideCompleteCard = ({
               Guide complete
             </p>
             <h2 className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">{title}</h2>
-            <p className="mt-1 text-sm text-slate-600">
-              You have reached the end of this flow documentation.
-            </p>
+            {!isEmptyRichText(description) ? (
+              <RichTextContent
+                html={description}
+                className="mt-2 text-sm text-slate-600"
+              />
+            ) : (
+              <p className="mt-1 text-sm text-slate-600">
+                You have reached the end of this flow documentation.
+              </p>
+            )}
           </div>
         </div>
       </div>
