@@ -12,9 +12,9 @@ interface FlowBranchPathOptionProps {
 }
 
 const selectedCardClass =
-  'border-brand-violet bg-gradient-to-r from-brand-violet/10 via-white to-peacock-50/70 shadow-md shadow-brand-violet/10 ring-2 ring-brand-violet/30';
+  'border-peacock-300 bg-gradient-to-r from-peacock-50/90 via-white to-white shadow-md shadow-peacock-500/10 ring-2 ring-peacock-200';
 const defaultCardClass =
-  'border-slate-200/90 bg-white hover:border-brand-violet/35 hover:shadow-sm';
+  'border-slate-200/90 bg-white/90 hover:border-peacock-300/60 hover:bg-white hover:shadow-sm';
 
 function IndexBadge({
   index,
@@ -27,8 +27,8 @@ function IndexBadge({
     <div
       className={`flex shrink-0 items-center justify-center rounded-lg font-bold transition ${
         isSelected
-          ? 'h-9 w-9 bg-gradient-to-br from-peacock-600 to-brand-violet text-sm text-white shadow-md'
-          : 'h-9 w-9 bg-slate-100 text-sm text-slate-600 group-hover:bg-brand-violet/10 group-hover:text-brand-violet'
+          ? 'h-9 w-9 bg-gradient-to-br from-peacock-500 to-peacock-700 text-sm text-white shadow-md shadow-peacock-500/20'
+          : 'h-9 w-9 bg-slate-100 text-sm text-slate-600 group-hover:bg-peacock-50 group-hover:text-peacock-700'
       }`}
     >
       {isSelected ? <Check className="h-4 w-4" aria-hidden /> : index + 1}
@@ -39,14 +39,14 @@ function IndexBadge({
 function MetaBadges({ meta }: { meta?: BranchPathMeta }) {
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-1.5">
-      <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600">
+      <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50/90 px-2 py-0.5 text-xs font-medium text-slate-600">
         <Layers className="h-3 w-3" aria-hidden />
         {meta?.stepCount
           ? `${meta.stepCount} ${meta.stepCount === 1 ? 'step' : 'steps'}`
           : 'Loading…'}
       </span>
       {meta?.rangeLabel ? (
-        <span className="rounded-full bg-peacock-50 px-2 py-0.5 text-xs font-medium text-peacock-800">
+        <span className="rounded-full bg-peacock-50 px-2 py-0.5 text-xs font-medium text-peacock-800 ring-1 ring-peacock-100">
           {meta.rangeLabel}
         </span>
       ) : null}
@@ -88,7 +88,7 @@ const CompactPathCard = ({
 
       <ArrowRight
         className={`h-4 w-4 shrink-0 sm:h-5 sm:w-5 ${
-          isSelected ? 'text-brand-violet' : 'text-slate-300 group-hover:text-brand-violet/70'
+          isSelected ? 'text-peacock-600' : 'text-slate-300 group-hover:text-peacock-500'
         }`}
         aria-hidden
       />
@@ -110,7 +110,7 @@ const ScrollPathCard = ({
       aria-pressed={isSelected}
       className={`group flex h-full w-full flex-col gap-3 rounded-2xl border px-4 py-4 text-left transition duration-200 sm:px-5 sm:py-5 ${
         isSelected
-          ? 'border-brand-violet bg-gradient-to-b from-brand-violet/10 via-white to-peacock-50/70 shadow-lg shadow-brand-violet/10 ring-2 ring-brand-violet/30'
+          ? 'border-peacock-300 bg-gradient-to-b from-peacock-50/90 via-white to-white shadow-lg shadow-peacock-500/10 ring-2 ring-peacock-200'
           : defaultCardClass
       }`}
     >
@@ -118,7 +118,7 @@ const ScrollPathCard = ({
         <IndexBadge index={index} isSelected={isSelected} />
         <ArrowRight
           className={`h-5 w-5 shrink-0 ${
-            isSelected ? 'text-brand-violet' : 'text-slate-300 group-hover:text-brand-violet/70'
+            isSelected ? 'text-peacock-600' : 'text-slate-300 group-hover:text-peacock-500'
           }`}
           aria-hidden
         />

@@ -1,18 +1,23 @@
-import { Link, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { AppHeader } from "@/components/AppHeader";
-import { Button } from "@/components/ui";
-import { persistCurrentFlow } from "@/services/flowLibraryService";
-import { useFlowStore, usePlayableSteps } from "@/store/flowStore";
-import { getDocumentPath } from "@/utils/shareLink";
-import { stripHtmlTags } from "@/utils/richText";
-import { FlowDetailsDrawer, type FlowDetailsInput } from "./FlowDetailsDrawer";
-import { FirstTimeTooltip } from "@/components/onboarding/FirstTimeTooltip";
-import { EDITOR_HINT_IDS } from "@/constants/firstTimeHints";
+import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link2, PanelRight, Play } from 'lucide-react';
+import { DASHBOARD_PATH } from '@/constants/routes';
+import {
+  FLOW_DOC_ACTION_CLASS,
+  FLOW_DOC_PRIMARY_ACTION_CLASS,
+  FlowDocChromeHeader,
+} from '@/components/flow/FlowDocChromeHeader';
+import { persistCurrentFlow } from '@/services/flowLibraryService';
+import { useFlowStore, usePlayableSteps } from '@/store/flowStore';
+import { getDocumentPath } from '@/utils/shareLink';
+import { FlowDetailsDrawer, type FlowDetailsInput } from './FlowDetailsDrawer';
+import { FirstTimeTooltip } from '@/components/onboarding/FirstTimeTooltip';
+import { EDITOR_HINT_IDS } from '@/constants/firstTimeHints';
 import {
   isEditorHintActive,
   type EditorHintControl,
-} from "@/editor/editorHintControl";
+} from '@/editor/editorHintControl';
+import { useDocumentShareModal } from '@/hooks/useDocumentShareModal';
 
 function getFlowDetailsPromptKey(createdAt: number): string {
   return `peacock-flow-details-prompted-${createdAt}`;
@@ -39,6 +44,7 @@ export const Toolbar = ({
   const updateFlowDetails = useFlowStore((state) => state.updateFlowDetails);
 
   const [isFlowDetailsOpen, setIsFlowDetailsOpen] = useState(false);
+  const { openShare, shareModal } = useDocumentShareModal(documentId ?? '');
 
   useEffect(() => {
     if (!isLoaded || !flow) {
@@ -74,60 +80,72 @@ export const Toolbar = ({
     markFlowDetailsSettled();
   };
 
-  const flowTitle = flow?.flow.title ?? "Untitled Flow";
-  const flowDescription = flow?.flow.description ?? "";
-  const flowDescriptionPlain = stripHtmlTags(flowDescription);
-  const flowVersion = flow?.flow.version ?? "";
+  const flowTitle = flow?.flow.title ?? 'Untitled Flow';
+  const flowDescription = flow?.flow.description ?? '';
+  const flowVersion = flow?.flow.version ?? '';
   const captureEnvironment = flow?.metadata.captureEnvironment ?? null;
-  const playerPath = documentId ? getDocumentPath(documentId, "player") : "/";
+  const playerPath = documentId ? getDocumentPath(documentId, 'player') : '/';
+  const showActions = isLoaded && playableSteps.length > 0;
 
   return (
     <>
-      <AppHeader
-        eyebrow="Peacock Studio Editor"
+      <FlowDocChromeHeader
         title={flowTitle}
-        description={flowDescriptionPlain || undefined}
-        homeLink
-        documentId={documentId}
-      >
-        <p className="text-sm text-slate-500">
-          {playableSteps.length} {playableSteps.length === 1 ? "step" : "steps"}
-        </p>
-        {isLoaded && playableSteps.length > 0 && (
-          <>
-            <FirstTimeTooltip
-              isOpen={isEditorHintActive(editorHints, EDITOR_HINT_IDS.flowDetails)}
-              stepLabel={editorHints?.hintStep(EDITOR_HINT_IDS.flowDetails) ?? "Quick tip"}
-              title="Flow details"
-              description="Set the documentation title, description, and version shown on your dashboard and share cards."
-              placement="bottom"
-              onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.flowDetails)}
-            >
-              <Button variant="secondary" onClick={() => setIsFlowDetailsOpen(true)}>
-                Flow details
-              </Button>
-            </FirstTimeTooltip>
-            {documentId ? (
+        modeBadge={{ label: 'Editor', tone: 'peacock' }}
+        homeTo={DASHBOARD_PATH}
+        actions={
+          showActions ? (
+            <>
+              {documentId ? (
+                <button type="button" onClick={openShare} className={FLOW_DOC_ACTION_CLASS}>
+                  <Link2 className="h-4 w-4 shrink-0" aria-hidden />
+                  <span className="hidden sm:inline">Share</span>
+                </button>
+              ) : null}
+
               <FirstTimeTooltip
-                isOpen={isEditorHintActive(editorHints, EDITOR_HINT_IDS.play)}
-                stepLabel={editorHints?.hintStep(EDITOR_HINT_IDS.play) ?? "Quick tip"}
-                title="Play your documentation"
-                description="Open the learner player and walk through your flow exactly as viewers will experience it."
+                isOpen={isEditorHintActive(editorHints, EDITOR_HINT_IDS.flowDetails)}
+                stepLabel={editorHints?.hintStep(EDITOR_HINT_IDS.flowDetails) ?? 'Quick tip'}
+                title="Flow details"
+                description="Set the documentation title, description, and version shown on your dashboard and share cards."
                 placement="bottom"
-                onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.play)}
+                onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.flowDetails)}
               >
-                <Link
-                  to={playerPath}
-                  state={libraryBackState}
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 bg-peacock-500 text-white hover:text-peacock-500"
+                <button
+                  type="button"
+                  onClick={() => setIsFlowDetailsOpen(true)}
+                  className={FLOW_DOC_ACTION_CLASS}
                 >
-                  Play
-                </Link>
+                  <PanelRight className="h-4 w-4 shrink-0" aria-hidden />
+                  <span className="hidden sm:inline">Flow details</span>
+                </button>
               </FirstTimeTooltip>
-            ) : null}
-          </>
-        )}
-      </AppHeader>
+
+              {documentId ? (
+                <FirstTimeTooltip
+                  isOpen={isEditorHintActive(editorHints, EDITOR_HINT_IDS.play)}
+                  stepLabel={editorHints?.hintStep(EDITOR_HINT_IDS.play) ?? 'Quick tip'}
+                  title="Play your documentation"
+                  description="Open the learner player and walk through your flow exactly as viewers will experience it."
+                  placement="bottom"
+                  onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.play)}
+                >
+                  <Link
+                    to={playerPath}
+                    state={libraryBackState}
+                    className={FLOW_DOC_PRIMARY_ACTION_CLASS}
+                  >
+                    <Play className="h-4 w-4 shrink-0" aria-hidden />
+                    <span className="hidden sm:inline">Play</span>
+                  </Link>
+                </FirstTimeTooltip>
+              ) : null}
+            </>
+          ) : undefined
+        }
+      />
+
+      {documentId ? shareModal : null}
 
       <FlowDetailsDrawer
         isOpen={isFlowDetailsOpen}

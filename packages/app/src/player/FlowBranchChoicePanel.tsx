@@ -1,8 +1,12 @@
-import { useEffect } from 'react';
-import { ArrowRight, GitBranch, Sparkles } from 'lucide-react';
-import { sortBranchPaths, type FlowBranch, type LinkedPeacockPath } from '@peacock/shared';
-import { FlowBranchPathOption } from './FlowBranchPathOption';
-import { useBranchPathMetadata } from './useBranchPathMetadata';
+import { useEffect } from "react";
+import { ArrowRight, GitBranch, Sparkles } from "lucide-react";
+import {
+  sortBranchPaths,
+  type FlowBranch,
+  type LinkedPeacockPath,
+} from "@peacock/shared";
+import { FlowBranchPathOption } from "./FlowBranchPathOption";
+import { useBranchPathMetadata } from "./useBranchPathMetadata";
 
 interface FlowBranchChoicePanelProps {
   branch: FlowBranch;
@@ -30,13 +34,13 @@ export const FlowBranchChoicePanel = ({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Enter' && selectedPath) {
+      if (event.key === "Enter" && selectedPath) {
         event.preventDefault();
         onSelect(selectedPath);
         return;
       }
 
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         if (paths.length <= 1) return;
 
         event.preventDefault();
@@ -44,7 +48,7 @@ export const FlowBranchChoicePanel = ({
           0,
           paths.findIndex((path) => path.id === selectedPathId),
         );
-        const offset = event.key === 'ArrowDown' ? 1 : -1;
+        const offset = event.key === "ArrowDown" ? 1 : -1;
         const nextIndex = (currentIndex + offset + paths.length) % paths.length;
         const nextPath = paths[nextIndex];
         if (nextPath) onSelectedPathChange(nextPath.id);
@@ -59,41 +63,61 @@ export const FlowBranchChoicePanel = ({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onSelect, onSelectedPathChange, paths, selectedPath, selectedPathId]);
 
   if (!paths.length) {
     return (
-      <div className="mx-auto w-full max-w-2xl rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
-        <p className="text-sm text-slate-500">No paths are configured for this branch yet.</p>
+      <div className="mx-auto w-full max-w-2xl rounded-3xl border border-dashed border-slate-300/80 bg-white/80 p-10 text-center shadow-sm backdrop-blur-sm">
+        <p className="text-sm text-slate-500">
+          No paths are configured for this branch yet.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-2 sm:px-0">
-      <article className="relative rounded-3xl border border-slate-200/80 bg-white shadow-xl shadow-slate-200/50">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl" aria-hidden>
-          <div className="absolute inset-0 bg-gradient-to-br from-peacock-50/90 via-white to-brand-violet/5" />
-          <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-peacock-200/25 blur-3xl" />
+    <div className="relative mx-auto w-full max-w-4xl px-2 sm:px-0">
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-10 bottom-0 -z-10 overflow-hidden"
+        aria-hidden
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-peacock-50/70 via-slate-50/40 to-transparent" />
+        <div className="absolute left-1/2 top-0 h-72 w-[min(100%,42rem)] -translate-x-1/2 rounded-full bg-peacock-200/25 blur-3xl" />
+        <div className="absolute -left-10 top-24 h-48 w-48 rounded-full bg-brand-cyan/10 blur-3xl" />
+      </div>
+
+      <article className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 shadow-xl shadow-slate-200/40 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <div className="absolute inset-0 bg-gradient-to-br from-peacock-50/80 via-white/50 to-brand-cyan/[0.04]" />
+          <div className="absolute -right-20 -top-24 h-56 w-56 rounded-full bg-peacock-200/30 blur-3xl" />
+          <div className="absolute -bottom-28 left-1/4 h-48 w-48 rounded-full bg-brand-cyan/10 blur-3xl" />
         </div>
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-peacock-500 via-peacock-600 to-brand-violet" />
+
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-peacock-300/70 to-transparent"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-peacock-500 via-peacock-600 to-brand-cyan/80 opacity-90"
+        />
 
         <div className="relative px-5 py-6 sm:px-8 sm:py-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-peacock-600 to-brand-violet text-white shadow-lg shadow-peacock-600/25">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-peacock-500 to-peacock-700 text-white shadow-md shadow-peacock-500/25 ring-1 ring-peacock-600/10">
               <GitBranch className="h-7 w-7" aria-hidden />
             </div>
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-violet/20 bg-brand-violet/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-violet">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-peacock-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-peacock-700 ring-1 ring-peacock-100">
                   <Sparkles className="h-3.5 w-3.5" aria-hidden />
                   Branch point
                 </span>
-                <span className="rounded-full bg-slate-900/5 px-2.5 py-0.5 text-xs font-medium text-slate-500">
-                  {paths.length} {paths.length === 1 ? 'path' : 'paths'}
+                <span className="rounded-full bg-slate-100/90 px-2.5 py-0.5 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                  {paths.length} {paths.length === 1 ? "path" : "paths"}
                 </span>
               </div>
 
@@ -129,37 +153,36 @@ export const FlowBranchChoicePanel = ({
             </ul>
           </div>
 
-          <div className="mt-6 flex flex-col items-stretch gap-3 border-t border-slate-200/80 pt-5 sm:mt-8 sm:gap-4 sm:pt-6 lg:flex-row lg:items-center lg:justify-between">
-            <p className="text-center text-sm text-slate-500 sm:text-left">
-              Use{' '}
-              <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
-                ↑
-              </kbd>{' '}
-              <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
-                ↓
-              </kbd>{' '}
-              or{' '}
-              <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
-                1–{paths.length}
-              </kbd>{' '}
-              to select, then{' '}
-              <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
-                Enter
-              </kbd>{' '}
-              or{' '}
-              <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-xs text-slate-700">
-                →
-              </kbd>{' '}
-              to continue.
-            </p>
-
+          <p className="text-center text-sm text-slate-500 sm:text-left mt-5">
+            Use{" "}
+            <kbd className="rounded-md border border-slate-200/90 bg-white/90 px-1.5 py-0.5 font-mono text-xs text-slate-700 shadow-sm">
+              ↑
+            </kbd>{" "}
+            <kbd className="rounded-md border border-slate-200/90 bg-white/90 px-1.5 py-0.5 font-mono text-xs text-slate-700 shadow-sm">
+              ↓
+            </kbd>{" "}
+            or{" "}
+            <kbd className="rounded-md border border-slate-200/90 bg-white/90 px-1.5 py-0.5 font-mono text-xs text-slate-700 shadow-sm">
+              1–{paths.length}
+            </kbd>{" "}
+            to select, then{" "}
+            <kbd className="rounded-md border border-slate-200/90 bg-white/90 px-1.5 py-0.5 font-mono text-xs text-slate-700 shadow-sm">
+              Enter
+            </kbd>{" "}
+            or{" "}
+            <kbd className="rounded-md border border-slate-200/90 bg-white/90 px-1.5 py-0.5 font-mono text-xs text-slate-700 shadow-sm">
+              →
+            </kbd>{" "}
+            to continue.
+          </p>
+          <div className="mt-4 flex flex-col items-stretch gap-3 border-t border-slate-200/70 pt-4 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
             <button
               type="button"
               disabled={!selectedPath}
               onClick={() => selectedPath && onSelect(selectedPath)}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-peacock-600 to-brand-violet px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-peacock-600/25 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-peacock-200 bg-peacock-50 px-6 py-3 text-sm font-semibold text-peacock-800 shadow-sm transition hover:bg-peacock-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {selectedPath ? `Start: ${selectedPath.label}` : 'Choose a path'}
+              {selectedPath ? `Start: ${selectedPath.label}` : "Choose a path"}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </button>
           </div>

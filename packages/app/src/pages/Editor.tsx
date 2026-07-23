@@ -99,6 +99,47 @@ export const Editor = () => {
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50">
+        <PeacockStudioLoader size={160} />
+        <p className="text-sm text-slate-500">
+          {isExtensionHandoff
+            ? "Waiting for flow from extension…"
+            : "Loading documentation…"}
+        </p>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    if (documentId) {
+      return (
+        <ResourceNotFoundPage
+          title="Documentation not found"
+          description="This documentation was not found. It may have been deleted."
+        />
+      );
+    }
+
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-8">
+        <div className="max-w-md rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900">
+            No flow loaded
+          </h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Record steps with the Peacock extension, then stop recording to open
+            the editor.
+          </p>
+          <Link to={DASHBOARD_PATH} className="btn-peacock mt-4">
+            Back to dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const handleLinkConfirm = async (input: {
     targetDocumentId: string;
     targetTitle: string;
@@ -124,88 +165,58 @@ export const Editor = () => {
         editorHints={editorHints}
       />
 
-      {isLoading && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-12">
-          <PeacockStudioLoader size={160} />
-          <p className="text-sm text-slate-500">
-            {isExtensionHandoff
-              ? "Waiting for flow from extension…"
-              : "Loading documentation…"}
-          </p>
-        </div>
-      )}
-
-      {!isLoaded && !isLoading && !error && (
-        <div className="flex flex-1 items-center justify-center p-8">
-          <div className="max-w-md rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">
-              No flow loaded
-            </h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Record steps with the Peacock extension, then stop recording to
-              open the editor.
+      <div className="grid min-h-0 flex-1 grid-cols-[280px_1fr_320px] gap-4 p-4">
+        <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+          <StepList
+            onLinkPeacockDoc={() => openLinkModal("new")}
+            editorHints={editorHints}
+          />
+        </aside>
+        <main className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+          <FirstTimeTooltip
+            isOpen={activeHintId === EDITOR_HINT_IDS.canvas}
+            stepLabel={editorHints.hintStep(EDITOR_HINT_IDS.canvas)}
+            title="Step preview"
+            description="See the captured screenshot and click marker for the selected step. This is what learners will view in the player."
+            onDismiss={() => dismissHint(EDITOR_HINT_IDS.canvas)}
+          >
+            <p className="mb-3 shrink-0 text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Preview
             </p>
-            <Link to={DASHBOARD_PATH} className="btn-peacock mt-4">
-              Back to dashboard
-            </Link>
+          </FirstTimeTooltip>
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {selectedBranch ? (
+              <div className="flex h-full flex-col items-center justify-center overflow-auto p-6">
+                <FlowBranchCard branch={selectedBranch} />
+              </div>
+            ) : selectedSection ? (
+              <div className="flex h-full flex-col items-center justify-center overflow-auto p-6">
+                <FlowSectionCard section={selectedSection} variant="editor" />
+                <p className="mt-6 max-w-md text-center text-sm text-slate-500">
+                  Edit title and description in the panel on the right. This
+                  card appears in document and player views.
+                </p>
+              </div>
+            ) : (
+              <Canvas step={selectedStep} />
+            )}
           </div>
-        </div>
-      )}
-
-      {isLoaded && (
-        <div className="grid min-h-0 flex-1 grid-cols-[280px_1fr_320px] gap-4 p-4">
-          <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-            <StepList
-              onLinkPeacockDoc={() => openLinkModal("new")}
-              editorHints={editorHints}
-            />
-          </aside>
-          <main className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-            <FirstTimeTooltip
-              isOpen={activeHintId === EDITOR_HINT_IDS.canvas}
-              stepLabel={editorHints.hintStep(EDITOR_HINT_IDS.canvas)}
-              title="Step preview"
-              description="See the captured screenshot and click marker for the selected step. This is what learners will view in the player."
-              onDismiss={() => dismissHint(EDITOR_HINT_IDS.canvas)}
-            >
-              <p className="mb-3 shrink-0 text-sm font-semibold uppercase tracking-wide text-slate-500">
-                Preview
-              </p>
-            </FirstTimeTooltip>
-            <div className="min-h-0 flex-1 overflow-hidden">
-              {selectedBranch ? (
-                <div className="flex h-full flex-col items-center justify-center overflow-auto p-6">
-                  <FlowBranchCard branch={selectedBranch} />
-                </div>
-              ) : selectedSection ? (
-                <div className="flex h-full flex-col items-center justify-center overflow-auto p-6">
-                  <FlowSectionCard section={selectedSection} variant="editor" />
-                  <p className="mt-6 max-w-md text-center text-sm text-slate-500">
-                    Edit title and description in the panel on the right. This
-                    card appears in document and player views.
-                  </p>
-                </div>
-              ) : (
-                <Canvas step={selectedStep} />
-              )}
-            </div>
-          </main>
-          <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-            <div className="min-h-0 flex-1 overflow-hidden">
-              {selectedBranch ? (
-                <BranchPanel
-                  branch={selectedBranch}
-                  onAddPath={() => openLinkModal("add-path")}
-                />
-              ) : selectedSection ? (
-                <SectionPanel section={selectedSection} />
-              ) : (
-                <StepPanel step={selectedStep} />
-              )}
-            </div>
-          </aside>
-        </div>
-      )}
+        </main>
+        <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {selectedBranch ? (
+              <BranchPanel
+                branch={selectedBranch}
+                onAddPath={() => openLinkModal("add-path")}
+              />
+            ) : selectedSection ? (
+              <SectionPanel section={selectedSection} />
+            ) : (
+              <StepPanel step={selectedStep} />
+            )}
+          </div>
+        </aside>
+      </div>
 
       <LinkPeacockDocModal
         isOpen={isLinkModalOpen}

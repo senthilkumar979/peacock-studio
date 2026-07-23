@@ -113,7 +113,11 @@ export const PlayerView = ({
 
   return (
     <div
-      className={`flex flex-col overflow-hidden bg-slate-50 ${isEmbed ? 'h-full min-h-0' : 'h-screen'}`}
+      className={`flex flex-col overflow-hidden ${
+        atBranch
+          ? 'bg-gradient-to-b from-peacock-50/80 via-slate-50 to-slate-50'
+          : 'bg-slate-50'
+      } ${isEmbed ? 'h-full min-h-0' : 'h-screen'}`}
     >
       <FlowDocViewHeader
         documentId={documentId}

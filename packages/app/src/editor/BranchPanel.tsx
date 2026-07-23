@@ -60,7 +60,7 @@ export const BranchPanel = ({ branch, onAddPath }: BranchPanelProps) => {
   return (
     <>
       <div className="flex h-full flex-col gap-4 overflow-y-auto">
-        <div className="flex items-center gap-2 text-brand-violet">
+        <div className="flex items-center gap-2 text-peacock-700">
           <GitBranch className="h-4 w-4" aria-hidden />
           <h2 className="text-sm font-semibold uppercase tracking-wide">
             Branch
