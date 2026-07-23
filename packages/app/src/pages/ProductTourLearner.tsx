@@ -37,7 +37,7 @@ import { TourDetailsPanel } from "@/product-tour-learner/TourDetailsPanel";
 import { TourDemoIntroPanel } from "@/product-tour-learner/TourDemoIntroPanel";
 import { TourBranchPointPanel } from "@/product-tour-learner/TourBranchPointPanel";
 
-interface ProductTourLearnerProps {
+export interface ProductTourLearnerProps {
   tourId?: string;
   isPresenter?: boolean;
   isPublicShare?: boolean;

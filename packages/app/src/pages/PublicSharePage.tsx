@@ -14,7 +14,7 @@ import { resolveFlowDocView } from '@/utils/resolveFlowDocView';
 import { getPublicSharePath, type SharedDocumentViewMode } from '@/utils/shareLink';
 import type { ResolvedShareLink } from '@/types/shareLink';
 
-interface PublicSharePageProps {
+export interface PublicSharePageProps {
   mode: 'view' | 'edit' | 'embed';
 }
 

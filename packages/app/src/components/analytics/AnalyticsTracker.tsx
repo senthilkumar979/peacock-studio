@@ -13,18 +13,24 @@ import {
 } from '@/analytics/analyticsClient';
 import { isPostHogConfigured } from '@/analytics/config';
 import { AnalyticsEvents } from '@/analytics/events';
-import { createPostHogSink } from '@/analytics/posthogSink';
 import { isCloudSyncEnabled } from '@/cloud/config';
 
-// Swap the console sink for PostHog once, before any consent-gated enable.
-if (isPostHogConfigured()) {
-  setAnalyticsSink(createPostHogSink());
+let posthogSinkPromise: Promise<void> | null = null;
+
+function ensurePostHogSink(): Promise<void> {
+  if (!isPostHogConfigured()) return Promise.resolve();
+  if (!posthogSinkPromise) {
+    posthogSinkPromise = import('@/analytics/posthogSink').then((m) => {
+      setAnalyticsSink(m.createPostHogSink());
+    });
+  }
+  return posthogSinkPromise;
 }
 
 /**
  * Bridges cookie consent to the analytics client: enables/disables analytics
  * when the user's choice changes, reports SPA page views, and identifies the
- * signed-in user. Renders nothing.
+ * signed-in user. Renders nothing. PostHog is loaded only after consent.
  */
 export const AnalyticsTracker = () => {
   const { isAnalyticsAllowed } = useConsent();
@@ -34,17 +40,25 @@ export const AnalyticsTracker = () => {
   const identifiedUserRef = useRef<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (isAnalyticsAllowed) {
-      const firstEnable = !wasEnabledRef.current;
-      enableAnalytics();
-      wasEnabledRef.current = true;
-      if (firstEnable) {
-        trackEvent(AnalyticsEvents.analyticsEnabled, {
-          provider: isPostHogConfigured() ? 'posthog' : 'console',
-        });
-      }
-      return;
+      void ensurePostHogSink().then(() => {
+        if (cancelled) return;
+        const firstEnable = !wasEnabledRef.current;
+        enableAnalytics();
+        wasEnabledRef.current = true;
+        if (firstEnable) {
+          trackEvent(AnalyticsEvents.analyticsEnabled, {
+            provider: isPostHogConfigured() ? 'posthog' : 'console',
+          });
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
     }
+
     if (wasEnabledRef.current) {
       resetAnalyticsUser();
       identifiedUserRef.current = null;

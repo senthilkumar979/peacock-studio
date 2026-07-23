@@ -7,7 +7,10 @@ import { LANDING_CATEGORY } from './landingData';
 import { HeroWorkflowVisual } from './HeroWorkflowVisual';
 
 export const HeroSection = () => (
-  <section id="hero" className="relative min-h-screen overflow-hidden border-b border-slate-800 bg-slate-950 px-6 pb-2 mt-12 sm:pb-2 sm:pt-16">
+  <section
+    id="hero"
+    className="relative mt-12 min-h-screen overflow-hidden border-b border-slate-800 bg-slate-950 px-6 pb-2 sm:pb-2 sm:pt-16"
+  >
     <motion.div
       aria-hidden
       className="pointer-events-none absolute -right-24 top-0 h-96 w-96 rounded-full bg-brand-violet/20 blur-3xl"
@@ -22,12 +25,9 @@ export const HeroSection = () => (
     />
 
     <div className="relative mx-auto grid max-w-7xl gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55 }}
-      >
-        <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-cyan mt-10">
+      {/* Visible immediately — opacity:0 initial delayed LCP on the H1. */}
+      <div>
+        <p className="mt-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-cyan">
           Structured workflow capture — not screen recording
         </p>
 
@@ -76,12 +76,12 @@ export const HeroSection = () => (
             </div>
           ))}
         </dl>
-      </motion.div>
+      </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
+        initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.15 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
       >
         <HeroWorkflowVisual />
       </motion.div>

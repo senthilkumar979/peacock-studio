@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { SignInButton, SignUpButton } from '@clerk/react';
 import { isCloudSyncEnabled } from '@/cloud/config';
+import { DASHBOARD_PATH } from '@/constants/routes';
 import { CloudSignInCallout } from '@/components/auth/CloudSignInCallout';
 import { SignedInUserButton } from '@/components/auth/SignedInUserButton';
 import { useSessionMode } from '@/hooks/useSessionMode';
@@ -16,6 +16,8 @@ const heroSignInClass =
 
 const heroSignUpClass =
   'rounded-lg bg-white px-4 py-2 text-sm font-semibold text-peacock-800 shadow-sm transition hover:bg-slate-100';
+
+const AUTH_REDIRECT_STATE = { from: DASHBOARD_PATH } as const;
 
 export const CloudAuthActions = ({
   variant = 'hero',
@@ -72,16 +74,12 @@ export const CloudAuthActions = ({
   if (variant === 'hero') {
     return (
       <div className="absolute right-6 top-6 z-10 flex flex-wrap items-center justify-end gap-2">
-        <SignInButton mode="redirect" forceRedirectUrl="/dashboard">
-          <button type="button" className={heroSignInClass}>
-            Sign in
-          </button>
-        </SignInButton>
-        <SignUpButton mode="redirect" forceRedirectUrl="/dashboard">
-          <button type="button" className={heroSignUpClass}>
-            Sign up
-          </button>
-        </SignUpButton>
+        <Link to="/sign-in" state={AUTH_REDIRECT_STATE} className={heroSignInClass}>
+          Sign in
+        </Link>
+        <Link to="/sign-up" state={AUTH_REDIRECT_STATE} className={heroSignUpClass}>
+          Sign up
+        </Link>
       </div>
     );
   }

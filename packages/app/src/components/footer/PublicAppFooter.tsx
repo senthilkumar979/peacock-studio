@@ -1,6 +1,5 @@
 import { Copyright } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { SignInButton, SignUpButton } from '@clerk/react';
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
 import { isCloudSyncEnabled } from '@/cloud/config';
 import { DASHBOARD_PATH } from '@/constants/routes';
@@ -13,6 +12,9 @@ import {
   PUBLIC_SOLUTION_LINKS,
 } from '@/components/footer/footerData';
 import { FooterLegalLinks } from '@/components/footer/FooterLegalLinks';
+
+/** Plain links — marketing pages defer ClerkProvider, so SignInButton would crash. */
+const AUTH_REDIRECT_STATE = { from: DASHBOARD_PATH } as const;
 
 export const PublicAppFooter = () => {
   const year = new Date().getFullYear();
@@ -95,22 +97,20 @@ export const PublicAppFooter = () => {
           <div className="flex flex-col gap-3 sm:items-end">
             {showAuthActions ? (
               <div className="flex flex-wrap items-center gap-2">
-                <SignInButton mode="redirect" forceRedirectUrl={DASHBOARD_PATH}>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    Sign in
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="redirect" forceRedirectUrl={DASHBOARD_PATH}>
-                  <button
-                    type="button"
-                    className="rounded-lg bg-peacock-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-peacock-700"
-                  >
-                    Create account
-                  </button>
-                </SignUpButton>
+                <Link
+                  to="/sign-in"
+                  state={AUTH_REDIRECT_STATE}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/sign-up"
+                  state={AUTH_REDIRECT_STATE}
+                  className="rounded-lg bg-peacock-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-peacock-700"
+                >
+                  Create account
+                </Link>
               </div>
             ) : null}
             <FooterLegalLinks className="flex flex-wrap items-center gap-x-4 gap-y-1 sm:justify-end" />
