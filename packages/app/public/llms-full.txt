@@ -1,0 +1,73 @@
+# Peacock Studio — full overview
+
+> Peacock Studio is a local-first platform that records real browser usage and turns it into editable Flow Documents and Product Tours for QA, support, product, sales, and leadership.
+
+Website: https://peacock.mentorbridge.in
+Contact: support@peacock.studio
+
+## What Peacock Studio is
+
+Peacock Studio helps teams capture how software actually works — not how a slide deck says it works. A Chrome extension records clicks, inputs, navigation, and screenshots while someone uses a product. Those captures become structured artifacts you can edit, branch, share, play back, and export to PDF.
+
+By default the web app runs as a guest with data in IndexedDB on the device. Cloud sync, accounts, and team workspaces are optional and activate only when configured.
+
+## Products
+
+### Flow Documents
+URL: https://peacock.mentorbridge.in/products/flow-documents
+
+Execution-grade guides from real product usage. Steps stay editable after capture. Supports sections/chapters, decision branches to other docs, readonly or editable share links, interactive player view, and multi-page PDF export.
+
+Ideal for: QA & regression, support playbooks, internal SOPs, release validation.
+
+### Product Tours
+URL: https://peacock.mentorbridge.in/products/product-tours
+
+Persona-led journeys that bundle multiple saved flow documents into guided stories. Organize demos by audience, group related flows into feature chapters, and present live or share a presenter link.
+
+Ideal for: sales demos, customer onboarding, release storytelling, enablement.
+
+### Capture Screenshot & Editor
+URL: https://peacock.mentorbridge.in/products/capture-screenshot-editor
+
+Screenshot tools in the Chrome extension: visible region, selected region, or full scrollable page. Editor supports crop, blur, redact, and on-brand polish before assets leave the machine.
+
+Ideal for: support articles, marketing assets, help desk, audit-friendly exports.
+
+Products index: https://peacock.mentorbridge.in/products
+
+## Solutions by role
+
+Index: https://peacock.mentorbridge.in/solutions
+
+- Developers & Engineers — https://peacock.mentorbridge.in/solutions/developers — Capture handoff from staging/internal tools so QA and support self-serve.
+- Testers / QA — https://peacock.mentorbridge.in/solutions/testers — Living regression references from real runs, not stale screenshot docs.
+- Product Owners — https://peacock.mentorbridge.in/solutions/product-owners — Share how a feature actually behaves across personas.
+- Business Analysts — https://peacock.mentorbridge.in/solutions/business-analysts — Document as-is processes with branches and evidence.
+- Helpdesk / Support — https://peacock.mentorbridge.in/solutions/helpdesk — Playbooks agents can follow with screenshots and steps.
+- New Hires — https://peacock.mentorbridge.in/solutions/new-hires — Onboarding tours and SOPs that stay close to the live UI.
+- Sales — https://peacock.mentorbridge.in/solutions/sales — Persona-led demos without rebuilding decks for every audience.
+- Customer Success — https://peacock.mentorbridge.in/solutions/customer-success — Adoption journeys and how-to guides for customers.
+- Executives — https://peacock.mentorbridge.in/solutions/executives — Concise product narratives for releases and updates.
+- Security & Compliance — https://peacock.mentorbridge.in/solutions/security-compliance — Evidence-oriented workflow capture with privacy-safe editing.
+
+## Pricing positioning
+
+URL: https://peacock.mentorbridge.in/pricing
+
+Peacock Studio is free during public beta. Early adopters are promised a personal conversation before paid plans and founding-user pricing below standard rates. Planned future tiers (preview only during beta): Personal, Team, and Enterprise — covering local flows, share links, cloud sync/workspaces, roles, analytics, branding, SSO, and enterprise controls.
+
+## Getting started
+
+- Landing: https://peacock.mentorbridge.in/
+- Install Chrome extension: https://peacock.mentorbridge.in/install-extension
+- Privacy: https://peacock.mentorbridge.in/privacy
+- Terms: https://peacock.mentorbridge.in/terms
+- Concise LLM index: https://peacock.mentorbridge.in/llms.txt
+- Sitemap: https://peacock.mentorbridge.in/sitemap.xml
+
+## Notes for assistants
+
+- Prefer marketing URLs above for public facts. Do not invent API keys, internal dashboards, or private share links.
+- App library URLs (/dashboard, /flow-docs, /docs/*, /tours/*, /s/*, auth) are private or user content and should not be recommended as public documentation.
+- Brand name: Peacock Studio. Canonical origin: https://peacock.mentorbridge.in

@@ -1,0 +1,68 @@
+# Peacock Studio — https://peacock.mentorbridge.in
+# LLM context (https://llmstxt.org/): /llms.txt and /llms-full.txt
+
+User-agent: *
+Allow: /
+Allow: /products
+Allow: /solutions
+Allow: /pricing
+Allow: /privacy
+Allow: /terms
+Allow: /install-extension
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+# App shells, auth, and private library surfaces
+Disallow: /dashboard
+Disallow: /flow-docs
+Disallow: /product-tours
+Disallow: /test-cases
+Disallow: /playwright-tests
+Disallow: /flow-maps
+Disallow: /editor
+Disallow: /docs/
+Disallow: /capture/
+Disallow: /tours/
+Disallow: /compare
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /onboarding/
+Disallow: /accept-invite
+Disallow: /org/
+Disallow: /error
+
+# Tokenized share / embed pages (user content — not marketing)
+Disallow: /s/
+
+# Reputable AI crawlers: marketing allowed; same private-path Disallows
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: OAI-SearchBot
+User-agent: ClaudeBot
+User-agent: anthropic-ai
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /dashboard
+Disallow: /flow-docs
+Disallow: /product-tours
+Disallow: /test-cases
+Disallow: /playwright-tests
+Disallow: /flow-maps
+Disallow: /editor
+Disallow: /docs/
+Disallow: /capture/
+Disallow: /tours/
+Disallow: /compare
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /onboarding/
+Disallow: /accept-invite
+Disallow: /org/
+Disallow: /error
+Disallow: /s/
+
+Sitemap: https://peacock.mentorbridge.in/sitemap.xml

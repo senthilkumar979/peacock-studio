@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppRouteTransition } from '@/components/motion/AppRouteTransition';
 import { WorkspaceOnboardingGate } from '@/components/auth/WorkspaceOnboardingGate';
+import { RouteDocumentMeta } from '@/seo/RouteDocumentMeta';
 import {
   ACCEPT_INVITE_PATH,
   DASHBOARD_PATH,
@@ -60,6 +61,7 @@ export const App = () => {
 
   return (
     <WorkspaceOnboardingGate>
+      <RouteDocumentMeta />
       <AppRouteTransition>
         <Routes location={location}>
           <Route path={LANDING_PATH} element={<Landing />} />

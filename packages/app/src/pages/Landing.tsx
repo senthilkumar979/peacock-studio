@@ -4,7 +4,6 @@ import { SiteNav } from "@/components/site/SiteNav";
 import { useLandingNavVisibility } from "@/hooks/useLandingNavVisibility";
 import { Suspense, lazy } from "react";
 import { HeroSection } from "./landing/HeroSection";
-import { useLandingSeo } from "./landing/useLandingSeo";
 
 const ProblemSection = lazy(() =>
   import("./landing/ProblemSection").then((m) => ({
@@ -66,7 +65,6 @@ const CTASection = lazy(() =>
 const BelowFoldFallback = () => <div className="min-h-[40vh]" aria-hidden />;
 
 export const Landing = () => {
-  useLandingSeo();
   const { showMainNav, showSubNav } = useLandingNavVisibility();
 
   return (
