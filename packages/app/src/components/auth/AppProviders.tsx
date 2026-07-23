@@ -1,16 +1,16 @@
-import { ClerkProvider } from '@clerk/react';
-import { BrowserRouter } from 'react-router-dom';
-import { GooeyToaster } from 'goey-toast';
-import 'goey-toast/styles.css';
-import { AppErrorBoundary } from '@/components/errors/AppErrorBoundary';
-import { GlobalErrorListeners } from '@/components/errors/GlobalErrorListeners';
-import { CloudSyncProvider } from '@/components/auth/CloudSyncProvider';
-import { CloudSyncBanner } from '@/components/auth/CloudSyncBanner';
-import { CookieConsentBanner } from '@/components/consent/CookieConsentBanner';
-import { CookiePreferencesModal } from '@/components/consent/CookiePreferencesModal';
-import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker';
-import { SupportWidget } from '@/components/support/SupportWidget';
-import { getClerkPublishableKey, isCloudSyncEnabled } from '@/cloud/config';
+import { ClerkProvider } from "@clerk/react";
+import { BrowserRouter } from "react-router-dom";
+import { GooeyToaster } from "goey-toast";
+import "goey-toast/styles.css";
+import { AppErrorBoundary } from "@/components/errors/AppErrorBoundary";
+import { GlobalErrorListeners } from "@/components/errors/GlobalErrorListeners";
+import { CloudSyncProvider } from "@/components/auth/CloudSyncProvider";
+import { CloudSyncBanner } from "@/components/auth/CloudSyncBanner";
+import { CookieConsentBanner } from "@/components/consent/CookieConsentBanner";
+import { CookiePreferencesModal } from "@/components/consent/CookiePreferencesModal";
+import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
+import { SupportWidget } from "@/components/support/SupportWidget";
+import { getClerkPublishableKey, isCloudSyncEnabled } from "@/cloud/config";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -32,7 +32,7 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
           <CookieConsentBanner />
           <CookiePreferencesModal />
           <GooeyToaster
-            position="bottom-right"
+            position="bottom-center"
             preset="smooth"
             closeButton="top-right"
             showTimestamp={false}

@@ -41,12 +41,14 @@ interface ProductTourLearnerProps {
   tourId?: string;
   isPresenter?: boolean;
   isPublicShare?: boolean;
+  isEmbed?: boolean;
 }
 
 export const ProductTourLearner = ({
   tourId: tourIdProp,
   isPresenter: isPresenterProp,
   isPublicShare = false,
+  isEmbed = false,
 }: ProductTourLearnerProps = {}) => {
   const { tourId: routeTourId } = useParams<{ tourId: string }>();
   const [searchParams] = useSearchParams();
@@ -408,6 +410,7 @@ export const ProductTourLearner = ({
         demoCount={countTourDemos(tour)}
         stepCount={stepCount}
         onReplay={playback.replay}
+        isEmbed={isEmbed}
       />
     );
   };
@@ -444,17 +447,17 @@ export const ProductTourLearner = ({
       {isPublicShare && !isPresenter ? (
         <header className="shrink-0 border-b border-slate-200 bg-white px-6 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-peacock-600">
-            Shared product tour
+            {isEmbed ? "Embedded product tour" : "Shared product tour"}
           </p>
           <h1 className="mt-1 text-lg font-bold text-slate-900">{tour.title}</h1>
-          {tour.description ? (
+          {tour.description && !isEmbed ? (
             <p className="mt-1 text-sm text-slate-600">{tour.description}</p>
           ) : null}
         </header>
       ) : null}
 
       <main className="mx-auto flex min-h-0 w-full max-w-8xl flex-1 gap-6 overflow-hidden px-4 py-6">
-        {!isPresenter ? (
+        {!isPresenter && !isEmbed ? (
           <aside className="hidden h-full min-h-0 w-[400px] shrink-0 lg:flex lg:flex-col">
             <HintAnchor
               hints={pageHints}

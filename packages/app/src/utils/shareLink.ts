@@ -1,15 +1,38 @@
 export type SharedDocumentViewMode = 'doc' | 'player';
 export type FlowDocViewMode = 'hub' | SharedDocumentViewMode;
 export type ShareLinkAccessMode = 'readonly' | 'editable';
+export type ShareLinkChannel = 'link' | 'embed';
 
 export const PUBLIC_SHARE_PATH = '/s' as const;
 
-export function getPublicSharePath(token: string, editable = false): string {
-  return editable ? `${PUBLIC_SHARE_PATH}/${token}/edit` : `${PUBLIC_SHARE_PATH}/${token}`;
+export function getPublicSharePath(
+  token: string,
+  options: { editable?: boolean; embed?: boolean } = {},
+): string {
+  if (options.embed) return `${PUBLIC_SHARE_PATH}/${token}/embed`;
+  return options.editable
+    ? `${PUBLIC_SHARE_PATH}/${token}/edit`
+    : `${PUBLIC_SHARE_PATH}/${token}`;
 }
 
-export function buildPublicShareUrl(token: string, options: { editable?: boolean } = {}): string {
-  return `${window.location.origin}${getPublicSharePath(token, options.editable ?? false)}`;
+export function buildPublicShareUrl(
+  token: string,
+  options: { editable?: boolean; embed?: boolean } = {},
+): string {
+  return `${window.location.origin}${getPublicSharePath(token, options)}`;
+}
+
+export function buildEmbedIframeCode(embedUrl: string, title = 'Peacock Studio guide'): string {
+  const safeTitle = title.replace(/"/g, '&quot;');
+  return `<iframe
+  src="${embedUrl}"
+  title="${safeTitle}"
+  width="100%"
+  height="640"
+  style="border:0;border-radius:12px;overflow:hidden;"
+  loading="lazy"
+  allowfullscreen
+></iframe>`;
 }
 
 export function getDocumentEditPath(documentId: string): string {
@@ -115,14 +138,6 @@ export function resolveLinkedPathIdFromAnchor(anchorId: string): string | null {
   return parseLinkedDocumentPathAnchor(anchorId) ?? parseLinkedDocumentStepAnchor(anchorId)?.pathId ?? null;
 }
 
-export function getEmbedCodePlaceholder(documentId: string): string {
-  return `<!-- Peacock embed — coming soon -->\n<div data-peacock-doc="${documentId}"></div>`;
-}
-
-export function getRouteEmbedCodePlaceholder(routeId: string): string {
-  return `<!-- Peacock route embed — coming soon -->\n<div data-peacock-route="${routeId}"></div>`;
-}
-
 export function buildSharedRouteUrl(
   routeId: string,
   accessMode: ShareLinkAccessMode = 'readonly',
@@ -142,10 +157,6 @@ export function buildSharedProductTourUrl(
   if (options.presenter) params.set('presenter', '1');
   const query = params.toString();
   return `${window.location.origin}${base}${query ? `?${query}` : ''}`;
-}
-
-export function getProductTourEmbedCodePlaceholder(tourId: string): string {
-  return `<!-- Peacock product tour embed — coming soon -->\n<div data-peacock-tour="${tourId}"></div>`;
 }
 
 export async function copyTextToClipboard(text: string): Promise<void> {

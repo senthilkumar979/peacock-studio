@@ -19,6 +19,8 @@ export function initSentry(): void {
     tracesSampleRate: 0.1,
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
+    // Chromium layout-churn quirk; not an application failure.
+    ignoreErrors: [/ResizeObserver loop/i],
   });
 
   initialized = true;

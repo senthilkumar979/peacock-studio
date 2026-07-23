@@ -15,6 +15,7 @@ import { useSessionMode } from '@/hooks/useSessionMode';
 import type { PendingInvitation } from '@/cloud/types/organization';
 import { reportAppError } from '@/utils/appError';
 import { notifyError, notifyPromise } from '@/utils/notify';
+import { AnalyticsEvents } from '@/analytics/events';
 
 type ChooserMode = 'choose' | 'team-form';
 
@@ -98,6 +99,7 @@ export const WorkspaceChooserPage = () => {
           loading: 'Creating workspace…',
           success: 'Personal workspace ready',
           context: 'Create personal workspace',
+          event: AnalyticsEvents.workspaceCreatedPersonal,
         },
       );
       void orgId;
@@ -124,6 +126,7 @@ export const WorkspaceChooserPage = () => {
           success: 'Team workspace created',
           successDescription: 'Invite teammates from Admin when you are ready.',
           context: 'Create team workspace',
+          event: AnalyticsEvents.workspaceCreatedTeam,
         },
       );
       void orgId;
@@ -148,6 +151,7 @@ export const WorkspaceChooserPage = () => {
           loading: 'Joining workspace…',
           success: 'You joined the workspace',
           context: 'Accept organization invitation',
+          event: AnalyticsEvents.workspaceInviteAccepted,
         },
       );
       void orgId;

@@ -3,6 +3,7 @@ import { deleteRoute, listRouteSummaries } from '@/services/routeLibraryService'
 import type { SavedRouteSummary } from '@/types/route';
 import { reportAppError } from '@/utils/appError';
 import { notifyError, notifyPromise } from '@/utils/notify';
+import { AnalyticsEvents } from '@/analytics/events';
 
 export function useRouteLibrary() {
   const [summaries, setSummaries] = useState<SavedRouteSummary[]>([]);
@@ -35,6 +36,8 @@ export function useRouteLibrary() {
         success: 'Route deleted',
         successDescription: 'Removed from your library.',
         context: 'Delete route',
+        event: AnalyticsEvents.routeDeleted,
+        eventProps: { route_id: id },
       });
     },
     [refresh],

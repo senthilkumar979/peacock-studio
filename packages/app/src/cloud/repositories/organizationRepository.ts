@@ -60,7 +60,10 @@ export async function listMyMemberships(): Promise<OrgMembership[]> {
     workspaceType: row.workspaceType === 'team' ? 'team' : 'personal',
     website: (row.website as string | null | undefined) ?? null,
     role: row.role === 'admin' ? 'admin' : 'member',
-    capabilities: parseCapabilities(row.capabilities),
+    capabilities: parseCapabilities(
+      row.capabilities,
+      row.role === 'admin' ? 'admin' : 'member',
+    ),
     status: row.status === 'disabled' ? 'disabled' : 'active',
     joinedAt: row.joinedAt ? String(row.joinedAt) : undefined,
   }));
@@ -78,7 +81,10 @@ export async function listMyPendingInvitations(): Promise<PendingInvitation[]> {
     organizationName: String(row.organizationName ?? 'Organization'),
     email: String(row.email),
     role: row.role === 'admin' ? 'admin' : 'member',
-    capabilities: parseCapabilities(row.capabilities),
+    capabilities: parseCapabilities(
+      row.capabilities,
+      row.role === 'admin' ? 'admin' : 'member',
+    ),
     token: String(row.token),
     expiresAt: String(row.expiresAt),
     invitedByEmail: (row.invitedByEmail as string | null | undefined) ?? null,
@@ -202,7 +208,10 @@ export async function listOrganizationMembers(
     clerkUserId: row.clerk_user_id,
     email: row.email,
     role: row.role === 'admin' ? 'admin' : 'member',
-    capabilities: parseCapabilities(row.capabilities),
+    capabilities: parseCapabilities(
+      row.capabilities,
+      row.role === 'admin' ? 'admin' : 'member',
+    ),
     status: row.status === 'disabled' ? 'disabled' : 'active',
     joinedAt: row.joined_at,
   }));
@@ -229,7 +238,10 @@ export async function listOrganizationInvitations(
     organizationId: row.organization_id,
     email: row.email,
     role: row.role === 'admin' ? 'admin' : 'member',
-    capabilities: parseCapabilities(row.capabilities),
+    capabilities: parseCapabilities(
+      row.capabilities,
+      row.role === 'admin' ? 'admin' : 'member',
+    ),
     token: row.token,
     expiresAt: row.expires_at,
     acceptedAt: row.accepted_at,
@@ -264,18 +276,37 @@ export async function setMemberStatus(
   if (error) throw error;
 }
 
+export interface OrgContributorRow {
+  email: string;
+  displayName: string;
+  count: number;
+}
+
 export interface OrgAdminActivity {
   memberCount: number;
   documentCount: number;
   tourCount: number;
   exportCount: number;
+  shareCount: number;
   byActor: Array<{ email: string; displayName: string; eventCount: number }>;
-  docsByCreator: Array<{ email: string; displayName: string; count: number }>;
+  docsByCreator: OrgContributorRow[];
+  toursByCreator: OrgContributorRow[];
+  exportsByActor: OrgContributorRow[];
+  sharesByActor: OrgContributorRow[];
 }
 
 export interface OrgDomainUsageRow {
   domain: string;
   count: number;
+}
+
+function mapContributorRows(value: unknown): OrgContributorRow[] {
+  if (!Array.isArray(value)) return [];
+  return (value as Array<Record<string, unknown>>).map((item) => ({
+    email: String(item.email ?? ''),
+    displayName: String(item.displayName ?? item.email ?? ''),
+    count: Number(item.count ?? 0),
+  }));
 }
 
 export async function fetchOrgAdminActivity(
@@ -295,6 +326,7 @@ export async function fetchOrgAdminActivity(
     documentCount: Number(row.documentCount ?? 0),
     tourCount: Number(row.tourCount ?? 0),
     exportCount: Number(row.exportCount ?? 0),
+    shareCount: Number(row.shareCount ?? 0),
     byActor: Array.isArray(row.byActor)
       ? (row.byActor as Array<Record<string, unknown>>).map((item) => ({
           email: String(item.email ?? ''),
@@ -302,13 +334,10 @@ export async function fetchOrgAdminActivity(
           eventCount: Number(item.eventCount ?? 0),
         }))
       : [],
-    docsByCreator: Array.isArray(row.docsByCreator)
-      ? (row.docsByCreator as Array<Record<string, unknown>>).map((item) => ({
-          email: String(item.email ?? ''),
-          displayName: String(item.displayName ?? item.email ?? ''),
-          count: Number(item.count ?? 0),
-        }))
-      : [],
+    docsByCreator: mapContributorRows(row.docsByCreator),
+    toursByCreator: mapContributorRows(row.toursByCreator),
+    exportsByActor: mapContributorRows(row.exportsByActor),
+    sharesByActor: mapContributorRows(row.sharesByActor),
   };
 }
 

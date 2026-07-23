@@ -58,6 +58,7 @@ interface DocumentViewProps {
   onOverview?: () => void;
   pageHints?: PageHintControl;
   showOwnerActions?: boolean;
+  isEmbed?: boolean;
 }
 
 export const DocumentView = ({
@@ -66,6 +67,7 @@ export const DocumentView = ({
   onOverview,
   pageHints,
   showOwnerActions = true,
+  isEmbed = false,
 }: DocumentViewProps) => {
   const location = useLocation();
   const libraryBackState = location.state;
@@ -291,6 +293,7 @@ export const DocumentView = ({
         editLinkState={libraryBackState}
         pageHints={pageHints}
         showOwnerActions={showOwnerActions}
+        isEmbed={isEmbed}
         guideProgressPercent={
           playableStepCount > 0 ? progressPercent : undefined
         }
@@ -450,6 +453,7 @@ export const DocumentView = ({
                 sectionCount={sectionCount}
                 branchCount={branches.length}
                 onViewFromBeginning={handleViewFromBeginning}
+                isEmbed={isEmbed}
               />
             </div>
           </div>

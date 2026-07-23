@@ -1,4 +1,7 @@
 import { gooeyToast } from 'goey-toast';
+import { trackEvent } from '@/analytics/analyticsClient';
+import { AnalyticsEvents } from '@/analytics/events';
+import type { AnalyticsProps } from '@/analytics/types';
 import { reportAppError, toUserFacingMessage, type ClassifiedAppError } from '@/utils/appError';
 
 const DEFAULT_DURATION = 4200;
@@ -35,6 +38,10 @@ export function notifyError(
   descriptionOrContext?: string,
 ): ClassifiedAppError | null {
   if (typeof titleOrError === 'string') {
+    trackEvent(AnalyticsEvents.softErrorShown, {
+      title: titleOrError,
+      description: descriptionOrContext,
+    });
     gooeyToast.error(titleOrError, {
       description: descriptionOrContext,
       timing: { displayDuration: 5600 },
@@ -45,6 +52,11 @@ export function notifyError(
   }
 
   const classified = reportAppError(descriptionOrContext ?? 'Action failed', titleOrError);
+  trackEvent(AnalyticsEvents.softErrorShown, {
+    title: classified.title,
+    kind: classified.kind,
+    context: descriptionOrContext,
+  });
   gooeyToast.error(classified.title, {
     description: classified.userMessage,
     timing: { displayDuration: 5600 },
@@ -57,6 +69,7 @@ export function notifyError(
 /**
  * Soft action helper: shows loading → success/error gooey toasts.
  * Returns the resolved value; rethrows after toasting on failure.
+ * Optionally emits a named PostHog product event on success/failure.
  */
 export async function notifyPromise<T>(
   promise: Promise<T>,
@@ -66,9 +79,34 @@ export async function notifyPromise<T>(
     error?: string | ((error: unknown) => string);
     successDescription?: string | ((value: T) => string);
     context?: string;
+    /** Named product event emitted on success (and failure as action_failed). */
+    event?: string;
+    eventProps?: AnalyticsProps;
   },
 ): Promise<T> {
-  gooeyToast.promise(promise, {
+  const tracked = promise.then(
+    (value) => {
+      if (messages.event) {
+        trackEvent(messages.event, messages.eventProps);
+      } else {
+        trackEvent(AnalyticsEvents.actionSucceeded, {
+          context: messages.context ?? messages.loading,
+          ...messages.eventProps,
+        });
+      }
+      return value;
+    },
+    (error: unknown) => {
+      trackEvent(AnalyticsEvents.actionFailed, {
+        context: messages.context ?? messages.loading,
+        event: messages.event,
+        ...messages.eventProps,
+      });
+      throw error;
+    },
+  );
+
+  gooeyToast.promise(tracked, {
     loading: messages.loading,
     success: messages.success,
     error: (error) => {
@@ -86,7 +124,7 @@ export async function notifyPromise<T>(
     preset: 'smooth',
   });
 
-  return promise;
+  return tracked;
 }
 
 const persistToastByContext = new Map<string, number>();

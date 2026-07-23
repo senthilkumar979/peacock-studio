@@ -174,6 +174,7 @@ function mapResolvedShareLink(row: Record<string, unknown>): ResolvedShareLink {
     resourceType: row.resourceType as ResolvedShareLink['resourceType'],
     resourceId: String(row.resourceId),
     accessMode: row.accessMode as ResolvedShareLink['accessMode'],
+    channel: row.channel === 'embed' ? 'embed' : 'link',
     settings: (row.settings as ShareLinkSettings | null) ?? {},
   };
 }

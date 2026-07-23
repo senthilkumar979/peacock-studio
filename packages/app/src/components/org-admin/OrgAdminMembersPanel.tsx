@@ -24,6 +24,7 @@ import type {
 } from '@/cloud/types/organization';
 import { reportAppError } from '@/utils/appError';
 import { notifyError, notifyPromise } from '@/utils/notify';
+import { AnalyticsEvents } from '@/analytics/events';
 
 interface OrgAdminMembersPanelProps {
   organizationId: string;
@@ -180,6 +181,8 @@ export const OrgAdminMembersPanel = ({
                 success: 'Invitation sent',
                 successDescription: `Invite emailed to ${input.email.trim().toLowerCase()} (expires in 7 days).`,
                 context: 'Create organization invitation',
+                event: AnalyticsEvents.memberInvited,
+                eventProps: { organization_id: organizationId, role: input.role },
               },
             );
           });
@@ -208,6 +211,8 @@ export const OrgAdminMembersPanel = ({
                 success: 'Invitation resent',
                 successDescription: 'Expiry reset to 7 days from now.',
                 context: 'Resend organization invitation',
+                event: AnalyticsEvents.memberInviteResent,
+                eventProps: { organization_id: organizationId },
               },
             );
           });
@@ -218,6 +223,8 @@ export const OrgAdminMembersPanel = ({
               loading: 'Revoking invitation…',
               success: 'Invitation revoked',
               context: 'Revoke organization invitation',
+              event: AnalyticsEvents.memberInviteRevoked,
+              eventProps: { organization_id: organizationId },
             });
           });
         }}
@@ -233,6 +240,8 @@ export const OrgAdminMembersPanel = ({
               loading: 'Updating permissions…',
               success: 'Permissions updated',
               context: 'Update member capabilities',
+              event: AnalyticsEvents.memberCapabilitiesUpdated,
+              eventProps: { organization_id: organizationId, member_id: memberId },
             });
             const member = members.find((m) => m.id === memberId);
             if (member?.clerkUserId === currentClerkUserId) {
@@ -250,6 +259,12 @@ export const OrgAdminMembersPanel = ({
                 loading: 'Disabling member…',
                 success: 'Member disabled',
                 context: 'Disable organization member',
+                event: AnalyticsEvents.memberStatusUpdated,
+                eventProps: {
+                  organization_id: organizationId,
+                  member_id: memberId,
+                  status: 'disabled',
+                },
               },
             );
           });

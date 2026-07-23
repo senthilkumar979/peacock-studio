@@ -103,6 +103,7 @@ export const App = () => {
             element={<PlaywrightTestsDetailPage />}
           />
           <Route path={`${FLOW_MAPS_PATH}/:documentId`} element={<FlowMapsDetailPage />} />
+          <Route path="/s/:token/embed" element={<PublicSharePage mode="embed" />} />
           <Route path="/s/:token/edit" element={<PublicSharePage mode="edit" />} />
           <Route path="/s/:token" element={<PublicSharePage mode="view" />} />
           <Route element={<LibraryLayout />}>

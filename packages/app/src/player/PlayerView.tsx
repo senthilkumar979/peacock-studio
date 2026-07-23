@@ -25,6 +25,7 @@ interface PlayerViewProps {
   onOverview?: () => void;
   pageHints?: PageHintControl;
   showOwnerActions?: boolean;
+  isEmbed?: boolean;
 }
 
 export const PlayerView = ({
@@ -33,6 +34,7 @@ export const PlayerView = ({
   onOverview,
   pageHints,
   showOwnerActions = true,
+  isEmbed = false,
 }: PlayerViewProps) => {
   const location = useLocation();
   const libraryBackState = location.state;
@@ -121,6 +123,7 @@ export const PlayerView = ({
         editLinkState={libraryBackState}
         pageHints={pageHints}
         showOwnerActions={showOwnerActions}
+        isEmbed={isEmbed}
       />
 
       <main
@@ -141,6 +144,7 @@ export const PlayerView = ({
             branchCount={playback.branchCount}
             sectionCount={playback.sectionCount}
             onReplay={handleReplay}
+            isEmbed={isEmbed}
           />
         ) : playback.isLoadingLinked ? (
           <p className="text-sm text-slate-500">Loading linked demo…</p>

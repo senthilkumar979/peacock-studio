@@ -76,7 +76,7 @@ export const DEFAULT_MEMBER_CAPABILITIES: MemberCapabilities = {
   delete: false,
   share: true,
   export: true,
-  embed: false,
+  embed: true,
 };
 
 export const CAPABILITY_KEYS = [
@@ -90,15 +90,19 @@ export const CAPABILITY_KEYS = [
 
 export type CapabilityKey = (typeof CAPABILITY_KEYS)[number];
 
-export function parseCapabilities(value: unknown): MemberCapabilities {
-  if (!value || typeof value !== 'object') return { ...DEFAULT_MEMBER_CAPABILITIES };
+export function parseCapabilities(
+  value: unknown,
+  role: MemberRole = 'member',
+): MemberCapabilities {
+  const defaults = role === 'admin' ? ALL_CAPABILITIES_TRUE : DEFAULT_MEMBER_CAPABILITIES;
+  if (!value || typeof value !== 'object') return { ...defaults };
   const record = value as Record<string, unknown>;
   return {
-    create: Boolean(record.create),
-    edit: Boolean(record.edit),
-    delete: Boolean(record.delete),
-    share: Boolean(record.share),
-    export: Boolean(record.export),
-    embed: Boolean(record.embed),
+    create: typeof record.create === 'boolean' ? record.create : defaults.create,
+    edit: typeof record.edit === 'boolean' ? record.edit : defaults.edit,
+    delete: typeof record.delete === 'boolean' ? record.delete : defaults.delete,
+    share: typeof record.share === 'boolean' ? record.share : defaults.share,
+    export: typeof record.export === 'boolean' ? record.export : defaults.export,
+    embed: typeof record.embed === 'boolean' ? record.embed : defaults.embed,
   };
 }

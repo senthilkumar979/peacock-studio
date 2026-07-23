@@ -4,6 +4,7 @@ import { deleteProductTour, listProductTourSummaries } from '@/services/productT
 import type { ProductTourSummary } from '@/types/productTour';
 import { reportAppError } from '@/utils/appError';
 import { notifyError, notifyPromise } from '@/utils/notify';
+import { AnalyticsEvents } from '@/analytics/events';
 
 export function useProductTourLibrary() {
   const sessionMode = useSessionMode();
@@ -44,6 +45,8 @@ export function useProductTourLibrary() {
         success: 'Tour deleted',
         successDescription: 'Removed from your library.',
         context: 'Delete product tour',
+        event: AnalyticsEvents.tourDeleted,
+        eventProps: { tour_id: id },
       });
     },
     [refresh, sessionMode],

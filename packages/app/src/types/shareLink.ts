@@ -1,5 +1,9 @@
 import type { FlowShareSettings } from '@/types/savedFlow';
-import type { ShareLinkAccessMode, SharedDocumentViewMode } from '@/utils/shareLink';
+import type {
+  ShareLinkAccessMode,
+  ShareLinkChannel,
+  SharedDocumentViewMode,
+} from '@/utils/shareLink';
 
 export type ShareLinkResourceType = 'document' | 'tour';
 
@@ -17,6 +21,7 @@ export interface ShareLinkRecord {
   resourceType: ShareLinkResourceType;
   resourceId: string;
   accessMode: ShareLinkAccessMode;
+  channel: ShareLinkChannel;
   settings: ShareLinkSettings;
   expiresAt: string | null;
   revokedAt: string | null;
@@ -31,6 +36,7 @@ export interface ResolvedShareLink {
   resourceType: ShareLinkResourceType;
   resourceId: string;
   accessMode: ShareLinkAccessMode;
+  channel: ShareLinkChannel;
   settings: ShareLinkSettings;
 }
 
@@ -44,5 +50,6 @@ export interface CreateShareLinkInput {
   resourceType: ShareLinkResourceType;
   resourceId: string;
   accessMode: ShareLinkAccessMode;
+  channel?: ShareLinkChannel;
   settings?: ShareLinkSettings;
 }

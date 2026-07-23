@@ -10,4 +10,8 @@ export interface AnalyticsSink {
   shutdown: () => void;
   track: (name: string, props?: AnalyticsProps) => void;
   page: (path: string) => void;
+  /** Optional: Error Tracking / exception capture. */
+  captureException?: (error: unknown, props?: AnalyticsProps) => void;
+  identify?: (userId: string, traits?: AnalyticsProps) => void;
+  reset?: () => void;
 }

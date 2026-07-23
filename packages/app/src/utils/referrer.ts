@@ -14,6 +14,29 @@ export function getReferrerDomain(): string | null {
   }
 }
 
+/**
+ * Best-effort host of the page embedding this app (iframe parent).
+ * Prefers `location.ancestorOrigins` (Chromium), then document.referrer.
+ */
+export function getEmbedHostDomain(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const ancestors = window.location.ancestorOrigins;
+    if (ancestors && ancestors.length > 0) {
+      const top = ancestors[ancestors.length - 1];
+      if (top) {
+        const host = new URL(top).hostname;
+        if (host && host !== window.location.hostname) return host;
+      }
+    }
+  } catch {
+    // ancestorOrigins may be restricted.
+  }
+
+  return getReferrerDomain();
+}
+
 /** Extracts UTM campaign parameters from the current URL as a flat record. */
 export function getUtmParams(): Record<string, string> {
   if (typeof window === 'undefined') return {};

@@ -14,6 +14,8 @@ import { useSessionMode } from '@/hooks/useSessionMode';
 import { generateWorkflowArtifact } from '@/services/workflowArtifactService';
 import type { WorkflowArtifactType } from '@/types/workflowArtifact';
 import { WORKFLOW_ARTIFACT_TYPES } from '@/types/workflowArtifact';
+import { trackEvent } from '@/analytics/analyticsClient';
+import { AnalyticsEvents } from '@/analytics/events';
 import { notifyError, notifyPromise, notifySuccess } from '@/utils/notify';
 import { downloadTextFile } from '@/utils/downloadTextFile';
 import { getDocumentPath } from '@/utils/shareLink';
@@ -55,6 +57,8 @@ export const ArtifactDetailPage = ({ artifactType }: ArtifactDetailPageProps) =>
           loading: 'Preparing PNG…',
           success: 'PNG downloaded',
           context: 'Download flow map PNG',
+          event: AnalyticsEvents.artifactDownloaded,
+          eventProps: { artifact_type: artifactType, format: 'png' },
         });
       } catch {
         setHasActionError(true);
@@ -69,6 +73,10 @@ export const ArtifactDetailPage = ({ artifactType }: ArtifactDetailPageProps) =>
       `${artifact.flowTitle.replace(/\s+/g, '-').toLowerCase()}.${config.fileExtension}`,
     );
     notifySuccess('File downloaded');
+    trackEvent(AnalyticsEvents.artifactDownloaded, {
+      artifact_type: artifactType,
+      format: config.fileExtension,
+    });
   };
 
   const handleRegenerate = async () => {
@@ -82,6 +90,8 @@ export const ArtifactDetailPage = ({ artifactType }: ArtifactDetailPageProps) =>
           loading: 'Regenerating…',
           success: 'Artifact regenerated',
           context: 'Regenerate workflow artifact',
+          event: AnalyticsEvents.artifactRegenerated,
+          eventProps: { artifact_type: artifactType, document_id: documentId },
         },
       );
     } catch {

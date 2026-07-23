@@ -11,10 +11,10 @@ import type { SavedRoute } from '@/types/route';
 import {
   buildSharedRouteUrl,
   copyTextToClipboard,
-  getRouteEmbedCodePlaceholder,
   type ShareLinkAccessMode,
 } from '@/utils/shareLink';
-import { notifyInfo, notifyPromise } from '@/utils/notify';
+import { notifyPromise } from '@/utils/notify';
+import { AnalyticsEvents } from '@/analytics/events';
 
 interface ShareRouteModalProps {
   isOpen: boolean;
@@ -82,10 +82,7 @@ export const ShareRouteModal = ({
   };
 
   const handlePrimaryAction = async () => {
-    if (method === 'embed') {
-      notifyInfo('Embed coming soon', 'Embed publishing is not available yet for this workspace.');
-      return;
-    }
+    if (method === 'embed') return;
     if (method === 'pdf') {
       if (!route) return;
       setIsExporting(true);
@@ -95,6 +92,8 @@ export const ShareRouteModal = ({
           success: 'PDF exported',
           successDescription: 'Your download should start shortly.',
           context: 'Export route PDF',
+          event: AnalyticsEvents.routePdfExported,
+          eventProps: { route_id: routeId },
         });
         onClose();
       } catch {
@@ -110,6 +109,8 @@ export const ShareRouteModal = ({
         success: 'Link copied',
         successDescription: 'Share URL is on your clipboard.',
         context: 'Copy route share link',
+        event: AnalyticsEvents.routeShared,
+        eventProps: { route_id: routeId, access_mode: accessMode },
       });
       handleClose();
     } catch {
@@ -157,16 +158,24 @@ export const ShareRouteModal = ({
             </div>
           ) : (
             <>
-              <ShareMethodPicker value={method} onChange={setMethod} disabled={isExporting} />
+              <ShareMethodPicker
+                value={method}
+                onChange={setMethod}
+                disabled={isExporting}
+                disabledMethods={{ embed: true }}
+                disabledReasons={{
+                  embed: 'Route embeds are not available yet. Use a link or PDF instead.',
+                }}
+              />
               {method === 'embed' ? (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Embed code
+                <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-medium text-slate-800">
+                    Route embeds are not available yet
                   </p>
-                  <pre className="overflow-x-auto rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-600">
-                    {getRouteEmbedCodePlaceholder(routeId)}
-                  </pre>
-                  <p className="text-xs text-slate-500">Embed support is coming soon.</p>
+                  <p className="text-sm text-slate-600">
+                    Cloud embed publishing currently supports flow docs and product tours. Share this
+                    route as a link or export a PDF instead.
+                  </p>
                 </div>
               ) : null}
               {method === 'link' ? (
@@ -206,7 +215,7 @@ export const ShareRouteModal = ({
               disabled
               className="rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-500"
             >
-              Copy code — coming soon
+              Unavailable for routes
             </button>
           ) : (
             <button

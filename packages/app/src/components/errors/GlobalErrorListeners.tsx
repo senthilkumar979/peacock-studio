@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { classifyAppError, logAppError } from '@/utils/appError';
+import { classifyAppError, isBenignBrowserNoise, logAppError } from '@/utils/appError';
 import { notifyError, notifyWarning } from '@/utils/notify';
 
 /**
@@ -11,6 +11,11 @@ export const GlobalErrorListeners = () => {
   useEffect(() => {
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
       const reason = event.reason;
+      if (isBenignBrowserNoise(reason)) {
+        event.preventDefault();
+        return;
+      }
+
       const classified = classifyAppError(reason);
       logAppError('Unhandled promise rejection', reason);
 
@@ -26,6 +31,10 @@ export const GlobalErrorListeners = () => {
       if (!event.error && !event.message) return;
       // Cross-origin script errors often have no useful payload.
       if (event.message === 'Script error.' && !event.error) return;
+      if (isBenignBrowserNoise(event.error ?? event.message)) {
+        event.preventDefault();
+        return;
+      }
 
       const error = event.error ?? new Error(event.message || 'Unknown window error');
       const classified = classifyAppError(error);

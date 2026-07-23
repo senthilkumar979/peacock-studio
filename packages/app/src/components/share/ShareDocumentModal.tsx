@@ -8,7 +8,7 @@ import { SharePdfPathOptions } from '@/components/share/SharePdfPathOptions';
 import { PdfExportBlockingOverlay } from '@/components/share/PdfExportBlockingOverlay';
 import { exportFlowPdf } from '@/pdf/exportFlowPdf';
 import { getFlowDocument } from '@/services/flowLibraryService';
-import { createDocumentShareUrl } from '@/services/shareLinkService';
+import { createDocumentEmbedCode, createDocumentShareUrl } from '@/services/shareLinkService';
 import { isCloudSyncEnabled } from '@/cloud/config';
 import type { FlowShareSettings } from '@/types/savedFlow';
 import { resolveShareSettings } from '@/utils/flowShareSettings';
@@ -18,11 +18,11 @@ import {
 } from '@/utils/pdfPathSelection';
 import {
   copyTextToClipboard,
-  getEmbedCodePlaceholder,
   type ShareLinkAccessMode,
 } from '@/utils/shareLink';
-import { useCanEmbed, useCanExport, useCanShare } from '@/hooks/useOrganization';
-import { notifyError, notifyInfo, notifyPromise } from '@/utils/notify';
+import { useShareMethodAccess } from '@/hooks/useOrganization';
+import { notifyError, notifyPromise } from '@/utils/notify';
+import { AnalyticsEvents } from '@/analytics/events';
 
 interface ShareDocumentModalProps {
   isOpen: boolean;
@@ -45,9 +45,7 @@ export const ShareDocumentModal = ({
   shareSettings: shareSettingsProp,
   onShareSettingsSave,
 }: ShareDocumentModalProps) => {
-  const canShare = useCanShare();
-  const canExport = useCanExport();
-  const canEmbed = useCanEmbed();
+  const { canShare, canExport, canEmbed, disabledReasons } = useShareMethodAccess();
   const [method, setMethod] = useState<ShareMethod>('link');
   const [accessMode, setAccessMode] = useState<ShareLinkAccessMode>('readonly');
   const [isLoading, setIsLoading] = useState(false);
@@ -72,6 +70,7 @@ export const ShareDocumentModal = ({
   const [branchSettings, setBranchSettings] = useState(defaultBranchSettings);
   const [shareUrl, setShareUrl] = useState('');
   const [isShareUrlLoading, setIsShareUrlLoading] = useState(false);
+  const [embedCode, setEmbedCode] = useState('');
 
   const defaultPdfPathSelections = useMemo(
     () => buildDefaultPdfPathSelections(branches),
@@ -81,18 +80,31 @@ export const ShareDocumentModal = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    const preferred: ShareMethod = canShare ? 'link' : canExport ? 'pdf' : 'embed';
+    const preferred: ShareMethod = canShare
+      ? 'link'
+      : canExport
+        ? 'pdf'
+        : canEmbed
+          ? 'embed'
+          : 'pdf';
     setMethod(preferred);
     setAccessMode('readonly');
     setBranchSettings(defaultBranchSettings);
     setPdfPathSelections(defaultPdfPathSelections);
-  }, [isOpen, defaultBranchSettings, defaultPdfPathSelections, canShare, canExport]);
+    setEmbedCode('');
+  }, [isOpen, defaultBranchSettings, defaultPdfPathSelections, canShare, canExport, canEmbed]);
 
   useEffect(() => {
-    if (method === 'link' && !canShare) setMethod(canExport ? 'pdf' : 'embed');
-    if (method === 'pdf' && !canExport) setMethod(canShare ? 'link' : 'embed');
-    if (method === 'embed' && !canEmbed && (canShare || canExport)) {
-      setMethod(canShare ? 'link' : 'pdf');
+    if (method === 'link' && !canShare) {
+      setMethod(canExport ? 'pdf' : canEmbed ? 'embed' : 'pdf');
+      return;
+    }
+    if (method === 'pdf' && !canExport) {
+      setMethod(canShare ? 'link' : canEmbed ? 'embed' : 'link');
+      return;
+    }
+    if (method === 'embed' && !canEmbed) {
+      setMethod(canShare ? 'link' : canExport ? 'pdf' : 'link');
     }
   }, [method, canShare, canExport, canEmbed]);
 
@@ -168,7 +180,35 @@ export const ShareDocumentModal = ({
 
   const handlePrimaryAction = async () => {
     if (method === 'embed') {
-      notifyInfo('Embed coming soon', 'Embed publishing is not available yet for this workspace.');
+      if (!canEmbed) {
+        notifyError('Embed not allowed', 'Your workspace role cannot publish embeds.');
+        return;
+      }
+      try {
+        const branchShareSettings =
+          hasBranches
+            ? { ...branchSettings, includeMainFlow: true }
+            : undefined;
+        const { iframeCode } = await notifyPromise(
+          createDocumentEmbedCode(documentId, {
+            title: flow?.flow.title,
+            shareSettings: branchShareSettings,
+          }),
+          {
+            loading: 'Creating embed…',
+            success: 'Embed code copied',
+            successDescription: 'Paste the iframe into your site.',
+            context: 'Create document embed',
+            event: AnalyticsEvents.documentEmbedded,
+            eventProps: { document_id: documentId },
+          },
+        );
+        setEmbedCode(iframeCode);
+        await copyTextToClipboard(iframeCode);
+        handleClose();
+      } catch {
+        // Toast already shown
+      }
       return;
     }
     if (method === 'pdf') {
@@ -187,6 +227,8 @@ export const ShareDocumentModal = ({
             success: 'PDF exported',
             successDescription: 'Your download should start shortly.',
             context: 'Export flow PDF',
+            event: AnalyticsEvents.documentPdfExported,
+            eventProps: { document_id: documentId },
           },
         );
         onClose();
@@ -220,6 +262,8 @@ export const ShareDocumentModal = ({
           success: 'Link copied',
           successDescription: 'Share URL is on your clipboard.',
           context: 'Create document share link',
+          event: AnalyticsEvents.documentShared,
+          eventProps: { document_id: documentId, access_mode: accessMode },
         },
       );
       void url;
@@ -232,9 +276,9 @@ export const ShareDocumentModal = ({
   if (!isOpen) return null;
 
   const primaryDisabled =
-    method === 'embed' ||
     isLoading ||
     isExporting ||
+    (method === 'embed' && !canEmbed) ||
     (method === 'link' && isShareUrlLoading) ||
     (method === 'pdf' && !flow) ||
     (method === 'pdf' && hasBranches && !hasCompletePdfPathSelections(branches, pdfPathSelections));
@@ -280,17 +324,28 @@ export const ShareDocumentModal = ({
                   pdf: !canExport,
                   embed: !canEmbed,
                 }}
+                disabledReasons={disabledReasons}
               />
               {method === 'embed' ? (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Embed code
-                  </p>
-                  <pre className="overflow-x-auto rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-600">
-                    {getEmbedCodePlaceholder(documentId)}
-                  </pre>
-                  <p className="text-xs text-slate-500">Embed support is coming soon.</p>
-                </div>
+                canEmbed ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-600">
+                      Copy an iframe that loads a unique Peacock embed URL. Viewers see the interactive
+                      player with a Peacock Studio watermark. Loads are counted per embedding domain.
+                    </p>
+                    <pre className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+                      {embedCode ||
+                        `<iframe src="https://…/s/your-unique-token/embed" title="Peacock Studio guide" width="100%" height="640" …></iframe>`}
+                    </pre>
+                    <p className="text-xs text-slate-500">
+                      Each document gets its own embed token. Loads are counted per embedding domain.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                    {disabledReasons.embed ?? 'Embed is not available for this session.'}
+                  </div>
+                )
               ) : null}
               {method === 'link' ? (
                 <ShareLinkPanel
@@ -337,10 +392,11 @@ export const ShareDocumentModal = ({
           {method === 'embed' ? (
             <button
               type="button"
-              disabled
-              className="rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-500"
+              disabled={primaryDisabled}
+              onClick={() => void handlePrimaryAction()}
+              className="rounded-lg bg-peacock-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             >
-              Copy code — coming soon
+              Copy embed code
             </button>
           ) : (
             <button

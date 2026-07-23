@@ -43,3 +43,21 @@ export function trackPageView(path: string): void {
   if (!isEnabled) return;
   sink.page(path);
 }
+
+/** Capture an exception for PostHog Error Tracking (consent-gated). */
+export function trackException(error: unknown, props?: AnalyticsProps): void {
+  if (!isEnabled) return;
+  sink.captureException?.(error, props);
+}
+
+/** Identify the signed-in user for person profiles / funnel attribution. */
+export function identifyAnalyticsUser(userId: string, traits?: AnalyticsProps): void {
+  if (!isEnabled) return;
+  sink.identify?.(userId, traits);
+}
+
+/** Clear identity on sign-out. */
+export function resetAnalyticsUser(): void {
+  if (!isEnabled) return;
+  sink.reset?.();
+}

@@ -8,13 +8,13 @@ import { getProductTour } from '@/storage/libraryRouter';
 import type { ProductTour } from '@/types/productTour';
 import {
   copyTextToClipboard,
-  getProductTourEmbedCodePlaceholder,
   type ShareLinkAccessMode,
 } from '@/utils/shareLink';
-import { createProductTourShareUrl } from '@/services/shareLinkService';
+import { createProductTourEmbedCode, createProductTourShareUrl } from '@/services/shareLinkService';
 import { isCloudSyncEnabled } from '@/cloud/config';
-import { useCanEmbed, useCanExport, useCanShare } from '@/hooks/useOrganization';
-import { notifyInfo, notifyPromise } from '@/utils/notify';
+import { useShareMethodAccess } from '@/hooks/useOrganization';
+import { notifyError, notifyPromise } from '@/utils/notify';
+import { AnalyticsEvents } from '@/analytics/events';
 
 interface ShareProductTourModalProps {
   isOpen: boolean;
@@ -29,9 +29,7 @@ export const ShareProductTourModal = ({
   tour: tourProp,
   onClose,
 }: ShareProductTourModalProps) => {
-  const canShare = useCanShare();
-  const canExport = useCanExport();
-  const canEmbed = useCanEmbed();
+  const { canShare, canExport, canEmbed, disabledReasons } = useShareMethodAccess();
   const [method, setMethod] = useState<ShareMethod>('link');
   const [accessMode, setAccessMode] = useState<ShareLinkAccessMode>('readonly');
   const [presenterLink, setPresenterLink] = useState(false);
@@ -40,23 +38,37 @@ export const ShareProductTourModal = ({
   const [loadedTour, setLoadedTour] = useState<ProductTour | null>(null);
   const [shareUrl, setShareUrl] = useState('');
   const [isShareUrlLoading, setIsShareUrlLoading] = useState(false);
+  const [embedCode, setEmbedCode] = useState('');
 
   const tour = tourProp ?? loadedTour;
   const canExportPdf = tour ? tourHasExportableDemos(tour) : false;
 
   useEffect(() => {
     if (!isOpen) return;
-    const preferred: ShareMethod = canShare ? 'link' : canExport ? 'pdf' : 'embed';
+    const preferred: ShareMethod = canShare
+      ? 'link'
+      : canExport
+        ? 'pdf'
+        : canEmbed
+          ? 'embed'
+          : 'pdf';
     setMethod(preferred);
     setAccessMode('readonly');
     setPresenterLink(false);
-  }, [isOpen, canShare, canExport]);
+    setEmbedCode('');
+  }, [isOpen, canShare, canExport, canEmbed]);
 
   useEffect(() => {
-    if (method === 'link' && !canShare) setMethod(canExport ? 'pdf' : 'embed');
-    if (method === 'pdf' && !canExport) setMethod(canShare ? 'link' : 'embed');
-    if (method === 'embed' && !canEmbed && (canShare || canExport)) {
-      setMethod(canShare ? 'link' : 'pdf');
+    if (method === 'link' && !canShare) {
+      setMethod(canExport ? 'pdf' : canEmbed ? 'embed' : 'pdf');
+      return;
+    }
+    if (method === 'pdf' && !canExport) {
+      setMethod(canShare ? 'link' : canEmbed ? 'embed' : 'link');
+      return;
+    }
+    if (method === 'embed' && !canEmbed) {
+      setMethod(canShare ? 'link' : canExport ? 'pdf' : 'link');
     }
   }, [method, canShare, canExport, canEmbed]);
 
@@ -114,7 +126,28 @@ export const ShareProductTourModal = ({
 
   const handlePrimaryAction = async () => {
     if (method === 'embed') {
-      notifyInfo('Embed coming soon', 'Embed publishing is not available yet for this workspace.');
+      if (!canEmbed) {
+        notifyError('Embed not allowed', 'Your workspace role cannot publish embeds.');
+        return;
+      }
+      try {
+        const { iframeCode } = await notifyPromise(
+          createProductTourEmbedCode(tourId, { title: tour?.title }),
+          {
+            loading: 'Creating embed…',
+            success: 'Embed code copied',
+            successDescription: 'Paste the iframe into your site.',
+            context: 'Create product tour embed',
+            event: AnalyticsEvents.tourEmbedded,
+            eventProps: { tour_id: tourId },
+          },
+        );
+        setEmbedCode(iframeCode);
+        await copyTextToClipboard(iframeCode);
+        handleClose();
+      } catch {
+        // Toast already shown
+      }
       return;
     }
     if (method === 'pdf') {
@@ -126,6 +159,8 @@ export const ShareProductTourModal = ({
           success: 'PDF exported',
           successDescription: 'Your download should start shortly.',
           context: 'Export product tour PDF',
+          event: AnalyticsEvents.tourPdfExported,
+          eventProps: { tour_id: tourId },
         });
         onClose();
       } catch {
@@ -150,6 +185,8 @@ export const ShareProductTourModal = ({
           success: 'Link copied',
           successDescription: 'Share URL is on your clipboard.',
           context: 'Create product tour share link',
+          event: AnalyticsEvents.tourShared,
+          eventProps: { tour_id: tourId, access_mode: accessMode },
         },
       );
       void url;
@@ -162,10 +199,11 @@ export const ShareProductTourModal = ({
   if (!isOpen) return null;
 
   const primaryDisabled =
-    method === 'embed' ||
     isLoading ||
     isExporting ||
-    (method === 'link' && isShareUrlLoading) || (method === 'pdf' && (!tour || !canExportPdf));
+    (method === 'embed' && !canEmbed) ||
+    (method === 'link' && isShareUrlLoading) ||
+    (method === 'pdf' && (!tour || !canExportPdf));
 
   return createPortal(
     <>
@@ -208,17 +246,30 @@ export const ShareProductTourModal = ({
                   pdf: !canExport || !canExportPdf,
                   embed: !canEmbed,
                 }}
+                disabledReasons={{
+                  ...disabledReasons,
+                  ...(!canExportPdf
+                    ? { pdf: 'Add demos to this tour before exporting PDFs.' }
+                    : {}),
+                }}
               />
               {method === 'embed' ? (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Embed code
-                  </p>
-                  <pre className="overflow-x-auto rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-600">
-                    {getProductTourEmbedCodePlaceholder(tourId)}
-                  </pre>
-                  <p className="text-xs text-slate-500">Embed support is coming soon.</p>
-                </div>
+                canEmbed ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-600">
+                      Copy an iframe with a unique Peacock embed URL. Loads are tracked per embedding
+                      domain, with a Peacock Studio watermark on the player.
+                    </p>
+                    <pre className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+                      {embedCode ||
+                        `<iframe src="https://…/s/your-unique-token/embed" title="Peacock Studio tour" width="100%" height="640" …></iframe>`}
+                    </pre>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                    {disabledReasons.embed ?? 'Embed is not available for this session.'}
+                  </div>
+                )
               ) : null}
               {method === 'link' ? (
                 <div className="space-y-4">
@@ -293,8 +344,13 @@ export const ShareProductTourModal = ({
             Cancel
           </button>
           {method === 'embed' ? (
-            <button type="button" disabled className="rounded-lg bg-slate-200 px-4 py-2 text-sm">
-              Copy code — coming soon
+            <button
+              type="button"
+              disabled={primaryDisabled}
+              onClick={() => void handlePrimaryAction()}
+              className="rounded-lg bg-peacock-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              Copy embed code
             </button>
           ) : (
             <button

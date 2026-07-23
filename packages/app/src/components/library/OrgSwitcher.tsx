@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { refreshCloudMemberships } from '@/components/auth/CloudSyncProvider';
 import { useActiveOrganization } from '@/hooks/useOrganization';
 import { notifyPromise } from '@/utils/notify';
+import { AnalyticsEvents } from '@/analytics/events';
 
 export const OrgSwitcher = () => {
   const { memberships, organizationId, organizationName } = useActiveOrganization();
@@ -56,6 +57,8 @@ export const OrgSwitcher = () => {
                           loading: 'Switching workspace…',
                           success: `Switched to ${membership.organizationName}`,
                           context: 'Switch organization',
+                          event: AnalyticsEvents.workspaceSwitched,
+                          eventProps: { organization_id: membership.organizationId },
                         },
                       );
                       setOpen(false);

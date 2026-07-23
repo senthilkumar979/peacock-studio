@@ -6,6 +6,13 @@ import type { OrgAnalyticsSummary } from '@/types/analytics';
 interface AnalyticsSummaryCardsProps {
   summary: OrgAnalyticsSummary;
   avgViewsPerDoc: number;
+  /** Optional “who leads” hints under each metric. */
+  leaderHints?: {
+    views?: string;
+    pdfExports?: string;
+    embedViews?: string;
+    avgViews?: string;
+  };
 }
 
 interface CardModel {
@@ -18,43 +25,51 @@ interface CardModel {
 
 const ICON_CLASS = 'h-[18px] w-[18px]';
 
-function buildCards(summary: OrgAnalyticsSummary, avgViewsPerDoc: number): CardModel[] {
+function buildCards(
+  summary: OrgAnalyticsSummary,
+  avgViewsPerDoc: number,
+  leaderHints?: AnalyticsSummaryCardsProps['leaderHints'],
+): CardModel[] {
   const topReferrer = summary.topReferrers[0]?.referrerDomain ?? '—';
   return [
     {
       label: 'Total views',
       value: summary.totals.views,
-      hint: 'Shared & embedded opens',
+      hint: leaderHints?.views ?? 'Shared & embedded opens',
       accent: 'from-peacock-500 to-peacock-700',
       icon: Eye,
     },
     {
       label: 'PDF exports',
       value: summary.totals.pdfExports,
-      hint: 'Downloaded documents',
+      hint: leaderHints?.pdfExports ?? 'Downloaded documents',
       accent: 'from-brand-cyan to-peacock-600',
       icon: FileDown,
     },
     {
       label: 'Embed views',
       value: summary.totals.embedViews,
-      hint: 'Impressions on embeds',
+      hint: leaderHints?.embedViews ?? 'Impressions on embeds',
       accent: 'from-brand-violet to-peacock-700',
       icon: Code2,
     },
     {
       label: 'Avg views / doc',
       value: avgViewsPerDoc.toFixed(1),
-      hint: `Top referrer: ${topReferrer}`,
+      hint: leaderHints?.avgViews ?? `Top referrer: ${topReferrer}`,
       accent: 'from-peacock-500 to-brand-cyan',
       icon: Globe,
     },
   ];
 }
 
-export const AnalyticsSummaryCards = ({ summary, avgViewsPerDoc }: AnalyticsSummaryCardsProps) => (
+export const AnalyticsSummaryCards = ({
+  summary,
+  avgViewsPerDoc,
+  leaderHints,
+}: AnalyticsSummaryCardsProps) => (
   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    {buildCards(summary, avgViewsPerDoc).map((card, index) => {
+    {buildCards(summary, avgViewsPerDoc, leaderHints).map((card, index) => {
       const Icon = card.icon;
       return (
         <motion.article

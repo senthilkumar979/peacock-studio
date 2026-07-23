@@ -11,6 +11,7 @@ import {
   type WorkflowArtifactType,
 } from "@/types/workflowArtifact";
 import { notifyPromise } from "@/utils/notify";
+import { AnalyticsEvents } from "@/analytics/events";
 
 interface WorkflowArtifactTilesProps {
   documentId: string;
@@ -70,6 +71,8 @@ export const WorkflowArtifactTiles = ({
         success: 'Artifact ready',
         successDescription: 'Open it from the library when you are ready.',
         context: 'Generate workflow artifact',
+        event: AnalyticsEvents.artifactGenerated,
+        eventProps: { artifact_type: artifactType, document_id: documentId },
       });
     } catch {
       setHasGenerateError(true);

@@ -5,6 +5,7 @@ import { computeDashboardStats, type DashboardStats } from '@/utils/dashboardSta
 import type { SavedFlowSummary } from '@/types/savedFlow';
 import { reportAppError } from '@/utils/appError';
 import { notifyError, notifyPromise } from '@/utils/notify';
+import { AnalyticsEvents } from '@/analytics/events';
 
 export function useFlowLibrary() {
   const sessionMode = useSessionMode();
@@ -47,6 +48,8 @@ export function useFlowLibrary() {
         success: 'Document deleted',
         successDescription: 'Removed from your library.',
         context: 'Delete flow document',
+        event: AnalyticsEvents.documentDeleted,
+        eventProps: { document_id: id },
       });
     },
     [refresh, sessionMode],

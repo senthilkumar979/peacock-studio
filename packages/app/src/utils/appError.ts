@@ -1,4 +1,6 @@
 import * as Sentry from '@sentry/react';
+import { trackEvent, trackException } from '@/analytics/analyticsClient';
+import { AnalyticsEvents } from '@/analytics/events';
 import { isSentryInitialized } from '@/observability/sentry';
 
 export const GENERIC_USER_ERROR_MESSAGE =
@@ -48,6 +50,17 @@ function rawMessage(error: unknown): string {
   if (typeof error === 'string') return error;
   const like = asErrorLike(error);
   return like.message ?? like.details ?? '';
+}
+
+/**
+ * Chromium quirk during layout churn (e.g. list unmount after delete).
+ * Harmless — must not toast or escalate to hard error UI.
+ */
+const BENIGN_BROWSER_NOISE_RE =
+  /ResizeObserver loop(?: completed with undelivered notifications| limit exceeded)?/i;
+
+export function isBenignBrowserNoise(error: unknown): boolean {
+  return BENIGN_BROWSER_NOISE_RE.test(rawMessage(error));
 }
 
 /**
@@ -169,10 +182,21 @@ export function toUserFacingMessage(error: unknown): string {
 
 export function logAppError(context: string, error: unknown): void {
   console.error(`[Peacock] ${context}`, error);
+  const classified = classifyAppError(error);
+
+  trackException(error instanceof Error ? error : new Error(classified.userMessage), {
+    peacock_context: context,
+    peacock_error_kind: classified.kind,
+  });
+  trackEvent(AnalyticsEvents.exceptionCaptured, {
+    context,
+    kind: classified.kind,
+    title: classified.title,
+  });
+
   if (isSentryInitialized()) {
     Sentry.withScope((scope) => {
       scope.setTag('peacock.context', context);
-      const classified = classifyAppError(error);
       scope.setTag('peacock.error_kind', classified.kind);
       if (error instanceof Error) {
         Sentry.captureException(error);

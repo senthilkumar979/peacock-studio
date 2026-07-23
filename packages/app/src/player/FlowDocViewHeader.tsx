@@ -20,6 +20,7 @@ interface FlowDocViewHeaderProps {
   pageHints?: PageHintControl;
   showOwnerActions?: boolean;
   guideProgressPercent?: number;
+  isEmbed?: boolean;
 }
 
 const actionClass =
@@ -36,6 +37,7 @@ export const FlowDocViewHeader = ({
   pageHints,
   showOwnerActions = true,
   guideProgressPercent,
+  isEmbed = false,
 }: FlowDocViewHeaderProps) => {
   const backLink = useLibraryBackLink();
   const { openShare, shareModal } = useDocumentShareModal(documentId);
@@ -49,7 +51,7 @@ export const FlowDocViewHeader = ({
       >
         <div className="relative flex items-center justify-between gap-3 px-4 py-2.5 sm:px-5">
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-            {showOwnerActions ? (
+            {showOwnerActions && !isEmbed ? (
               <>
                 <Link
                   to={backLink.from}
@@ -65,7 +67,7 @@ export const FlowDocViewHeader = ({
             ) : null}
 
             <Link
-              to={showOwnerActions ? DASHBOARD_PATH : LANDING_PATH}
+              to={showOwnerActions && !isEmbed ? DASHBOARD_PATH : LANDING_PATH}
               className="group hidden shrink-0 items-center gap-2 rounded-xl outline-none ring-peacock-500 focus-visible:ring-2 sm:inline-flex"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-peacock-500 to-peacock-700 p-1 shadow-md shadow-peacock-500/20 ring-1 ring-peacock-600/10">
@@ -78,32 +80,36 @@ export const FlowDocViewHeader = ({
 
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="shrink-0 rounded-full bg-peacock-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-peacock-700 ring-1 ring-peacock-100">
-                  {modeLabel}
-                </span>
+                {!isEmbed ? (
+                  <span className="shrink-0 rounded-full bg-peacock-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-peacock-700 ring-1 ring-peacock-100">
+                    {modeLabel}
+                  </span>
+                ) : null}
                 <h1 className="truncate text-sm font-bold text-slate-900 sm:text-base">{title}</h1>
               </div>
             </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {onOverview ? (
+            {onOverview && !isEmbed ? (
               <button type="button" onClick={onOverview} className={actionClass}>
                 <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
                 <span className="hidden sm:inline">Overview</span>
               </button>
             ) : null}
 
-            <HintAnchor
-              hints={pageHints}
-              hintId={PLAYER_HINT_IDS.viewToggle}
-              title="Doc or Player"
-              description="Switch between a scrollable guide and a step-by-step player. Share either view with your audience."
-            >
-              <SharedViewToggle mode={viewMode} onChange={onViewModeChange} />
-            </HintAnchor>
+            {!isEmbed ? (
+              <HintAnchor
+                hints={pageHints}
+                hintId={PLAYER_HINT_IDS.viewToggle}
+                title="Doc or Player"
+                description="Switch between a scrollable guide and a step-by-step player. Share either view with your audience."
+              >
+                <SharedViewToggle mode={viewMode} onChange={onViewModeChange} />
+              </HintAnchor>
+            ) : null}
 
-            {showOwnerActions ? (
+            {showOwnerActions && !isEmbed ? (
               <>
                 <button type="button" onClick={openShare} className={actionClass}>
                   <Link2 className="h-4 w-4 shrink-0" aria-hidden />

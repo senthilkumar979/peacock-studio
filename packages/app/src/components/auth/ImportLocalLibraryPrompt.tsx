@@ -12,6 +12,7 @@ import {
 import { isCloudSyncEnabled } from '@/cloud/config';
 import { reportAppError } from '@/utils/appError';
 import { notifyPromise } from '@/utils/notify';
+import { AnalyticsEvents } from '@/analytics/events';
 
 const ImportLocalLibraryPromptInner = () => {
   const { isSignedIn } = useAuth();
@@ -56,6 +57,7 @@ const ImportLocalLibraryPromptInner = () => {
         success: 'Library imported',
         successDescription: 'Reloading so your cloud library is ready.',
         context: 'Import local library to cloud',
+        event: AnalyticsEvents.localLibraryImported,
       });
       setIsOpen(false);
       window.location.reload();

@@ -12,6 +12,7 @@ interface FlowDocExperienceViewsProps {
   onOverview: () => void;
   pageHints?: PageHintControl;
   showOwnerActions?: boolean;
+  isEmbed?: boolean;
 }
 
 export const FlowDocExperienceViews = ({
@@ -21,6 +22,7 @@ export const FlowDocExperienceViews = ({
   onOverview,
   pageHints,
   showOwnerActions = true,
+  isEmbed = false,
 }: FlowDocExperienceViewsProps) => {
   if (resolvedView === 'hub') {
     return (
@@ -37,9 +39,10 @@ export const FlowDocExperienceViews = ({
       <PlayerView
         documentId={documentId}
         onModeChange={onModeChange}
-        onOverview={onOverview}
+        onOverview={isEmbed ? undefined : onOverview}
         pageHints={pageHints}
         showOwnerActions={showOwnerActions}
+        isEmbed={isEmbed}
       />
     );
   }
@@ -48,9 +51,10 @@ export const FlowDocExperienceViews = ({
     <DocumentView
       documentId={documentId}
       onModeChange={onModeChange}
-      onOverview={onOverview}
+      onOverview={isEmbed ? undefined : onOverview}
       pageHints={pageHints}
       showOwnerActions={showOwnerActions}
+      isEmbed={isEmbed}
     />
   );
 };

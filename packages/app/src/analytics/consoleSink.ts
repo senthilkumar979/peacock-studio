@@ -21,5 +21,14 @@ export function createConsoleSink(): AnalyticsSink {
     page: (path) => {
       if (isDev) console.info('[analytics] page', path);
     },
+    captureException: (error, props) => {
+      if (isDev) console.info('[analytics] exception', error, props ?? {});
+    },
+    identify: (userId, traits) => {
+      if (isDev) console.info('[analytics] identify', userId, traits ?? {});
+    },
+    reset: () => {
+      if (isDev) console.info('[analytics] reset');
+    },
   };
 }

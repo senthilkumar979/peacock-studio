@@ -14,6 +14,7 @@ import {
 import { useSessionMode } from '@/hooks/useSessionMode';
 import { reportAppError } from '@/utils/appError';
 import { notifyPromise } from '@/utils/notify';
+import { AnalyticsEvents } from '@/analytics/events';
 
 export const AcceptInvitePage = () => {
   const [searchParams] = useSearchParams();
@@ -46,6 +47,7 @@ export const AcceptInvitePage = () => {
             loading: 'Joining workspace…',
             success: 'You joined the workspace',
             context: 'Accept invite link',
+            event: AnalyticsEvents.workspaceInviteAccepted,
           },
         );
         if (cancelled) return;

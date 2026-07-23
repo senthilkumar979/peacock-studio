@@ -7,6 +7,8 @@ interface ShareMethodPickerProps {
   onChange: (method: ShareMethod) => void;
   disabled?: boolean;
   disabledMethods?: Partial<Record<ShareMethod, boolean>>;
+  /** Shown under the label when a method is disabled. */
+  disabledReasons?: Partial<Record<ShareMethod, string>>;
 }
 
 const OPTIONS: Array<{
@@ -40,18 +42,21 @@ export const ShareMethodPicker = ({
   onChange,
   disabled = false,
   disabledMethods = {},
+  disabledReasons = {},
 }: ShareMethodPickerProps) => (
   <div className="grid gap-2 sm:grid-cols-3">
     {OPTIONS.map((option) => {
       const Icon = option.icon;
       const isSelected = value === option.id;
       const methodDisabled = Boolean(disabledMethods[option.id]);
+      const reason = disabledReasons[option.id];
       return (
         <button
           key={option.id}
           type="button"
           disabled={disabled || methodDisabled}
           onClick={() => onChange(option.id)}
+          title={methodDisabled ? reason : undefined}
           className={`rounded-xl border px-3 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${
             isSelected
               ? 'border-peacock-500 bg-peacock-50 ring-2 ring-peacock-500/20'
@@ -64,7 +69,7 @@ export const ShareMethodPicker = ({
           />
           <p className="mt-2 text-sm font-semibold text-slate-900">{option.label}</p>
           <p className="mt-1 text-xs text-slate-500">
-            {methodDisabled ? 'Not allowed in this workspace' : option.description}
+            {methodDisabled ? reason || 'Not available right now' : option.description}
           </p>
         </button>
       );

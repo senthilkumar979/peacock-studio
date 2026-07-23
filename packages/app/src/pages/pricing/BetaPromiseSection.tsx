@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, MessageSquare } from 'lucide-react';
 import { trackEvent } from '@/analytics/analyticsClient';
+import { AnalyticsEvents } from '@/analytics/events';
 import { openSupportChat } from '@/utils/support';
 import { BETA_PERKS } from './pricingData';
 
@@ -19,7 +20,7 @@ export const BetaPromiseSection = () => {
       return;
     }
     // Never send the raw email as an analytics prop — just the intent signal.
-    trackEvent('beta_pricing_interest');
+    trackEvent(AnalyticsEvents.betaPricingInterest);
     setError(null);
     setSubmitted(true);
   };

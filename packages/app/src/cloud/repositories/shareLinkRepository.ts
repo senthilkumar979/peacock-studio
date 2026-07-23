@@ -6,6 +6,7 @@ import type {
   ShareLinkRecord,
   ShareLinkSettings,
 } from '@/types/shareLink';
+import type { ShareLinkChannel } from '@/utils/shareLink';
 
 interface ShareLinkRow {
   id: string;
@@ -14,6 +15,7 @@ interface ShareLinkRow {
   resource_type: ShareLinkRecord['resourceType'];
   resource_id: string;
   access_mode: ShareLinkRecord['accessMode'];
+  channel?: ShareLinkChannel | null;
   settings: ShareLinkSettings | null;
   expires_at: string | null;
   revoked_at: string | null;
@@ -28,9 +30,16 @@ function createShareToken(): string {
 }
 
 export async function createOrUpdateShareLink(input: CreateShareLinkInput): Promise<ShareLinkRecord> {
-  requireCapability('share');
+  const channel: ShareLinkChannel = input.channel ?? 'link';
+  if (channel === 'embed') {
+    requireCapability('embed');
+  } else {
+    requireCapability('share');
+  }
+
   const { organizationId, userEmail } = requireCloudAuthContext();
   const supabase = getAuthenticatedSupabaseClient();
+  const accessMode = channel === 'embed' ? 'readonly' : input.accessMode;
 
   const { data: existing, error: existingError } = await supabase
     .from('share_links')
@@ -38,7 +47,8 @@ export async function createOrUpdateShareLink(input: CreateShareLinkInput): Prom
     .eq('organization_id', organizationId)
     .eq('resource_type', input.resourceType)
     .eq('resource_id', input.resourceId)
-    .eq('access_mode', input.accessMode)
+    .eq('access_mode', accessMode)
+    .eq('channel', channel)
     .is('revoked_at', null)
     .maybeSingle();
 
@@ -70,7 +80,8 @@ export async function createOrUpdateShareLink(input: CreateShareLinkInput): Prom
       organization_id: organizationId,
       resource_type: input.resourceType,
       resource_id: input.resourceId,
-      access_mode: input.accessMode,
+      access_mode: accessMode,
+      channel,
       settings,
       created_by: userEmail,
       updated_by: userEmail,
@@ -84,7 +95,7 @@ export async function createOrUpdateShareLink(input: CreateShareLinkInput): Prom
   void recordOrgEvent('share_link_created', {
     resourceType: input.resourceType,
     resourceId: input.resourceId,
-    metadata: { accessMode: input.accessMode },
+    metadata: { accessMode, channel },
   });
 
   return mapShareLinkRow(data as ShareLinkRow);
@@ -98,6 +109,7 @@ function mapShareLinkRow(row: ShareLinkRow): ShareLinkRecord {
     resourceType: row.resource_type,
     resourceId: row.resource_id,
     accessMode: row.access_mode,
+    channel: row.channel === 'embed' ? 'embed' : 'link',
     settings: row.settings ?? {},
     expiresAt: row.expires_at,
     revokedAt: row.revoked_at,
