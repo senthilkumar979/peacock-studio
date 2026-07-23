@@ -11,6 +11,7 @@ import { Button } from '@/components/ui';
 import { exportFlowPdf } from '@/pdf/exportFlowPdf';
 import { getFlowDocument } from '@/services/flowLibraryService';
 import { createDocumentEmbedCode, createDocumentShareUrl } from '@/services/shareLinkService';
+import { EmbedPublicAccessNote } from '@/components/share/EmbedPublicAccessNote';
 import { isCloudSyncEnabled } from '@/cloud/config';
 import type { FlowShareSettings } from '@/types/savedFlow';
 import { resolveShareSettings } from '@/utils/flowShareSettings';
@@ -358,6 +359,7 @@ export const ShareDocumentModal = ({
                       Copy an iframe that loads a unique Peacock embed URL. Viewers see the interactive
                       player with a Peacock Studio watermark. Loads are counted per embedding domain.
                     </p>
+                    <EmbedPublicAccessNote />
                     <pre className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
                       {embedCode ||
                         `<iframe src="https://…/s/your-unique-token/embed" title="Peacock Studio guide" width="1280" height="720" …></iframe>`}

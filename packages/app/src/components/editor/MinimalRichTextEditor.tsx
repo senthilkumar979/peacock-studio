@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 import StarterKit from '@tiptap/starter-kit';
 import { MinimalRichTextToolbar } from '@/components/editor/MinimalRichTextToolbar';
+import { FLOW_DESCRIPTION_MAX_CHARS } from '@/utils/richText';
 
 export interface MinimalRichTextEditorProps {
   value: string;
@@ -9,6 +11,8 @@ export interface MinimalRichTextEditorProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  /** Plain-text character cap (HTML tags excluded). Defaults to flow description limit. */
+  maxChars?: number;
 }
 
 const EDITOR_CONTENT_CLASS =
@@ -24,13 +28,28 @@ const EDITOR_CONTENT_CLASS =
   '[&_.ProseMirror_li]:my-0.5 [&_.ProseMirror_li]:leading-relaxed ' +
   '[&_.ProseMirror_hr]:my-3 [&_.ProseMirror_hr]:border-0 [&_.ProseMirror_hr]:border-t [&_.ProseMirror_hr]:border-slate-300';
 
+function createCharacterLimitPlugin(maxChars: number) {
+  return new Plugin({
+    key: new PluginKey('characterLimit'),
+    filterTransaction: (transaction, state) => {
+      if (!transaction.docChanged) return true;
+      const nextLength = transaction.doc.textContent.length;
+      if (nextLength <= maxChars) return true;
+      return nextLength < state.doc.textContent.length;
+    },
+  });
+}
+
 export const MinimalRichTextEditor = ({
   value,
   onChange,
   placeholder,
   disabled = false,
   className = '',
+  maxChars = FLOW_DESCRIPTION_MAX_CHARS,
 }: MinimalRichTextEditorProps) => {
+  const [plainLength, setPlainLength] = useState(0);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -47,7 +66,12 @@ export const MinimalRichTextEditor = ({
     editable: !disabled,
     immediatelyRender: false,
     onUpdate: ({ editor: next }) => {
+      setPlainLength(next.state.doc.textContent.length);
       onChange(next.getHTML());
+    },
+    onCreate: ({ editor: next }) => {
+      next.registerPlugin(createCharacterLimitPlugin(maxChars));
+      setPlainLength(next.state.doc.textContent.length);
     },
     editorProps: {
       attributes: {
@@ -65,6 +89,7 @@ export const MinimalRichTextEditor = ({
     if (next === editor.getHTML()) return;
 
     editor.commands.setContent(next, { emitUpdate: false });
+    setPlainLength(editor.state.doc.textContent.length);
   }, [editor, value]);
 
   useEffect(() => {
@@ -73,6 +98,8 @@ export const MinimalRichTextEditor = ({
   }, [editor, disabled]);
 
   const showPlaceholder = Boolean(placeholder && editor?.isEmpty);
+  const isNearLimit = plainLength >= Math.floor(maxChars * 0.9);
+  const isAtLimit = plainLength >= maxChars;
 
   return (
     <div
@@ -86,6 +113,14 @@ export const MinimalRichTextEditor = ({
           </span>
         ) : null}
         <EditorContent editor={editor} />
+      </div>
+      <div
+        className={`flex justify-end border-t border-slate-100 px-3 py-1.5 text-xs ${
+          isAtLimit ? 'text-red-600' : isNearLimit ? 'text-amber-700' : 'text-slate-500'
+        }`}
+        aria-live="polite"
+      >
+        {plainLength.toLocaleString()} / {maxChars.toLocaleString()}
       </div>
     </div>
   );

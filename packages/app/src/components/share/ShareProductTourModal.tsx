@@ -15,6 +15,7 @@ import {
 } from '@/utils/shareLink';
 import { expiresAtFromPreset, type ShareExpiryPreset } from '@/utils/shareExpiry';
 import { createProductTourEmbedCode, createProductTourShareUrl } from '@/services/shareLinkService';
+import { EmbedPublicAccessNote } from '@/components/share/EmbedPublicAccessNote';
 import { isCloudSyncEnabled } from '@/cloud/config';
 import { useShareMethodAccess } from '@/hooks/useOrganization';
 import { notifyError, notifyPromise } from '@/utils/notify';
@@ -276,6 +277,7 @@ export const ShareProductTourModal = ({
                       Copy an iframe with a unique Peacock embed URL. Loads are tracked per embedding
                       domain, with a Peacock Studio watermark on the player.
                     </p>
+                    <EmbedPublicAccessNote />
                     <pre className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
                       {embedCode ||
                         `<iframe src="https://…/s/your-unique-token/embed" title="Peacock Studio tour" width="1280" height="720" …></iframe>`}

@@ -9,7 +9,7 @@ import {
   FormField,
   ModalFooterActions,
 } from "@/components/ui";
-import { normalizeRichText } from "@/utils/richText";
+import { normalizeRichText, FLOW_DESCRIPTION_MAX_CHARS, richTextPlainLength } from "@/utils/richText";
 
 const VERSION_HELPER_EXAMPLES =
   "1.0.0, 2.1.0, 1.4.3-beta, 1, 1a, 2026.1.0, v1.2.0-g4b2d9e1, 2.1a, 20260619.1";
@@ -110,9 +110,17 @@ export const FlowDetailsDrawer = ({
       return;
     }
 
+    const description = normalizeRichText(draft.description);
+    if (richTextPlainLength(description) > FLOW_DESCRIPTION_MAX_CHARS) {
+      setError(
+        `Description must be ${FLOW_DESCRIPTION_MAX_CHARS.toLocaleString()} characters or fewer.`,
+      );
+      return;
+    }
+
     onSave({
       title: trimmedTitle,
-      description: normalizeRichText(draft.description),
+      description,
       version: draft.version.trim(),
     });
   };
@@ -181,7 +189,10 @@ export const FlowDetailsDrawer = ({
                   />
                 </FormField>
 
-                <FormField label="Description">
+                <FormField
+                  label="Description"
+                  hint={`Up to ${FLOW_DESCRIPTION_MAX_CHARS.toLocaleString()} characters (plain text).`}
+                >
                   <MinimalRichTextEditor
                     key={resolvedKey}
                     value={draft.description}
@@ -189,6 +200,7 @@ export const FlowDetailsDrawer = ({
                       setDraft((prev) => ({ ...prev, description }))
                     }
                     placeholder="What does this flow help someone accomplish?"
+                    maxChars={FLOW_DESCRIPTION_MAX_CHARS}
                   />
                 </FormField>
 

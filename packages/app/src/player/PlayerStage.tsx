@@ -14,22 +14,37 @@ interface PlayerStageProps {
   step: FlowStep;
   stepNumber: number;
   screenshotUrls: Record<string, string>;
+  /** Compact layout when framed by embed header/footer chrome. */
+  isEmbed?: boolean;
 }
 
 const screenshotClassName =
   'block max-h-[min(65vh,800px)] w-auto max-w-[calc(100vw-2.5rem)] object-contain';
 
-const StageLoader = () => (
+/** Leaves room for embed header + player controls + watermark footer. */
+const embedScreenshotClassName =
+  'block max-h-[min(calc(100dvh-14rem),640px)] w-auto max-w-[calc(100%-1.5rem)] object-contain';
+
+const StageLoader = ({ isEmbed = false }: { isEmbed?: boolean }) => (
   <div
-    className="flex min-h-[min(50vh,520px)] w-full min-w-[min(100%,20rem)] max-w-[calc(100vw-2rem)] items-center justify-center rounded-xl bg-slate-100"
+    className={`flex w-full min-w-[min(100%,20rem)] items-center justify-center rounded-xl bg-slate-100 ${
+      isEmbed
+        ? 'min-h-[min(40dvh,360px)] max-w-[calc(100%-1rem)]'
+        : 'min-h-[min(50vh,520px)] max-w-[calc(100vw-2rem)]'
+    }`}
     aria-busy="true"
     aria-label="Loading step screenshot"
   >
-    <PeacockStudioLoader size={96} />
+    <PeacockStudioLoader size={isEmbed ? 72 : 96} />
   </div>
 );
 
-export const PlayerStage = ({ step, stepNumber, screenshotUrls }: PlayerStageProps) => {
+export const PlayerStage = ({
+  step,
+  stepNumber,
+  screenshotUrls,
+  isEmbed = false,
+}: PlayerStageProps) => {
   const screenshotUrl = getStepScreenshotUrl(step, screenshotUrls);
   const markerPosition = getStepMarkerPosition(step);
   const stepUrl = getStepUrl(step);
@@ -39,9 +54,14 @@ export const PlayerStage = ({ step, stepNumber, screenshotUrls }: PlayerStagePro
 
   const showOverlays = Boolean(screenshotUrl && isImageLoaded);
   const isScreenshotLoading = Boolean(screenshotUrl && !isImageLoaded);
+  const imageClassName = isEmbed ? embedScreenshotClassName : screenshotClassName;
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-center gap-5">
+    <div
+      className={`relative flex h-full w-full flex-col items-center justify-center ${
+        isEmbed ? 'gap-3' : 'gap-5'
+      }`}
+    >
       {screenshotUrl ? (
         <>
           <img
@@ -65,7 +85,7 @@ export const PlayerStage = ({ step, stepNumber, screenshotUrls }: PlayerStagePro
                 transition={{ duration: 0.15 }}
                 className="w-full"
               >
-                <StageLoader />
+                <StageLoader isEmbed={isEmbed} />
               </motion.div>
             ) : (
               <motion.div
@@ -76,11 +96,15 @@ export const PlayerStage = ({ step, stepNumber, screenshotUrls }: PlayerStagePro
                 className="w-full"
               >
                 <BrowserMockup url={stepUrl}>
-                  <div className="relative inline-block min-w-[min(100%,20rem)] p-3 sm:p-4">
+                  <div
+                    className={`relative inline-block min-w-[min(100%,20rem)] ${
+                      isEmbed ? 'p-2 sm:p-3' : 'p-3 sm:p-4'
+                    }`}
+                  >
                     <img
                       src={screenshotUrl}
                       alt={step.title}
-                      className={screenshotClassName}
+                      className={imageClassName}
                     />
 
                     {showOverlays && markerPosition ? (

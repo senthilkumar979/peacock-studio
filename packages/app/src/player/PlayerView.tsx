@@ -134,12 +134,14 @@ export const PlayerView = ({
 
       <main
         ref={mainRef}
-        className={`flex min-h-0 flex-1 px-3 py-3 md:px-6 md:py-4 ${
+        className={`flex min-h-0 flex-1 ${
+          isEmbed ? 'px-3 py-4 sm:px-5 sm:py-5' : 'px-3 py-3 md:px-6 md:py-4'
+        } ${
           isScrollableMain
             ? 'items-start overflow-y-auto overscroll-contain'
             : isCenteredPlayerContent
               ? 'items-center justify-center overflow-y-auto overscroll-contain'
-              : 'items-start justify-center overflow-hidden'
+              : 'items-center justify-center overflow-hidden'
         }`}
       >
         {playback.isAtFinale ? (
@@ -161,6 +163,7 @@ export const PlayerView = ({
             step={linkedStep}
             stepNumber={playback.linkedPlayback.stepIndex + 1}
             screenshotUrls={playback.linkedPlayback.screenshotUrls}
+            isEmbed={isEmbed}
           />
         ) : atBranch ? (
           <FlowBranchChoicePanel
@@ -184,6 +187,7 @@ export const PlayerView = ({
             step={playback.currentSegment.step}
             stepNumber={playback.currentSegment.stepNumber}
             screenshotUrls={screenshotUrls}
+            isEmbed={isEmbed}
           />
         ) : null}
       </main>

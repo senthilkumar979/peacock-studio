@@ -15,6 +15,9 @@ const ALLOWED_TAGS = new Set([
   'HR',
 ]);
 
+/** Plain-text character limit for flow descriptions (HTML tags do not count). */
+export const FLOW_DESCRIPTION_MAX_CHARS = 500;
+
 /** Strip tags for plain-text previews, search, and PDF. */
 export function stripHtmlTags(html: string): string {
   if (!html) return '';
@@ -33,8 +36,12 @@ export function stripHtmlTags(html: string): string {
     .trim();
 }
 
+export function richTextPlainLength(html: string): number {
+  return stripHtmlTags(html).length;
+}
+
 export function isEmptyRichText(html: string): boolean {
-  return stripHtmlTags(html).length === 0;
+  return richTextPlainLength(html) === 0;
 }
 
 /** Persist empty TipTap docs as "" so existing empty checks keep working. */
