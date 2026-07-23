@@ -6,6 +6,7 @@ import {
   type CloudAuthContext,
 } from '@/cloud/authContext';
 import type { CapabilityKey, MemberCapabilities } from '@/cloud/types/organization';
+import { useCloudInitError } from '@/hooks/useCloudInitError';
 import { useCanDeleteLibraryItems, useSessionMode } from '@/hooks/useSessionMode';
 
 type ShareMethodKey = 'embed' | 'pdf' | 'link';
@@ -66,9 +67,13 @@ export interface ShareMethodAccess {
 /**
  * Share / export / embed availability for the Share UI.
  * PDF export stays available locally even for guests; link + embed need a cloud workspace.
+ *
+ * With VITE_CLOUD_SYNC on, unsigned / unresolved sessions disable link + embed (not “coming soon”).
+ * Pure local mode (cloud sync off) still allows ID-based share links; embeds always need cloud.
  */
 export function useShareMethodAccess(): ShareMethodAccess {
   const mode = useSessionMode();
+  const cloudInitError = useCloudInitError();
   const canShareCap = useHasCapability('share');
   const canExportCap = useHasCapability('export');
   const canEmbedCap = useHasCapability('embed');
@@ -85,13 +90,16 @@ export function useShareMethodAccess(): ShareMethodAccess {
   }
 
   if (mode === 'loading' || mode === 'connecting') {
+    const reason = cloudInitError
+      ? 'Cloud workspace failed to connect. Refresh, or sign out and sign back in.'
+      : 'Workspace is still loading…';
     return {
       canShare: false,
       canExport: true,
       canEmbed: false,
       disabledReasons: {
-        link: 'Workspace is still loading…',
-        embed: 'Workspace is still loading…',
+        link: reason,
+        embed: reason,
       },
     };
   }
@@ -124,7 +132,10 @@ export function useShareMethodAccess(): ShareMethodAccess {
   const disabledReasons: Partial<Record<ShareMethodKey, string>> = {};
   if (!canShareCap) disabledReasons.link = 'Your workspace role cannot share.';
   if (!canExportCap) disabledReasons.pdf = 'Your workspace role cannot export.';
-  if (!canEmbedCap) disabledReasons.embed = 'Your workspace role cannot publish embeds.';
+  if (!canEmbedCap) {
+    disabledReasons.embed =
+      'Your workspace role cannot publish embeds. Ask a workspace admin to enable Embed for your account.';
+  }
 
   return {
     canShare: canShareCap,
