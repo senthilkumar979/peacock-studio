@@ -17,6 +17,9 @@ export default defineConfig({
     port: 5173,
   },
   build: {
+    // Public source maps for Lighthouse BP + readable production stack traces.
+    // No @sentry/vite-plugin yet — use `true` (not `hidden`) so maps are referenced.
+    sourcemap: true,
     // Avoid premature download of deferred/auth/heavy vendors on `/`.
     modulePreload: {
       resolveDependencies: (_filename, deps) =>

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getTawkConfig } from '@/analytics/config';
 import { LANDING_PATH } from '@/constants/routes';
+import { isMobileClient } from '@/utils/isMobileClient';
 
 const TAWK_SCRIPT_ID = 'tawk-to-embed';
 const TAWK_IDLE_TIMEOUT_MS = 4000;
@@ -22,9 +23,13 @@ function injectTawkScript(propertyId: string, widgetId: string): void {
   document.body.appendChild(script);
 }
 
-/** Support chat is marketing-only — never inside the product app. */
+/** Support chat is marketing homepage + desktop only — never inside the product app or on mobile. */
 function isSupportWidgetRoute(pathname: string): boolean {
   return pathname === LANDING_PATH;
+}
+
+function shouldLoadTawk(pathname: string): boolean {
+  return isSupportWidgetRoute(pathname) && !isMobileClient();
 }
 
 function setTawkVisibility(visible: boolean): void {
@@ -42,14 +47,19 @@ function scheduleIdle(task: () => void): () => void {
 }
 
 /**
- * Loads the Tawk.to live-chat widget on the landing page only. Renders nothing.
+ * Loads the Tawk.to live-chat widget on the desktop landing page only. Renders nothing.
+ * Skipped on mobile viewports (UA-CH mobile, coarse pointer, or max-width ≤767px).
  * Injection is deferred until the browser is idle so it never contends with FCP/LCP.
+ *
+ * Remaining third-party cookies on desktop `/`: Tawk sets its own cookies after idle load.
+ * Clerk/PostHog/Sentry are not booted on cold marketing loads (see DeferredCloudAuth /
+ * DeferredSentry / AnalyticsTracker consent gate).
  */
 export const SupportWidget = () => {
   const config = getTawkConfig();
   const { pathname } = useLocation();
   const loadedRef = useRef(false);
-  const visible = isSupportWidgetRoute(pathname);
+  const visible = shouldLoadTawk(pathname);
 
   useEffect(() => {
     if (!config || !visible) return;
@@ -57,12 +67,12 @@ export const SupportWidget = () => {
     if (!loadedRef.current) {
       window.Tawk_API = window.Tawk_API || {};
       window.Tawk_API.onLoad = () => {
-        setTawkVisibility(isSupportWidgetRoute(window.location.pathname));
+        setTawkVisibility(shouldLoadTawk(window.location.pathname));
       };
 
       return scheduleIdle(() => {
         if (loadedRef.current) return;
-        if (!isSupportWidgetRoute(window.location.pathname)) return;
+        if (!shouldLoadTawk(window.location.pathname)) return;
         injectTawkScript(config.propertyId, config.widgetId);
         loadedRef.current = true;
       });

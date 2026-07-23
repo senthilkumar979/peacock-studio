@@ -9,6 +9,7 @@ import { CookieConsentBanner } from '@/components/consent/CookieConsentBanner';
 import { CookiePreferencesModal } from '@/components/consent/CookiePreferencesModal';
 import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker';
 import { SupportWidget } from '@/components/support/SupportWidget';
+import { DeferredSentry } from '@/observability/DeferredSentry';
 import { getClerkPublishableKey, isCloudSyncEnabled } from '@/cloud/config';
 
 interface AppProvidersProps {
@@ -22,6 +23,7 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
   const chrome = (
     <>
       <GlobalErrorListeners />
+      <DeferredSentry />
       {children}
       <AnalyticsTracker />
       <SupportWidget />

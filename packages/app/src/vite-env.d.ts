@@ -46,7 +46,15 @@ interface TawkApi {
   visitor?: Record<string, string>;
 }
 
+interface NavigatorUAData {
+  readonly mobile: boolean;
+}
+
 declare global {
+  interface Navigator {
+    readonly userAgentData?: NavigatorUAData;
+  }
+
   interface Window {
     chrome?: ChromeApi;
     Tawk_API?: TawkApi;
