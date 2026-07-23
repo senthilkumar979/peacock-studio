@@ -417,7 +417,7 @@ export const ProductTourLearner = ({
 
   return (
     <div
-      className={`flex h-screen flex-col overflow-hidden bg-slate-50 ${isPresenter ? "presenter-mode" : ""}`}
+      className={`flex flex-col overflow-hidden bg-slate-50 ${isEmbed ? 'h-full min-h-0' : 'h-screen'} ${isPresenter ? 'presenter-mode' : ''}`}
     >
       {!isPresenter && !isPublicShare ? (
         <AppHeader

@@ -127,11 +127,11 @@ const EmbedChrome = ({
 }) => {
   if (!isEmbed) return children;
   return (
-    <div className="relative min-h-screen bg-slate-50">
-      {children}
-      <div className="pointer-events-none absolute bottom-3 right-3 z-[60]">
+    <div className="flex h-dvh flex-col overflow-hidden bg-slate-50">
+      <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+      <footer className="flex shrink-0 items-center justify-center border-t border-slate-200/80 bg-white/95 px-3 py-1.5">
         <PeacockEmbedWatermark />
-      </div>
+      </footer>
     </div>
   );
 };

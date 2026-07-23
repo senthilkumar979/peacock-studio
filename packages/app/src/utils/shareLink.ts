@@ -22,14 +22,18 @@ export function buildPublicShareUrl(
   return `${window.location.origin}${getPublicSharePath(token, options)}`;
 }
 
+/** Intrinsic embed size — 16:9 HD desktop viewport (scales via max-width + aspect-ratio). */
+export const EMBED_IFRAME_WIDTH = 1280;
+export const EMBED_IFRAME_HEIGHT = 720;
+
 export function buildEmbedIframeCode(embedUrl: string, title = 'Peacock Studio guide'): string {
   const safeTitle = title.replace(/"/g, '&quot;');
   return `<iframe
   src="${embedUrl}"
   title="${safeTitle}"
-  width="100%"
-  height="640"
-  style="border:0;border-radius:12px;overflow:hidden;"
+  width="${EMBED_IFRAME_WIDTH}"
+  height="${EMBED_IFRAME_HEIGHT}"
+  style="border:0;border-radius:12px;overflow:hidden;width:100%;max-width:${EMBED_IFRAME_WIDTH}px;aspect-ratio:16/9;height:auto;"
   loading="lazy"
   allowfullscreen
 ></iframe>`;

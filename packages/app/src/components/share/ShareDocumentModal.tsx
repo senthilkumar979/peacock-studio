@@ -335,7 +335,7 @@ export const ShareDocumentModal = ({
                     </p>
                     <pre className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
                       {embedCode ||
-                        `<iframe src="https://…/s/your-unique-token/embed" title="Peacock Studio guide" width="100%" height="640" …></iframe>`}
+                        `<iframe src="https://…/s/your-unique-token/embed" title="Peacock Studio guide" width="1280" height="720" …></iframe>`}
                     </pre>
                     <p className="text-xs text-slate-500">
                       Each document gets its own embed token. Loads are counted per embedding domain.

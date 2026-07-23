@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getTawkConfig } from '@/analytics/config';
+import { LANDING_PATH } from '@/constants/routes';
 
 const TAWK_SCRIPT_ID = 'tawk-to-embed';
 
@@ -19,52 +20,48 @@ function injectTawkScript(propertyId: string, widgetId: string): void {
   document.body.appendChild(script);
 }
 
-/** Public share routes should not surface the internal support widget. */
-function isPublicRoute(pathname: string): boolean {
-  return pathname.startsWith('/s/');
+/** Support chat is marketing-only — never inside the product app. */
+function isSupportWidgetRoute(pathname: string): boolean {
+  return pathname === LANDING_PATH;
 }
 
-/** Immersive flow doc viewer (hub, guide, player) — not the editor. */
-function isFlowDocViewRoute(pathname: string): boolean {
-  return /^\/docs\/[^/]+$/.test(pathname);
-}
-
-function shouldHideSupportWidget(pathname: string): boolean {
-  return isPublicRoute(pathname) || isFlowDocViewRoute(pathname);
+function setTawkVisibility(visible: boolean): void {
+  if (visible) window.Tawk_API?.showWidget?.();
+  else window.Tawk_API?.hideWidget?.();
 }
 
 /**
- * Loads the Tawk.to live-chat widget when configured and toggles its
- * visibility so it never appears on public share or flow doc view pages. Renders nothing.
+ * Loads the Tawk.to live-chat widget on the landing page only. Renders nothing.
+ * Script injects on first visit to `/`; navigating away hides the bubble so it
+ * never lingers on dashboard, editors, or share surfaces.
  */
 export const SupportWidget = () => {
   const config = getTawkConfig();
-  const location = useLocation();
+  const { pathname } = useLocation();
   const loadedRef = useRef(false);
+  const visible = isSupportWidgetRoute(pathname);
 
   useEffect(() => {
-    if (!config || loadedRef.current) return;
-    injectTawkScript(config.propertyId, config.widgetId);
-    loadedRef.current = true;
-  }, [config]);
+    if (!config || !visible) return;
 
-  useEffect(() => {
-    if (!config) return;
-    const hidden = shouldHideSupportWidget(location.pathname);
-
-    const applyVisibility = () => {
-      if (hidden) window.Tawk_API?.hideWidget?.();
-      else window.Tawk_API?.showWidget?.();
-    };
-
-    // The API methods only exist once the widget finishes loading.
-    if (window.Tawk_API?.showWidget) {
-      applyVisibility();
-    } else {
+    if (!loadedRef.current) {
       window.Tawk_API = window.Tawk_API || {};
-      window.Tawk_API.onLoad = applyVisibility;
+      window.Tawk_API.onLoad = () => {
+        // Path may have changed while the script was loading.
+        setTawkVisibility(isSupportWidgetRoute(window.location.pathname));
+      };
+      injectTawkScript(config.propertyId, config.widgetId);
+      loadedRef.current = true;
+      return;
     }
-  }, [config, location.pathname]);
+
+    setTawkVisibility(true);
+  }, [config, visible]);
+
+  useEffect(() => {
+    if (!config || !loadedRef.current || visible) return;
+    setTawkVisibility(false);
+  }, [config, visible]);
 
   return null;
 };

@@ -112,7 +112,9 @@ export const PlayerView = ({
     playback.isAtFinale || playback.currentSegment?.type === 'section';
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
+    <div
+      className={`flex flex-col overflow-hidden bg-slate-50 ${isEmbed ? 'h-full min-h-0' : 'h-screen'}`}
+    >
       <FlowDocViewHeader
         documentId={documentId}
         title={flow?.flow.title ?? 'Untitled Flow'}
