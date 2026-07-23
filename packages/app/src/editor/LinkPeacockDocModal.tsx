@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, X } from "lucide-react";
 import { formatPathStepRange, getPlayableSteps } from "@peacock/shared";
+import {
+  Button,
+  FieldInput,
+  FieldSelect,
+  FormField,
+  ModalFooterActions,
+} from "@/components/ui";
 import { AddPeacockModal } from "@/route-builder/AddPeacockModal";
 import {
   getFlowDocument,
@@ -121,13 +128,9 @@ export const LinkPeacockDocModal = ({
             <ChevronLeft className="h-4 w-4" aria-hidden />
             Change demo
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 hover:bg-slate-100"
-          >
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
             <X className="h-4 w-4" aria-hidden />
-          </button>
+          </Button>
         </div>
 
         <h2 className="mt-2 text-lg font-bold text-slate-900">
@@ -135,79 +138,63 @@ export const LinkPeacockDocModal = ({
         </h2>
         <p className="mt-1 text-sm text-slate-600">{targetTitle}</p>
 
-        <label className="mt-5 block text-sm font-medium text-slate-700">
-          Path label
-          <input
+        <FormField label="Path label" className="mt-5">
+          <FieldInput
             value={label}
             onChange={(event) => setLabel(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
             placeholder="e.g. Happy path"
           />
-        </label>
+        </FormField>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <label className="text-sm font-medium text-slate-700">
-            From step
-            <select
+          <FormField label="From step">
+            <FieldSelect
               value={fromStepId}
               onChange={(event) => setFromStepId(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
             >
               {playableStepIds.map((stepId, index) => (
                 <option key={stepId} value={stepId}>
                   Step {index + 1}
                 </option>
               ))}
-            </select>
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            To step
-            <select
+            </FieldSelect>
+          </FormField>
+          <FormField label="To step">
+            <FieldSelect
               value={toStepId}
               onChange={(event) => setToStepId(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
             >
               {playableStepIds.map((stepId, index) => (
                 <option key={stepId} value={stepId}>
                   Step {index + 1}
                 </option>
               ))}
-            </select>
-          </label>
+            </FieldSelect>
+          </FormField>
         </div>
 
         <p className="mt-2 text-xs text-slate-500">{rangeLabel}</p>
 
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border px-4 py-2 text-sm"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            disabled={!canConfirm}
-            onClick={() => {
-              if (!targetDocumentId || !canConfirm) return;
-              onConfirm({
-                targetDocumentId,
-                targetTitle,
-                targetDescription:
-                  summaries.find((item) => item.id === targetDocumentId)
-                    ?.description ?? "",
-                fromStepId,
-                toStepId,
-                label: label.trim(),
-              });
-              onClose();
-            }}
-            className="rounded-lg bg-peacock-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            Add path
-          </button>
-        </div>
+        <ModalFooterActions
+          className="mt-6"
+          onCancel={onClose}
+          confirmLabel="Add path"
+          confirmDisabled={!canConfirm}
+          onConfirm={() => {
+            if (!targetDocumentId || !canConfirm) return;
+            onConfirm({
+              targetDocumentId,
+              targetTitle,
+              targetDescription:
+                summaries.find((item) => item.id === targetDocumentId)
+                  ?.description ?? "",
+              fromStepId,
+              toStepId,
+              label: label.trim(),
+            });
+            onClose();
+          }}
+        />
       </div>
     </div>
   );

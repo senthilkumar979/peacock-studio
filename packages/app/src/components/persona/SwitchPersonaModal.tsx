@@ -1,6 +1,7 @@
 import { useEffect, useId } from 'react';
 import { Check, X } from 'lucide-react';
 import { PersonaAvatar } from '@/components/persona/PersonaAvatar';
+import { Button } from '@/components/ui';
 import type { Persona } from '@/types/persona';
 
 interface SwitchPersonaModalProps {
@@ -132,13 +133,9 @@ export const SwitchPersonaModal = ({
         ) : null}
 
         <footer className="flex shrink-0 justify-end border-t border-slate-200 px-6 py-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
+          <Button variant="secondary" onClick={onClose}>
             Cancel
-          </button>
+          </Button>
         </footer>
       </div>
     </div>

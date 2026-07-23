@@ -4,6 +4,7 @@ import { Loader2, X } from 'lucide-react';
 import { ShareLinkPanel } from '@/components/share/ShareLinkPanel';
 import { ShareMethodPicker, type ShareMethod } from '@/components/share/ShareMethodPicker';
 import { PdfExportBlockingOverlay } from '@/components/share/PdfExportBlockingOverlay';
+import { Button } from '@/components/ui';
 import { exportRoutePdf, routeHasExportablePeacocks } from '@/pdf/exportRoutePdf';
 import { getRoute } from '@/storage/flowLibraryDb';
 import type { FlowShareSettings } from '@/types/savedFlow';
@@ -201,31 +202,17 @@ export const ShareRouteModal = ({
         </div>
 
         <div className="flex justify-end gap-2 border-t border-slate-100 p-5">
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isExporting}
-            className="rounded-lg border px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <Button variant="secondary" onClick={handleClose} disabled={isExporting}>
             Cancel
-          </button>
+          </Button>
           {method === 'embed' ? (
-            <button
-              type="button"
-              disabled
-              className="rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-500"
-            >
+            <Button variant="secondary" disabled>
               Unavailable for routes
-            </button>
+            </Button>
           ) : (
-            <button
-              type="button"
-              disabled={primaryDisabled}
-              onClick={() => void handlePrimaryAction()}
-              className="rounded-lg bg-peacock-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            >
+            <Button disabled={primaryDisabled} onClick={() => void handlePrimaryAction()}>
               {method === 'pdf' ? (isExporting ? 'Exporting…' : 'Export PDF') : 'Copy link'}
-            </button>
+            </Button>
           )}
         </div>
       </div>

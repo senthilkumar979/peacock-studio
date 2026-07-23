@@ -6,6 +6,7 @@ import { ShareLinkPanel } from '@/components/share/ShareLinkPanel';
 import { ShareMethodPicker, type ShareMethod } from '@/components/share/ShareMethodPicker';
 import { SharePdfPathOptions } from '@/components/share/SharePdfPathOptions';
 import { PdfExportBlockingOverlay } from '@/components/share/PdfExportBlockingOverlay';
+import { Button } from '@/components/ui';
 import { exportFlowPdf } from '@/pdf/exportFlowPdf';
 import { getFlowDocument } from '@/services/flowLibraryService';
 import { createDocumentEmbedCode, createDocumentShareUrl } from '@/services/shareLinkService';
@@ -381,33 +382,18 @@ export const ShareDocumentModal = ({
         </div>
 
         <div className="flex justify-end gap-2 border-t border-slate-100 p-5">
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isExporting}
-            className="rounded-lg border px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <Button variant="secondary" onClick={handleClose} disabled={isExporting}>
             Cancel
-          </button>
-          {method === 'embed' ? (
-            <button
-              type="button"
-              disabled={primaryDisabled}
-              onClick={() => void handlePrimaryAction()}
-              className="rounded-lg bg-peacock-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            >
-              Copy embed code
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled={primaryDisabled}
-              onClick={() => void handlePrimaryAction()}
-              className="rounded-lg bg-peacock-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            >
-              {method === 'pdf' ? (isExporting ? 'Exporting…' : 'Export PDF') : 'Copy link'}
-            </button>
-          )}
+          </Button>
+          <Button disabled={primaryDisabled} onClick={() => void handlePrimaryAction()}>
+            {method === 'embed'
+              ? 'Copy embed code'
+              : method === 'pdf'
+                ? isExporting
+                  ? 'Exporting…'
+                  : 'Export PDF'
+                : 'Copy link'}
+          </Button>
         </div>
       </div>
     </div>

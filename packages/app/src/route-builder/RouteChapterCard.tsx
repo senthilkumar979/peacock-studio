@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import { Button, FieldInput, FieldTextarea } from '@/components/ui';
 import { AddPeacockModal } from '@/route-builder/AddPeacockModal';
 import { RoutePeacockList } from '@/route-builder/RoutePeacockList';
 import { useRouteBuilderStore } from '@/store/routeBuilderStore';
@@ -39,33 +40,33 @@ export const RouteChapterCard = ({
           {chapterNumber}
         </div>
         <div className="min-w-0 flex-1 space-y-2">
-          <input
+          <FieldInput
             type="text"
             value={chapter.title}
             onChange={(event) =>
               updateChapter(chapter.id, event.target.value, chapter.description)
             }
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500"
+            className="font-semibold text-slate-900"
             aria-label={`Chapter ${chapterNumber} title`}
           />
-          <textarea
+          <FieldTextarea
             value={chapter.description}
             onChange={(event) => updateChapter(chapter.id, chapter.title, event.target.value)}
             rows={6}
             placeholder="Chapter description (optional)"
-            className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 outline-none focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500"
+            className="text-slate-600"
             aria-label={`Chapter ${chapterNumber} description`}
           />
         </div>
         {canDelete ? (
-          <button
-            type="button"
+          <Button
+            variant="danger"
+            className="h-fit border p-2"
             onClick={() => deleteNode(chapter.id)}
-            className="h-fit rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50"
             aria-label={`Delete chapter ${chapterNumber}`}
           >
             <Trash2 className="h-4 w-4" />
-          </button>
+          </Button>
         ) : null}
       </div>
 

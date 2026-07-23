@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { AlignLeft, Layers3, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
+import { Button, FieldInput, FieldTextarea, FormField } from '@/components/ui';
 import { AddPeacockModal } from '@/route-builder/AddPeacockModal';
 import { RoutePeacockList } from '@/route-builder/RoutePeacockList';
 import { useProductTourBuilderStore } from '@/store/productTourBuilderStore';
@@ -44,46 +45,44 @@ export const TourFeatureCard = ({
             </p>
           </div>
           {canDelete ? (
-            <button
-              type="button"
+            <Button
+              variant="danger"
+              className="h-fit border bg-white p-2"
               onClick={() => deleteFeature(feature.id)}
-              className="h-fit rounded-lg border border-red-200 bg-white p-2 text-red-600 transition hover:bg-red-50"
               aria-label={`Delete feature ${featureNumber}`}
             >
               <Trash2 className="h-4 w-4" />
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>
 
       <div className="space-y-4 p-4 sm:p-5">
-        <label className="block text-sm">
-          <span className="inline-flex items-center gap-1.5 font-semibold text-slate-700">
-            <Layers3 className="h-4 w-4 text-slate-400" aria-hidden />
-            Feature title
-          </span>
-          <input
+        <FormField
+          label="Feature title"
+          hint="Define what users should learn in this part."
+        >
+          <FieldInput
             value={feature.title}
             onChange={(event) => updateFeature(feature.id, event.target.value, feature.description)}
-            className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500/30"
+            className="rounded-xl border-slate-200 px-3.5 py-2.5 font-semibold text-slate-900 focus:ring-peacock-500/30"
             aria-label={`Feature ${featureNumber} title`}
             placeholder="e.g. Onboarding & first workspace setup"
           />
-        </label>
+        </FormField>
 
-        <label className="block text-sm">
-          <span className="inline-flex items-center gap-1.5 font-semibold text-slate-700">
-            <AlignLeft className="h-4 w-4 text-slate-400" aria-hidden />
-            Feature details
-          </span>
-          <textarea
+        <FormField
+          label="Feature details"
+          hint="What should users understand after this feature?"
+        >
+          <FieldTextarea
             value={feature.description}
             onChange={(event) => updateFeature(feature.id, feature.title, event.target.value)}
             rows={4}
             placeholder="What should users understand after this feature?"
-            className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 outline-none transition focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500/30"
+            className="rounded-xl border-slate-200 px-3.5 py-2.5 text-slate-700 focus:ring-peacock-500/30"
           />
-        </label>
+        </FormField>
       </div>
 
       <div className="border-t border-slate-100 bg-slate-50/40 p-4 sm:p-5">

@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Building2, User } from 'lucide-react';
 import { refreshCloudMemberships } from '@/components/auth/CloudSyncProvider';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
+import { Button, FieldInput, FormField } from '@/components/ui';
 import {
   acceptOrganizationInvitation,
   createPersonalWorkspace,
@@ -246,49 +247,32 @@ export const WorkspaceChooserPage = () => {
           </div>
         ) : (
           <form onSubmit={(e) => void handleTeam(e)} className="mt-6 space-y-4">
-            <div>
-              <label htmlFor="company-name" className="block text-sm font-medium text-slate-700">
-                Company name
-              </label>
-              <input
+            <FormField label="Company name" htmlFor="company-name">
+              <FieldInput
                 id="company-name"
                 required
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-peacock-500 focus:ring-2"
                 placeholder="Acme Inc."
               />
-            </div>
-            <div>
-              <label htmlFor="website" className="block text-sm font-medium text-slate-700">
-                Website
-              </label>
-              <input
+            </FormField>
+            <FormField label="Website" htmlFor="website">
+              <FieldInput
                 id="website"
                 required
                 type="url"
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-peacock-500 focus:ring-2"
                 placeholder="https://example.com"
               />
-            </div>
+            </FormField>
             <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => setMode('choose')}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
+              <Button variant="secondary" disabled={busy} onClick={() => setMode('choose')}>
                 Back
-              </button>
-              <button
-                type="submit"
-                disabled={busy}
-                className="rounded-lg bg-peacock-600 px-4 py-2 text-sm font-semibold text-white hover:bg-peacock-700 disabled:opacity-60"
-              >
+              </Button>
+              <Button type="submit" disabled={busy} className="font-semibold">
                 Create organization
-              </button>
+              </Button>
             </div>
           </form>
         )}

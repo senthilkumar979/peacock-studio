@@ -3,6 +3,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { FlowCaptureEnvironment } from "@peacock/shared";
 import { X } from "lucide-react";
 import { MinimalRichTextEditor } from "@/components/editor/MinimalRichTextEditor";
+import {
+  Button,
+  FieldInput,
+  FormField,
+  ModalFooterActions,
+} from "@/components/ui";
 import { normalizeRichText } from "@/utils/richText";
 
 const VERSION_HELPER_EXAMPLES =
@@ -151,38 +157,31 @@ export const FlowDetailsDrawer = ({
                   exported document headers.
                 </p>
               </div>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={onClose}
                 aria-label="Close flow details"
-                className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
               >
                 <X className="h-5 w-5" aria-hidden />
-              </button>
+              </Button>
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
               <div className="flex flex-col gap-4">
-                <label className="flex flex-col gap-1.5 text-sm">
-                  <span className="font-medium text-slate-700">Flow title</span>
-                  <input
+                <FormField label="Flow title" error={error ?? undefined}>
+                  <FieldInput
+                    hasError={Boolean(error)}
                     value={draft.title}
                     onChange={(event) => {
                       setDraft((prev) => ({ ...prev, title: event.target.value }));
                       setError(null);
                     }}
                     placeholder="e.g. Create a new order"
-                    className={`rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2 ${error ? "border-red-600" : ""}`}
                   />
-                  {error ? (
-                    <p className="text-sm text-red-600">{error}</p>
-                  ) : null}
-                </label>
+                </FormField>
 
-                <div className="flex flex-col gap-1.5 text-sm">
-                  <span className="font-medium text-slate-700">
-                    Description
-                  </span>
+                <FormField label="Description">
                   <MinimalRichTextEditor
                     key={resolvedKey}
                     value={draft.description}
@@ -191,40 +190,29 @@ export const FlowDetailsDrawer = ({
                     }
                     placeholder="What does this flow help someone accomplish?"
                   />
-                </div>
+                </FormField>
 
-                <label className="flex flex-col gap-1.5 text-sm">
-                  <span className="font-medium text-slate-700">Version</span>
-                  <span className="text-xs leading-relaxed text-slate-500">
-                    Ex: {VERSION_HELPER_EXAMPLES}
-                  </span>
-                  <input
+                <FormField
+                  label="Version"
+                  hint={`Ex: ${VERSION_HELPER_EXAMPLES}`}
+                >
+                  <FieldInput
                     value={draft.version}
                     onChange={(event) =>
                       setDraft((prev) => ({ ...prev, version: event.target.value }))
                     }
                     placeholder="e.g. 1.0.0"
-                    className="rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2"
                   />
-                </label>
+                </FormField>
               </div>
             </div>
 
-            <footer className="flex shrink-0 justify-end gap-2 border-t border-slate-200 px-6 py-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                className="btn-peacock"
-              >
-                {confirmLabel}
-              </button>
+            <footer className="shrink-0 border-t border-slate-200 px-6 py-4">
+              <ModalFooterActions
+                onCancel={onClose}
+                onConfirm={handleSubmit}
+                confirmLabel={confirmLabel}
+              />
             </footer>
           </motion.aside>
         </div>

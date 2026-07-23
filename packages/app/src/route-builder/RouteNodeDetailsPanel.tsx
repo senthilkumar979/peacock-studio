@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Flag, Plus, Trash2 } from "lucide-react";
+import { Button, FieldInput, FieldTextarea, FormField } from "@/components/ui";
 import { AddPeacockModal } from "@/route-builder/AddPeacockModal";
 import { RouteFormFieldsEditor } from "@/route-builder/RouteFormFieldsEditor";
 import { RouteInterestTopicsEditor } from "@/route-builder/RouteInterestTopicsEditor";
@@ -106,14 +107,14 @@ export const RouteNodeDetailsPanel = ({
             </p>
           </div>
           {route.nodes.length > 1 ? (
-            <button
-              type="button"
+            <Button
+              variant="danger"
+              className="border p-2"
               onClick={() => deleteNode(node.id)}
-              className="rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50"
               aria-label="Delete node"
             >
               <Trash2 className="h-4 w-4" />
-            </button>
+            </Button>
           ) : null}
         </div>
         {!isEntry ? (
@@ -141,38 +142,32 @@ export const RouteNodeDetailsPanel = ({
       ) : null}
 
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
-        <label className="block">
-          <span className="text-sm font-medium text-slate-700">Title</span>
-          <input
+        <FormField label="Title">
+          <FieldInput
             type="text"
             value={node.title}
             onChange={(event) =>
               updateTitleDescription(event.target.value, node.description)
             }
-            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500"
           />
-        </label>
+        </FormField>
 
-        <label className="block">
-          <span className="text-sm font-medium text-slate-700">
-            Description
-          </span>
-          <textarea
+        <FormField label="Description">
+          <FieldTextarea
             value={node.description}
             onChange={(event) =>
               updateTitleDescription(node.title, event.target.value)
             }
             rows={6}
-            className="mt-1 w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500"
           />
-        </label>
+        </FormField>
 
         {isBranchNode(node) ? (
           <div className="space-y-2">
             <p className="text-sm font-medium text-slate-700">Branch options</p>
             {node.options.map((option) => (
               <div key={option.id} className="flex items-center gap-2">
-                <input
+                <FieldInput
                   type="text"
                   value={option.label}
                   onChange={(event) =>
@@ -182,17 +177,16 @@ export const RouteNodeDetailsPanel = ({
                       event.target.value,
                     )
                   }
-                  className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500"
+                  className="min-w-0 flex-1"
                 />
                 {node.options.length > 2 ? (
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghostDanger"
                     onClick={() => removeBranchOption(node.id, option.id)}
-                    className="rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
                     aria-label="Remove option"
                   >
                     <Trash2 className="h-4 w-4" />
-                  </button>
+                  </Button>
                 ) : null}
               </div>
             ))}

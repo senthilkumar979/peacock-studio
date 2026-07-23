@@ -6,6 +6,7 @@ import {
   type FlowBranch,
 } from "@peacock/shared";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Button, FieldInput, FieldTextarea, FormField } from "@/components/ui";
 import { getFlowDocument } from "@/services/flowLibraryService";
 import { useFlowStore } from "@/store/flowStore";
 import { useEffect, useState } from "react";
@@ -81,42 +82,34 @@ export const BranchPanel = ({ branch, onAddPath }: BranchPanelProps) => {
           </span>
         </div>
 
-        <label className="block text-sm font-medium text-slate-700 px-1">
-          Title
-          <input
+        <FormField label="Title" className="px-1">
+          <FieldInput
             value={branch.title}
             onChange={(event) =>
               updateBranchTitle(branch.id, event.target.value)
             }
-            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
           />
-        </label>
+        </FormField>
 
-        <label className="block text-sm font-medium text-slate-700 px-1">
-          Description
-          <textarea
+        <FormField label="Description" className="px-1">
+          <FieldTextarea
             value={branch.description}
             onChange={(event) =>
               updateBranchDescription(branch.id, event.target.value)
             }
             rows={6}
-            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
           />
-        </label>
+        </FormField>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-800">
               Paths ({paths.length})
             </p>
-            <button
-              type="button"
-              onClick={onAddPath}
-              className="inline-flex items-center gap-1 rounded-lg border border-peacock-200 bg-peacock-50 px-2 py-1 text-xs font-medium text-peacock-800"
-            >
+            <Button variant="soft" onClick={onAddPath}>
               <Plus className="h-3.5 w-3.5" aria-hidden />
               Add path
-            </button>
+            </Button>
           </div>
 
           {paths.map((path) => (

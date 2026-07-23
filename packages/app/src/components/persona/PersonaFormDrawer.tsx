@@ -1,6 +1,7 @@
 import { useEffect, useId } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
+import { Button } from '@/components/ui';
 import type { Persona, PersonaInput } from '@/types/persona';
 import { PersonaFormFields } from './PersonaFormFields';
 
@@ -111,22 +112,12 @@ export const PersonaFormDrawer = ({
             </div>
 
             <footer className="flex shrink-0 justify-end gap-2 border-t border-slate-200 px-6 py-4">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isSaving}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
+              <Button variant="secondary" onClick={onClose} disabled={isSaving}>
                 Cancel
-              </button>
-              <button
-                type="submit"
-                form={formId}
-                disabled={isSaving}
-                className="btn-peacock disabled:cursor-not-allowed disabled:opacity-50"
-              >
+              </Button>
+              <Button type="submit" form={formId} disabled={isSaving}>
                 {isSaving ? 'Saving…' : 'Save persona'}
-              </button>
+              </Button>
             </footer>
           </motion.aside>
         </div>

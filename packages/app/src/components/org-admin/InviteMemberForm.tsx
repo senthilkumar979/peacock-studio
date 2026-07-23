@@ -7,6 +7,7 @@ import {
   type MemberRole,
 } from '@/cloud/types/organization';
 import { CapabilityChipGrid } from '@/components/org-admin/CapabilityChipGrid';
+import { FieldInput, FormField } from '@/components/ui';
 
 interface InviteMemberFormProps {
   busy: boolean;
@@ -67,20 +68,17 @@ export const InviteMemberForm = ({ busy, onInvite }: InviteMemberFormProps) => {
 
         <div className="mt-6 space-y-5 rounded-2xl border border-slate-200/80 bg-white/95 p-5 shadow-sm backdrop-blur-sm sm:p-6">
           <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-            <div>
-              <label htmlFor="invite-email" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Work email
-              </label>
-              <input
+            <FormField label="Work email" htmlFor="invite-email" className="gap-1.5">
+              <FieldInput
                 id="invite-email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-peacock-400 focus:bg-white focus:ring-2 focus:ring-peacock-500/20"
+                className="rounded-xl border-slate-200 bg-slate-50/80 px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-peacock-400 focus:bg-white focus:ring-peacock-500/20"
                 placeholder="colleague@company.com"
               />
-            </div>
+            </FormField>
 
             <fieldset>
               <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">

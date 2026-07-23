@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, X } from 'lucide-react';
+import { Button, FieldTextarea, FormField } from '@/components/ui';
 import type { PersonaInput } from '@/types/persona';
 import { PersonaFormFields } from './PersonaFormFields';
 
@@ -150,9 +151,8 @@ export const CreatePersonaWithGoalDrawer = ({
                 />
               ) : (
                 <div className="space-y-4 text-slate-900">
-                  <label className="block text-sm text-slate-900">
-                    <span className="font-medium text-slate-900">Tour goal</span>
-                    <textarea
+                  <FormField label="Tour goal" error={goalError ?? undefined}>
+                    <FieldTextarea
                       value={tourGoal}
                       onChange={(event) => {
                         setTourGoal(event.target.value);
@@ -162,9 +162,9 @@ export const CreatePersonaWithGoalDrawer = ({
                       autoFocus
                       disabled={isSaving}
                       placeholder="e.g. Reduce time spent on manual user provisioning"
-                      className="mt-1 w-full resize-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:opacity-60"
+                      className="border-slate-300 text-slate-900 placeholder:text-slate-400"
                     />
-                  </label>
+                  </FormField>
                   <p className="text-sm text-slate-600">
                     Shown on the persona intro slide for this tour only.
                   </p>
@@ -185,52 +185,35 @@ export const CreatePersonaWithGoalDrawer = ({
                       </span>
                     </span>
                   </label>
-                  {goalError ? <p className="text-sm text-red-600">{goalError}</p> : null}
                 </div>
               )}
             </div>
 
             <footer className="flex shrink-0 justify-between gap-2 border-t border-slate-200 px-6 py-4">
               {step === 'goal' ? (
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
                   onClick={() => setStep('identity')}
                   disabled={isSaving}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <ArrowLeft className="h-4 w-4" aria-hidden />
                   Back
-                </button>
+                </Button>
               ) : (
                 <span />
               )}
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={isSaving}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
+                <Button variant="secondary" onClick={onClose} disabled={isSaving}>
                   Cancel
-                </button>
+                </Button>
                 {step === 'identity' ? (
-                  <button
-                    type="submit"
-                    form={identityFormId}
-                    disabled={isSaving}
-                    className="btn-peacock disabled:cursor-not-allowed disabled:opacity-50"
-                  >
+                  <Button type="submit" form={identityFormId} disabled={isSaving}>
                     Continue
-                  </button>
+                  </Button>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={handleGoalSubmit}
-                    disabled={isSaving}
-                    className="btn-peacock disabled:cursor-not-allowed disabled:opacity-50"
-                  >
+                  <Button onClick={handleGoalSubmit} disabled={isSaving}>
                     {isSaving ? 'Saving…' : 'Create persona & set goal'}
-                  </button>
+                  </Button>
                 )}
               </div>
             </footer>

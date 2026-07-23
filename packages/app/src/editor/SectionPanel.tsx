@@ -1,4 +1,5 @@
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Button, FieldInput, FieldTextarea, FormField } from "@/components/ui";
 import { useFlowStore } from "@/store/flowStore";
 import type { FlowSection } from "@peacock/shared";
 import { Info } from "lucide-react";
@@ -51,37 +52,33 @@ export const SectionPanel = ({ section }: SectionPanelProps) => {
           </span>
         </div>
 
-        <label className="flex flex-col gap-1 text-sm px-1">
-          <span className="font-medium text-slate-700">Title</span>
-          <input
+        <FormField label="Title" className="px-1">
+          <FieldInput
             value={section.title}
             onChange={(event) =>
               updateSectionTitle(section.id, event.target.value)
             }
-            className="rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2"
           />
-        </label>
+        </FormField>
 
-        <label className="flex flex-col gap-1 text-sm px-1">
-          <span className="font-medium text-slate-700">Description</span>
-          <textarea
+        <FormField label="Description" className="px-1">
+          <FieldTextarea
             value={section.description}
             onChange={(event) =>
               updateSectionDescription(section.id, event.target.value)
             }
             rows={8}
             placeholder="Optional context shown in document view"
-            className="resize-none rounded-lg border border-slate-300 px-3 py-2 outline-none ring-peacock-500 focus:ring-2"
           />
-        </label>
+        </FormField>
 
-        <button
-          type="button"
+        <Button
+          variant="danger"
+          className="mt-auto"
           onClick={() => setIsDeleteDialogOpen(true)}
-          className="mt-auto rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
         >
           Delete section
-        </button>
+        </Button>
       </div>
 
       <ConfirmDialog

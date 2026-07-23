@@ -1,4 +1,5 @@
 import { Plus, Trash2 } from 'lucide-react';
+import { Button, FieldInput, FieldSelect } from '@/components/ui';
 import type { RouteFormFieldType, RouteFormNode } from '@/types/route';
 import { useRouteBuilderStore } from '@/store/routeBuilderStore';
 
@@ -16,16 +17,15 @@ export const RouteFormFieldsEditor = ({ node }: RouteFormFieldsEditorProps) => {
       <p className="text-sm font-medium text-slate-700">Form fields</p>
       {node.fields.map((field) => (
         <div key={field.id} className="space-y-2 rounded-lg border border-slate-200 p-3">
-          <input
+          <FieldInput
             type="text"
             value={field.label}
             onChange={(event) =>
               updateFormField(node.id, field.id, event.target.value, field.type, field.required)
             }
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500"
           />
           <div className="flex items-center gap-2">
-            <select
+            <FieldSelect
               value={field.type}
               onChange={(event) =>
                 updateFormField(
@@ -33,15 +33,15 @@ export const RouteFormFieldsEditor = ({ node }: RouteFormFieldsEditorProps) => {
                   field.id,
                   field.label,
                   event.target.value as RouteFormFieldType,
-                  field.required
+                  field.required,
                 )
               }
-              className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+              className="w-auto px-2 py-1.5"
             >
               <option value="text">Text</option>
               <option value="email">Email</option>
               <option value="textarea">Long text</option>
-            </select>
+            </FieldSelect>
             <label className="inline-flex items-center gap-1.5 text-sm text-slate-600">
               <input
                 type="checkbox"
@@ -53,14 +53,14 @@ export const RouteFormFieldsEditor = ({ node }: RouteFormFieldsEditorProps) => {
               Required
             </label>
             {node.fields.length > 1 ? (
-              <button
-                type="button"
+              <Button
+                variant="ghostDanger"
+                className="ml-auto"
                 onClick={() => removeFormField(node.id, field.id)}
-                className="ml-auto rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
                 aria-label="Remove field"
               >
                 <Trash2 className="h-4 w-4" />
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>

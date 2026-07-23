@@ -6,6 +6,7 @@ import type {
   PersonaInput,
 } from "@/types/persona";
 import { useState } from "react";
+import { Button, FieldInput, FieldTextarea, FormField } from "@/components/ui";
 import { PersonaAvatar } from "./PersonaAvatar";
 
 interface PersonaFormFieldsProps {
@@ -25,9 +26,6 @@ const GENDERS: { value: PersonaGender; label: string }[] = [
   { value: "male", label: "Male" },
   { value: "neutral", label: "Neutral" },
 ];
-
-const inputClassName =
-  "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 disabled:opacity-60";
 
 function createInitialFormState(
   initialPersona?: (Persona & LegacyPersonaRecord) | null,
@@ -123,40 +121,34 @@ export const PersonaFormFields = ({
         />
       </div>
 
-      <label className="block text-sm">
-        <span className="font-medium text-slate-700">Name</span>
-        <input
+      <FormField label="Name">
+        <FieldInput
           value={name}
           onChange={(event) => setName(event.target.value)}
           autoFocus={autoFocusName}
           disabled={isSaving}
-          className={inputClassName}
         />
-      </label>
+      </FormField>
 
-      <label className="block text-sm">
-        <span className="font-medium text-slate-700">Occupation</span>
-        <input
+      <FormField label="Occupation">
+        <FieldInput
           value={occupation}
           onChange={(event) => setOccupation(event.target.value)}
           disabled={isSaving}
-          className={inputClassName}
         />
-      </label>
+      </FormField>
 
       <div className="grid grid-cols-[8rem_minmax(0,1fr)] items-start gap-4">
-        <label className="block text-sm">
-          <span className="font-medium text-slate-700">Age (optional)</span>
-          <input
+        <FormField label="Age (optional)">
+          <FieldInput
             type="number"
             min={1}
             max={120}
             value={age}
             onChange={(event) => setAge(event.target.value)}
             disabled={isSaving}
-            className={inputClassName}
           />
-        </label>
+        </FormField>
 
         <fieldset className="min-w-0 ml-[10rem]">
           <legend className="text-sm font-medium text-slate-700">Gender</legend>
@@ -180,46 +172,33 @@ export const PersonaFormFields = ({
         </fieldset>
       </div>
 
-      <label className="block text-sm">
-        <span className="font-medium text-slate-700">Short bio</span>
-        <textarea
+      <FormField label="Short bio">
+        <FieldTextarea
           value={shortBio}
           onChange={(event) => setShortBio(event.target.value)}
           rows={2}
           disabled={isSaving}
-          className={`${inputClassName} resize-none`}
         />
-      </label>
+      </FormField>
 
-      <label className="block text-sm">
-        <span className="font-medium text-slate-700">Company (optional)</span>
-        <input
+      <FormField label="Company (optional)">
+        <FieldInput
           value={company}
           onChange={(event) => setCompany(event.target.value)}
           disabled={isSaving}
-          className={inputClassName}
         />
-      </label>
+      </FormField>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       {showActions ? (
         <div className="flex justify-end gap-2 pt-1">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isSaving}
-            className="rounded-lg border bg-white px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button variant="secondary" onClick={onCancel} disabled={isSaving}>
             Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="btn-peacock disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          </Button>
+          <Button type="submit" disabled={isSaving}>
             {isSaving ? "Saving…" : submitLabel}
-          </button>
+          </Button>
         </div>
       ) : null}
     </form>

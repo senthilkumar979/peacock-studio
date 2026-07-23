@@ -1,4 +1,5 @@
 import { useEffect, useId, type ReactNode } from 'react';
+import { ModalFooterActions } from '@/components/ui';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -66,26 +67,15 @@ export const ConfirmDialog = ({
             {description}
           </p>
         ) : null}
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
-            {cancelLabel}
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className={
-              isDestructive
-                ? 'rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700'
-                : 'btn-peacock btn-peacock--sm'
-            }
-          >
-            {confirmLabel}
-          </button>
-        </div>
+        <ModalFooterActions
+          className="mt-6"
+          size="sm"
+          onCancel={onCancel}
+          onConfirm={onConfirm}
+          cancelLabel={cancelLabel}
+          confirmLabel={confirmLabel}
+          isDestructive={isDestructive}
+        />
       </div>
     </div>
   );
