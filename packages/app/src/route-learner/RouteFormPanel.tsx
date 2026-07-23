@@ -1,3 +1,4 @@
+import { FieldInput, FieldTextarea, FormField } from '@/components/ui';
 import type { RouteFormNode } from '@/types/route';
 
 interface RouteFormPanelProps {
@@ -6,6 +7,9 @@ interface RouteFormPanelProps {
   onChange: (fieldId: string, value: string) => void;
 }
 
+/** Sky focus keeps route-learner lead-capture branding (important beats Field* defaults). */
+const skyFieldClassName = 'focus:!border-sky-300 focus:!ring-sky-500';
+
 export const RouteFormPanel = ({ form, responses, onChange }: RouteFormPanelProps) => (
   <div className="mx-auto w-full max-w-xl rounded-2xl border border-sky-200 bg-white p-6 shadow-lg">
     <p className="text-xs font-semibold uppercase tracking-wide text-sky-600">Lead capture</p>
@@ -13,27 +17,26 @@ export const RouteFormPanel = ({ form, responses, onChange }: RouteFormPanelProp
     {form.description ? <p className="mt-2 text-sm text-slate-600">{form.description}</p> : null}
     <div className="mt-5 space-y-4">
       {form.fields.map((field) => (
-        <label key={field.id} className="block">
-          <span className="text-sm font-medium text-slate-700">
-            {field.label}
-            {field.required ? <span className="text-red-500"> *</span> : null}
-          </span>
+        <FormField
+          key={field.id}
+          label={field.required ? `${field.label} *` : field.label}
+        >
           {field.type === 'textarea' ? (
-            <textarea
+            <FieldTextarea
               value={responses[field.id] ?? ''}
               onChange={(event) => onChange(field.id, event.target.value)}
               rows={3}
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-500"
+              className={skyFieldClassName}
             />
           ) : (
-            <input
+            <FieldInput
               type={field.type === 'email' ? 'email' : 'text'}
               value={responses[field.id] ?? ''}
               onChange={(event) => onChange(field.id, event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-500"
+              className={skyFieldClassName}
             />
           )}
-        </label>
+        </FormField>
       ))}
     </div>
   </div>

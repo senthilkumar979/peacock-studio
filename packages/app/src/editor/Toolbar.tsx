@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
+import { Button } from "@/components/ui";
 import { persistCurrentFlow } from "@/services/flowLibraryService";
 import { useFlowStore, usePlayableSteps } from "@/store/flowStore";
 import { getDocumentPath } from "@/utils/shareLink";
@@ -102,13 +103,9 @@ export const Toolbar = ({
               placement="bottom"
               onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.flowDetails)}
             >
-              <button
-                type="button"
-                onClick={() => setIsFlowDetailsOpen(true)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
+              <Button variant="secondary" onClick={() => setIsFlowDetailsOpen(true)}>
                 Flow details
-              </button>
+              </Button>
             </FirstTimeTooltip>
             {documentId ? (
               <FirstTimeTooltip

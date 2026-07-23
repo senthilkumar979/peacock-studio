@@ -1,9 +1,10 @@
 import {
   CAPTURE_BACKGROUND_PRESETS,
   getPresetSwatchCss,
-} from "@peacock/shared";
-import { useCaptureEditorStore } from "@/store/captureEditorStore";
-import { CaptureEditorInspector } from "./CaptureEditorInspector";
+} from '@peacock/shared';
+import { FieldInput, FieldTextarea, FormField } from '@/components/ui';
+import { useCaptureEditorStore } from '@/store/captureEditorStore';
+import { CaptureEditorInspector } from './CaptureEditorInspector';
 
 export const CaptureEditorSidebar = () => {
   const settings = useCaptureEditorStore((state) => state.settings);
@@ -21,38 +22,34 @@ export const CaptureEditorSidebar = () => {
   const setDescription = useCaptureEditorStore((state) => state.setDescription);
   const commitSettings = useCaptureEditorStore((state) => state.commitSettings);
 
+  const commitOnBlur = () =>
+    commitSettings(useCaptureEditorStore.getState().settings);
+
   return (
     <aside className="flex w-72 shrink-0 flex-col gap-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="space-y-3 border-b border-slate-100 p-4">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
           Caption
         </p>
-        <label className="block text-xs text-slate-600 px-1">
-          Title
-          <input
+        <FormField label="Title" className="px-1">
+          <FieldInput
             type="text"
             value={settings.title}
             onChange={(event) => setTitle(event.target.value)}
-            onBlur={() =>
-              commitSettings(useCaptureEditorStore.getState().settings)
-            }
+            onBlur={commitOnBlur}
             placeholder="Add a title"
-            className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-900"
           />
-        </label>
-        <label className="block text-xs text-slate-600 px-1">
-          Description
-          <textarea
+        </FormField>
+        <FormField label="Description" className="px-1">
+          <FieldTextarea
             value={settings.description}
             onChange={(event) => setDescription(event.target.value)}
-            onBlur={() =>
-              commitSettings(useCaptureEditorStore.getState().settings)
-            }
+            onBlur={commitOnBlur}
             placeholder="Add a short description"
             rows={3}
-            className="mt-1 w-full resize-y rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-900"
+            className="resize-y"
           />
-        </label>
+        </FormField>
       </div>
 
       <div className="flex min-h-0 flex-col gap-3 p-4 py-1">
@@ -70,8 +67,8 @@ export const CaptureEditorSidebar = () => {
                   onClick={() => setBackgroundPresetId(preset.id)}
                   className={`rounded-xl border p-2 text-left transition ${
                     isActive
-                      ? "border-peacock-500 ring-2 ring-peacock-100"
-                      : "border-slate-200 hover:border-slate-300"
+                      ? 'border-peacock-500 ring-2 ring-peacock-100'
+                      : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
                   <span

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import type { FlowStep } from '@peacock/shared';
 import { getCapturedScreenshotId, hasCustomStepScreenshot } from '@peacock/shared';
+import { Button } from '@/components/ui';
 import { STEP_IMAGE_ACCEPT } from '@/constants/stepImageUpload';
 import { readStepImageDataUrl } from '@/utils/stepImageFile';
 import { useFlowStore } from '@/store/flowStore';
@@ -55,27 +56,27 @@ export const StepImageUpload = ({ step }: StepImageUploadProps) => {
       />
 
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           disabled={isUploading}
           onClick={() => fileInputRef.current?.click()}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          className="disabled:opacity-60"
         >
           {isUploading ? 'Uploading…' : hasCustomImage ? 'Replace image' : 'Upload image'}
-        </button>
+        </Button>
 
         {hasCustomImage && hasCapturedImage && (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             disabled={isUploading}
             onClick={() => {
               setUploadError(null);
               resetStepScreenshot(step.id);
             }}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="disabled:opacity-60"
           >
             Reset to captured
-          </button>
+          </Button>
         )}
       </div>
 

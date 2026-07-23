@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
 import { ResourceNotFoundPage } from '@/components/errors/ResourceNotFoundPage';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
+import { Button } from '@/components/ui';
 import { CaptureEditorCanvas } from '@/capture-editor/CaptureEditorCanvas';
 import { CaptureEditorSidebar } from '@/capture-editor/CaptureEditorSidebar';
 import { CaptureEditorToolbar } from '@/capture-editor/CaptureEditorToolbar';
@@ -106,38 +107,22 @@ export const CaptureEditor = () => {
         description="Frame your screenshot, then export the edited version."
         homeLink
       >
-        <button
-          type="button"
-          onClick={() => undo()}
-          disabled={!canUndo()}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        <Button variant="secondary" onClick={() => undo()} disabled={!canUndo()}>
           Undo
-        </button>
-        <button
-          type="button"
-          onClick={() => redo()}
-          disabled={!canRedo()}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        </Button>
+        <Button variant="secondary" onClick={() => redo()} disabled={!canRedo()}>
           Redo
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="secondary"
           onClick={() => void handleCopy()}
           disabled={isExporting}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
         >
           Copy edited
-        </button>
-        <button
-          type="button"
-          onClick={() => void handleDownload()}
-          disabled={isExporting}
-          className="btn-peacock"
-        >
+        </Button>
+        <Button onClick={() => void handleDownload()} disabled={isExporting}>
           Download edited
-        </button>
+        </Button>
       </AppHeader>
 
       {statusMessage ? (

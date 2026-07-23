@@ -5,6 +5,7 @@ import {
   getSortedFeatures,
 } from "@/store/productTourBuilderStore";
 import type { SavedFlowSummary } from "@/types/savedFlow";
+import { FieldInput, FieldTextarea, FormField } from "@/components/ui";
 import { ProductTourPersonaSection } from "./ProductTourPersonaSection";
 import { TourFeatureCard } from "./TourFeatureCard";
 import { HintAnchor, type PageHintControl } from "@/components/onboarding/HintAnchor";
@@ -74,27 +75,25 @@ export const ProductTourFeatureList = ({
         </div>
 
         <div className="space-y-4 px-5 py-5 sm:px-6">
-          <label className="block text-sm">
-            <span className="font-medium text-slate-700">Tour title</span>
-            <input
+          <FormField label="Tour title">
+            <FieldInput
               value={tour.title}
               onChange={(event) =>
                 updateTourDetails(event.target.value, tour.description)
               }
-              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500/30"
+              className="font-semibold text-slate-900"
             />
-          </label>
-          <label className="block text-sm">
-            <span className="font-medium text-slate-700">Tour description</span>
-            <textarea
+          </FormField>
+          <FormField label="Tour description">
+            <FieldTextarea
               value={tour.description}
               onChange={(event) =>
                 updateTourDetails(tour.title, event.target.value)
               }
               rows={4}
-              className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700 outline-none transition focus:border-peacock-300 focus:ring-2 focus:ring-peacock-500/30"
+              className="text-slate-700"
             />
-          </label>
+          </FormField>
         </div>
       </section>
 

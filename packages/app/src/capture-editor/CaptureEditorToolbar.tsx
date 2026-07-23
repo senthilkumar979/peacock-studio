@@ -1,4 +1,5 @@
 import type { CaptureEditorTool } from '@peacock/shared';
+import { Button } from '@/components/ui';
 import { useCaptureEditorStore } from '@/store/captureEditorStore';
 
 const TOOLS: { id: CaptureEditorTool; label: string }[] = [
@@ -35,14 +36,14 @@ export const CaptureEditorToolbar = () => {
           Drag to select — crop applies when you release
         </p>
       ) : (
-        <button
-          type="button"
+        <Button
+          variant="danger"
           onClick={() => removeSelected()}
           disabled={!selectedId}
-          className="ml-auto rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="ml-auto px-3 py-1.5 text-xs font-semibold"
         >
           Delete
-        </button>
+        </Button>
       )}
     </div>
   );
