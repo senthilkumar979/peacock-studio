@@ -5,6 +5,8 @@ interface BrowserMockupProps {
   url: string;
   children: ReactNode;
   isFluid?: boolean;
+  /** Smaller frame for embed iframes (header + controls + watermark). */
+  isEmbed?: boolean;
 }
 
 function getDisplayUrl(url: string): string {
@@ -34,6 +36,7 @@ export const BrowserMockup = ({
   url,
   children,
   isFluid = false,
+  isEmbed = false,
 }: BrowserMockupProps) => {
   const displayUrl = getDisplayUrl(url);
   const truncatedUrl = truncateDisplayUrl(url);
@@ -42,11 +45,17 @@ export const BrowserMockup = ({
     <div
       className={`flex min-w-0 flex-col overflow-hidden rounded-xl bg-slate-800 ring-1 ring-slate-900/10 ${
         isFluid
-          ? "w-full max-w-full shadow-xl"
-          : "mx-auto w-fit max-w-[calc(100vw-2rem)] shadow-2xl"
+          ? 'w-full max-w-full shadow-xl'
+          : isEmbed
+            ? 'mx-auto w-fit max-w-[calc(100vw-2rem)] shadow-xl'
+            : 'mx-auto w-fit max-w-[calc(100vw-2rem)] shadow-2xl'
       }`}
     >
-      <div className="flex min-w-0 max-w-full shrink-0 items-center gap-3 border-b border-slate-700/80 bg-slate-800 px-4 py-3">
+      <div
+        className={`flex min-w-0 max-w-full shrink-0 items-center gap-3 border-b border-slate-700/80 bg-slate-800 ${
+          isEmbed ? 'px-3.5 py-2.5' : 'px-4 py-3'
+        }`}
+      >
         <div className="flex shrink-0 items-center gap-1.5" aria-hidden>
           <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
           <span className="h-3 w-3 rounded-full bg-[#febc2e]" />

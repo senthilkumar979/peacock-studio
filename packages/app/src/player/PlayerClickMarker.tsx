@@ -10,6 +10,7 @@ interface PlayerClickMarkerProps {
   yPercent: number;
   isDetailsVisible?: boolean;
   onToggle?: () => void;
+  isEmbed?: boolean;
 }
 
 export const PlayerClickMarker = ({
@@ -19,6 +20,7 @@ export const PlayerClickMarker = ({
   yPercent,
   isDetailsVisible = true,
   onToggle,
+  isEmbed = false,
 }: PlayerClickMarkerProps) => {
   const isInteractive = Boolean(onToggle);
   const description = step.notes || step.generatedDescription;
@@ -57,6 +59,7 @@ export const PlayerClickMarker = ({
             description={description}
             showArrow
             arrowSide={placement.arrowSide}
+            isEmbed={isEmbed}
           />
         </div>
       ) : null}

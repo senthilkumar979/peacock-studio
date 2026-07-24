@@ -21,21 +21,18 @@ interface PlayerStageProps {
 const screenshotClassName =
   'block max-h-[min(65vh,800px)] w-auto max-w-[calc(100vw-2.5rem)] object-contain';
 
-/** Leaves room for embed header + player controls + watermark footer. */
 const embedScreenshotClassName =
-  'block max-h-[min(calc(100dvh-14rem),640px)] w-auto max-w-[calc(100%-1.5rem)] object-contain';
+  'block max-h-[min(calc(100dvh-20rem),560px)] w-auto max-w-[calc(100vw-2.5rem)] object-contain';
 
 const StageLoader = ({ isEmbed = false }: { isEmbed?: boolean }) => (
   <div
-    className={`flex w-full min-w-[min(100%,20rem)] items-center justify-center rounded-xl bg-slate-100 ${
-      isEmbed
-        ? 'min-h-[min(40dvh,360px)] max-w-[calc(100%-1rem)]'
-        : 'min-h-[min(50vh,520px)] max-w-[calc(100vw-2rem)]'
+    className={`flex w-full min-w-[min(100%,20rem)] max-w-[calc(100vw-2rem)] items-center justify-center rounded-xl bg-slate-100 ${
+      isEmbed ? 'min-h-[min(calc(100dvh-20rem),360px)]' : 'min-h-[min(50vh,520px)]'
     }`}
     aria-busy="true"
     aria-label="Loading step screenshot"
   >
-    <PeacockStudioLoader size={isEmbed ? 72 : 96} />
+    <PeacockStudioLoader size={isEmbed ? 80 : 96} />
   </div>
 );
 
@@ -95,12 +92,8 @@ export const PlayerStage = ({
                 transition={{ duration: 0.25 }}
                 className="w-full"
               >
-                <BrowserMockup url={stepUrl}>
-                  <div
-                    className={`relative inline-block min-w-[min(100%,20rem)] ${
-                      isEmbed ? 'p-2 sm:p-3' : 'p-3 sm:p-4'
-                    }`}
-                  >
+                <BrowserMockup url={stepUrl} isEmbed={isEmbed}>
+                  <div className="relative inline-block min-w-[min(100%,20rem)] p-3 sm:p-4">
                     <img
                       src={screenshotUrl}
                       alt={step.title}
@@ -115,6 +108,7 @@ export const PlayerStage = ({
                         yPercent={markerPosition.yPercent}
                         isDetailsVisible={isDetailsVisible}
                         onToggle={toggleDetails}
+                        isEmbed={isEmbed}
                       />
                     ) : null}
 
@@ -148,6 +142,7 @@ export const PlayerStage = ({
                                   title={step.title}
                                   description={description}
                                   appearance="glass"
+                                  isEmbed={isEmbed}
                                 />
                               </div>
                             </motion.div>
@@ -162,7 +157,7 @@ export const PlayerStage = ({
           </AnimatePresence>
         </>
       ) : (
-        <BrowserMockup url={stepUrl}>
+        <BrowserMockup url={stepUrl} isEmbed={isEmbed}>
           <div className="flex min-h-[200px] min-w-[min(100%,20rem)] items-center justify-center px-6 py-10 text-sm text-slate-500">
             {step.event.type === 'navigation'
               ? 'Navigation step — no screenshot'
@@ -187,6 +182,7 @@ export const PlayerStage = ({
                   stepNumber={stepNumber}
                   title={step.title}
                   description={description}
+                  isEmbed={isEmbed}
                 />
               </motion.div>
             ) : null}

@@ -135,13 +135,15 @@ export const PlayerView = ({
       <main
         ref={mainRef}
         className={`flex min-h-0 flex-1 ${
-          isEmbed ? 'px-3 py-4 sm:px-5 sm:py-5' : 'px-3 py-3 md:px-6 md:py-4'
+          isEmbed ? 'px-4 py-5 sm:px-6 sm:py-6' : 'px-3 py-3 md:px-6 md:py-4'
         } ${
           isScrollableMain
             ? 'items-start overflow-y-auto overscroll-contain'
             : isCenteredPlayerContent
               ? 'items-center justify-center overflow-y-auto overscroll-contain'
-              : 'items-center justify-center overflow-hidden'
+              : isEmbed
+                ? 'items-center justify-center overflow-hidden'
+                : 'items-start justify-center overflow-hidden'
         }`}
       >
         {playback.isAtFinale ? (
