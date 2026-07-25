@@ -41,8 +41,10 @@ export const NOINDEX_PREFIXES = [
   '/onboarding/',
   '/accept-invite',
   '/org/',
+  '/super-admin',
   '/platform/',
   '/health',
+  '/api-docs',
   '/error',
 ] as const;
 

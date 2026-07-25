@@ -115,6 +115,9 @@ export const AcceptInvitePage = lazy(() =>
 export const OrgAdminPage = lazy(() =>
   import('@/pages/OrgAdminPage').then((m) => ({ default: m.OrgAdminPage })),
 );
+export const SuperAdminPage = lazy(() =>
+  import('@/pages/SuperAdminPage').then((m) => ({ default: m.SuperAdminPage })),
+);
 export const PlatformAdminPage = lazy(() =>
   import('@/pages/PlatformAdminPage').then((m) => ({ default: m.PlatformAdminPage })),
 );

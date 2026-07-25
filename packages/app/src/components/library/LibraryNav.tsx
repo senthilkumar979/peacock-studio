@@ -1,18 +1,16 @@
 import type { LucideIcon } from "lucide-react";
 import { NavLink, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BookOpen, HeartPulse, Shield, Settings2 } from "lucide-react";
+import { Settings2, Shield } from "lucide-react";
 import { SignInButton, SignUpButton } from "@clerk/react";
 import { SignedInUserButton } from "@/components/auth/SignedInUserButton";
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from "@/constants/branding";
 import { isCloudSyncEnabled } from "@/cloud/config";
 import { LIBRARY_NAV_ITEMS } from "@/constants/libraryNav";
 import {
-  API_DOCS_PATH,
   DASHBOARD_PATH,
-  HEALTH_CHECKER_PATH,
   ORG_ADMIN_PATH,
-  PLATFORM_ADMIN_PATH,
+  SUPER_ADMIN_PATH,
 } from "@/constants/routes";
 import { OrgSwitcher } from "@/components/library/OrgSwitcher";
 import { useIsPlatformSuperAdmin } from "@/hooks/useIsPlatformSuperAdmin";
@@ -61,6 +59,9 @@ const LibraryNavLink = ({
   </NavLink>
 );
 
+const navActionClass =
+  "inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50";
+
 export const LibraryNav = () => {
   const sessionMode = useSessionMode();
   const { isAdmin } = useActiveOrganization();
@@ -108,48 +109,21 @@ export const LibraryNav = () => {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2 border-l border-slate-200/80 pl-2 sm:pl-3">
-          {sessionMode === "cloud" ? <OrgSwitcher /> : null}
-
-          <Link
-            to={HEALTH_CHECKER_PATH}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
-            title="Health Checker"
-          >
-            <HeartPulse
-              className="h-4 w-4 shrink-0 text-slate-500"
-              aria-hidden
-            />
-            <span className="hidden lg:inline">Health</span>
-          </Link>
-
-          <Link
-            to={API_DOCS_PATH}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
-            title="API catalog"
-          >
-            <BookOpen
-              className="h-4 w-4 shrink-0 text-slate-500"
-              aria-hidden
-            />
-            <span className="hidden lg:inline">API</span>
-          </Link>
+          {/* {sessionMode === "cloud" ? <OrgSwitcher /> : null} */}
 
           {sessionMode === "cloud" && isPlatformSuperAdmin ? (
             <Link
-              to={PLATFORM_ADMIN_PATH}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
-              title="Platform admin"
+              to={SUPER_ADMIN_PATH}
+              className={navActionClass}
+              title="Super admin"
             >
               <Shield className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
-              <span className="hidden lg:inline">Platform</span>
+              <span className="hidden lg:inline">Super admin</span>
             </Link>
           ) : null}
 
           {sessionMode === "cloud" && isAdmin ? (
-            <Link
-              to={ORG_ADMIN_PATH}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
-            >
+            <Link to={ORG_ADMIN_PATH} className={navActionClass}>
               <Settings2
                 className="h-4 w-4 shrink-0 text-slate-500"
                 aria-hidden

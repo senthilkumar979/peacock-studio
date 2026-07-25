@@ -70,7 +70,7 @@ afterEach(() => {
 
 describe('compressImage helpers', () => {
   it('formats the max image label', () => {
-    expect(formatMaxImageLabel(MAX_IMAGE_BYTES)).toBe('2 MB');
+    expect(formatMaxImageLabel(MAX_IMAGE_BYTES)).toBe('1 MB');
     expect(formatMaxImageLabel(1.5 * 1024 * 1024)).toBe('1.5 MB');
   });
 

@@ -1,11 +1,11 @@
 -- Harden screenshots bucket MIME allowlist and enforce org storage/doc quotas in Postgres.
 
 -- ---------------------------------------------------------------------------
--- Bucket: 2 MB + JPEG/PNG only (SVG never stored in cloud)
+-- Bucket: 1 MB + JPEG/PNG only (SVG never stored in cloud)
 -- ---------------------------------------------------------------------------
 update storage.buckets
 set
-  file_size_limit = 2097152,
+  file_size_limit = 1048576,
   allowed_mime_types = array['image/jpeg', 'image/png']::text[]
 where id = 'screenshots';
 

@@ -27,13 +27,20 @@ export const FLOW_MAPS_PATH = '/flow-maps' as const;
 export const WORKSPACE_ONBOARDING_PATH = '/onboarding/workspace' as const;
 export const ACCEPT_INVITE_PATH = '/accept-invite' as const;
 export const ORG_ADMIN_PATH = '/org/admin' as const;
-/** Platform-wide super admin (SUPER_ADMIN_EMAILS Edge Function secret) */
+/** Platform super admin console (tabs: platform, health, api, …) */
+export const SUPER_ADMIN_PATH = '/super-admin' as const;
+/** @deprecated Prefer SUPER_ADMIN_PATH?tab=platform */
 export const PLATFORM_ADMIN_PATH = '/platform/admin' as const;
-/** Client-side diagnostics for pages, connections, and logs */
+/** @deprecated Prefer SUPER_ADMIN_PATH?tab=health */
 export const HEALTH_CHECKER_PATH = '/health' as const;
-/** OpenAPI / Swagger catalog of app API surfaces */
+/** @deprecated Prefer SUPER_ADMIN_PATH?tab=api */
 export const API_DOCS_PATH = '/api-docs' as const;
 export const ERROR_PATH = '/error' as const;
+
+export function getSuperAdminPath(tab?: 'platform' | 'health' | 'api'): string {
+  if (!tab || tab === 'platform') return SUPER_ADMIN_PATH;
+  return `${SUPER_ADMIN_PATH}?tab=${tab}`;
+}
 
 export function getTestCasesDetailPath(documentId: string): string {
   return `${TEST_CASES_PATH}/${documentId}`;

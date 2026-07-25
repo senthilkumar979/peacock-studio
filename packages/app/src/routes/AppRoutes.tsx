@@ -19,6 +19,7 @@ import {
   PRICING_PATH,
   PRIVACY_PATH,
   PRODUCT_TOURS_PATH,
+  SUPER_ADMIN_PATH,
   TERMS_PATH,
   TEST_CASES_PATH,
   WORKSPACE_ONBOARDING_PATH,
@@ -60,6 +61,7 @@ import {
   SignUpPage,
   SolutionRole,
   Solutions,
+  SuperAdminPage,
   TermsAndConditions,
   TestCasesDetailPage,
   TestCasesLibraryPage,
@@ -145,15 +147,16 @@ export const App = () => {
                 }
               />
               <Route
-                path={PLATFORM_ADMIN_PATH}
+                path={SUPER_ADMIN_PATH}
                 element={
                   isCloudSyncEnabled() ? (
-                    <PlatformAdminPage />
+                    <SuperAdminPage />
                   ) : (
                     <Navigate to={DASHBOARD_PATH} replace />
                   )
                 }
               />
+              <Route path={PLATFORM_ADMIN_PATH} element={<PlatformAdminPage />} />
               <Route path={HEALTH_CHECKER_PATH} element={<HealthCheckerPage />} />
               <Route path={API_DOCS_PATH} element={<ApiDocsPage />} />
             </Route>

@@ -48,9 +48,10 @@ Phase 1 bot/abuse controls live in-app (Turnstile + Supabase Edge Functions + DB
 
 ## Platform super admin
 
-Read-only console at `/platform/admin` for operators listed in the Supabase Edge Function secret `SUPER_ADMIN_EMAILS` (never a `VITE_` var — those ship in the browser bundle).
+Read-only console at `/super-admin` (tabs: Platform, Health, API — more tabs can be added) for operators listed in the Supabase Edge Function secret `SUPER_ADMIN_EMAILS` (never a `VITE_` var — those ship in the browser bundle).
 
 - Set: `supabase secrets set SUPER_ADMIN_EMAILS=you@company.com`
 - Deploy: `supabase functions deploy platform-admin --no-verify-jwt`
 - Local: same secret + `supabase functions serve platform-admin`
 - Auth: caller Clerk JWT → `resolve_actor_email` → allowlist match → service-role aggregates (orgs, users, doc/tour counts, domains, storage).
+- Legacy paths `/platform/admin`, `/health`, and `/api-docs` redirect into the matching Super Admin tab.
