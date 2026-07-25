@@ -383,6 +383,16 @@ export class InviteEmailNotConfiguredError extends Error {
   }
 }
 
+export class InviteEmailSendError extends Error {
+  readonly detail?: string;
+
+  constructor(message: string, detail?: string) {
+    super(message);
+    this.name = 'InviteEmailSendError';
+    this.detail = detail;
+  }
+}
+
 export async function sendOrgInviteEmail(input: {
   toEmail: string;
   organizationName: string;
@@ -395,7 +405,7 @@ export async function sendOrgInviteEmail(input: {
     body: input,
   });
 
-  const payload = data as { skipped?: boolean; error?: string } | null;
+  const payload = data as { skipped?: boolean; error?: string; detail?: string } | null;
   if (payload?.skipped) {
     throw new InviteEmailNotConfiguredError(payload.error ?? 'Invite email is not configured');
   }
@@ -404,17 +414,36 @@ export async function sendOrgInviteEmail(input: {
     const context = (error as { context?: Response }).context;
     if (context) {
       try {
-        const body = (await context.clone().json()) as { skipped?: boolean; error?: string };
+        const body = (await context.clone().json()) as {
+          skipped?: boolean;
+          error?: string;
+          detail?: string;
+        };
         if (body?.skipped) {
           throw new InviteEmailNotConfiguredError(
             body.error ?? 'Invite email is not configured',
           );
         }
+        if (body?.error || body?.detail) {
+          throw new InviteEmailSendError(
+            body.detail || body.error || 'Failed to send invite email',
+            body.detail,
+          );
+        }
       } catch (parseError) {
-        if (parseError instanceof InviteEmailNotConfiguredError) throw parseError;
+        if (
+          parseError instanceof InviteEmailNotConfiguredError ||
+          parseError instanceof InviteEmailSendError
+        ) {
+          throw parseError;
+        }
       }
     }
-    throw new Error(error.message || 'Failed to send invite email');
+    throw new InviteEmailSendError(error.message || 'Failed to send invite email');
+  }
+
+  if (payload?.error) {
+    throw new InviteEmailSendError(payload.detail || payload.error, payload.detail);
   }
 
   return { sent: true };

@@ -225,9 +225,11 @@ export const OrgAdminMembersPanel = ({
                     'Invite link copied. Send it manually to your teammate.',
                   );
                 } else {
+                  const detail =
+                    emailError instanceof Error ? emailError.message : 'Unknown email error';
                   notifyWarning(
                     'Invite created — email failed',
-                    'Invite link copied. Share it manually with the teammate.',
+                    `${detail} Invite link copied — share it manually.`,
                   );
                   reportAppError('Send invite email', emailError);
                 }
@@ -284,9 +286,11 @@ export const OrgAdminMembersPanel = ({
                     'Invite link copied. Send it manually.',
                   );
                 } else {
+                  const detail =
+                    emailError instanceof Error ? emailError.message : 'Unknown email error';
                   notifyWarning(
                     'Invite updated — email failed',
-                    'Invite link copied. Share it manually.',
+                    `${detail} Invite link copied — share it manually.`,
                   );
                   reportAppError('Resend invite email', emailError);
                 }

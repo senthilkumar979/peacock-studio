@@ -2,6 +2,9 @@
 // Deploy with verify_jwt=false — Clerk third-party JWTs fail the legacy gateway check.
 // Auth is validated inside by calling an authenticated RPC with the caller's Bearer token.
 // Secrets: RESEND_API_KEY, APP_ORIGIN (e.g. https://app.example.com), RESEND_FROM
+//
+// Resend note: onboarding@resend.dev can only send to your Resend account email.
+// For teammate invites, verify a domain and set RESEND_FROM to that domain.
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 
@@ -26,19 +29,13 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return json({ error: 'Unauthorized' }, 401);
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
     if (!supabaseUrl || !supabaseAnonKey) {
-      return new Response(JSON.stringify({ error: 'Server misconfigured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return json({ error: 'Server misconfigured' }, 500);
     }
 
     // Prove the caller has a valid cloud session (Clerk JWT accepted by PostgREST).
@@ -52,10 +49,7 @@ serve(async (req) => {
       body: '{}',
     });
     if (!authProbe.ok) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return json({ error: 'Unauthorized' }, 401);
     }
 
     const body = (await req.json()) as InviteBody;
@@ -66,10 +60,7 @@ serve(async (req) => {
     const expiresAt = body.expiresAt;
 
     if (!toEmail || !organizationName || !inviteToken) {
-      return new Response(JSON.stringify({ error: 'Missing fields' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return json({ error: 'Missing fields' }, 400);
     }
 
     const appOrigin = (Deno.env.get('APP_ORIGIN') ?? 'http://localhost:5173').replace(/\/$/, '');
@@ -81,19 +72,13 @@ serve(async (req) => {
         })
       : 'in 7 days';
 
-    const resendKey = Deno.env.get('RESEND_API_KEY');
+    const resendKey = Deno.env.get('RESEND_API_KEY')?.trim();
     if (!resendKey) {
       console.warn('RESEND_API_KEY not set — invite email skipped');
-      return new Response(
-        JSON.stringify({ error: 'Invite email is not configured', skipped: true }),
-        {
-          status: 503,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      );
+      return json({ error: 'Invite email is not configured', skipped: true }, 503);
     }
 
-    const from = Deno.env.get('RESEND_FROM') ?? 'Peacock Studio <onboarding@resend.dev>';
+    const from = (Deno.env.get('RESEND_FROM') ?? 'Peacock Studio <onboarding@resend.dev>').trim();
     const html = `
       <div style="font-family: system-ui, sans-serif; line-height: 1.5; color: #0f172a;">
         <h1 style="font-size: 20px;">You're invited to ${escapeHtml(organizationName)}</h1>
@@ -120,25 +105,58 @@ serve(async (req) => {
 
     if (!resendRes.ok) {
       const text = await resendRes.text();
-      console.error('Resend error', text);
-      return new Response(JSON.stringify({ error: 'Email send failed', detail: text }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      console.error('Resend error', resendRes.status, text);
+      return json(
+        {
+          error: 'Email send failed',
+          detail: summarizeResendError(text, from, toEmail),
+        },
+        502,
+      );
     }
 
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return json({ ok: true }, 200);
   } catch (error) {
     console.error(error);
-    return new Response(JSON.stringify({ error: 'Internal error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return json({ error: 'Internal error' }, 500);
   }
 });
+
+function json(payload: Record<string, unknown>, status: number): Response {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+function summarizeResendError(raw: string, from: string, toEmail: string): string {
+  let message = raw;
+  try {
+    const parsed = JSON.parse(raw) as { message?: string; name?: string };
+    if (parsed.message) message = parsed.message;
+  } catch {
+    // keep raw text
+  }
+
+  const lower = message.toLowerCase();
+  if (
+    lower.includes('only send testing emails') ||
+    lower.includes('verify a domain') ||
+    from.includes('onboarding@resend.dev')
+  ) {
+    return (
+      `Resend rejected send to ${toEmail} from ${from}. ` +
+      'Verify your domain in Resend and set the RESEND_FROM secret to an address on that domain ' +
+      '(onboarding@resend.dev can only email your own Resend account address).'
+    );
+  }
+
+  if (lower.includes('invalid') && lower.includes('api')) {
+    return 'Resend API key is invalid. Check the RESEND_API_KEY secret.';
+  }
+
+  return message.slice(0, 400);
+}
 
 function escapeHtml(value: string): string {
   return value
