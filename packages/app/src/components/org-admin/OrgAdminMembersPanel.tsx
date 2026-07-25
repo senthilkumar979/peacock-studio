@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, UserPlus, Users } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { InviteMemberForm } from '@/components/org-admin/InviteMemberForm';
 import { MembersRoster } from '@/components/org-admin/MembersRoster';
@@ -12,12 +13,17 @@ import {
   InviteEmailNotConfiguredError,
   listOrganizationInvitations,
   listOrganizationMembers,
+  removeOrganizationMember,
   resendOrganizationInvitation,
   revokeOrganizationInvitation,
   sendOrgInviteEmail,
   setMemberStatus,
   updateMemberCapabilities,
 } from '@/cloud/repositories/organizationRepository';
+import {
+  fetchProfilesByClerkUserIds,
+  type UserProfile,
+} from '@/cloud/repositories/profileRepository';
 import type {
   MemberCapabilities,
   MemberRole,
@@ -37,7 +43,14 @@ interface OrgAdminMembersPanelProps {
   workspaceType: WorkspaceType;
   inviterName: string;
   currentClerkUserId: string;
+  currentUserEmail: string;
+  currentUserDisplayName: string;
 }
+
+type MemberConfirm =
+  | { kind: 'revoke'; member: OrganizationMemberRecord; displayEmail: string }
+  | { kind: 'remove'; member: OrganizationMemberRecord; displayEmail: string }
+  | null;
 
 export const OrgAdminMembersPanel = ({
   organizationId,
@@ -45,13 +58,17 @@ export const OrgAdminMembersPanel = ({
   workspaceType,
   inviterName,
   currentClerkUserId,
+  currentUserEmail,
+  currentUserDisplayName,
 }: OrgAdminMembersPanelProps) => {
   const [members, setMembers] = useState<OrganizationMemberRecord[]>([]);
   const [invites, setInvites] = useState<OrganizationInvitationRecord[]>([]);
+  const [profileByClerkId, setProfileByClerkId] = useState<Record<string, UserProfile>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
+  const [memberConfirm, setMemberConfirm] = useState<MemberConfirm>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -60,8 +77,12 @@ export const OrgAdminMembersPanel = ({
         listOrganizationMembers(organizationId),
         listOrganizationInvitations(organizationId),
       ]);
+      const profiles = await fetchProfilesByClerkUserIds(
+        memberRows.map((row) => row.clerkUserId),
+      );
       setMembers(memberRows);
       setInvites(inviteRows);
+      setProfileByClerkId(profiles);
       setError(null);
     } catch (err) {
       const classified = reportAppError('Failed to load members', err);
@@ -88,8 +109,6 @@ export const OrgAdminMembersPanel = ({
     } catch (err) {
       const classified = reportAppError('Members action failed', err);
       setError(classified.userMessage);
-      // Soft actions should toast themselves (notifyPromise / notifyError).
-      // Avoid double toasts here.
       throw err;
     } finally {
       setBusy(false);
@@ -238,59 +257,62 @@ export const OrgAdminMembersPanel = ({
       )}
 
       {workspaceType === 'team' ? (
-      <PendingInvitesSection
-        invites={invites}
-        busy={busy}
-        onResend={async (inviteId) => {
-          await runBusy(async () => {
-            const resent = await resendOrganizationInvitation(inviteId);
-            const inviteUrl = buildOrgInviteAcceptUrl(resent.token);
-            trackEvent(AnalyticsEvents.memberInviteResent, {
-              organization_id: organizationId,
-            });
-            try {
-              await sendOrgInviteEmail({
-                toEmail: resent.email,
-                organizationName,
-                inviterName,
-                inviteToken: resent.token,
-                expiresAt: resent.expiresAt,
+        <PendingInvitesSection
+          invites={invites}
+          busy={busy}
+          onResend={async (inviteId) => {
+            await runBusy(async () => {
+              const resent = await resendOrganizationInvitation(inviteId);
+              const inviteUrl = buildOrgInviteAcceptUrl(resent.token);
+              trackEvent(AnalyticsEvents.memberInviteResent, {
+                organization_id: organizationId,
               });
-              notifySuccess('Invitation resent', 'Expiry reset to 7 days from now.');
-            } catch (emailError) {
-              await copyTextToClipboard(inviteUrl);
-              if (emailError instanceof InviteEmailNotConfiguredError) {
-                notifyWarning(
-                  'Invite updated — email not configured',
-                  'Invite link copied. Send it manually.',
-                );
-              } else {
-                notifyWarning(
-                  'Invite updated — email failed',
-                  'Invite link copied. Share it manually.',
-                );
-                reportAppError('Resend invite email', emailError);
+              try {
+                await sendOrgInviteEmail({
+                  toEmail: resent.email,
+                  organizationName,
+                  inviterName,
+                  inviteToken: resent.token,
+                  expiresAt: resent.expiresAt,
+                });
+                notifySuccess('Invitation resent', 'Expiry reset to 7 days from now.');
+              } catch (emailError) {
+                await copyTextToClipboard(inviteUrl);
+                if (emailError instanceof InviteEmailNotConfiguredError) {
+                  notifyWarning(
+                    'Invite updated — email not configured',
+                    'Invite link copied. Send it manually.',
+                  );
+                } else {
+                  notifyWarning(
+                    'Invite updated — email failed',
+                    'Invite link copied. Share it manually.',
+                  );
+                  reportAppError('Resend invite email', emailError);
+                }
               }
-            }
-          });
-        }}
-        onRevoke={async (inviteId) => {
-          await runBusy(async () => {
-            await notifyPromise(revokeOrganizationInvitation(inviteId), {
-              loading: 'Revoking invitation…',
-              success: 'Invitation revoked',
-              context: 'Revoke organization invitation',
-              event: AnalyticsEvents.memberInviteRevoked,
-              eventProps: { organization_id: organizationId },
             });
-          });
-        }}
-      />
+          }}
+          onRevoke={async (inviteId) => {
+            await runBusy(async () => {
+              await notifyPromise(revokeOrganizationInvitation(inviteId), {
+                loading: 'Revoking invitation…',
+                success: 'Invitation revoked',
+                context: 'Revoke organization invitation',
+                event: AnalyticsEvents.memberInviteRevoked,
+                eventProps: { organization_id: organizationId },
+              });
+            });
+          }}
+        />
       ) : null}
 
       <MembersRoster
         members={members}
+        profileByClerkId={profileByClerkId}
         currentClerkUserId={currentClerkUserId}
+        currentUserEmail={currentUserEmail}
+        currentUserDisplayName={currentUserDisplayName}
         busy={busy}
         onUpdateCapabilities={async (memberId, capabilities) => {
           await runBusy(async () => {
@@ -307,20 +329,65 @@ export const OrgAdminMembersPanel = ({
             }
           });
         }}
-        onDisable={async (memberId) => {
-          await runBusy(async () => {
+        onRequestRevokeAccess={(member, displayEmail) =>
+          setMemberConfirm({ kind: 'revoke', member, displayEmail })
+        }
+        onRequestRemove={(member, displayEmail) =>
+          setMemberConfirm({ kind: 'remove', member, displayEmail })
+        }
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(memberConfirm)}
+        title={
+          memberConfirm?.kind === 'remove' ? 'Remove from organization?' : 'Revoke access?'
+        }
+        description={
+          memberConfirm?.kind === 'remove'
+            ? `Remove ${memberConfirm.displayEmail} from this organization? They will lose access immediately.`
+            : memberConfirm
+              ? `Revoke access for ${memberConfirm.displayEmail}? They will no longer be able to use this workspace until re-enabled.`
+              : undefined
+        }
+        confirmLabel={memberConfirm?.kind === 'remove' ? 'Remove member' : 'Revoke access'}
+        isDestructive
+        onCancel={() => setMemberConfirm(null)}
+        onConfirm={() => {
+          if (!memberConfirm) return;
+          const target = memberConfirm;
+          setMemberConfirm(null);
+          void runBusy(async () => {
+            if (target.kind === 'remove') {
+              await notifyPromise(
+                removeOrganizationMember(target.member.id).then(() =>
+                  refreshCloudMemberships(organizationId),
+                ),
+                {
+                  loading: 'Removing member…',
+                  success: 'Member removed',
+                  context: 'Remove organization member',
+                  event: AnalyticsEvents.memberStatusUpdated,
+                  eventProps: {
+                    organization_id: organizationId,
+                    member_id: target.member.id,
+                    status: 'removed',
+                  },
+                },
+              );
+              return;
+            }
             await notifyPromise(
-              setMemberStatus(memberId, 'disabled').then(() =>
+              setMemberStatus(target.member.id, 'disabled').then(() =>
                 refreshCloudMemberships(organizationId),
               ),
               {
-                loading: 'Disabling member…',
-                success: 'Member disabled',
+                loading: 'Revoking access…',
+                success: 'Access revoked',
                 context: 'Disable organization member',
                 event: AnalyticsEvents.memberStatusUpdated,
                 eventProps: {
                   organization_id: organizationId,
-                  member_id: memberId,
+                  member_id: target.member.id,
                   status: 'disabled',
                 },
               },

@@ -1,0 +1,6 @@
+# Peacock Studio Supabase config (functions only; local stack optional)
+
+[functions.send-org-invite]
+# Clerk third-party JWTs fail the legacy gateway verify_jwt check.
+# Auth is enforced inside the function via an authenticated RPC probe.
+verify_jwt = false

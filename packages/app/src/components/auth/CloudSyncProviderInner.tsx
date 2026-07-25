@@ -6,6 +6,7 @@ import {
   setCloudAuthContext,
   setCloudInitError,
   resolveClerkDisplayName,
+  resolveClerkNameParts,
 } from '@/cloud/authContext';
 import { fetchClerkSupabaseAccessToken } from '@/cloud/clerkSupabaseToken';
 import { resetCloudSyncState } from '@/cloud/cloudSyncState';
@@ -15,6 +16,7 @@ import {
   listMyMemberships,
   pickActiveMembership,
   setStoredActiveOrganizationId,
+  syncMyMembershipEmails,
 } from '@/cloud/repositories/organizationRepository';
 import { resetSupabaseClientCache } from '@/cloud/supabaseClient';
 import { setSessionAuthState } from '@/cloud/sessionState';
@@ -38,6 +40,7 @@ export const CloudSyncProviderInner = ({ children }: CloudSyncProviderInnerProps
 
   const userEmail = user?.primaryEmailAddress?.emailAddress?.trim() ?? '';
   const userDisplayName = resolveClerkDisplayName(user) ?? userEmail;
+  const { firstName: userFirstName, lastName: userLastName } = resolveClerkNameParts(user);
 
   useEffect(() => {
     let cancelled = false;
@@ -142,7 +145,16 @@ export const CloudSyncProviderInner = ({ children }: CloudSyncProviderInnerProps
           email: userEmail,
           clerkUserId: userId,
           displayName: userDisplayName,
+          firstName: userFirstName,
+          lastName: userLastName,
         });
+        if (cancelled) return;
+
+        try {
+          await syncMyMembershipEmails();
+        } catch {
+          // Non-fatal: roster still resolves emails from profiles client-side.
+        }
         if (cancelled) return;
 
         const memberships = await listMyMemberships();
@@ -179,7 +191,7 @@ export const CloudSyncProviderInner = ({ children }: CloudSyncProviderInnerProps
     return () => {
       cancelled = true;
     };
-  }, [isLoaded, isSignedIn, session, userId, userEmail, userDisplayName]);
+  }, [isLoaded, isSignedIn, session, userId, userEmail, userDisplayName, userFirstName, userLastName]);
 
   return (
     <>

@@ -276,6 +276,21 @@ export async function setMemberStatus(
   if (error) throw error;
 }
 
+export async function removeOrganizationMember(memberId: string): Promise<void> {
+  const supabase = getAuthenticatedSupabaseClient();
+  const { error } = await supabase.rpc('remove_organization_member', {
+    p_member_id: memberId,
+  });
+  if (error) throw error;
+}
+
+/** Repair placeholder emails on the caller's membership rows from JWT/profile. */
+export async function syncMyMembershipEmails(): Promise<void> {
+  const supabase = getAuthenticatedSupabaseClient();
+  const { error } = await supabase.rpc('sync_my_membership_emails');
+  if (error) throw error;
+}
+
 export interface OrgContributorRow {
   email: string;
   displayName: string;

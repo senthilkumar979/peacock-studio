@@ -9,6 +9,7 @@ import {
   createPersonalWorkspace,
   createTeamWorkspace,
   listMyPendingInvitations,
+  syncMyMembershipEmails,
 } from '@/cloud/repositories/organizationRepository';
 import { DASHBOARD_PATH, LANDING_PATH, ORG_ADMIN_PATH } from '@/constants/routes';
 import { useCloudAuthContext, useNeedsWorkspaceOnboarding } from '@/hooks/useOrganization';
@@ -128,6 +129,11 @@ export const WorkspaceChooserPage = () => {
     try {
       const orgId = await notifyPromise(
         createPersonalWorkspace(context?.userDisplayName ?? null).then(async (id) => {
+          try {
+            await syncMyMembershipEmails();
+          } catch {
+            // Roster still resolves email from Clerk/profile client-side.
+          }
           await refreshCloudMemberships(id);
           return id;
         }),
@@ -158,6 +164,11 @@ export const WorkspaceChooserPage = () => {
     try {
       const orgId = await notifyPromise(
         createTeamWorkspace(companyName.trim(), normalizeWebsiteUrl(website)).then(async (id) => {
+          try {
+            await syncMyMembershipEmails();
+          } catch {
+            // Roster still resolves email from Clerk/profile client-side.
+          }
           await refreshCloudMemberships(id);
           return id;
         }),

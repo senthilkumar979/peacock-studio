@@ -132,6 +132,15 @@ export function resolveClerkDisplayName(user: {
   return user?.primaryEmailAddress?.emailAddress?.trim() || null;
 }
 
+export function resolveClerkNameParts(user: {
+  firstName?: string | null;
+  lastName?: string | null;
+} | null | undefined): { firstName: string | null; lastName: string | null } {
+  const firstName = user?.firstName?.trim() || null;
+  const lastName = user?.lastName?.trim() || null;
+  return { firstName, lastName };
+}
+
 export function buildCloudAuthContext(input: {
   clerkUserId: string;
   userEmail: string;

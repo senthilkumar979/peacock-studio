@@ -1,28 +1,48 @@
-import { Shield, UserMinus, UserRound } from 'lucide-react';
+import { UserRound } from 'lucide-react';
+import type { UserProfile } from '@/cloud/repositories/profileRepository';
 import type {
   MemberCapabilities,
   OrganizationMemberRecord,
 } from '@/cloud/types/organization';
-import { CapabilityChipGrid } from '@/components/org-admin/CapabilityChipGrid';
-import { memberInitials, roleLabel } from '@/components/org-admin/memberAdminHelpers';
+import { MembersAccessTable } from '@/components/org-admin/MembersAccessTable';
+import { SoloMemberCard } from '@/components/org-admin/SoloMemberCard';
+import {
+  resolveMemberDisplayEmail,
+  resolveMemberDisplayName,
+} from '@/components/org-admin/memberAdminHelpers';
 
 interface MembersRosterProps {
   members: OrganizationMemberRecord[];
+  profileByClerkId: Record<string, UserProfile>;
   currentClerkUserId: string;
+  currentUserEmail: string;
+  currentUserDisplayName: string;
   busy: boolean;
   onUpdateCapabilities: (memberId: string, capabilities: MemberCapabilities) => Promise<void>;
-  onDisable: (memberId: string) => Promise<void>;
+  onRequestRevokeAccess: (member: OrganizationMemberRecord, displayEmail: string) => void;
+  onRequestRemove: (member: OrganizationMemberRecord, displayEmail: string) => void;
 }
 
 export const MembersRoster = ({
   members,
+  profileByClerkId,
   currentClerkUserId,
+  currentUserEmail,
+  currentUserDisplayName,
   busy,
   onUpdateCapabilities,
-  onDisable,
+  onRequestRevokeAccess,
+  onRequestRemove,
 }: MembersRosterProps) => {
   const active = members.filter((m) => m.status === 'active');
   const disabled = members.filter((m) => m.status === 'disabled');
+  const isSolo = members.length === 1;
+  const currentUser = {
+    clerkUserId: currentClerkUserId,
+    email: currentUserEmail,
+    displayName: currentUserDisplayName,
+  };
+  const solo = members[0];
 
   return (
     <section className="rounded-2xl border border-slate-200/80 bg-white shadow-sm">
@@ -41,102 +61,26 @@ export const MembersRoster = ({
         </div>
       </div>
 
-      <ul className="divide-y divide-slate-100">
-        {members.map((member) => {
-          const isYou = member.clerkUserId === currentClerkUserId;
-          const isAdmin = member.role === 'admin';
-          const isDisabled = member.status === 'disabled';
-
-          return (
-            <li
-              key={member.id}
-              className={`px-5 py-5 sm:px-6 ${isDisabled ? 'bg-slate-50/70 opacity-80' : ''}`}
-            >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white shadow-md ${
-                      isAdmin
-                        ? 'bg-gradient-to-br from-peacock-500 to-peacock-700 shadow-peacock-500/25'
-                        : 'bg-gradient-to-br from-slate-500 to-slate-700 shadow-slate-500/20'
-                    }`}
-                  >
-                    {memberInitials(member.email)}
-                  </span>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate font-semibold text-slate-900">{member.email}</p>
-                      {isYou ? (
-                        <span className="rounded-full bg-peacock-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-peacock-700 ring-1 ring-peacock-100">
-                          You
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ring-1 ${
-                          isAdmin
-                            ? 'bg-peacock-50 text-peacock-800 ring-peacock-100'
-                            : 'bg-slate-100 text-slate-600 ring-slate-200'
-                        }`}
-                      >
-                        {isAdmin ? (
-                          <Shield className="h-3 w-3" aria-hidden />
-                        ) : (
-                          <UserRound className="h-3 w-3" aria-hidden />
-                        )}
-                        {roleLabel(member.role)}
-                      </span>
-                      <span
-                        className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${
-                          isDisabled
-                            ? 'bg-rose-50 text-rose-700 ring-rose-100'
-                            : 'bg-emerald-50 text-emerald-700 ring-emerald-100'
-                        }`}
-                      >
-                        {isDisabled ? 'Disabled' : 'Active'}
-                      </span>
-                      {member.joinedAt ? (
-                        <span className="text-[11px] text-slate-400">
-                          Joined{' '}
-                          {new Date(member.joinedAt).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-
-                {!isYou && !isDisabled ? (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void onDisable(member.id)}
-                    className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-xl border border-rose-200 bg-white px-3 py-2 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-rose-50 disabled:opacity-60"
-                  >
-                    <UserMinus className="h-3.5 w-3.5" aria-hidden />
-                    Disable access
-                  </button>
-                ) : null}
-              </div>
-
-              <div className="mt-4">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                  Capabilities
-                </p>
-                <CapabilityChipGrid
-                  value={member.capabilities}
-                  disabled={busy || isDisabled}
-                  onChange={(next) => void onUpdateCapabilities(member.id, next)}
-                />
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      {isSolo && solo ? (
+        <SoloMemberCard
+          member={solo}
+          displayName={resolveMemberDisplayName(solo, profileByClerkId, currentUser)}
+          displayEmail={resolveMemberDisplayEmail(solo, profileByClerkId, currentUser)}
+          currentClerkUserId={currentClerkUserId}
+          busy={busy}
+          onUpdateCapabilities={onUpdateCapabilities}
+        />
+      ) : (
+        <MembersAccessTable
+          members={members}
+          profileByClerkId={profileByClerkId}
+          currentUser={currentUser}
+          busy={busy}
+          onUpdateCapabilities={onUpdateCapabilities}
+          onRequestRevokeAccess={onRequestRevokeAccess}
+          onRequestRemove={onRequestRemove}
+        />
+      )}
     </section>
   );
 };

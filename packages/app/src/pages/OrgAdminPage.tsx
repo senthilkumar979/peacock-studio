@@ -76,6 +76,8 @@ export const OrgAdminPage = () => {
           workspaceType={context.workspaceType === 'team' ? 'team' : 'personal'}
           inviterName={context.userDisplayName}
           currentClerkUserId={context.clerkUserId}
+          currentUserEmail={context.userEmail}
+          currentUserDisplayName={context.userDisplayName}
         />
       ) : null}
       {tab === 'activity' ? <OrgAdminActivityTab organizationId={organizationId} /> : null}

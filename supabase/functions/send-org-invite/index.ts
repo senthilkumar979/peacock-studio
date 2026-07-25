@@ -1,5 +1,6 @@
 // Supabase Edge Function: send organization invite emails via Resend.
-// Deploy: supabase functions deploy send-org-invite
+// Deploy with verify_jwt=false — Clerk third-party JWTs fail the legacy gateway check.
+// Auth is validated inside by calling an authenticated RPC with the caller's Bearer token.
 // Secrets: RESEND_API_KEY, APP_ORIGIN (e.g. https://app.example.com), RESEND_FROM
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
@@ -25,6 +26,32 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(JSON.stringify({ error: 'Server misconfigured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Prove the caller has a valid cloud session (Clerk JWT accepted by PostgREST).
+    const authProbe = await fetch(`${supabaseUrl}/rest/v1/rpc/list_my_memberships`, {
+      method: 'POST',
+      headers: {
+        Authorization: authHeader,
+        apikey: supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: '{}',
+    });
+    if (!authProbe.ok) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -94,7 +121,7 @@ serve(async (req) => {
     if (!resendRes.ok) {
       const text = await resendRes.text();
       console.error('Resend error', text);
-      return new Response(JSON.stringify({ error: 'Email send failed' }), {
+      return new Response(JSON.stringify({ error: 'Email send failed', detail: text }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
