@@ -1,4 +1,11 @@
 import {
+  ImageTooLargeError,
+  blobToDataUrl,
+  compressImageToMaxBytes,
+  formatMaxImageLabel,
+  isSvgImageBlob,
+} from '@peacock/shared';
+import {
   ALLOWED_STEP_IMAGE_EXTENSIONS,
   ALLOWED_STEP_IMAGE_MIME_TYPES,
   MAX_STEP_IMAGE_BYTES,
@@ -16,25 +23,23 @@ export function isAllowedStepImageFile(file: File): boolean {
   return hasAllowedExtension || hasAllowedMime;
 }
 
-export function readStepImageDataUrl(file: File): Promise<string> {
+export async function readStepImageDataUrl(file: File): Promise<string> {
   if (!isAllowedStepImageFile(file)) {
     return Promise.reject(new Error('Only JPEG, JPG, PNG, and SVG images are allowed.'));
   }
 
-  if (file.size > MAX_STEP_IMAGE_BYTES) {
-    return Promise.reject(new Error('Image must be 5 MB or smaller.'));
+  if (isSvgImageBlob(file) && file.size > MAX_STEP_IMAGE_BYTES) {
+    throw new ImageTooLargeError(MAX_STEP_IMAGE_BYTES);
   }
 
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result !== 'string') {
-        reject(new Error('Could not read image file.'));
-        return;
-      }
-      resolve(reader.result);
-    };
-    reader.onerror = () => reject(reader.error ?? new Error('Could not read image file.'));
-    reader.readAsDataURL(file);
-  });
+  try {
+    const prepared = await compressImageToMaxBytes(file, MAX_STEP_IMAGE_BYTES);
+    return blobToDataUrl(prepared);
+  } catch (error) {
+    if (error instanceof ImageTooLargeError) throw error;
+    if (error instanceof Error) throw error;
+    throw new Error(
+      `Could not process image. Use a file ${formatMaxImageLabel(MAX_STEP_IMAGE_BYTES)} or smaller.`,
+    );
+  }
 }

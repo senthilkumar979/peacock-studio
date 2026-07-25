@@ -45,7 +45,10 @@ export const StepImageUpload = ({ step }: StepImageUploadProps) => {
   return (
     <div className="flex flex-col gap-2 text-sm">
       <span className="font-medium text-slate-700">Step image</span>
-      <p className="text-xs text-slate-500">JPEG, JPG, PNG, or SVG. Replaces the captured screenshot for this step.</p>
+      <p className="text-xs text-slate-500">
+        JPEG, JPG, PNG, or SVG. Max 2 MB — larger raster images are compressed automatically.
+        Replaces the captured screenshot for this step.
+      </p>
 
       <input
         ref={fileInputRef}

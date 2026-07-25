@@ -115,6 +115,9 @@ export const AcceptInvitePage = lazy(() =>
 export const OrgAdminPage = lazy(() =>
   import('@/pages/OrgAdminPage').then((m) => ({ default: m.OrgAdminPage })),
 );
+export const HealthCheckerPage = lazy(() =>
+  import('@/pages/HealthCheckerPage').then((m) => ({ default: m.HealthCheckerPage })),
+);
 export const LibraryLayout = lazy(() =>
   import('@/layouts/LibraryLayout').then((m) => ({ default: m.LibraryLayout })),
 );

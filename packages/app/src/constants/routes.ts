@@ -27,6 +27,8 @@ export const FLOW_MAPS_PATH = '/flow-maps' as const;
 export const WORKSPACE_ONBOARDING_PATH = '/onboarding/workspace' as const;
 export const ACCEPT_INVITE_PATH = '/accept-invite' as const;
 export const ORG_ADMIN_PATH = '/org/admin' as const;
+/** Client-side diagnostics for pages, connections, and logs */
+export const HEALTH_CHECKER_PATH = '/health' as const;
 export const ERROR_PATH = '/error' as const;
 
 export function getTestCasesDetailPath(documentId: string): string {

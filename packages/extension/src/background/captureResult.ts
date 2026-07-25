@@ -1,4 +1,4 @@
-import { createId } from '@peacock/shared';
+import { compressImageToMaxBytes, createId } from '@peacock/shared';
 import { saveCaptureResult } from '../storage/db';
 
 export type ScreenshotToolMode = 'full-page' | 'visible' | 'selection';
@@ -88,9 +88,10 @@ export async function stitchFullPageCaptures(
 
 export async function openCaptureResult(blob: Blob, mode: ScreenshotToolMode): Promise<void> {
   const captureId = createId();
+  const compressed = await compressImageToMaxBytes(blob);
   await saveCaptureResult({
     id: captureId,
-    blob,
+    blob: compressed,
     mode,
     createdAt: Date.now(),
   });

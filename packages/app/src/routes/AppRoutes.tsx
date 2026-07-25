@@ -9,6 +9,7 @@ import {
   ERROR_PATH,
   FLOW_DOCS_PATH,
   FLOW_MAPS_PATH,
+  HEALTH_CHECKER_PATH,
   LANDING_PATH,
   EXTENSION_INSTALL_PATH,
   ORG_ADMIN_PATH,
@@ -34,6 +35,7 @@ import {
   FlowDocsLibraryPage,
   FlowMapsDetailPage,
   FlowMapsLibraryPage,
+  HealthCheckerPage,
   LegacyRouteRedirect,
   LibraryLayout,
   NewProductTour,
@@ -138,6 +140,7 @@ export const App = () => {
                   )
                 }
               />
+              <Route path={HEALTH_CHECKER_PATH} element={<HealthCheckerPage />} />
             </Route>
             <Route path="/compare" element={<CompareDocs />} />
             <Route path="/editor" element={<Editor />} />

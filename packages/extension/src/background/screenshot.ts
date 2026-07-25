@@ -1,4 +1,4 @@
-import { createId } from '@peacock/shared';
+import { compressImageToMaxBytes, createId } from '@peacock/shared';
 import { db } from '../storage/db';
 import { dataUrlToBlob, sleep } from '../utils/blob';
 import { getRecordingStatus } from './recordingState';
@@ -43,9 +43,10 @@ export async function captureScreenshot(tabId: number, windowId?: number): Promi
   }
 
   const blob = await captureVisibleScreenshotBlob(tabId, windowId);
+  const compressed = await compressImageToMaxBytes(blob);
   const id = createId();
 
-  await db.screenshots.add({ id, blob, tabId, timestamp: Date.now() });
+  await db.screenshots.add({ id, blob: compressed, tabId, timestamp: Date.now() });
 
   return id;
 }

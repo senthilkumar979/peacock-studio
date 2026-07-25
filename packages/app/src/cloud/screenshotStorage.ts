@@ -1,3 +1,4 @@
+import { compressImageToMaxBytes } from '@peacock/shared';
 import {
   SCREENSHOTS_BUCKET,
   SIGNED_URL_TTL_SECONDS,
@@ -146,8 +147,9 @@ export async function syncDocumentScreenshots(
   for (const [screenshotId, url] of entries) {
     if (!isInlineScreenshotUrl(url)) continue;
 
-    const blob = await inlineScreenshotToBlob(url);
-    if (!blob) continue;
+    const rawBlob = await inlineScreenshotToBlob(url);
+    if (!rawBlob) continue;
+    const blob = await compressImageToMaxBytes(rawBlob);
     const contentHash = await sha256HexFromBlob(blob);
 
     const existing = await findExistingAssetByHash(organizationId, contentHash);

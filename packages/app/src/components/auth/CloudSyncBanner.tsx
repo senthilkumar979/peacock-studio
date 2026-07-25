@@ -20,13 +20,18 @@ export const CloudSyncBanner = () => {
   }, [snapshot.phase, snapshot.exceedsFreeLimit]);
 
   const dismissSuccess = () => {
-    setCloudSyncState({ phase: 'idle', message: null });
+    setCloudSyncState({ phase: 'idle', message: null, visible: false });
   };
+
+  const showSyncing = snapshot.visible && snapshot.phase === 'syncing';
+  const showSuccess =
+    snapshot.visible && snapshot.phase === 'success' && snapshot.importedDocuments > 0;
+  const showError = snapshot.visible && snapshot.phase === 'error' && Boolean(snapshot.message);
 
   return (
     <>
       <AnimatePresence>
-        {snapshot.phase === 'syncing' ? (
+        {showSyncing ? (
           <motion.div
             key="syncing"
             initial={{ opacity: 0, y: -12 }}
@@ -53,7 +58,7 @@ export const CloudSyncBanner = () => {
           </motion.div>
         ) : null}
 
-        {snapshot.phase === 'success' && snapshot.importedDocuments > 0 ? (
+        {showSuccess ? (
           <motion.div
             key="success"
             initial={{ opacity: 0, y: -12 }}
@@ -74,7 +79,7 @@ export const CloudSyncBanner = () => {
           </motion.div>
         ) : null}
 
-        {snapshot.phase === 'error' && snapshot.message ? (
+        {showError ? (
           <motion.div
             key="error"
             initial={{ opacity: 0, y: -12 }}

@@ -13,6 +13,7 @@ export * from './types/capture';
 export * from './constants/limits';
 export * from './constants/manualStep';
 export * from './constants/privacy';
+export * from './utils/compressImage';
 export * from './utils/coordinates';
 export * from './utils/masking';
 export * from './utils/classifyField';
