@@ -51,6 +51,7 @@ export const OrgAdminMembersPanel = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showInviteForm, setShowInviteForm] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -89,6 +90,7 @@ export const OrgAdminMembersPanel = ({
       setError(classified.userMessage);
       // Soft actions should toast themselves (notifyPromise / notifyError).
       // Avoid double toasts here.
+      throw err;
     } finally {
       setBusy(false);
     }
@@ -163,9 +165,10 @@ export const OrgAdminMembersPanel = ({
           Personal workspaces are single-user. Create or switch to a team workspace to invite
           members and manage roles.
         </div>
-      ) : (
+      ) : showInviteForm ? (
         <InviteMemberForm
           busy={busy}
+          onCancel={() => setShowInviteForm(false)}
           onInvite={async (input: {
             email: string;
             role: MemberRole;
@@ -210,9 +213,28 @@ export const OrgAdminMembersPanel = ({
                   reportAppError('Send invite email', emailError);
                 }
               }
+              setShowInviteForm(false);
             });
           }}
         />
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">Invite teammates</p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Send a 7-day invitation with role and permissions.
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setShowInviteForm(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-peacock-600 to-peacock-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-peacock-600/20 transition hover:brightness-105 disabled:opacity-60"
+          >
+            <UserPlus className="h-4 w-4" aria-hidden />
+            Invite
+          </button>
+        </div>
       )}
 
       {workspaceType === 'team' ? (

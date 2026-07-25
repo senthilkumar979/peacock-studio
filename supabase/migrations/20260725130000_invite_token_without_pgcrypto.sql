@@ -1,4 +1,5 @@
--- Team workspaces only: personal workspaces cannot invite members.
+-- Avoid pgcrypto entirely: gen_random_bytes is not available on some hosted Postgres
+-- setups even after CREATE EXTENSION. Use core gen_random_uuid() instead.
 
 create or replace function public.create_organization_invitation(
   p_organization_id uuid,
@@ -70,6 +71,7 @@ begin
     and accepted_at is null
     and revoked_at is null;
 
+  -- 64 hex chars from two UUIDs (built-in; no pgcrypto required)
   invite_token := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
   expires := now() + interval '7 days';
 
@@ -105,58 +107,3 @@ begin
   );
 end;
 $$;
-
-create or replace function public.resend_organization_invitation(p_invitation_id uuid)
-returns jsonb
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  inv public.organization_invitations;
-  new_expires timestamptz;
-  org_workspace text;
-begin
-  select * into inv from public.organization_invitations where id = p_invitation_id;
-  if inv.id is null then
-    raise exception 'Invitation not found';
-  end if;
-  if not public.is_org_admin(inv.organization_id) then
-    raise exception 'Only admins can resend invitations';
-  end if;
-
-  select workspace_type into org_workspace
-  from public.organizations
-  where id = inv.organization_id;
-
-  if org_workspace is distinct from 'team' then
-    raise exception 'Invites are only available for team workspaces. Create or switch to a team workspace to invite members.';
-  end if;
-
-  if inv.accepted_at is not null then
-    raise exception 'Invitation already accepted';
-  end if;
-  if inv.revoked_at is not null then
-    raise exception 'Invitation was revoked';
-  end if;
-
-  new_expires := now() + interval '7 days';
-
-  update public.organization_invitations
-  set
-    expires_at = new_expires,
-    resent_at = now(),
-    updated_at = now()
-  where id = p_invitation_id;
-
-  return jsonb_build_object(
-    'id', inv.id,
-    'token', inv.token,
-    'email', inv.email,
-    'expiresAt', new_expires
-  );
-end;
-$$;
-
-grant execute on function public.create_organization_invitation(uuid, text, text, jsonb) to authenticated;
-grant execute on function public.resend_organization_invitation(uuid) to authenticated;

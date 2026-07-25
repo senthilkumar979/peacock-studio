@@ -20,6 +20,11 @@ import { AnalyticsEvents } from '@/analytics/events';
 
 type ChooserMode = 'choose' | 'team-form';
 
+interface TeamFormErrors {
+  companyName?: string;
+  website?: string;
+}
+
 function formatExpiry(expiresAt: string): string {
   const ms = new Date(expiresAt).getTime() - Date.now();
   if (ms <= 0) return 'Expired';
@@ -28,6 +33,35 @@ function formatExpiry(expiresAt: string): string {
   if (days > 0) return `${days}d ${hours}h left`;
   const minutes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
   return hours > 0 ? `${hours}h ${minutes}m left` : `${minutes}m left`;
+}
+
+function normalizeWebsiteUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+function isValidWebsiteUrl(raw: string): boolean {
+  try {
+    const parsed = new URL(normalizeWebsiteUrl(raw));
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function validateTeamForm(companyName: string, website: string): TeamFormErrors {
+  const errors: TeamFormErrors = {};
+  if (!companyName.trim()) {
+    errors.companyName = 'Company name is required.';
+  }
+  if (!website.trim()) {
+    errors.website = 'Website is required.';
+  } else if (!isValidWebsiteUrl(website)) {
+    errors.website = 'Enter a valid website URL (e.g. https://example.com).';
+  }
+  return errors;
 }
 
 export const WorkspaceChooserPage = () => {
@@ -43,6 +77,7 @@ export const WorkspaceChooserPage = () => {
   const [website, setWebsite] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<TeamFormErrors>({});
 
   useEffect(() => {
     if (sessionMode !== 'onboarding' || !context) {
@@ -114,11 +149,15 @@ export const WorkspaceChooserPage = () => {
 
   const handleTeam = async (event: React.FormEvent) => {
     event.preventDefault();
+    const nextFieldErrors = validateTeamForm(companyName, website);
+    setFieldErrors(nextFieldErrors);
+    if (nextFieldErrors.companyName || nextFieldErrors.website) return;
+
     setBusy(true);
     setError(null);
     try {
       const orgId = await notifyPromise(
-        createTeamWorkspace(companyName, website).then(async (id) => {
+        createTeamWorkspace(companyName.trim(), normalizeWebsiteUrl(website)).then(async (id) => {
           await refreshCloudMemberships(id);
           return id;
         }),
@@ -246,28 +285,49 @@ export const WorkspaceChooserPage = () => {
             </button>
           </div>
         ) : (
-          <form onSubmit={(e) => void handleTeam(e)} className="mt-6 space-y-4">
-            <FormField label="Company name" htmlFor="company-name">
+          <form noValidate onSubmit={(e) => void handleTeam(e)} className="mt-6 space-y-4">
+            <FormField label="Company name" htmlFor="company-name" error={fieldErrors.companyName}>
               <FieldInput
                 id="company-name"
-                required
                 value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
+                hasError={Boolean(fieldErrors.companyName)}
+                onChange={(e) => {
+                  setCompanyName(e.target.value);
+                  if (fieldErrors.companyName) {
+                    setFieldErrors((prev) => ({ ...prev, companyName: undefined }));
+                  }
+                }}
                 placeholder="Acme Inc."
+                autoComplete="organization"
               />
             </FormField>
-            <FormField label="Website" htmlFor="website">
+            <FormField label="Website" htmlFor="website" error={fieldErrors.website}>
               <FieldInput
                 id="website"
-                required
-                type="url"
+                type="text"
+                inputMode="url"
                 value={website}
-                onChange={(e) => setWebsite(e.target.value)}
+                hasError={Boolean(fieldErrors.website)}
+                onChange={(e) => {
+                  setWebsite(e.target.value);
+                  if (fieldErrors.website) {
+                    setFieldErrors((prev) => ({ ...prev, website: undefined }));
+                  }
+                }}
                 placeholder="https://example.com"
+                autoComplete="url"
               />
             </FormField>
             <div className="flex gap-2">
-              <Button variant="secondary" disabled={busy} onClick={() => setMode('choose')}>
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={busy}
+                onClick={() => {
+                  setMode('choose');
+                  setFieldErrors({});
+                }}
+              >
                 Back
               </Button>
               <Button type="submit" disabled={busy} className="font-semibold">
