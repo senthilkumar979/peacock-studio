@@ -115,8 +115,14 @@ export const AcceptInvitePage = lazy(() =>
 export const OrgAdminPage = lazy(() =>
   import('@/pages/OrgAdminPage').then((m) => ({ default: m.OrgAdminPage })),
 );
+export const PlatformAdminPage = lazy(() =>
+  import('@/pages/PlatformAdminPage').then((m) => ({ default: m.PlatformAdminPage })),
+);
 export const HealthCheckerPage = lazy(() =>
   import('@/pages/HealthCheckerPage').then((m) => ({ default: m.HealthCheckerPage })),
+);
+export const ApiDocsPage = lazy(() =>
+  import('@/pages/ApiDocsPage').then((m) => ({ default: m.ApiDocsPage })),
 );
 export const LibraryLayout = lazy(() =>
   import('@/layouts/LibraryLayout').then((m) => ({ default: m.LibraryLayout })),

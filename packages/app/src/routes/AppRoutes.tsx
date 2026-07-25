@@ -5,6 +5,7 @@ import { WorkspaceOnboardingGate } from '@/components/auth/WorkspaceOnboardingGa
 import { RouteDocumentMeta } from '@/seo/RouteDocumentMeta';
 import {
   ACCEPT_INVITE_PATH,
+  API_DOCS_PATH,
   DASHBOARD_PATH,
   ERROR_PATH,
   FLOW_DOCS_PATH,
@@ -13,6 +14,7 @@ import {
   LANDING_PATH,
   EXTENSION_INSTALL_PATH,
   ORG_ADMIN_PATH,
+  PLATFORM_ADMIN_PATH,
   PLAYWRIGHT_TESTS_PATH,
   PRICING_PATH,
   PRIVACY_PATH,
@@ -25,6 +27,7 @@ import { Landing } from '@/pages/Landing';
 import { isCloudSyncEnabled, isCloudSyncFlagEnabled } from '@/cloud/config';
 import {
   AcceptInvitePage,
+  ApiDocsPage,
   CaptureEditor,
   CaptureEditorLegacyRedirect,
   CompareDocs,
@@ -40,6 +43,7 @@ import {
   LibraryLayout,
   NewProductTour,
   OrgAdminPage,
+  PlatformAdminPage,
   Player,
   PlaywrightTestsDetailPage,
   PlaywrightTestsLibraryPage,
@@ -140,7 +144,18 @@ export const App = () => {
                   )
                 }
               />
+              <Route
+                path={PLATFORM_ADMIN_PATH}
+                element={
+                  isCloudSyncEnabled() ? (
+                    <PlatformAdminPage />
+                  ) : (
+                    <Navigate to={DASHBOARD_PATH} replace />
+                  )
+                }
+              />
               <Route path={HEALTH_CHECKER_PATH} element={<HealthCheckerPage />} />
+              <Route path={API_DOCS_PATH} element={<ApiDocsPage />} />
             </Route>
             <Route path="/compare" element={<CompareDocs />} />
             <Route path="/editor" element={<Editor />} />

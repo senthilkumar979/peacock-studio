@@ -59,7 +59,7 @@ export const ShareLinkPanel = ({
         {accessMode === 'readonly'
           ? usesTokenLinks
             ? requiresAuth
-              ? 'Viewers must sign in with a Peacock account before content loads.'
+              ? 'Viewers must be signed-in members of this workspace before content loads.'
               : 'Anyone with the link can view until it expires or is revoked.'
             : 'Viewers can read the guide but cannot edit it.'
           : usesTokenLinks

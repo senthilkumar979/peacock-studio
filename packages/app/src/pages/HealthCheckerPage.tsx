@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Activity,
   ClipboardCopy,
@@ -7,11 +7,11 @@ import {
   LayoutGrid,
   RefreshCw,
   ScrollText,
-} from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { HealthCheckList } from '@/components/health/HealthCheckList';
-import { HealthOverviewPanel } from '@/components/health/HealthOverviewPanel';
-import { useHealthChecks } from '@/hooks/useHealthChecks';
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { HealthCheckList } from "@/components/health/HealthCheckList";
+import { HealthOverviewPanel } from "@/components/health/HealthOverviewPanel";
+import { useHealthChecks } from "@/hooks/useHealthChecks";
 import {
   DASHBOARD_PATH,
   FLOW_DOCS_PATH,
@@ -19,34 +19,37 @@ import {
   PLAYWRIGHT_TESTS_PATH,
   PRODUCT_TOURS_PATH,
   TEST_CASES_PATH,
-} from '@/constants/routes';
+} from "@/constants/routes";
 
-type HealthTab = 'overview' | 'pages' | 'connections' | 'logs';
+type HealthTab = "overview" | "pages" | "connections" | "logs";
 
 const PAGE_HREFS: Record<string, string> = {
-  'page-dashboard': DASHBOARD_PATH,
-  'page-tours': PRODUCT_TOURS_PATH,
-  'page-flow-docs': FLOW_DOCS_PATH,
-  'page-test-cases': TEST_CASES_PATH,
-  'page-playwright': PLAYWRIGHT_TESTS_PATH,
-  'page-flow-maps': FLOW_MAPS_PATH,
+  "page-dashboard": DASHBOARD_PATH,
+  "page-tours": PRODUCT_TOURS_PATH,
+  "page-flow-docs": FLOW_DOCS_PATH,
+  "page-test-cases": TEST_CASES_PATH,
+  "page-playwright": PLAYWRIGHT_TESTS_PATH,
+  "page-flow-maps": FLOW_MAPS_PATH,
 };
 
 const TABS = [
-  { id: 'overview', label: 'Overview', icon: Activity },
-  { id: 'pages', label: 'Pages', icon: LayoutGrid },
-  { id: 'connections', label: 'Connections', icon: Link2 },
-  { id: 'logs', label: 'Logs', icon: ScrollText },
+  { id: "overview", label: "Overview", icon: Activity },
+  { id: "pages", label: "Pages", icon: LayoutGrid },
+  { id: "connections", label: "Connections", icon: Link2 },
+  { id: "logs", label: "Logs", icon: ScrollText },
 ] as const;
 
 export const HealthCheckerPage = () => {
-  const { results, isRunning, ranAt, error, refresh, copyReport } = useHealthChecks();
-  const [tab, setTab] = useState<HealthTab>('overview');
+  const { results, isRunning, ranAt, error, refresh, copyReport } =
+    useHealthChecks();
+  const [tab, setTab] = useState<HealthTab>("overview");
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
 
   const handleCopy = async () => {
     const ok = await copyReport();
-    setCopyMessage(ok ? 'Report copied to clipboard.' : 'Could not copy report.');
+    setCopyMessage(
+      ok ? "Report copied to clipboard." : "Could not copy report.",
+    );
     window.setTimeout(() => setCopyMessage(null), 2500);
   };
 
@@ -60,20 +63,32 @@ export const HealthCheckerPage = () => {
             Health Checker
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-500">
-            Check library pages, cloud and local connections, and client diagnostic logs.
+            Check library pages, cloud and local connections, and client
+            diagnostic logs.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={() => void handleCopy()} disabled={!ranAt}>
+          <Button
+            variant="secondary"
+            className="flex"
+            size="sm"
+            onClick={() => void handleCopy()}
+            disabled={!ranAt}
+          >
             <ClipboardCopy className="mr-1.5 h-4 w-4" aria-hidden />
             Copy report
           </Button>
-          <Button variant="primary" size="sm" onClick={refresh} disabled={isRunning}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={refresh}
+            disabled={isRunning}
+          >
             <RefreshCw
-              className={`mr-1.5 h-4 w-4 ${isRunning ? 'animate-spin' : ''}`}
+              className={`mr-1.5 h-4 w-4 ${isRunning ? "animate-spin" : ""}`}
               aria-hidden
             />
-            {isRunning ? 'Checking…' : 'Re-run checks'}
+            {isRunning ? "Checking…" : "Re-run checks"}
           </Button>
         </div>
       </div>
@@ -97,8 +112,8 @@ export const HealthCheckerPage = () => {
             onClick={() => setTab(id)}
             className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
               tab === id
-                ? 'bg-white text-peacock-700 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? "bg-white text-peacock-700 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
             <Icon className="h-4 w-4" aria-hidden />
@@ -107,10 +122,14 @@ export const HealthCheckerPage = () => {
         ))}
       </div>
 
-      {tab === 'overview' ? (
-        <HealthOverviewPanel results={results} isRunning={isRunning} ranAt={ranAt} />
+      {tab === "overview" ? (
+        <HealthOverviewPanel
+          results={results}
+          isRunning={isRunning}
+          ranAt={ranAt}
+        />
       ) : null}
-      {tab === 'pages' ? (
+      {tab === "pages" ? (
         <HealthCheckList
           title="Pages"
           description="Library shell routes and whether session data can load."
@@ -119,7 +138,7 @@ export const HealthCheckerPage = () => {
           hrefById={PAGE_HREFS}
         />
       ) : null}
-      {tab === 'connections' ? (
+      {tab === "connections" ? (
         <HealthCheckList
           title="Connections"
           description="Extension bridge, IndexedDB, cloud config, Supabase, and observability."
@@ -127,7 +146,7 @@ export const HealthCheckerPage = () => {
           results={results}
         />
       ) : null}
-      {tab === 'logs' ? (
+      {tab === "logs" ? (
         <HealthCheckList
           title="Logs"
           description="Client-side diagnostic messages from the latest health run."

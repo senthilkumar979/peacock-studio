@@ -11,7 +11,7 @@ export interface OrganizationRecord {
   website: string | null;
 }
 
-/** Adjust storage bytes for the active organization. */
+/** Prefer DB triggers for storage_bytes; kept for rare manual adjustments. */
 export async function adjustOrganizationStorageBytes(delta: number): Promise<void> {
   if (delta === 0) return;
 

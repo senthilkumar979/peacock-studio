@@ -1,4 +1,5 @@
 import {
+  API_DOCS_PATH,
   DASHBOARD_PATH,
   FLOW_DOCS_PATH,
   FLOW_MAPS_PATH,
@@ -16,6 +17,7 @@ const LIBRARY_SHELL_PREFIXES = [
   PLAYWRIGHT_TESTS_PATH,
   FLOW_MAPS_PATH,
   HEALTH_CHECKER_PATH,
+  API_DOCS_PATH,
 ] as const;
 
 export function isLibraryShellRoute(pathname: string): boolean {

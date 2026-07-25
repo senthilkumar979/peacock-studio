@@ -1,11 +1,10 @@
-import { compressImageToMaxBytes } from '@peacock/shared';
+import { prepareImageForCloudStorage } from '@peacock/shared';
 import {
   SCREENSHOTS_BUCKET,
   SIGNED_URL_TTL_SECONDS,
 } from '@/cloud/config';
 import { requireCloudAuthContext } from '@/cloud/authContext';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
-import { adjustOrganizationStorageBytes, incrementOrganizationStorageBytes } from '@/cloud/ensureOrganization';
 import {
   buildScreenshotStoragePath,
   inlineScreenshotToBlob,
@@ -149,24 +148,22 @@ export async function syncDocumentScreenshots(
 
     const rawBlob = await inlineScreenshotToBlob(url);
     if (!rawBlob) continue;
-    const blob = await compressImageToMaxBytes(rawBlob);
+    const blob = await prepareImageForCloudStorage(rawBlob);
     const contentHash = await sha256HexFromBlob(blob);
 
     const existing = await findExistingAssetByHash(organizationId, contentHash);
 
     let storagePath = existing?.storage_path;
     let byteSize = existing?.byte_size ?? 0;
-    let storageDelta = 0;
 
     if (!storagePath) {
       storagePath = buildScreenshotStoragePath(organizationId, documentId, screenshotId);
       byteSize = blob.size;
-      storageDelta = blob.size;
 
       const { error: uploadError } = await supabase.storage
         .from(SCREENSHOTS_BUCKET)
         .upload(storagePath, blob, {
-          contentType: blob.type || 'image/png',
+          contentType: 'image/jpeg',
           upsert: true,
         });
 
@@ -181,10 +178,6 @@ export async function syncDocumentScreenshots(
       contentHash,
       byteSize,
     });
-
-    if (storageDelta > 0) {
-      await incrementOrganizationStorageBytes(storageDelta);
-    }
   }
 }
 
@@ -217,7 +210,7 @@ export async function deleteDocumentScreenshots(documentId: string): Promise<voi
 
   const { data, error } = await supabase
     .from('screenshot_assets')
-    .select('storage_path, byte_size')
+    .select('storage_path')
     .eq('organization_id', organizationId)
     .eq('document_id', documentId);
 
@@ -225,9 +218,6 @@ export async function deleteDocumentScreenshots(documentId: string): Promise<voi
   if (!data?.length) return;
 
   const candidatePaths = [...new Set(data.map((row) => row.storage_path))];
-  const reclaimedByPath = new Map(
-    data.map((row) => [row.storage_path, Number(row.byte_size)] as const),
-  );
 
   const { error: deleteError } = await supabase
     .from('screenshot_assets')
@@ -247,14 +237,7 @@ export async function deleteDocumentScreenshots(documentId: string): Promise<voi
     if (storageError) throw storageError;
   }
 
-  const reclaimedBytes = orphanedPaths.reduce(
-    (sum, path) => sum + (reclaimedByPath.get(path) ?? 0),
-    0,
-  );
-
-  if (reclaimedBytes > 0) {
-    await adjustOrganizationStorageBytes(-reclaimedBytes);
-  }
+  // storage_bytes is reclaimed by the screenshot_assets DELETE trigger
 }
 
 export type { ScreenshotAssetRow };

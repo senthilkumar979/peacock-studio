@@ -1,7 +1,7 @@
 import { isoToMs } from '@/cloud/audit';
 import type { FlowOutlineItem, FlowPayload } from '@peacock/shared';
-import { SCREENSHOTS_BUCKET, SIGNED_URL_TTL_SECONDS } from '@/cloud/config';
-import { getPublicSupabaseClient } from '@/cloud/publicSupabaseClient';
+import { getCloudAuthContext } from '@/cloud/authContext';
+import { getSupabaseAnonKey, getSupabaseUrl } from '@/cloud/config';
 import type { Persona } from '@/types/persona';
 import type { ProductTour, ProductTourCompletionCta, TourFeature } from '@/types/productTour';
 import type { EditableShareVerification, ResolvedShareLink, ShareLinkSettings } from '@/types/shareLink';
@@ -9,6 +9,7 @@ import type { FlowShareSettings, SavedFlowDocument } from '@/types/savedFlow';
 import { normalizePersona } from '@/utils/normalizePersona';
 import { normalizeProductTour } from '@/utils/normalizeProductTour';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
+import { getTurnstileToken } from '@/security/turnstile';
 
 interface SharedFlowDocumentPayload {
   id: string;
@@ -21,32 +22,97 @@ interface SharedFlowDocumentPayload {
   shareSettings?: FlowShareSettings;
 }
 
-interface SharedScreenshotAsset {
-  id: string;
-  storagePath: string;
+type ShareAction = 'resolve' | 'flow' | 'tour' | 'persona' | 'screenshots';
+
+interface CachedTurnstile {
+  token: string;
+  expiresAt: number;
+}
+
+let cachedTurnstile: CachedTurnstile | null = null;
+
+async function obtainShareTurnstileToken(): Promise<string> {
+  const now = Date.now();
+  if (cachedTurnstile && cachedTurnstile.expiresAt > now) {
+    return cachedTurnstile.token;
+  }
+
+  const token = await getTurnstileToken('resolve-share');
+  cachedTurnstile = {
+    token,
+    expiresAt: now + 4 * 60 * 1000,
+  };
+  return token;
+}
+
+async function invokeResolveShare<T>(input: {
+  action: ShareAction;
+  token: string;
+  documentId?: string;
+  personaId?: string;
+}): Promise<T> {
+  const turnstileToken = await obtainShareTurnstileToken();
+  const accessToken = await resolveCallerAccessToken();
+
+  const response = await fetch(`${getSupabaseUrl()}/functions/v1/resolve-share`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: getSupabaseAnonKey(),
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      action: input.action,
+      token: input.token,
+      turnstileToken,
+      documentId: input.documentId,
+      personaId: input.personaId,
+    }),
+  });
+
+  const payload = (await response.json().catch(() => null)) as {
+    data?: T;
+    error?: string;
+  } | null;
+
+  if (!response.ok) {
+    throw new Error(payload?.error || `Share request failed (${response.status})`);
+  }
+
+  return payload?.data as T;
+}
+
+async function resolveCallerAccessToken(): Promise<string> {
+  const session = getCloudAuthContext();
+  if (session) {
+    const token = await session.getAccessToken();
+    if (token) return token;
+  }
+
+  return getSupabaseAnonKey();
 }
 
 export async function resolvePublicShareLink(token: string): Promise<ResolvedShareLink | null> {
-  const supabase = getShareSupabaseClient();
-  const { data, error } = await supabase.rpc('resolve_share_link', { p_token: token });
-
-  if (error) throw error;
+  const data = await invokeResolveShare<Record<string, unknown> | null>({
+    action: 'resolve',
+    token,
+  });
   if (!data) return null;
-
-  return mapResolvedShareLink(data as Record<string, unknown>);
+  return mapResolvedShareLink(data);
 }
 
 export async function fetchPublicFlowDocument(
   token: string,
   documentId: string,
 ): Promise<SavedFlowDocument | undefined> {
-  const supabase = getShareSupabaseClient();
-  const { data, error } = await supabase.rpc('get_shared_flow_document', {
-    p_token: token,
-    p_document_id: documentId,
-  });
+  const data = await invokeResolveShare<SharedFlowDocumentPayload | Record<string, unknown> | null>(
+    {
+      action: 'flow',
+      token,
+      documentId,
+    },
+  );
 
-  if (error) throw error;
   if (!data || isAuthRequiredPayload(data)) return undefined;
 
   const payload = data as SharedFlowDocumentPayload;
@@ -66,27 +132,27 @@ export async function fetchPublicFlowDocument(
 }
 
 export async function fetchPublicProductTour(token: string): Promise<ProductTour | undefined> {
-  const supabase = getShareSupabaseClient();
-  const { data, error } = await supabase.rpc('get_shared_product_tour', { p_token: token });
+  const data = await invokeResolveShare<Record<string, unknown> | null>({
+    action: 'tour',
+    token,
+  });
 
-  if (error) throw error;
   if (!data || isAuthRequiredPayload(data)) return undefined;
 
-  const row = data as Record<string, unknown>;
   return normalizeProductTour({
-    id: String(row.id),
-    title: String(row.title),
-    description: String(row.description ?? ''),
-    status: row.status as ProductTour['status'],
-    personaId: String(row.personaId),
-    tourGoal: String(row.tourGoal ?? ''),
-    features: row.features as TourFeature[],
-    completionCta: (row.completionCta as ProductTourCompletionCta | null) ?? undefined,
-    migratedFromRoute: Boolean(row.migratedFromRoute),
-    createdAt: isoToMs(row.createdAt as string | number),
-    updatedAt: isoToMs(row.updatedAt as string | number),
-    createdBy: row.createdBy ? String(row.createdBy) : null,
-    updatedBy: row.updatedBy ? String(row.updatedBy) : null,
+    id: String(data.id),
+    title: String(data.title),
+    description: String(data.description ?? ''),
+    status: data.status as ProductTour['status'],
+    personaId: String(data.personaId),
+    tourGoal: String(data.tourGoal ?? ''),
+    features: data.features as TourFeature[],
+    completionCta: (data.completionCta as ProductTourCompletionCta | null) ?? undefined,
+    migratedFromRoute: Boolean(data.migratedFromRoute),
+    createdAt: isoToMs(data.createdAt as string | number),
+    updatedAt: isoToMs(data.updatedAt as string | number),
+    createdBy: data.createdBy ? String(data.createdBy) : null,
+    updatedBy: data.updatedBy ? String(data.updatedBy) : null,
   });
 }
 
@@ -94,30 +160,28 @@ export async function fetchPublicPersona(
   token: string,
   personaId: string,
 ): Promise<Persona | undefined> {
-  const supabase = getShareSupabaseClient();
-  const { data, error } = await supabase.rpc('get_shared_persona', {
-    p_token: token,
-    p_persona_id: personaId,
+  const data = await invokeResolveShare<Record<string, unknown> | null>({
+    action: 'persona',
+    token,
+    personaId,
   });
 
-  if (error) throw error;
   if (!data || isAuthRequiredPayload(data)) return undefined;
 
-  const row = data as Record<string, unknown>;
   return normalizePersona({
-    id: String(row.id),
-    name: String(row.name),
-    occupation: String(row.occupation),
-    age: row.age == null ? undefined : Number(row.age),
-    shortBio: String(row.shortBio),
-    defaultGoal: row.defaultGoal ? String(row.defaultGoal) : undefined,
-    gender: row.gender as Persona['gender'],
-    avatarId: String(row.avatarId),
-    company: row.company ? String(row.company) : undefined,
-    createdAt: isoToMs(row.createdAt as string | number),
-    updatedAt: isoToMs(row.updatedAt as string | number),
-    createdBy: row.createdBy ? String(row.createdBy) : null,
-    updatedBy: row.updatedBy ? String(row.updatedBy) : null,
+    id: String(data.id),
+    name: String(data.name),
+    occupation: String(data.occupation),
+    age: data.age == null ? undefined : Number(data.age),
+    shortBio: String(data.shortBio),
+    defaultGoal: data.defaultGoal ? String(data.defaultGoal) : undefined,
+    gender: data.gender as Persona['gender'],
+    avatarId: String(data.avatarId),
+    company: data.company ? String(data.company) : undefined,
+    createdAt: isoToMs(data.createdAt as string | number),
+    updatedAt: isoToMs(data.updatedAt as string | number),
+    createdBy: data.createdBy ? String(data.createdBy) : null,
+    updatedBy: data.updatedBy ? String(data.updatedBy) : null,
   });
 }
 
@@ -140,39 +204,13 @@ async function resolvePublicScreenshotUrls(
   token: string,
   documentId: string,
 ): Promise<Record<string, string>> {
-  const supabase = getShareSupabaseClient();
-  const { data, error } = await supabase.rpc('list_shared_screenshot_assets', {
-    p_token: token,
-    p_document_id: documentId,
+  const urls = await invokeResolveShare<Record<string, string> | null>({
+    action: 'screenshots',
+    token,
+    documentId,
   });
 
-  if (error) throw error;
-
-  const assets = (data ?? []) as SharedScreenshotAsset[];
-  if (!assets.length) return {};
-
-  const urls: Record<string, string> = {};
-
-  await Promise.all(
-    assets.map(async (asset) => {
-      const { data: signed, error: signError } = await supabase.storage
-        .from(SCREENSHOTS_BUCKET)
-        .createSignedUrl(asset.storagePath, SIGNED_URL_TTL_SECONDS);
-
-      if (signError) throw signError;
-      if (signed?.signedUrl) urls[asset.id] = signed.signedUrl;
-    }),
-  );
-
-  return urls;
-}
-
-function getShareSupabaseClient() {
-  try {
-    return getAuthenticatedSupabaseClient();
-  } catch {
-    return getPublicSupabaseClient();
-  }
+  return urls ?? {};
 }
 
 function isAuthRequiredPayload(data: unknown): boolean {

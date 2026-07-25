@@ -50,10 +50,10 @@ export const ShareLinkSecurityOptions = ({
         />
         <span>
           <span className="block text-sm font-medium text-slate-800">
-            Require sign-in to view
+            Require workspace members to view
           </span>
           <span className="mt-0.5 block text-xs text-slate-500">
-            Viewers must sign in with Clerk before shared content loads.
+            Viewers must be signed in and belong to this workspace before shared content loads.
           </span>
         </span>
       </label>

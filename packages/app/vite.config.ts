@@ -2,7 +2,7 @@ import { resolve } from 'path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-const DEFERRED_CHUNK = /(^|\/)(sentry|clerk|posthog|pdf|xyflow|editor|charts)(-|$)/;
+const DEFERRED_CHUNK = /(^|\/)(sentry|clerk|posthog|pdf|xyflow|editor|charts|swagger)(-|$)/;
 
 export default defineConfig({
   plugins: [react()],
@@ -37,6 +37,7 @@ export default defineConfig({
           if (id.includes('@xyflow')) return 'xyflow';
           if (id.includes('@tiptap') || id.includes('prosemirror')) return 'editor';
           if (id.includes('recharts')) return 'charts';
+          if (id.includes('swagger-ui')) return 'swagger';
           if (id.includes('framer-motion')) return 'motion';
         },
       },

@@ -7,10 +7,18 @@ function hasQuotes(value: string): boolean {
 
 /** Returns a user-facing message when cloud env vars look misconfigured. */
 export function getCloudEnvValidationError(): string | null {
-  const leakedSecret = (import.meta.env as Record<string, string | undefined>)
-    .VITE_CLERK_SECRET_KEY?.trim();
+  const env = import.meta.env as Record<string, string | undefined>;
+
+  const leakedSecret = env.VITE_CLERK_SECRET_KEY?.trim();
   if (leakedSecret) {
     return 'Remove VITE_CLERK_SECRET_KEY from the client env. Secret keys must never use the VITE_ prefix (they ship in the browser bundle). Use CLERK_SECRET_KEY only in server/CI, rotate the leaked key in Clerk, and redeploy.';
+  }
+
+  const leakedSuperAdminKey = Object.keys(env).find(
+    (key) => key.startsWith('VITE_SUPER_ADMIN') && env[key]?.trim(),
+  );
+  if (leakedSuperAdminKey) {
+    return `Remove ${leakedSuperAdminKey} from the client env. Super-admin emails must live in the Supabase Edge Function secret SUPER_ADMIN_EMAILS (never VITE_).`;
   }
 
   const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY?.trim();

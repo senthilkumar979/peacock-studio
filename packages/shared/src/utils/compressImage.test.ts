@@ -124,6 +124,29 @@ describe('compressImageToMaxBytes', () => {
   });
 });
 
+describe('prepareImageForCloudStorage', () => {
+  it('passes through small JPEG blobs', async () => {
+    const { prepareImageForCloudStorage } = await import('./compressImage');
+    const blob = new Blob([new Uint8Array(100)], { type: 'image/jpeg' });
+    const result = await prepareImageForCloudStorage(blob, 1024);
+    expect(result).toBe(blob);
+  });
+
+  it('rasterizes SVG to JPEG for cloud upload', async () => {
+    const { prepareImageForCloudStorage } = await import('./compressImage');
+    installCanvasMocks({
+      width: 200,
+      height: 100,
+      bytesPerPixelAtFullQuality: 0.2,
+    });
+
+    const svg = new Blob([new Uint8Array(500)], { type: 'image/svg+xml' });
+    const prepared = await prepareImageForCloudStorage(svg, MAX_IMAGE_BYTES);
+    expect(prepared.type).toBe('image/jpeg');
+    expect(prepared.size).toBeLessThanOrEqual(MAX_IMAGE_BYTES);
+  });
+});
+
 describe('blobToDataUrl', () => {
   it('encodes a blob as a data URL', async () => {
     const blob = new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' });

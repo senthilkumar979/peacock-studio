@@ -207,11 +207,8 @@ export const OrgAdminMembersPanel = ({
               });
               try {
                 await sendOrgInviteEmail({
-                  toEmail: created.email,
-                  organizationName,
+                  invitationId: created.id,
                   inviterName,
-                  inviteToken: created.token,
-                  expiresAt: created.expiresAt,
                 });
                 notifySuccess(
                   'Invitation sent',
@@ -271,11 +268,8 @@ export const OrgAdminMembersPanel = ({
               });
               try {
                 await sendOrgInviteEmail({
-                  toEmail: resent.email,
-                  organizationName,
+                  invitationId: resent.id,
                   inviterName,
-                  inviteToken: resent.token,
-                  expiresAt: resent.expiresAt,
                 });
                 notifySuccess('Invitation resent', 'Expiry reset to 7 days from now.');
               } catch (emailError) {

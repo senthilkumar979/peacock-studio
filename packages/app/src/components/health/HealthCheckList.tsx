@@ -25,6 +25,9 @@ export const HealthCheckList = ({
       <div className="border-b border-slate-100 px-4 py-4 sm:px-5">
         <h2 className="text-base font-bold text-slate-900">{title}</h2>
         <p className="mt-1 text-sm text-slate-500">{description}</p>
+        <p className="mt-1 text-xs text-slate-400">
+          Expand a row for what is checked, how the probe runs, and how to interpret the result.
+        </p>
       </div>
       {items.length === 0 ? (
         <p className="px-4 py-6 text-sm text-slate-500 sm:px-5">{emptyMessage}</p>

@@ -1,0 +1,1003 @@
+openapi: 3.1.0
+info:
+  title: Peacock App API Catalog
+  version: 0.1.0
+  description: |
+    Hand-maintained catalog of HTTP/API surfaces the Peacock SPA uses.
+
+    Peacock has **no first-party REST server**. Cloud traffic goes to Supabase
+    (Edge Functions, PostgREST tables/RPCs, Storage) plus third-party SDKs
+    (Clerk, Turnstile, PostHog, Sentry, Tawk).
+
+    Server base URL is your project `VITE_SUPABASE_URL`. Try-it-out is disabled
+    in the UI — calls require Clerk JWTs and often Cloudflare Turnstile tokens.
+  contact:
+    name: Peacock
+servers:
+  - url: '{SUPABASE_URL}'
+    description: Supabase project URL (VITE_SUPABASE_URL)
+    variables:
+      SUPABASE_URL:
+        default: https://YOUR_PROJECT.supabase.co
+tags:
+  - name: Edge Functions
+    description: First-party Supabase Edge Functions under `/functions/v1/*`
+  - name: PostgREST RPCs
+    description: Postgres functions invoked via `/rest/v1/rpc/{name}`
+  - name: PostgREST Tables
+    description: Table CRUD via `/rest/v1/{table}` (supabase-js `.from()`)
+  - name: Storage
+    description: Supabase Storage bucket `screenshots`
+  - name: External
+    description: Third-party integrations (informational only)
+
+paths:
+  /functions/v1/resolve-share:
+    post:
+      tags: [Edge Functions]
+      operationId: resolveShare
+      summary: Resolve public share (Turnstile + rate limit)
+      description: |
+        Public share gate. Deployed with `verify_jwt=false`.
+
+        **Client:** `packages/app/src/cloud/publicShareClient.ts`
+
+        **Actions** (`body.action`):
+        - `resolve` (default) — share metadata via RPC `resolve_share_link`
+        - `flow` — shared flow document (`documentId` required)
+        - `tour` — shared product tour
+        - `persona` — shared persona (`personaId` required)
+        - `screenshots` — signed screenshot URL map (`documentId` required)
+
+        Always requires `token` + `turnstileToken`. Optional `Authorization`
+        Bearer (Clerk JWT) for auth-gated shares; otherwise anon key.
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/OptionalBearer'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveShareBody'
+            examples:
+              resolve:
+                value:
+                  action: resolve
+                  token: share-token
+                  turnstileToken: turnstile-response
+              flow:
+                value:
+                  action: flow
+                  token: share-token
+                  turnstileToken: turnstile-response
+                  documentId: doc-uuid
+      responses:
+        '200':
+          description: "Wrapped payload `{ data: ... }`"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    description: Action-specific payload
+        '400':
+          $ref: '#/components/responses/ErrorJson'
+        '403':
+          description: Bot check failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+        '429':
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+        '500':
+          $ref: '#/components/responses/ErrorJson'
+    options:
+      tags: [Edge Functions]
+      operationId: resolveShareCors
+      summary: CORS preflight for resolve-share
+      responses:
+        '200':
+          description: OK
+
+  /functions/v1/send-org-invite:
+    post:
+      tags: [Edge Functions]
+      operationId: sendOrgInvite
+      summary: Send organization invite email (Resend)
+      description: |
+        Auth + ownership verified via RPC `claim_org_invite_email_send` with
+        the caller's Bearer token. Requires Turnstile.
+
+        **Client:** `organizationRepository.sendOrgInviteEmail`
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invitationId, turnstileToken]
+              properties:
+                invitationId:
+                  type: string
+                inviterName:
+                  type: string
+                  default: A teammate
+                turnstileToken:
+                  type: string
+      responses:
+        '200':
+          description: Email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    const: true
+        '400':
+          $ref: '#/components/responses/ErrorJson'
+        '401':
+          $ref: '#/components/responses/ErrorJson'
+        '403':
+          description: Bot check failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+        '502':
+          description: Resend or claim failure
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  detail:
+                    type: string
+        '500':
+          $ref: '#/components/responses/ErrorJson'
+    options:
+      tags: [Edge Functions]
+      operationId: sendOrgInviteCors
+      summary: CORS preflight for send-org-invite
+      responses:
+        '200':
+          description: OK
+
+  /functions/v1/platform-admin:
+    post:
+      tags: [Edge Functions]
+      operationId: platformAdmin
+      summary: Platform super-admin read-only stats
+      description: |
+        Auth via RPC `resolve_actor_email` — caller email must be in
+        `SUPER_ADMIN_EMAILS` secret (except `whoami`).
+
+        **Actions:** `whoami`, `overview`, `listOrganizations`, `getOrganization`
+
+        **Client:** `platformAdminRepository.ts`
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformAdminBody'
+            examples:
+              whoami:
+                value: { action: whoami }
+              overview:
+                value: { action: overview }
+              getOrganization:
+                value:
+                  action: getOrganization
+                  organizationId: org-uuid
+      responses:
+        '200':
+          description: "Action-specific JSON (whoami returns `{ isSuperAdmin }`)"
+        '400':
+          $ref: '#/components/responses/ErrorJson'
+        '401':
+          $ref: '#/components/responses/ErrorJson'
+        '403':
+          $ref: '#/components/responses/ErrorJson'
+        '404':
+          $ref: '#/components/responses/ErrorJson'
+        '500':
+          $ref: '#/components/responses/ErrorJson'
+    options:
+      tags: [Edge Functions]
+      operationId: platformAdminCors
+      summary: CORS preflight for platform-admin
+      responses:
+        '200':
+          description: OK
+
+  # --- RPCs (orgs) ---
+  /rest/v1/rpc/list_my_memberships:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: listMyMemberships
+      summary: List workspaces for signed-in user
+      description: 'Client: organizationRepository'
+      x-peacock-client: listMyMemberships
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Membership rows
+
+  /rest/v1/rpc/list_my_pending_invitations:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: listMyPendingInvitations
+      summary: List pending invitations for current user
+      x-peacock-client: listMyPendingInvitations
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Invitation rows
+
+  /rest/v1/rpc/create_personal_workspace:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: createPersonalWorkspace
+      summary: Create personal workspace
+      x-peacock-client: createPersonalWorkspace
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_name:
+                  type: string
+      responses:
+        '200':
+          description: New organization id / row
+
+  /rest/v1/rpc/create_team_workspace:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: createTeamWorkspace
+      summary: Create team workspace
+      x-peacock-client: createTeamWorkspace
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_name:
+                  type: string
+      responses:
+        '200':
+          description: New organization id / row
+
+  /rest/v1/rpc/accept_organization_invitation:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: acceptOrganizationInvitation
+      summary: Accept invite by token
+      x-peacock-client: acceptOrganizationInvitation
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_token:
+                  type: string
+      responses:
+        '200':
+          description: Accepted membership
+
+  /rest/v1/rpc/create_organization_invitation:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: createOrganizationInvitation
+      summary: Create organization invitation
+      x-peacock-client: createOrganizationInvitation
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Invitation row
+
+  /rest/v1/rpc/resend_organization_invitation:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: resendOrganizationInvitation
+      summary: Resend / refresh invitation
+      x-peacock-client: resendOrganizationInvitation
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Updated invitation
+
+  /rest/v1/rpc/revoke_organization_invitation:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: revokeOrganizationInvitation
+      summary: Revoke pending invitation
+      x-peacock-client: revokeOrganizationInvitation
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '204':
+          description: Revoked
+
+  /rest/v1/rpc/update_member_capabilities:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: updateMemberCapabilities
+      summary: Update member capabilities
+      x-peacock-client: updateMemberCapabilities
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '204':
+          description: Updated
+
+  /rest/v1/rpc/set_member_status:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: setMemberStatus
+      summary: Enable or disable member
+      x-peacock-client: setMemberStatus
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '204':
+          description: Updated
+
+  /rest/v1/rpc/remove_organization_member:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: removeOrganizationMember
+      summary: Remove organization member
+      x-peacock-client: removeOrganizationMember
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '204':
+          description: Removed
+
+  /rest/v1/rpc/sync_my_membership_emails:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: syncMyMembershipEmails
+      summary: Repair membership emails from JWT
+      x-peacock-client: syncMyMembershipEmails
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '204':
+          description: Synced
+
+  /rest/v1/rpc/get_org_admin_activity:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: getOrgAdminActivity
+      summary: Org admin activity summary
+      x-peacock-client: getOrgAdminActivity
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Activity rows
+
+  /rest/v1/rpc/get_org_domain_usage:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: getOrgDomainUsage
+      summary: Domains used in org flows
+      x-peacock-client: getOrgDomainUsage
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Domain usage rows
+
+  /rest/v1/rpc/verify_editable_share_link:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: verifyEditableShareLink
+      summary: Auth check for editable share
+      description: 'Client: publicShareClient.verifyEditableShareLink'
+      x-peacock-client: verifyEditableShareLink
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_token:
+                  type: string
+      responses:
+        '200':
+          description: Editable share verification or null
+
+  /rest/v1/rpc/revoke_share_link:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: revokeShareLink
+      summary: Revoke share link
+      x-peacock-client: revokeShareLink
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_id:
+                  type: string
+                  format: uuid
+      responses:
+        '204':
+          description: Revoked
+
+  /rest/v1/rpc/list_org_share_links_for_resource:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: listOrgShareLinksForResource
+      summary: List shares for a resource
+      x-peacock-client: listOrgShareLinksForResource
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Share link rows
+
+  /rest/v1/rpc/record_share_event:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: recordShareEvent
+      summary: Record public share_view / embed_view
+      description: Often called with anon client from analyticsRepository
+      x-peacock-client: recordShareEvent
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+      responses:
+        '204':
+          description: Recorded
+
+  /rest/v1/rpc/record_org_event:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: recordOrgEvent
+      summary: Record org analytics event
+      x-peacock-client: recordOrgEvent
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '204':
+          description: Recorded
+
+  /rest/v1/rpc/get_org_analytics_summary:
+    post:
+      tags: [PostgREST RPCs]
+      operationId: getOrgAnalyticsSummary
+      summary: Dashboard analytics summary
+      x-peacock-client: getOrgAnalyticsSummary
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Analytics summary
+
+  # --- Tables ---
+  /rest/v1/organizations:
+    get:
+      tags: [PostgREST Tables]
+      operationId: selectOrganizations
+      summary: Select organizations
+      description: |
+        Used by `ensureOrganization` (storage_bytes) and health checks.
+      x-peacock-client: ensureOrganization / checkSupabase
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Organization rows
+    patch:
+      tags: [PostgREST Tables]
+      operationId: updateOrganizations
+      summary: Update organization fields
+      description: 'Client: ensureOrganization (storage_bytes)'
+      x-peacock-client: ensureOrganization
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Updated rows
+
+  /rest/v1/organization_members:
+    get:
+      tags: [PostgREST Tables]
+      operationId: selectOrganizationMembers
+      summary: Select org member roster
+      x-peacock-client: listOrganizationMembers
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Member rows
+
+  /rest/v1/organization_invitations:
+    get:
+      tags: [PostgREST Tables]
+      operationId: selectOrganizationInvitations
+      summary: Select pending invitations for org
+      x-peacock-client: listOrganizationInvitations
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Invitation rows
+
+  /rest/v1/user_profiles:
+    get:
+      tags: [PostgREST Tables]
+      operationId: selectUserProfiles
+      summary: Select user profile by clerk id / email
+      x-peacock-client: profileRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Profile rows
+    post:
+      tags: [PostgREST Tables]
+      operationId: upsertUserProfiles
+      summary: Upsert user profile
+      description: Preferential upsert via Prefer header / onConflict
+      x-peacock-client: profileRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '201':
+          description: Upserted
+
+  /rest/v1/flow_documents:
+    get:
+      tags: [PostgREST Tables]
+      operationId: selectFlowDocuments
+      summary: List or get flow documents
+      x-peacock-client: flowDocumentRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Document rows
+    post:
+      tags: [PostgREST Tables]
+      operationId: upsertFlowDocuments
+      summary: Upsert flow document
+      x-peacock-client: flowDocumentRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '201':
+          description: Upserted
+    delete:
+      tags: [PostgREST Tables]
+      operationId: deleteFlowDocuments
+      summary: Delete flow document
+      x-peacock-client: flowDocumentRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '204':
+          description: Deleted
+
+  /rest/v1/product_tours:
+    get:
+      tags: [PostgREST Tables]
+      operationId: selectProductTours
+      summary: List or get product tours
+      x-peacock-client: productTourRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Tour rows
+    post:
+      tags: [PostgREST Tables]
+      operationId: upsertProductTours
+      summary: Upsert product tour
+      x-peacock-client: productTourRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '201':
+          description: Upserted
+    delete:
+      tags: [PostgREST Tables]
+      operationId: deleteProductTours
+      summary: Delete product tour
+      x-peacock-client: productTourRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '204':
+          description: Deleted
+
+  /rest/v1/personas:
+    get:
+      tags: [PostgREST Tables]
+      operationId: selectPersonas
+      summary: List or get personas
+      x-peacock-client: personaRepository / productTourRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Persona rows
+    post:
+      tags: [PostgREST Tables]
+      operationId: upsertPersonas
+      summary: Upsert persona
+      x-peacock-client: personaRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '201':
+          description: Upserted
+    delete:
+      tags: [PostgREST Tables]
+      operationId: deletePersonas
+      summary: Delete persona
+      x-peacock-client: personaRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '204':
+          description: Deleted
+
+  /rest/v1/workflow_artifacts:
+    get:
+      tags: [PostgREST Tables]
+      operationId: selectWorkflowArtifacts
+      summary: List or get workflow artifacts
+      x-peacock-client: workflowArtifactRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Artifact rows
+    post:
+      tags: [PostgREST Tables]
+      operationId: upsertWorkflowArtifacts
+      summary: Upsert workflow artifact
+      x-peacock-client: workflowArtifactRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '201':
+          description: Upserted
+
+  /rest/v1/share_links:
+    get:
+      tags: [PostgREST Tables]
+      operationId: selectShareLinks
+      summary: Select share links
+      x-peacock-client: shareLinkRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Share link rows
+    post:
+      tags: [PostgREST Tables]
+      operationId: insertShareLinks
+      summary: Insert share link
+      x-peacock-client: shareLinkRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '201':
+          description: Created
+    patch:
+      tags: [PostgREST Tables]
+      operationId: updateShareLinks
+      summary: Update share link settings
+      x-peacock-client: shareLinkRepository
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Updated
+
+  /rest/v1/screenshot_assets:
+    get:
+      tags: [PostgREST Tables]
+      operationId: selectScreenshotAssets
+      summary: Select screenshot asset metadata
+      x-peacock-client: screenshotStorage
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '200':
+          description: Asset rows
+    post:
+      tags: [PostgREST Tables]
+      operationId: upsertScreenshotAssets
+      summary: Upsert screenshot asset row
+      x-peacock-client: screenshotStorage
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '201':
+          description: Upserted
+    delete:
+      tags: [PostgREST Tables]
+      operationId: deleteScreenshotAssets
+      summary: Delete screenshot asset metadata
+      x-peacock-client: screenshotStorage
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+      responses:
+        '204':
+          description: Deleted
+
+  # --- Storage ---
+  /storage/v1/object/screenshots/{path}:
+    post:
+      tags: [Storage]
+      operationId: uploadScreenshotObject
+      summary: Upload screenshot object
+      description: |
+        Bucket `screenshots`. Client: `screenshotStorage.ts` via
+        `supabase.storage.from('screenshots').upload(...)`.
+      x-peacock-client: screenshotStorage
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Uploaded
+    delete:
+      tags: [Storage]
+      operationId: removeScreenshotObject
+      summary: Remove screenshot object(s)
+      description: 'Client: screenshotStorage via storage.remove'
+      x-peacock-client: screenshotStorage
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/RequiredBearer'
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Removed
+
+  /storage/v1/object/sign/screenshots/{path}:
+    post:
+      tags: [Storage]
+      operationId: signScreenshotObject
+      summary: Create signed URL for screenshot
+      description: |
+        Auth client and `resolve-share` screenshots action both create signed URLs
+        (TTL from `SIGNED_URL_TTL_SECONDS`).
+      x-peacock-client: screenshotStorage / resolve-share
+      parameters:
+        - $ref: '#/components/parameters/ApikeyHeader'
+        - $ref: '#/components/parameters/OptionalBearer'
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Signed URL payload
+
+  # --- External (informational paths — not Peacock-owned) ---
+  /external/clerk:
+    get:
+      tags: [External]
+      operationId: externalClerk
+      summary: Clerk authentication (SDK)
+      description: |
+        `@clerk/react` SignIn/SignUp, `session.getToken()` for Supabase JWT.
+        Not called via fetch from app code — SDK manages HTTP.
+      externalDocs:
+        url: https://clerk.com/docs
+      responses:
+        '200':
+          description: Informational only — no Peacock endpoint
+
+  /external/turnstile:
+    get:
+      tags: [External]
+      operationId: externalTurnstile
+      summary: Cloudflare Turnstile (client widget)
+      description: |
+        Client: `packages/app/src/security/turnstile.ts` (`VITE_TURNSTILE_SITE_KEY`).
+        Siteverify runs only on Edge Functions.
+      externalDocs:
+        url: https://developers.cloudflare.com/turnstile/
+      responses:
+        '200':
+          description: Informational only
+
+  /external/posthog:
+    get:
+      tags: [External]
+      operationId: externalPosthog
+      summary: PostHog product analytics
+      description: |
+        `posthog-js` when `VITE_POSTHOG_KEY` is set. Default host `eu.i.posthog.com`.
+      externalDocs:
+        url: https://posthog.com/docs
+      responses:
+        '200':
+          description: Informational only
+
+  /external/sentry:
+    get:
+      tags: [External]
+      operationId: externalSentry
+      summary: Sentry error reporting
+      description: |
+        `@sentry/react` when `VITE_SENTRY_DSN` is set.
+      externalDocs:
+        url: https://docs.sentry.io/
+      responses:
+        '200':
+          description: Informational only
+
+  /external/tawk:
+    get:
+      tags: [External]
+      operationId: externalTawk
+      summary: Tawk.to support widget
+      description: |
+        Embed when `VITE_TAWK_PROPERTY_ID` + `VITE_TAWK_WIDGET_ID` are set.
+      externalDocs:
+        url: https://www.tawk.to/
+      responses:
+        '200':
+          description: Informational only
+
+components:
+  parameters:
+    ApikeyHeader:
+      name: apikey
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Supabase anon key (`VITE_SUPABASE_ANON_KEY`)
+    RequiredBearer:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Bearer Clerk JWT (Supabase third-party auth)
+    OptionalBearer:
+      name: Authorization
+      in: header
+      required: false
+      schema:
+        type: string
+      description: Bearer Clerk JWT, or anon key for public share paths
+
+  schemas:
+    ErrorBody:
+      type: object
+      properties:
+        error:
+          type: string
+    ResolveShareBody:
+      type: object
+      required: [token, turnstileToken]
+      properties:
+        action:
+          type: string
+          enum: [resolve, flow, tour, persona, screenshots]
+          default: resolve
+        token:
+          type: string
+        turnstileToken:
+          type: string
+        documentId:
+          type: string
+        personaId:
+          type: string
+    PlatformAdminBody:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [whoami, overview, listOrganizations, getOrganization]
+        organizationId:
+          type: string
+          description: Required when action is getOrganization
+
+  responses:
+    ErrorJson:
+      description: Error payload
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorBody'

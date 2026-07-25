@@ -1,4 +1,5 @@
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
+import { getTurnstileToken } from '@/security/turnstile';
 import {
   parseCapabilities,
   type MemberCapabilities,
@@ -394,15 +395,17 @@ export class InviteEmailSendError extends Error {
 }
 
 export async function sendOrgInviteEmail(input: {
-  toEmail: string;
-  organizationName: string;
+  invitationId: string;
   inviterName: string;
-  inviteToken: string;
-  expiresAt: string;
 }): Promise<{ sent: true } | { sent: false; skipped: true }> {
+  const turnstileToken = await getTurnstileToken('send-org-invite');
   const supabase = getAuthenticatedSupabaseClient();
   const { data, error } = await supabase.functions.invoke('send-org-invite', {
-    body: input,
+    body: {
+      invitationId: input.invitationId,
+      inviterName: input.inviterName,
+      turnstileToken,
+    },
   });
 
   const payload = data as { skipped?: boolean; error?: string; detail?: string } | null;

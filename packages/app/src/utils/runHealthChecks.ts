@@ -9,6 +9,7 @@ import { checkLogSources } from '@/utils/health/checkLogs';
 import { checkObservability } from '@/utils/health/checkObservability';
 import { checkPages } from '@/utils/health/checkPages';
 import { checkSupabase } from '@/utils/health/checkSupabase';
+import { getHealthCheckMethod } from '@/utils/health/healthCheckMethods';
 import type { HealthCheckResult } from '@/types/health';
 
 /** Runs client-side health probes for pages, connections, and diagnostic logs. */
@@ -42,6 +43,13 @@ export function formatHealthReport(results: HealthCheckResult[], ranAt: number):
   ];
   for (const item of results) {
     lines.push(`[${item.status.toUpperCase()}] (${item.category}) ${item.label}: ${item.detail}`);
+    const method = getHealthCheckMethod(item.id);
+    if (method) {
+      lines.push(`  What: ${method.what}`);
+      lines.push(`  How: ${method.how}`);
+      lines.push(`  Interpret: ${method.interpret}`);
+    }
+    lines.push('');
   }
   return lines.join('\n');
 }

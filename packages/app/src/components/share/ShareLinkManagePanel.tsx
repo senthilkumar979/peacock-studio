@@ -72,7 +72,7 @@ export const ShareLinkManagePanel = ({
                 {link.requiresAuth ? (
                   <Badge>
                     <Shield className="mr-1 h-3 w-3" aria-hidden />
-                    Sign-in
+                    Members only
                   </Badge>
                 ) : null}
                 <Badge>

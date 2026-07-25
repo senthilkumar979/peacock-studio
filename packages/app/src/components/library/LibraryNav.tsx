@@ -1,14 +1,21 @@
 import type { LucideIcon } from "lucide-react";
 import { NavLink, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { HeartPulse, Settings2 } from "lucide-react";
+import { BookOpen, HeartPulse, Shield, Settings2 } from "lucide-react";
 import { SignInButton, SignUpButton } from "@clerk/react";
 import { SignedInUserButton } from "@/components/auth/SignedInUserButton";
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from "@/constants/branding";
 import { isCloudSyncEnabled } from "@/cloud/config";
 import { LIBRARY_NAV_ITEMS } from "@/constants/libraryNav";
-import { DASHBOARD_PATH, HEALTH_CHECKER_PATH, ORG_ADMIN_PATH } from "@/constants/routes";
+import {
+  API_DOCS_PATH,
+  DASHBOARD_PATH,
+  HEALTH_CHECKER_PATH,
+  ORG_ADMIN_PATH,
+  PLATFORM_ADMIN_PATH,
+} from "@/constants/routes";
 import { OrgSwitcher } from "@/components/library/OrgSwitcher";
+import { useIsPlatformSuperAdmin } from "@/hooks/useIsPlatformSuperAdmin";
 import { useActiveOrganization } from "@/hooks/useOrganization";
 import { useSessionMode } from "@/hooks/useSessionMode";
 
@@ -57,6 +64,7 @@ const LibraryNavLink = ({
 export const LibraryNav = () => {
   const sessionMode = useSessionMode();
   const { isAdmin } = useActiveOrganization();
+  const { isPlatformSuperAdmin } = useIsPlatformSuperAdmin();
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-white/80">
@@ -113,6 +121,29 @@ export const LibraryNav = () => {
             />
             <span className="hidden lg:inline">Health</span>
           </Link>
+
+          <Link
+            to={API_DOCS_PATH}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
+            title="API catalog"
+          >
+            <BookOpen
+              className="h-4 w-4 shrink-0 text-slate-500"
+              aria-hidden
+            />
+            <span className="hidden lg:inline">API</span>
+          </Link>
+
+          {sessionMode === "cloud" && isPlatformSuperAdmin ? (
+            <Link
+              to={PLATFORM_ADMIN_PATH}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
+              title="Platform admin"
+            >
+              <Shield className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+              <span className="hidden lg:inline">Platform</span>
+            </Link>
+          ) : null}
 
           {sessionMode === "cloud" && isAdmin ? (
             <Link

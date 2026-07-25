@@ -40,6 +40,24 @@ export async function compressImageToMaxBytes(
     throw new ImageTooLargeError(maxBytes);
   }
 
+  return encodeDownscaledJpeg(blob, maxBytes);
+}
+
+/**
+ * Cloud storage only accepts JPEG/PNG. Rasterizes SVG and returns JPEG ≤ maxBytes.
+ */
+export async function prepareImageForCloudStorage(
+  blob: Blob,
+  maxBytes: number = MAX_IMAGE_BYTES,
+): Promise<Blob> {
+  if (blob.type === OUTPUT_MIME && blob.size <= maxBytes && !isSvgImageBlob(blob)) {
+    return blob;
+  }
+
+  return encodeDownscaledJpeg(blob, maxBytes);
+}
+
+async function encodeDownscaledJpeg(blob: Blob, maxBytes: number): Promise<Blob> {
   const bitmap = await createImageBitmap(blob);
 
   try {
