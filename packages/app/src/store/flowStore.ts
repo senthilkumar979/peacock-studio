@@ -18,7 +18,8 @@ import {
   type FlowStep,
   type LinkedPeacockPath,
 } from '@peacock/shared';
-import type { FlowShareSettings, SavedFlowDocument } from '@/types/savedFlow';
+import type { FlowDocumentStatus, FlowShareSettings, SavedFlowDocument } from '@/types/savedFlow';
+import { normalizeFlowStatus, normalizeFlowVersion } from '@/utils/flowDocumentMeta';
 import {
   buildDefaultShareSettings,
   filterOutlineForViewer,
@@ -32,11 +33,13 @@ interface FlowStore {
   steps: FlowOutlineItem[];
   selectedOutlineId: string | null;
   isLoaded: boolean;
+  status: FlowDocumentStatus;
   shareSettings: FlowShareSettings | null;
   viewerFilter: FlowViewerFilter | null;
 
   setFlow: (flow: FlowPayload, screenshotUrls: Record<string, string>) => void;
   setDocumentId: (id: string | null) => void;
+  setDocumentStatus: (status: FlowDocumentStatus) => void;
   hydrateFromDocument: (doc: SavedFlowDocument) => void;
   resetFlow: () => void;
   selectOutlineItem: (id: string) => void;
@@ -77,6 +80,7 @@ const initialState = {
   steps: [] as FlowOutlineItem[],
   selectedOutlineId: null as string | null,
   isLoaded: false,
+  status: 'draft' as FlowDocumentStatus,
   shareSettings: null as FlowShareSettings | null,
   viewerFilter: null as FlowViewerFilter | null,
 };
@@ -114,16 +118,25 @@ export const useFlowStore = create<FlowStore>()(
 
     setFlow: (flow, screenshotUrls) =>
       set({
-        flow,
+        flow: {
+          ...flow,
+          flow: {
+            ...flow.flow,
+            version: normalizeFlowVersion(flow.flow.version),
+          },
+        },
         screenshotUrls,
         steps: flow.steps,
         selectedOutlineId: pickInitialSelection(flow.steps),
         isLoaded: true,
+        status: 'draft',
         shareSettings: buildDefaultShareSettings(flow.steps),
         viewerFilter: null,
       }),
 
     setDocumentId: (id) => set({ documentId: id }),
+
+    setDocumentStatus: (status) => set({ status }),
 
     hydrateFromDocument: (doc) =>
       set({
@@ -132,13 +145,14 @@ export const useFlowStore = create<FlowStore>()(
           ...doc.flow,
           flow: {
             ...doc.flow.flow,
-            version: doc.flow.flow.version ?? '',
+            version: normalizeFlowVersion(doc.flow.flow.version),
           },
         },
         screenshotUrls: doc.screenshotUrls,
         steps: doc.steps,
         selectedOutlineId: pickInitialSelection(doc.steps),
         isLoaded: true,
+        status: normalizeFlowStatus(doc.status, 'live'),
         shareSettings: doc.shareSettings ?? buildDefaultShareSettings(doc.steps),
         viewerFilter: null,
       }),
@@ -239,7 +253,7 @@ export const useFlowStore = create<FlowStore>()(
         if (!state.flow) return;
         state.flow.flow.title = title;
         state.flow.flow.description = description;
-        state.flow.flow.version = version;
+        state.flow.flow.version = normalizeFlowVersion(version);
       }),
 
     addBranch: (afterItemId) =>

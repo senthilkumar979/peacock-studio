@@ -118,10 +118,16 @@ export const FlowDetailsDrawer = ({
       return;
     }
 
+    const trimmedVersion = draft.version.trim();
+    if (!trimmedVersion) {
+      setError("Version is required (e.g. 1.0.0).");
+      return;
+    }
+
     onSave({
       title: trimmedTitle,
       description,
-      version: draft.version.trim(),
+      version: trimmedVersion,
     });
   };
 
@@ -206,7 +212,7 @@ export const FlowDetailsDrawer = ({
 
                 <FormField
                   label="Version"
-                  hint={`Ex: ${VERSION_HELPER_EXAMPLES}`}
+                  hint={`Required. Ex: ${VERSION_HELPER_EXAMPLES}`}
                 >
                   <FieldInput
                     value={draft.version}
@@ -214,6 +220,7 @@ export const FlowDetailsDrawer = ({
                       setDraft((prev) => ({ ...prev, version: event.target.value }))
                     }
                     placeholder="e.g. 1.0.0"
+                    required
                   />
                 </FormField>
               </div>

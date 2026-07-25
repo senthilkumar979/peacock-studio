@@ -6,6 +6,7 @@ import type {
 } from '@/cloud/types/organization';
 
 export const CAPABILITY_LABELS: Record<CapabilityKey, { label: string; hint: string }> = {
+  read: { label: 'Read', hint: 'View docs and tours in the library' },
   create: { label: 'Create', hint: 'Add new docs and tours' },
   edit: { label: 'Edit', hint: 'Update existing content' },
   delete: { label: 'Delete', hint: 'Remove library items' },

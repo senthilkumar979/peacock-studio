@@ -1,6 +1,6 @@
 import type { FlowOutlineItem, FlowPayload } from '@peacock/shared';
 import { countStepDomains } from '@peacock/shared';
-import { isoToMs, msToIso, stampAuditForCloudWrite } from '@/cloud/audit';
+import { isoToMs, msToIso, requireUserEmail, stampAuditForCloudWrite } from '@/cloud/audit';
 import { requireCapability, requireCloudAuthContext } from '@/cloud/authContext';
 import {
   deleteDocumentScreenshots,
@@ -8,8 +8,19 @@ import {
   syncDocumentScreenshots,
 } from '@/cloud/screenshotStorage';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
-import type { FlowShareSettings, SavedFlowDocument, SavedFlowSummary } from '@/types/savedFlow';
+import type {
+  FlowDocumentStatus,
+  FlowShareSettings,
+  SavedFlowDocument,
+  SavedFlowSummary,
+} from '@/types/savedFlow';
 import { countPlayableSteps } from '@/utils/flowDocumentSnapshot';
+import {
+  normalizeFlowStatus,
+  normalizeFlowVersion,
+  titleVersionIdentity,
+  TitleVersionConflictError,
+} from '@/utils/flowDocumentMeta';
 
 interface FlowDocumentRow {
   id: string;
@@ -19,6 +30,7 @@ interface FlowDocumentRow {
   created_at?: string | number;
   created_by?: string | null;
   updated_by?: string | null;
+  status?: FlowDocumentStatus | null;
   flow: FlowPayload;
   steps: FlowOutlineItem[];
   share_settings: FlowShareSettings | null;
@@ -30,7 +42,7 @@ export async function cloudListFlowSummaries(): Promise<SavedFlowSummary[]> {
 
   const { data, error } = await supabase
     .from('flow_documents')
-    .select('id, saved_at, updated_at, created_by, updated_by, flow, steps')
+    .select('id, saved_at, updated_at, created_by, updated_by, status, flow, steps')
     .eq('organization_id', organizationId)
     .order('updated_at', { ascending: false });
 
@@ -45,7 +57,7 @@ export async function cloudGetFlowDocument(id: string): Promise<SavedFlowDocumen
 
   const { data, error } = await supabase
     .from('flow_documents')
-    .select('id, saved_at, updated_at, created_by, updated_by, flow, steps, share_settings')
+    .select('id, saved_at, updated_at, created_by, updated_by, status, flow, steps, share_settings')
     .eq('organization_id', organizationId)
     .eq('id', id)
     .maybeSingle();
@@ -60,13 +72,48 @@ export async function cloudGetFlowDocument(id: string): Promise<SavedFlowDocumen
     id: row.id,
     savedAt: isoToMs(row.saved_at),
     updatedAt: isoToMs(row.updated_at),
+    status: normalizeFlowStatus(row.status, 'live'),
     createdBy: row.created_by ?? null,
     updatedBy: row.updated_by ?? null,
-    flow: row.flow as FlowPayload,
+    flow: normalizeFlowPayload(row.flow as FlowPayload),
     steps: row.steps as FlowOutlineItem[],
     shareSettings: row.share_settings ?? undefined,
     screenshotUrls,
   };
+}
+
+export async function cloudFindTitleVersionConflict(input: {
+  title: string;
+  version: string;
+  excludeDocumentId?: string;
+  excludeDocumentIds?: string[];
+}): Promise<{ id: string; title: string; version: string } | null> {
+  const { organizationId } = requireCloudAuthContext();
+  const identity = titleVersionIdentity(input.title, input.version);
+  const excluded = new Set(
+    [...(input.excludeDocumentIds ?? []), input.excludeDocumentId].filter(
+      (id): id is string => Boolean(id),
+    ),
+  );
+  const supabase = getAuthenticatedSupabaseClient();
+
+  const { data, error } = await supabase
+    .from('flow_documents')
+    .select('id, flow')
+    .eq('organization_id', organizationId);
+
+  if (error) throw error;
+
+  for (const row of data ?? []) {
+    if (excluded.has(row.id)) continue;
+    const flow = row.flow as FlowPayload | null;
+    const other = titleVersionIdentity(flow?.flow?.title, flow?.flow?.version);
+    if (other.titleKey === identity.titleKey && other.versionKey === identity.versionKey) {
+      return { id: row.id, title: identity.title, version: identity.version };
+    }
+  }
+
+  return null;
 }
 
 export async function cloudSaveFlowDocument(
@@ -74,15 +121,30 @@ export async function cloudSaveFlowDocument(
   options: { preserveUpdatedAt?: boolean } = {},
 ): Promise<void> {
   const { organizationId } = requireCloudAuthContext();
-  // Lightweight existence check without loading screenshots
   const supabaseCheck = getAuthenticatedSupabaseClient();
-  const { data: existingRow } = await supabaseCheck
+  const { data: existingRow, error: existingError } = await supabaseCheck
     .from('flow_documents')
     .select('id')
     .eq('organization_id', organizationId)
     .eq('id', doc.id)
     .maybeSingle();
+  if (existingError) throw existingError;
+
   requireCapability(existingRow ? 'edit' : 'create');
+
+  const conflict = await cloudFindTitleVersionConflict({
+    title: doc.flow.flow.title,
+    version: doc.flow.flow.version,
+    excludeDocumentId: doc.id,
+  });
+  if (conflict) {
+    throw new TitleVersionConflictError({
+      conflictDocumentId: conflict.id,
+      title: conflict.title,
+      version: conflict.version,
+    });
+  }
+
   const supabase = getAuthenticatedSupabaseClient();
   const audit = stampAuditForCloudWrite(
     {
@@ -94,26 +156,70 @@ export async function cloudSaveFlowDocument(
     options,
   );
 
-  const { error } = await supabase.from('flow_documents').upsert(
-    {
-      id: doc.id,
-      organization_id: organizationId,
-      saved_at: msToIso(audit.createdAt),
-      created_at: msToIso(audit.createdAt),
-      updated_at: msToIso(audit.updatedAt),
-      created_by: audit.createdBy,
-      updated_by: audit.updatedBy,
-      flow: doc.flow,
-      steps: doc.steps,
-      share_settings: doc.shareSettings ?? null,
-      domain_counts: countStepDomains(doc.steps),
-    },
-    { onConflict: 'id' },
-  );
+  const flow = normalizeFlowPayload(doc.flow);
+  const row = {
+    id: doc.id,
+    organization_id: organizationId,
+    saved_at: msToIso(audit.createdAt),
+    created_at: msToIso(audit.createdAt),
+    updated_at: msToIso(audit.updatedAt),
+    created_by: audit.createdBy,
+    updated_by: audit.updatedBy,
+    status: normalizeFlowStatus(doc.status, 'draft'),
+    flow,
+    steps: doc.steps,
+    share_settings: doc.shareSettings ?? null,
+    domain_counts: countStepDomains(doc.steps),
+  };
 
-  if (error) throw error;
+  if (existingRow) {
+    const { error } = await supabase
+      .from('flow_documents')
+      .update({
+        saved_at: row.saved_at,
+        updated_at: row.updated_at,
+        updated_by: row.updated_by,
+        status: row.status,
+        flow: row.flow,
+        steps: row.steps,
+        share_settings: row.share_settings,
+        domain_counts: row.domain_counts,
+      })
+      .eq('organization_id', organizationId)
+      .eq('id', doc.id);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from('flow_documents').insert(row);
+    if (error) throw error;
+  }
 
   await syncDocumentScreenshots(doc.id, doc.screenshotUrls);
+}
+
+/** Status-only write — never inserts, so it cannot hit the document quota. */
+export async function cloudUpdateFlowDocumentStatus(
+  documentId: string,
+  status: FlowDocumentStatus,
+): Promise<void> {
+  requireCapability('edit');
+  const { organizationId } = requireCloudAuthContext();
+  const supabase = getAuthenticatedSupabaseClient();
+  const updatedBy = requireUserEmail();
+
+  const { data, error } = await supabase
+    .from('flow_documents')
+    .update({
+      status: normalizeFlowStatus(status, 'draft'),
+      updated_at: msToIso(Date.now()),
+      updated_by: updatedBy,
+    })
+    .eq('organization_id', organizationId)
+    .eq('id', documentId)
+    .select('id')
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error('Documentation not found.');
 }
 
 export async function cloudDeleteFlowDocument(id: string): Promise<void> {
@@ -132,6 +238,17 @@ export async function cloudDeleteFlowDocument(id: string): Promise<void> {
   if (error) throw error;
 }
 
+function normalizeFlowPayload(flow: FlowPayload): FlowPayload {
+  return {
+    ...flow,
+    flow: {
+      ...flow.flow,
+      title: flow.flow.title.trim() || 'Untitled flow',
+      version: normalizeFlowVersion(flow.flow.version),
+    },
+  };
+}
+
 function toFlowSummary(row: FlowDocumentRow): SavedFlowSummary {
   const flow = row.flow;
   const title = flow.flow.title.trim() || 'Untitled flow';
@@ -140,7 +257,8 @@ function toFlowSummary(row: FlowDocumentRow): SavedFlowSummary {
     id: row.id,
     title,
     description: flow.flow.description.trim(),
-    version: flow.flow.version?.trim() ?? '',
+    version: normalizeFlowVersion(flow.flow.version),
+    status: normalizeFlowStatus(row.status, 'live'),
     generatedAt: flow.metadata.createdAt,
     updatedAt: isoToMs(row.updated_at),
     createdBy: row.created_by ?? null,

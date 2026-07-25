@@ -1,114 +1,126 @@
-import { Calendar, FileText, Settings2, Tag } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import type { SavedFlowSummary } from '@/types/savedFlow';
-import { useLibraryNavigationState } from '@/hooks/useLibraryBackState';
-import { formatFlowDate } from '@/utils/formatFlowDate';
-import { formatUpdatedByLine } from '@/utils/formatUpdatedByLine';
-import { stripHtmlTags } from '@/utils/richText';
-import { getDocumentPath } from '@/utils/shareLink';
-import { FlowDocumentActions } from './FlowDocumentActions';
-import { FlowStepCountBadge } from './FlowStepCountBadge';
-import { FlowVersionBadge } from './FlowVersionBadge';
+import { Calendar, FileText, Settings2, Tag } from "lucide-react";
+import { Link } from "react-router-dom";
+import type { SavedFlowSummary } from "@/types/savedFlow";
+import { useLibraryNavigationState } from "@/hooks/useLibraryBackState";
+import { formatFlowDate } from "@/utils/formatFlowDate";
+import { formatUpdatedByLine } from "@/utils/formatUpdatedByLine";
+import { stripHtmlTags } from "@/utils/richText";
+import { getDocumentPath } from "@/utils/shareLink";
+import { FlowDocumentActions } from "./FlowDocumentActions";
+import { FlowStatusBadge } from "./FlowStatusBadge";
+import { FlowStepCountBadge } from "./FlowStepCountBadge";
+import { FlowVersionBadge } from "./FlowVersionBadge";
 
 interface FlowLibraryTableProps {
   summaries: SavedFlowSummary[];
   displayNamesByEmail?: Record<string, string>;
   onRequestDelete: (summary: SavedFlowSummary) => void;
+  onRequestDuplicate?: (summary: SavedFlowSummary) => void;
 }
 
 export const FlowLibraryTable = ({
   summaries,
   displayNamesByEmail = {},
   onRequestDelete,
+  onRequestDuplicate,
 }: FlowLibraryTableProps) => {
   const navigationState = useLibraryNavigationState();
 
   return (
-  <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-    <table className="min-w-full divide-y divide-slate-200 text-sm">
-      <thead className="bg-slate-50">
-        <tr>
-          <th className="px-4 py-3 text-left font-semibold text-slate-700">
-            <span className="inline-flex items-center gap-1.5">
-              <FileText className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-              Title
-            </span>
-          </th>
-          <th className="px-4 py-3 text-left font-semibold text-slate-700">
-            <span className="inline-flex items-center gap-1.5">
-              <Tag className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-              Version
-            </span>
-          </th>
-          <th className="px-4 py-3 text-left font-semibold text-slate-700">
-            <span className="inline-flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-              Generated
-            </span>
-          </th>
-          <th className="px-4 py-3 text-left font-semibold text-slate-700">
-            Last updated
-          </th>
-          <th className="px-4 py-3 text-right font-semibold text-slate-700">
-            <span className="inline-flex items-center justify-end gap-1.5">
-              <Settings2 className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-              Actions
-            </span>
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-slate-100">
-        {summaries.map((summary) => {
-          const plainDescription = stripHtmlTags(summary.description);
-          return (
-          <tr key={summary.id} className="hover:bg-slate-50/80">
-            <td className="px-4 py-3">
-              <Link
-                to={getDocumentPath(summary.id)}
-                state={navigationState}
-                className="group block min-w-0 rounded-lg outline-none ring-peacock-500 focus-visible:ring-2"
-              >
-                <p className="font-medium text-slate-900 transition-colors group-hover:text-peacock-700">
-                  {summary.title}
-                </p>
-                {plainDescription ? (
-                  <p className="mt-0.5 line-clamp-1 text-slate-500">
-                    {plainDescription}
-                  </p>
-                ) : null}
-                <div className="mt-2">
-                  <FlowStepCountBadge stepCount={summary.stepCount} />
-                </div>
-              </Link>
-            </td>
-            <td className="px-4 py-3">
-              <FlowVersionBadge version={summary.version} />
-            </td>
-            <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-              {formatFlowDate(summary.generatedAt)}
-            </td>
-            <td className="max-w-[14rem] truncate px-4 py-3 text-slate-600">
-              {formatUpdatedByLine(
-                summary.updatedAt,
-                summary.updatedBy,
-                formatFlowDate,
-                summary.createdBy,
-                displayNamesByEmail,
-              )}
-            </td>
-            <td className="whitespace-nowrap px-4 py-3">
-              <div className="flex justify-end">
-                <FlowDocumentActions
-                  documentId={summary.id}
-                  onRequestDelete={() => onRequestDelete(summary)}
-                />
-              </div>
-            </td>
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <table className="min-w-full divide-y divide-slate-200 text-sm">
+        <thead className="bg-slate-50">
+          <tr>
+            <th className="px-4 py-3 text-left font-semibold text-slate-700">
+              <span className="inline-flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                Title
+              </span>
+            </th>
+            <th className="px-4 py-3 text-left font-semibold text-slate-700">
+              <span className="inline-flex items-center gap-1.5">
+                <Tag className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                Version
+              </span>
+            </th>
+            <th className="px-4 py-3 text-left font-semibold text-slate-700">
+              <span className="inline-flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                Generated
+              </span>
+            </th>
+            <th className="px-4 py-3 text-left font-semibold text-slate-700">
+              Last updated
+            </th>
+            <th className="px-4 py-3 text-right font-semibold text-slate-700">
+              <span className="inline-flex items-center justify-end gap-1.5">
+                <Settings2 className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                Actions
+              </span>
+            </th>
           </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody className="divide-y divide-slate-100">
+          {summaries.map((summary) => {
+            const plainDescription = stripHtmlTags(summary.description);
+            return (
+              <tr key={summary.id} className="hover:bg-slate-50/80">
+                <td className="px-4 py-3">
+                  <Link
+                    to={getDocumentPath(summary.id)}
+                    state={navigationState}
+                    className="group block min-w-0 rounded-lg outline-none ring-peacock-500 focus-visible:ring-2"
+                  >
+                    <p className="font-medium text-slate-900 transition-colors group-hover:text-peacock-700">
+                      {summary.title}
+                    </p>
+                    {plainDescription ? (
+                      <p className="mt-0.5 line-clamp-1 text-slate-500">
+                        {plainDescription}
+                      </p>
+                    ) : null}
+                    <div className="mt-2 flex items-center gap-2">
+                      <FlowStatusBadge status={summary.status} />
+                      <FlowStepCountBadge stepCount={summary.stepCount} />
+                    </div>
+                  </Link>
+                </td>
+                <td className="px-4 py-3">
+                  <FlowVersionBadge version={summary.version} />
+                </td>
+                <td className="whitespace-nowrap px-4 py-3 text-slate-600">
+                  {formatFlowDate(summary.generatedAt)}
+                </td>
+                <td className="max-w-[14rem] truncate px-4 py-3 text-slate-600">
+                  {formatUpdatedByLine(
+                    summary.updatedAt,
+                    summary.updatedBy,
+                    formatFlowDate,
+                    summary.createdBy,
+                    displayNamesByEmail,
+                    false,
+                    false,
+                  )}
+                </td>
+                <td className="whitespace-nowrap px-4 py-3">
+                  <div className="flex justify-end">
+                    <FlowDocumentActions
+                      documentId={summary.id}
+                      status={summary.status}
+                      onRequestDelete={() => onRequestDelete(summary)}
+                      onRequestDuplicate={
+                        onRequestDuplicate
+                          ? () => onRequestDuplicate(summary)
+                          : undefined
+                      }
+                    />
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 };

@@ -65,7 +65,7 @@ export async function buildPayloadFromRecording(): Promise<PendingHandoff> {
     flow: {
       title: getFlowTitle(events),
       description: '',
-      version: '',
+      version: '1.0.0',
       category: '',
       tags: [],
     },

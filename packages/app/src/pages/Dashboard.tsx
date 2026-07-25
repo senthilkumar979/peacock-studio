@@ -37,7 +37,8 @@ export const Dashboard = () => {
   const sessionMode = useSessionMode();
   const isGuest = useIsGuestSession();
   const cloudInitError = useCloudInitError();
-  const { summaries: allSummaries, isLoading, error, deleteDocument } = useFlowLibrary();
+  const { summaries: allSummaries, isLoading, error, deleteDocument, duplicateDocument } =
+    useFlowLibrary();
   const {
     summaries: tourSummaries,
     isLoading: isToursLoading,
@@ -172,6 +173,9 @@ export const Dashboard = () => {
                       viewMode={flowDocsViewMode}
                       summaries={recentFlowDocs}
                       onRequestDelete={setPendingDocDelete}
+                      onRequestDuplicate={(summary) => {
+                        void duplicateDocument(summary.id);
+                      }}
                     />
                   )}
                 </DashboardRecentSection>

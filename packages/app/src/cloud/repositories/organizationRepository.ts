@@ -5,6 +5,7 @@ import {
   type MemberCapabilities,
   type MemberRole,
   type OrgMembership,
+  type OrganizationGroupRecord,
   type OrganizationInvitationRecord,
   type OrganizationMemberRecord,
   type PendingInvitation,
@@ -467,4 +468,143 @@ export function buildOrgInviteAcceptUrl(token: string): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   return `${origin}/accept-invite?token=${encodeURIComponent(token)}`;
 }
+
+export async function listOrganizationGroups(
+  organizationId: string,
+): Promise<OrganizationGroupRecord[]> {
+  const supabase = getAuthenticatedSupabaseClient();
+  const { data: groups, error } = await supabase
+    .from('organization_groups')
+    .select('id, organization_id, name, description, capabilities, created_at, updated_at')
+    .eq('organization_id', organizationId)
+    .order('name', { ascending: true });
+
+  if (error) throw error;
+  if (!groups?.length) return [];
+
+  const groupIds = groups.map((group) => group.id);
+  const { data: memberships, error: memberError } = await supabase
+    .from('organization_group_members')
+    .select('group_id, member_id')
+    .in('group_id', groupIds);
+
+  if (memberError) throw memberError;
+
+  const memberIdsByGroup = new Map<string, string[]>();
+  for (const row of memberships ?? []) {
+    const list = memberIdsByGroup.get(row.group_id) ?? [];
+    list.push(row.member_id);
+    memberIdsByGroup.set(row.group_id, list);
+  }
+
+  return groups.map((group) => ({
+    id: group.id,
+    organizationId: group.organization_id,
+    name: group.name,
+    description: group.description ?? '',
+    capabilities: parseCapabilities(group.capabilities, 'member'),
+    createdAt: group.created_at,
+    updatedAt: group.updated_at,
+    memberIds: memberIdsByGroup.get(group.id) ?? [],
+  }));
+}
+
+export async function createOrganizationGroup(input: {
+  organizationId: string;
+  name: string;
+  description?: string;
+  capabilities: MemberCapabilities;
+}): Promise<OrganizationGroupRecord> {
+  const supabase = getAuthenticatedSupabaseClient();
+  const { data, error } = await supabase
+    .from('organization_groups')
+    .insert({
+      organization_id: input.organizationId,
+      name: input.name.trim(),
+      description: input.description?.trim() ?? '',
+      capabilities: input.capabilities,
+    })
+    .select('id, organization_id, name, description, capabilities, created_at, updated_at')
+    .single();
+
+  if (error) throw error;
+
+  return {
+    id: data.id,
+    organizationId: data.organization_id,
+    name: data.name,
+    description: data.description ?? '',
+    capabilities: parseCapabilities(data.capabilities, 'member'),
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    memberIds: [],
+  };
+}
+
+export async function updateOrganizationGroup(input: {
+  groupId: string;
+  name: string;
+  description?: string;
+  capabilities: MemberCapabilities;
+}): Promise<void> {
+  const supabase = getAuthenticatedSupabaseClient();
+  const { error } = await supabase
+    .from('organization_groups')
+    .update({
+      name: input.name.trim(),
+      description: input.description?.trim() ?? '',
+      capabilities: input.capabilities,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', input.groupId);
+
+  if (error) throw error;
+}
+
+export async function deleteOrganizationGroup(groupId: string): Promise<void> {
+  const supabase = getAuthenticatedSupabaseClient();
+  const { error } = await supabase.from('organization_groups').delete().eq('id', groupId);
+  if (error) throw error;
+}
+
+export async function setOrganizationGroupMembers(
+  groupId: string,
+  memberIds: string[],
+): Promise<void> {
+  const supabase = getAuthenticatedSupabaseClient();
+  const uniqueIds = [...new Set(memberIds)];
+
+  const { data: existing, error: existingError } = await supabase
+    .from('organization_group_members')
+    .select('id, member_id')
+    .eq('group_id', groupId);
+
+  if (existingError) throw existingError;
+
+  const existingIds = new Set((existing ?? []).map((row) => row.member_id as string));
+  const nextIds = new Set(uniqueIds);
+  const toRemove = (existing ?? [])
+    .filter((row) => !nextIds.has(row.member_id))
+    .map((row) => row.id);
+  const toAdd = uniqueIds.filter((id) => !existingIds.has(id));
+
+  if (toRemove.length > 0) {
+    const { error } = await supabase
+      .from('organization_group_members')
+      .delete()
+      .in('id', toRemove);
+    if (error) throw error;
+  }
+
+  if (toAdd.length > 0) {
+    const { error } = await supabase.from('organization_group_members').insert(
+      toAdd.map((memberId) => ({
+        group_id: groupId,
+        member_id: memberId,
+      })),
+    );
+    if (error) throw error;
+  }
+}
+
 

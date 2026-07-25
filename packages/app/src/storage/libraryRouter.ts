@@ -9,9 +9,11 @@ import { getPublicShareToken } from '@/cloud/publicShareContext';
 import { isGuestSessionSnapshot } from '@/cloud/sessionState';
 import {
   cloudDeleteFlowDocument,
+  cloudFindTitleVersionConflict,
   cloudGetFlowDocument,
   cloudListFlowSummaries,
   cloudSaveFlowDocument,
+  cloudUpdateFlowDocumentStatus,
 } from '@/cloud/repositories/flowDocumentRepository';
 import {
   cloudDeletePersona,
@@ -44,7 +46,11 @@ import {
 import { DEFAULT_PERSONA_ID } from '@/constants/personaAvatars';
 import type { Persona } from '@/types/persona';
 import type { ProductTour, ProductTourSummary } from '@/types/productTour';
-import type { SavedFlowDocument, SavedFlowSummary } from '@/types/savedFlow';
+import type { FlowDocumentStatus, SavedFlowDocument, SavedFlowSummary } from '@/types/savedFlow';
+import {
+  titleVersionIdentity,
+  TitleVersionConflictError,
+} from '@/utils/flowDocumentMeta';
 
 function useCloudLibrary(): boolean {
   return isCloudSyncEnabled() && isCloudLibraryActive();
@@ -73,7 +79,71 @@ export async function saveFlowDocument(
     await cloudSaveFlowDocument(doc, options);
     return;
   }
+
+  const conflict = await findLocalTitleVersionConflict({
+    title: doc.flow.flow.title,
+    version: doc.flow.flow.version,
+    excludeDocumentId: doc.id,
+  });
+  if (conflict) {
+    throw new TitleVersionConflictError({
+      conflictDocumentId: conflict.id,
+      title: conflict.title,
+      version: conflict.version,
+    });
+  }
+
   await localSaveFlowDocument(doc);
+}
+
+export async function findTitleVersionConflict(input: {
+  title: string;
+  version: string;
+  excludeDocumentId?: string;
+  excludeDocumentIds?: string[];
+}): Promise<{ id: string; title: string; version: string } | null> {
+  if (useCloudLibrary()) return cloudFindTitleVersionConflict(input);
+  return findLocalTitleVersionConflict(input);
+}
+
+async function findLocalTitleVersionConflict(input: {
+  title: string;
+  version: string;
+  excludeDocumentId?: string;
+  excludeDocumentIds?: string[];
+}): Promise<{ id: string; title: string; version: string } | null> {
+  const identity = titleVersionIdentity(input.title, input.version);
+  const excluded = new Set(
+    [...(input.excludeDocumentIds ?? []), input.excludeDocumentId].filter(
+      (id): id is string => Boolean(id),
+    ),
+  );
+  const summaries = await localListFlowSummaries();
+  for (const summary of summaries) {
+    if (excluded.has(summary.id)) continue;
+    const other = titleVersionIdentity(summary.title, summary.version);
+    if (other.titleKey === identity.titleKey && other.versionKey === identity.versionKey) {
+      return { id: summary.id, title: identity.title, version: identity.version };
+    }
+  }
+  return null;
+}
+
+export async function updateFlowDocumentStatus(
+  documentId: string,
+  status: FlowDocumentStatus,
+): Promise<void> {
+  if (useCloudLibrary()) {
+    await cloudUpdateFlowDocumentStatus(documentId, status);
+    return;
+  }
+  const doc = await localGetFlowDocument(documentId);
+  if (!doc) throw new Error('Documentation not found.');
+  await localSaveFlowDocument({
+    ...doc,
+    status,
+    updatedAt: Date.now(),
+  });
 }
 
 export async function deleteFlowDocument(id: string): Promise<void> {

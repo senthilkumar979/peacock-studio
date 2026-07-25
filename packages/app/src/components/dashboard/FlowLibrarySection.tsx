@@ -9,12 +9,14 @@ interface FlowLibrarySectionProps {
   viewMode: DashboardViewMode;
   summaries: SavedFlowSummary[];
   onRequestDelete: (summary: SavedFlowSummary) => void;
+  onRequestDuplicate?: (summary: SavedFlowSummary) => void;
 }
 
 export const FlowLibrarySection = ({
   viewMode,
   summaries,
   onRequestDelete,
+  onRequestDuplicate,
 }: FlowLibrarySectionProps) => {
   const emails = useMemo(
     () => summaries.flatMap((summary) => [summary.updatedBy, summary.createdBy]),
@@ -28,6 +30,7 @@ export const FlowLibrarySection = ({
         summaries={summaries}
         displayNamesByEmail={displayNamesByEmail}
         onRequestDelete={onRequestDelete}
+        onRequestDuplicate={onRequestDuplicate}
       />
     );
   }
@@ -38,6 +41,7 @@ export const FlowLibrarySection = ({
         summaries={summaries}
         displayNamesByEmail={displayNamesByEmail}
         onRequestDelete={onRequestDelete}
+        onRequestDuplicate={onRequestDuplicate}
       />
     );
   }
@@ -47,6 +51,7 @@ export const FlowLibrarySection = ({
       summaries={summaries}
       displayNamesByEmail={displayNamesByEmail}
       onRequestDelete={onRequestDelete}
+      onRequestDuplicate={onRequestDuplicate}
     />
   );
 };

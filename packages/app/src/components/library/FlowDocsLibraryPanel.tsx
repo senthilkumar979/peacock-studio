@@ -24,15 +24,17 @@ import {
   filterSummaries,
   sortSummaries,
   type DashboardSortMode,
+  type DashboardStatusFilter,
 } from '@/utils/dashboardLibrary';
 import { filterGuestVisibleSummaries } from '@/utils/guestDocumentVisibility';
 
 export const FlowDocsLibraryPanel = () => {
   const isGuest = useIsGuestSession();
-  const { summaries: allSummaries, isLoading, error, deleteDocument, refresh } =
+  const { summaries: allSummaries, isLoading, error, deleteDocument, duplicateDocument, refresh } =
     useFlowLibrary();
   const [viewMode, setViewMode] = useState<DashboardViewMode>(readDashboardViewMode);
   const [sortMode, setSortMode] = useState<DashboardSortMode>('newest');
+  const [statusFilter, setStatusFilter] = useState<DashboardStatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingDelete, setPendingDelete] = useState<SavedFlowSummary | null>(null);
 
@@ -42,8 +44,8 @@ export const FlowDocsLibraryPanel = () => {
   }, [allSummaries, isGuest]);
 
   const displayedSummaries = useMemo(
-    () => sortSummaries(filterSummaries(summaries, searchQuery), sortMode),
-    [summaries, searchQuery, sortMode],
+    () => sortSummaries(filterSummaries(summaries, searchQuery, statusFilter), sortMode),
+    [summaries, searchQuery, statusFilter, sortMode],
   );
 
   const handleViewChange = (mode: DashboardViewMode) => {
@@ -113,9 +115,11 @@ export const FlowDocsLibraryPanel = () => {
               <FlowDocsLibraryToolbar
                 searchQuery={searchQuery}
                 sortMode={sortMode}
+                statusFilter={statusFilter}
                 viewMode={viewMode}
                 onSearchChange={setSearchQuery}
                 onSortChange={setSortMode}
+                onStatusFilterChange={setStatusFilter}
                 onViewChange={handleViewChange}
               />
             ) : null}
@@ -136,10 +140,13 @@ export const FlowDocsLibraryPanel = () => {
                 </p>
                 <button
                   type="button"
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => {
+                    setSearchQuery('');
+                    setStatusFilter('all');
+                  }}
                   className="mt-4 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
-                  Clear search
+                  Clear filters
                 </button>
               </div>
             ) : null}
@@ -150,6 +157,9 @@ export const FlowDocsLibraryPanel = () => {
                   viewMode={viewMode}
                   summaries={displayedSummaries}
                   onRequestDelete={setPendingDelete}
+                  onRequestDuplicate={(summary) => {
+                    void duplicateDocument(summary.id);
+                  }}
                 />
               </div>
             ) : null}

@@ -13,7 +13,7 @@ import { getFlowDocument } from '@/services/flowLibraryService';
 import { createDocumentEmbedCode, createDocumentShareUrl } from '@/services/shareLinkService';
 import { EmbedPublicAccessNote } from '@/components/share/EmbedPublicAccessNote';
 import { isCloudSyncEnabled } from '@/cloud/config';
-import type { FlowShareSettings } from '@/types/savedFlow';
+import type { FlowDocumentStatus, FlowShareSettings } from '@/types/savedFlow';
 import { resolveShareSettings } from '@/utils/flowShareSettings';
 import {
   buildDefaultPdfPathSelections,
@@ -36,6 +36,7 @@ interface ShareDocumentModalProps {
   steps?: FlowOutlineItem[];
   screenshotUrls?: Record<string, string>;
   shareSettings?: FlowShareSettings;
+  status?: FlowDocumentStatus;
   onShareSettingsSave?: (settings: FlowShareSettings) => void;
 }
 
@@ -47,11 +48,13 @@ export const ShareDocumentModal = ({
   steps: stepsProp,
   screenshotUrls: screenshotUrlsProp,
   shareSettings: shareSettingsProp,
+  status: statusProp,
   onShareSettingsSave,
 }: ShareDocumentModalProps) => {
   const { canShare, canExport, canEmbed, disabledReasons } = useShareMethodAccess();
   const [method, setMethod] = useState<ShareMethod>('link');
   const [accessMode, setAccessMode] = useState<ShareLinkAccessMode>('readonly');
+  const [presenterLink, setPresenterLink] = useState(false);
   const [expiryPreset, setExpiryPreset] = useState<ShareExpiryPreset>('never');
   const [requiresAuth, setRequiresAuth] = useState(false);
   const [manageRefreshKey, setManageRefreshKey] = useState(0);
@@ -62,11 +65,16 @@ export const ShareDocumentModal = ({
     steps: FlowOutlineItem[];
     screenshotUrls: Record<string, string>;
     shareSettings?: FlowShareSettings;
+    status: FlowDocumentStatus;
   } | null>(null);
 
   const flow = flowProp ?? loaded?.flow ?? null;
   const steps = stepsProp ?? loaded?.steps ?? [];
   const screenshotUrls = screenshotUrlsProp ?? loaded?.screenshotUrls ?? {};
+  const documentStatus = statusProp ?? loaded?.status ?? 'live';
+  const isDraft = documentStatus === 'draft';
+  const canSharePublicly = canShare && !isDraft;
+  const canEmbedPublicly = canEmbed && !isDraft;
   const branches = useMemo(() => collectAllBranches(steps), [steps]);
   const hasBranches = branches.length > 0;
 
@@ -87,35 +95,43 @@ export const ShareDocumentModal = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    const preferred: ShareMethod = canShare
+    const preferred: ShareMethod = canSharePublicly
       ? 'link'
       : canExport
         ? 'pdf'
-        : canEmbed
+        : canEmbedPublicly
           ? 'embed'
           : 'pdf';
     setMethod(preferred);
     setAccessMode('readonly');
+    setPresenterLink(false);
     setExpiryPreset('never');
     setRequiresAuth(false);
     setBranchSettings(defaultBranchSettings);
     setPdfPathSelections(defaultPdfPathSelections);
     setEmbedCode('');
-  }, [isOpen, defaultBranchSettings, defaultPdfPathSelections, canShare, canExport, canEmbed]);
+  }, [
+    isOpen,
+    defaultBranchSettings,
+    defaultPdfPathSelections,
+    canSharePublicly,
+    canExport,
+    canEmbedPublicly,
+  ]);
 
   useEffect(() => {
-    if (method === 'link' && !canShare) {
-      setMethod(canExport ? 'pdf' : canEmbed ? 'embed' : 'pdf');
+    if (method === 'link' && !canSharePublicly) {
+      setMethod(canExport ? 'pdf' : canEmbedPublicly ? 'embed' : 'pdf');
       return;
     }
     if (method === 'pdf' && !canExport) {
-      setMethod(canShare ? 'link' : canEmbed ? 'embed' : 'link');
+      setMethod(canSharePublicly ? 'link' : canEmbedPublicly ? 'embed' : 'link');
       return;
     }
-    if (method === 'embed' && !canEmbed) {
-      setMethod(canShare ? 'link' : canExport ? 'pdf' : 'link');
+    if (method === 'embed' && !canEmbedPublicly) {
+      setMethod(canSharePublicly ? 'link' : canExport ? 'pdf' : 'link');
     }
-  }, [method, canShare, canExport, canEmbed]);
+  }, [method, canSharePublicly, canExport, canEmbedPublicly]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -138,6 +154,7 @@ export const ShareDocumentModal = ({
           steps: doc.steps,
           screenshotUrls: doc.screenshotUrls,
           shareSettings: doc.shareSettings,
+          status: doc.status,
         });
       })
       .finally(() => {
@@ -149,7 +166,7 @@ export const ShareDocumentModal = ({
   }, [isOpen, documentId, flowProp, stepsProp]);
 
   useEffect(() => {
-    if (!isOpen || method !== 'link' || !canShare) return;
+    if (!isOpen || method !== 'link' || !canSharePublicly) return;
 
     let cancelled = false;
     setIsShareUrlLoading(true);
@@ -161,8 +178,9 @@ export const ShareDocumentModal = ({
 
     void createDocumentShareUrl(documentId, {
       accessMode,
-      viewMode: 'doc',
+      viewMode: presenterLink ? 'player' : 'doc',
       shareSettings: branchShareSettings,
+      presenter: accessMode === 'readonly' ? presenterLink : false,
       expiresAt: expiresAtFromPreset(expiryPreset),
       requiresAuth: accessMode === 'readonly' ? requiresAuth : false,
     })
@@ -192,9 +210,10 @@ export const ShareDocumentModal = ({
     accessMode,
     branchSettings,
     hasBranches,
-    canShare,
+    canSharePublicly,
     expiryPreset,
     requiresAuth,
+    presenterLink,
   ]);
 
   const handleClose = () => {
@@ -275,8 +294,9 @@ export const ShareDocumentModal = ({
         (async () => {
           const created = await createDocumentShareUrl(documentId, {
             accessMode,
-            viewMode: 'doc',
+            viewMode: presenterLink ? 'player' : 'doc',
             shareSettings: branchShareSettings,
+            presenter: accessMode === 'readonly' ? presenterLink : false,
             expiresAt: expiresAtFromPreset(expiryPreset),
             requiresAuth: accessMode === 'readonly' ? requiresAuth : false,
           });
@@ -304,8 +324,8 @@ export const ShareDocumentModal = ({
   const primaryDisabled =
     isLoading ||
     isExporting ||
-    (method === 'embed' && !canEmbed) ||
-    (method === 'link' && isShareUrlLoading) ||
+    (method === 'embed' && !canEmbedPublicly) ||
+    (method === 'link' && (!canSharePublicly || isShareUrlLoading)) ||
     (method === 'pdf' && !flow) ||
     (method === 'pdf' && hasBranches && !hasCompletePdfPathSelections(branches, pdfPathSelections));
 
@@ -341,19 +361,33 @@ export const ShareDocumentModal = ({
             </div>
           ) : (
             <>
+              {isDraft ? (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  This documentation is still a draft. Set status to Live in the editor before
+                  creating a public link or embed. PDF export remains available.
+                </div>
+              ) : null}
               <ShareMethodPicker
                 value={method}
                 onChange={setMethod}
                 disabled={isExporting}
                 disabledMethods={{
-                  link: !canShare,
+                  link: !canSharePublicly,
                   pdf: !canExport,
-                  embed: !canEmbed,
+                  embed: !canEmbedPublicly,
                 }}
-                disabledReasons={disabledReasons}
+                disabledReasons={{
+                  ...disabledReasons,
+                  link: isDraft
+                    ? 'Publish to Live before sharing a public link.'
+                    : disabledReasons.link,
+                  embed: isDraft
+                    ? 'Publish to Live before creating an embed.'
+                    : disabledReasons.embed,
+                }}
               />
               {method === 'embed' ? (
-                canEmbed ? (
+                canEmbedPublicly ? (
                   <div className="space-y-3">
                     <p className="text-sm text-slate-600">
                       Copy an iframe that loads a unique Peacock embed URL. Viewers see the interactive
@@ -391,6 +425,16 @@ export const ShareDocumentModal = ({
                     onExpiryPresetChange={setExpiryPreset}
                     onRequiresAuthChange={setRequiresAuth}
                   />
+                  {accessMode === 'readonly' ? (
+                    <label className="flex items-center gap-2 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={presenterLink}
+                        onChange={(event) => setPresenterLink(event.target.checked)}
+                      />
+                      Presenter mode link (fullscreen player)
+                    </label>
+                  ) : null}
                   {isCloudSyncEnabled() ? (
                     <ShareLinkManagePanel
                       resourceType="document"

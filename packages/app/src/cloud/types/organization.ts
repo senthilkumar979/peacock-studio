@@ -3,6 +3,7 @@ export type MemberRole = 'admin' | 'member';
 export type MemberStatus = 'active' | 'disabled';
 
 export interface MemberCapabilities {
+  read: boolean;
   create: boolean;
   edit: boolean;
   delete: boolean;
@@ -61,7 +62,19 @@ export interface OrganizationMemberRecord {
   joinedAt: string;
 }
 
+export interface OrganizationGroupRecord {
+  id: string;
+  organizationId: string;
+  name: string;
+  description: string;
+  capabilities: MemberCapabilities;
+  createdAt: string;
+  updatedAt: string;
+  memberIds: string[];
+}
+
 export const ALL_CAPABILITIES_TRUE: MemberCapabilities = {
+  read: true,
   create: true,
   edit: true,
   delete: true,
@@ -71,6 +84,7 @@ export const ALL_CAPABILITIES_TRUE: MemberCapabilities = {
 };
 
 export const DEFAULT_MEMBER_CAPABILITIES: MemberCapabilities = {
+  read: true,
   create: true,
   edit: true,
   delete: false,
@@ -80,6 +94,7 @@ export const DEFAULT_MEMBER_CAPABILITIES: MemberCapabilities = {
 };
 
 export const CAPABILITY_KEYS = [
+  'read',
   'create',
   'edit',
   'delete',
@@ -98,6 +113,7 @@ export function parseCapabilities(
   if (!value || typeof value !== 'object') return { ...defaults };
   const record = value as Record<string, unknown>;
   return {
+    read: typeof record.read === 'boolean' ? record.read : defaults.read,
     create: typeof record.create === 'boolean' ? record.create : defaults.create,
     edit: typeof record.edit === 'boolean' ? record.edit : defaults.edit,
     delete: typeof record.delete === 'boolean' ? record.delete : defaults.delete,

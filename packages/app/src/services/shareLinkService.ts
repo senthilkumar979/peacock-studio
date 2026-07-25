@@ -23,6 +23,7 @@ interface DocumentShareLinkOptions extends ShareSecurityOptions {
   accessMode: ShareLinkAccessMode;
   viewMode?: SharedDocumentViewMode;
   shareSettings?: FlowShareSettings;
+  presenter?: boolean;
 }
 
 interface ProductTourShareLinkOptions extends ShareSecurityOptions {
@@ -34,14 +35,19 @@ export async function createDocumentShareUrl(
   documentId: string,
   options: DocumentShareLinkOptions,
 ): Promise<string> {
+  await assertDocumentShareable(documentId);
+
   if (!isCloudSyncEnabled()) {
-    const query =
-      options.shareSettings && options.accessMode === 'readonly'
-        ? buildBranchQueryFromSettings(options.shareSettings)
-        : '';
+    const queryParts: string[] = [];
+    if (options.shareSettings && options.accessMode === 'readonly') {
+      const branchQuery = buildBranchQueryFromSettings(options.shareSettings);
+      if (branchQuery) queryParts.push(branchQuery.replace(/^\?/, ''));
+    }
+    if (options.presenter) queryParts.push('presenter=1');
+    const query = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
     return buildSharedDocumentUrl(documentId, {
       accessMode: options.accessMode,
-      viewMode: options.viewMode,
+      viewMode: options.presenter ? 'player' : options.viewMode,
       query,
     });
   }
@@ -54,8 +60,9 @@ export async function createDocumentShareUrl(
     expiresAt: options.expiresAt,
     requiresAuth: options.requiresAuth,
     settings: {
-      viewMode: options.viewMode ?? 'doc',
+      viewMode: options.presenter ? 'player' : (options.viewMode ?? 'doc'),
       shareSettings: options.shareSettings,
+      presenter: options.presenter ?? false,
     },
   });
 
@@ -69,6 +76,8 @@ export async function createDocumentEmbedCode(
   if (!isCloudSyncEnabled()) {
     throw new Error('Embeds require cloud sync and an Embed capability in your workspace.');
   }
+
+  await assertDocumentShareable(documentId);
 
   const link = await createOrUpdateShareLink({
     resourceType: 'document',
@@ -86,6 +95,14 @@ export async function createDocumentEmbedCode(
     embedUrl,
     iframeCode: buildEmbedIframeCode(embedUrl, options.title ?? 'Peacock Studio guide'),
   };
+}
+
+async function assertDocumentShareable(documentId: string): Promise<void> {
+  const doc = await getFlowDocument(documentId);
+  if (!doc) throw new Error('Documentation not found.');
+  if (doc.status !== 'live') {
+    throw new Error('Publish this documentation to Live before sharing publicly.');
+  }
 }
 
 export async function createProductTourShareUrl(

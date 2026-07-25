@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSessionMode } from '@/hooks/useSessionMode';
-import { listFlowSummaries, removeFlowDocument } from '@/services/flowLibraryService';
+import { listFlowSummaries, removeFlowDocument, duplicateFlowDocument } from '@/services/flowLibraryService';
 import { computeDashboardStats, type DashboardStats } from '@/utils/dashboardStats';
 import type { SavedFlowSummary } from '@/types/savedFlow';
 import { reportAppError } from '@/utils/appError';
@@ -55,5 +55,33 @@ export function useFlowLibrary() {
     [refresh, sessionMode],
   );
 
-  return { summaries, stats, isLoading, error, refresh, deleteDocument, sessionMode };
+  const duplicateDocument = useCallback(
+    async (id: string) => {
+      if (sessionMode === 'guest') return;
+      await notifyPromise(
+        duplicateFlowDocument(id).then((newId) => {
+          if (!newId) throw new Error('Could not duplicate documentation.');
+          return refresh();
+        }),
+        {
+          loading: 'Duplicating document…',
+          success: 'Document duplicated',
+          successDescription: 'A draft copy was added to your library.',
+          context: 'Duplicate flow document',
+        },
+      );
+    },
+    [refresh, sessionMode],
+  );
+
+  return {
+    summaries,
+    stats,
+    isLoading,
+    error,
+    refresh,
+    deleteDocument,
+    duplicateDocument,
+    sessionMode,
+  };
 }

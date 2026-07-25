@@ -5,6 +5,7 @@ import type { PageHintControl } from '@/components/onboarding/HintAnchor';
 import { FlowDocViewHeader } from '@/player/FlowDocViewHeader';
 import { useBranchingPlayback } from '@/hooks/useBranchingPlayback';
 import { useKeyboard } from '@/hooks/useKeyboard';
+import { usePresenterMode } from '@/hooks/usePresenterMode';
 import { useFlowStore } from '@/store/flowStore';
 import type { SharedDocumentViewMode } from '@/utils/shareLink';
 import { FlowBranchChoicePanel } from './FlowBranchChoicePanel';
@@ -26,6 +27,7 @@ interface PlayerViewProps {
   pageHints?: PageHintControl;
   showOwnerActions?: boolean;
   isEmbed?: boolean;
+  isPresenter?: boolean;
 }
 
 export const PlayerView = ({
@@ -35,6 +37,7 @@ export const PlayerView = ({
   pageHints,
   showOwnerActions = true,
   isEmbed = false,
+  isPresenter: isPresenterProp = false,
 }: PlayerViewProps) => {
   const location = useLocation();
   const libraryBackState = location.state;
@@ -43,6 +46,12 @@ export const PlayerView = ({
   const playback = useBranchingPlayback();
   const [isPlaying, setIsPlaying] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
+  const {
+    rootRef,
+    isPresenter,
+    enterPresenter,
+    exitPresenter,
+  } = usePresenterMode({ forcedPresenter: isPresenterProp });
 
   const linkedStep = playback.linkedPlayback?.steps[playback.linkedPlayback.stepIndex];
   const atBranch =
@@ -92,8 +101,11 @@ export const PlayerView = ({
         if (playback.currentIndex >= playback.totalNavigableSegments - 2) return;
         setIsPlaying((playing) => !playing);
       },
+      Escape: () => {
+        if (isPresenter && !isPresenterProp) exitPresenter();
+      },
     }),
-    [playback],
+    [playback, isPresenter, isPresenterProp, exitPresenter],
   );
 
   useKeyboard(keyboardHandlers);
@@ -110,38 +122,44 @@ export const PlayerView = ({
   const isScrollableMain = atBranch;
   const isCenteredPlayerContent =
     playback.isAtFinale || playback.currentSegment?.type === 'section';
+  const showChrome = !isPresenter;
 
   return (
     <div
-      className={`flex flex-col overflow-hidden ${
+      ref={rootRef}
+      className={`relative flex flex-col overflow-hidden ${
         atBranch
           ? 'bg-gradient-to-b from-peacock-50/80 via-slate-50 to-slate-50'
           : 'bg-slate-50'
-      } ${isEmbed ? 'h-full min-h-0' : 'h-screen'}`}
+      } ${isEmbed ? 'h-full min-h-0' : 'h-screen'}${isPresenter ? ' presenter-mode' : ''}`}
     >
-      <FlowDocViewHeader
-        documentId={documentId}
-        title={flow?.flow.title ?? 'Untitled Flow'}
-        viewMode="player"
-        onViewModeChange={onModeChange}
-        onOverview={onOverview}
-        editHref={`/docs/${documentId}/edit`}
-        editLinkState={libraryBackState}
-        pageHints={pageHints}
-        showOwnerActions={showOwnerActions}
-        isEmbed={isEmbed}
-      />
+      {showChrome ? (
+        <FlowDocViewHeader
+          documentId={documentId}
+          title={flow?.flow.title ?? 'Untitled Flow'}
+          version={flow?.flow.version}
+          viewMode="player"
+          onViewModeChange={onModeChange}
+          onOverview={onOverview}
+          editHref={`/docs/${documentId}/edit`}
+          editLinkState={libraryBackState}
+          pageHints={pageHints}
+          showOwnerActions={showOwnerActions}
+          isEmbed={isEmbed}
+          onEnterPresenter={isEmbed ? undefined : enterPresenter}
+        />
+      ) : null}
 
       <main
         ref={mainRef}
         className={`flex min-h-0 flex-1 ${
-          isEmbed ? 'px-4 py-5 sm:px-6 sm:py-6' : 'px-3 py-3 md:px-6 md:py-4'
+          isEmbed || isPresenter ? 'px-4 py-5 sm:px-6 sm:py-6' : 'px-3 py-3 md:px-6 md:py-4'
         } ${
           isScrollableMain
             ? 'items-start overflow-y-auto overscroll-contain'
             : isCenteredPlayerContent
               ? 'items-center justify-center overflow-y-auto overscroll-contain'
-              : isEmbed
+              : isEmbed || isPresenter
                 ? 'items-center justify-center overflow-hidden'
                 : 'items-start justify-center overflow-hidden'
         }`}
@@ -194,18 +212,24 @@ export const PlayerView = ({
         ) : null}
       </main>
 
-      <PlayerControls
-        position={position}
-        progressLabel={progressLabel}
-        progressPercent={progressPercent}
-        currentIndex={playback.currentIndex}
-        totalSegments={playback.totalNavigableSegments}
-        isPlaying={isPlaying}
-        onPrevious={playback.goPrevious}
-        onNext={playback.goNext}
-        onTogglePlay={() => setIsPlaying((playing) => !playing)}
-        pageHints={pageHints}
-      />
+      {showChrome ? (
+        <PlayerControls
+          position={position}
+          progressLabel={progressLabel}
+          progressPercent={progressPercent}
+          currentIndex={playback.currentIndex}
+          totalSegments={playback.totalNavigableSegments}
+          isPlaying={isPlaying}
+          onPrevious={playback.goPrevious}
+          onNext={playback.goNext}
+          onTogglePlay={() => setIsPlaying((playing) => !playing)}
+          pageHints={pageHints}
+        />
+      ) : (
+        <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-slate-900/70 px-3 py-1 text-xs text-white">
+          Esc to exit presenter · {progressLabel}
+        </div>
+      )}
     </div>
   );
 };

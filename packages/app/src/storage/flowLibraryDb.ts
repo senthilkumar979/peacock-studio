@@ -8,6 +8,7 @@ import { convertRouteToProductTour } from '@/utils/migrateRouteToProductTour';
 import { estimateTourDurationMinutes } from '@/utils/productTourLearner';
 import { countRouteBranches, countRoutePeacocks, getChapterNodes, migrateSavedRoute, needsRouteMigration } from '@/utils/routeGraph';
 import { countPlayableSteps } from '@/utils/flowDocumentSnapshot';
+import { normalizeFlowStatus, normalizeFlowVersion } from '@/utils/flowDocumentMeta';
 import { normalizePersona } from '@/utils/normalizePersona';
 import { normalizeProductTour } from '@/utils/normalizeProductTour';
 import { DEFAULT_PERSONA_ID } from '@/constants/personaAvatars';
@@ -156,7 +157,8 @@ export function toFlowSummary(doc: SavedFlowDocument): SavedFlowSummary {
     id: doc.id,
     title: doc.flow.flow.title.trim() || 'Untitled flow',
     description: doc.flow.flow.description.trim(),
-    version: doc.flow.flow.version?.trim() ?? '',
+    version: normalizeFlowVersion(doc.flow.flow.version),
+    status: normalizeFlowStatus(doc.status, 'live'),
     generatedAt: doc.flow.metadata.createdAt,
     updatedAt: doc.updatedAt,
     createdBy: doc.createdBy ?? null,
@@ -173,12 +175,34 @@ export async function listFlowSummaries(): Promise<SavedFlowSummary[]> {
 
 export async function getFlowDocument(id: string): Promise<SavedFlowDocument | undefined> {
   const db = await getDb();
-  return db.get('documents', id);
+  const doc = await db.get('documents', id);
+  if (!doc) return undefined;
+  return {
+    ...doc,
+    status: normalizeFlowStatus(doc.status, 'live'),
+    flow: {
+      ...doc.flow,
+      flow: {
+        ...doc.flow.flow,
+        version: normalizeFlowVersion(doc.flow.flow.version),
+      },
+    },
+  };
 }
 
 export async function saveFlowDocument(doc: SavedFlowDocument): Promise<void> {
   const db = await getDb();
-  await db.put('documents', doc);
+  await db.put('documents', {
+    ...doc,
+    status: normalizeFlowStatus(doc.status, 'draft'),
+    flow: {
+      ...doc.flow,
+      flow: {
+        ...doc.flow.flow,
+        version: normalizeFlowVersion(doc.flow.flow.version),
+      },
+    },
+  });
 }
 
 export async function deleteFlowDocument(id: string): Promise<void> {

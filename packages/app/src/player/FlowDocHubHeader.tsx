@@ -11,6 +11,7 @@ import { useDocumentShareModal } from '@/hooks/useDocumentShareModal';
 interface FlowDocHubHeaderProps {
   documentId: string;
   title: string;
+  version?: string | null;
   editHref: string;
   editLinkState?: unknown;
   showOwnerActions?: boolean;
@@ -19,6 +20,7 @@ interface FlowDocHubHeaderProps {
 export const FlowDocHubHeader = ({
   documentId,
   title,
+  version,
   editHref,
   editLinkState,
   showOwnerActions = true,
@@ -29,6 +31,7 @@ export const FlowDocHubHeader = ({
     <>
       <FlowDocChromeHeader
         title={title}
+        version={version}
         modeBadge={{ label: 'Overview', tone: 'slate' }}
         showBack={showOwnerActions}
         homeTo={showOwnerActions ? DASHBOARD_PATH : LANDING_PATH}

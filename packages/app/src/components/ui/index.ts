@@ -1,5 +1,6 @@
 export { Button } from '@/components/ui/Button';
 export { cn } from '@/components/ui/cn';
+export { ActionTooltip } from '@/components/ui/ActionTooltip';
 export { FieldInput } from '@/components/ui/FieldInput';
 export { FieldSelect } from '@/components/ui/FieldSelect';
 export { FieldTextarea } from '@/components/ui/FieldTextarea';

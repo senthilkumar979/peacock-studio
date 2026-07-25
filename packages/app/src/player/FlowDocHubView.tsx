@@ -30,6 +30,7 @@ export const FlowDocHubView = ({
       <FlowDocHubHeader
         documentId={documentId}
         title={title}
+        version={flow?.flow.version}
         editHref={`/docs/${documentId}/edit`}
         editLinkState={libraryBackState}
         showOwnerActions={showOwnerActions}

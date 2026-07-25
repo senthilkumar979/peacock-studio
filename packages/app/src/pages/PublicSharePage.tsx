@@ -122,6 +122,7 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
         onOverview={handleHubNavigation}
         showOwnerActions={false}
         isEmbed={isEmbed}
+        isPresenter={link.settings.presenter ?? false}
       />
     </EmbedChrome>
   );

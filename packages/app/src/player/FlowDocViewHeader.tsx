@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { LayoutGrid, Link2, Pencil } from 'lucide-react';
+import { LayoutGrid, Link2, Maximize2, Pencil } from 'lucide-react';
 import { DASHBOARD_PATH, LANDING_PATH } from '@/constants/routes';
 import {
   FLOW_DOC_ACTION_CLASS,
@@ -7,6 +7,7 @@ import {
   FlowDocChromeHeader,
 } from '@/components/flow/FlowDocChromeHeader';
 import { HintAnchor, type PageHintControl } from '@/components/onboarding/HintAnchor';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import { PLAYER_HINT_IDS } from '@/constants/firstTimeHints';
 import { useDocumentShareModal } from '@/hooks/useDocumentShareModal';
 import { SharedViewToggle } from '@/player/SharedViewToggle';
@@ -15,6 +16,7 @@ import type { SharedDocumentViewMode } from '@/utils/shareLink';
 interface FlowDocViewHeaderProps {
   documentId: string;
   title: string;
+  version?: string | null;
   viewMode: SharedDocumentViewMode;
   onViewModeChange: (mode: SharedDocumentViewMode) => void;
   onOverview?: () => void;
@@ -24,11 +26,13 @@ interface FlowDocViewHeaderProps {
   showOwnerActions?: boolean;
   guideProgressPercent?: number;
   isEmbed?: boolean;
+  onEnterPresenter?: () => void;
 }
 
 export const FlowDocViewHeader = ({
   documentId,
   title,
+  version,
   viewMode,
   onViewModeChange,
   onOverview,
@@ -38,6 +42,7 @@ export const FlowDocViewHeader = ({
   showOwnerActions = true,
   guideProgressPercent,
   isEmbed = false,
+  onEnterPresenter,
 }: FlowDocViewHeaderProps) => {
   const { openShare, shareModal } = useDocumentShareModal(documentId);
   const modeLabel = viewMode === 'player' ? 'Player' : 'Guide';
@@ -47,6 +52,7 @@ export const FlowDocViewHeader = ({
     <>
       <FlowDocChromeHeader
         title={title}
+        version={version}
         modeBadge={!isEmbed ? { label: modeLabel, tone: 'peacock' } : undefined}
         showBack={showChromeNav}
         homeTo={showChromeNav ? DASHBOARD_PATH : LANDING_PATH}
@@ -55,10 +61,31 @@ export const FlowDocViewHeader = ({
         actions={
           <>
             {onOverview && !isEmbed ? (
-              <button type="button" onClick={onOverview} className={FLOW_DOC_ACTION_CLASS}>
-                <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
-                <span className="hidden sm:inline">Overview</span>
-              </button>
+              <ActionTooltip label="Overview">
+                <button
+                  type="button"
+                  onClick={onOverview}
+                  className={FLOW_DOC_ACTION_CLASS}
+                  aria-label="Overview"
+                >
+                  <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
+                  <span className="hidden sm:inline">Overview</span>
+                </button>
+              </ActionTooltip>
+            ) : null}
+
+            {viewMode === 'player' && onEnterPresenter ? (
+              <ActionTooltip label="Presenter mode (fullscreen)">
+                <button
+                  type="button"
+                  onClick={onEnterPresenter}
+                  className={FLOW_DOC_ACTION_CLASS}
+                  aria-label="Presenter mode"
+                >
+                  <Maximize2 className="h-4 w-4 shrink-0" aria-hidden />
+                  <span className="hidden sm:inline">Presenter</span>
+                </button>
+              </ActionTooltip>
             ) : null}
 
             {!isEmbed ? (
@@ -74,10 +101,17 @@ export const FlowDocViewHeader = ({
 
             {showOwnerActions && !isEmbed ? (
               <>
-                <button type="button" onClick={openShare} className={FLOW_DOC_ACTION_CLASS}>
-                  <Link2 className="h-4 w-4 shrink-0" aria-hidden />
-                  <span className="hidden sm:inline">Share</span>
-                </button>
+                <ActionTooltip label="Share">
+                  <button
+                    type="button"
+                    onClick={openShare}
+                    className={FLOW_DOC_ACTION_CLASS}
+                    aria-label="Share"
+                  >
+                    <Link2 className="h-4 w-4 shrink-0" aria-hidden />
+                    <span className="hidden sm:inline">Share</span>
+                  </button>
+                </ActionTooltip>
 
                 <HintAnchor
                   hints={pageHints}
@@ -86,14 +120,17 @@ export const FlowDocViewHeader = ({
                   description="Jump back to the editor to update steps, branching, and screenshots."
                   placement="bottom"
                 >
-                  <Link
-                    to={editHref}
-                    state={editLinkState}
-                    className={FLOW_DOC_PRIMARY_ACTION_CLASS}
-                  >
-                    <Pencil className="h-4 w-4 shrink-0" aria-hidden />
-                    <span className="hidden sm:inline">Edit</span>
-                  </Link>
+                  <ActionTooltip label="Edit">
+                    <Link
+                      to={editHref}
+                      state={editLinkState}
+                      className={FLOW_DOC_PRIMARY_ACTION_CLASS}
+                      aria-label="Edit"
+                    >
+                      <Pencil className="h-4 w-4 shrink-0" aria-hidden />
+                      <span className="hidden sm:inline">Edit</span>
+                    </Link>
+                  </ActionTooltip>
                 </HintAnchor>
               </>
             ) : null}

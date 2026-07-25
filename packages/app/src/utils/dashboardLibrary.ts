@@ -1,25 +1,28 @@
-import type { SavedFlowSummary } from '@/types/savedFlow';
+import type { FlowDocumentStatus, SavedFlowSummary } from '@/types/savedFlow';
 import { stripHtmlTags } from '@/utils/richText';
 
 export type DashboardSortMode = 'newest' | 'oldest' | 'mostSteps' | 'title';
+export type DashboardStatusFilter = 'all' | FlowDocumentStatus;
 
 export function filterSummaries(
   summaries: SavedFlowSummary[],
-  query: string
+  query: string,
+  statusFilter: DashboardStatusFilter = 'all',
 ): SavedFlowSummary[] {
   const normalized = query.trim().toLowerCase();
-  if (!normalized) return summaries;
 
   return summaries.filter((item) => {
+    if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+    if (!normalized) return true;
     const haystack =
-      `${item.title} ${stripHtmlTags(item.description)} ${item.version}`.toLowerCase();
+      `${item.title} ${stripHtmlTags(item.description)} ${item.version} ${item.status}`.toLowerCase();
     return haystack.includes(normalized);
   });
 }
 
 export function sortSummaries(
   summaries: SavedFlowSummary[],
-  mode: DashboardSortMode
+  mode: DashboardSortMode,
 ): SavedFlowSummary[] {
   const next = [...summaries];
 

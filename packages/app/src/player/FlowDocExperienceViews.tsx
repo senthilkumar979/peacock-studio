@@ -13,6 +13,7 @@ interface FlowDocExperienceViewsProps {
   pageHints?: PageHintControl;
   showOwnerActions?: boolean;
   isEmbed?: boolean;
+  isPresenter?: boolean;
 }
 
 export const FlowDocExperienceViews = ({
@@ -23,6 +24,7 @@ export const FlowDocExperienceViews = ({
   pageHints,
   showOwnerActions = true,
   isEmbed = false,
+  isPresenter = false,
 }: FlowDocExperienceViewsProps) => {
   if (resolvedView === 'hub') {
     return (
@@ -43,6 +45,7 @@ export const FlowDocExperienceViews = ({
         pageHints={pageHints}
         showOwnerActions={showOwnerActions}
         isEmbed={isEmbed}
+        isPresenter={isPresenter}
       />
     );
   }

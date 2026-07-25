@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { Activity, BarChart3, Users } from 'lucide-react';
+import { Activity, BarChart3, Users, UsersRound } from 'lucide-react';
 import { OrgAdminActivityTab } from '@/components/org-admin/OrgAdminActivityTab';
+import { OrgAdminGroupsPanel } from '@/components/org-admin/OrgAdminGroupsPanel';
 import { OrgAdminMembersPanel } from '@/components/org-admin/OrgAdminMembersPanel';
 import { OrgAdminOverviewTab } from '@/components/org-admin/OrgAdminOverviewTab';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
@@ -9,13 +10,14 @@ import { DASHBOARD_PATH } from '@/constants/routes';
 import { useActiveOrganization, useCloudAuthContext } from '@/hooks/useOrganization';
 import { useSessionMode } from '@/hooks/useSessionMode';
 
-type AdminTab = 'overview' | 'members' | 'activity';
+type AdminTab = 'overview' | 'members' | 'groups' | 'activity';
 
 export const OrgAdminPage = () => {
   const sessionMode = useSessionMode();
   const context = useCloudAuthContext();
   const { isAdmin, organizationId, organizationName } = useActiveOrganization();
   const [tab, setTab] = useState<AdminTab>('overview');
+  const isTeam = context?.workspaceType === 'team';
 
   if (sessionMode === 'loading' || sessionMode === 'connecting') {
     return (
@@ -28,6 +30,17 @@ export const OrgAdminPage = () => {
   if (sessionMode !== 'cloud' || !isAdmin || !organizationId) {
     return <Navigate to={DASHBOARD_PATH} replace />;
   }
+
+  const tabs = (
+    [
+      { id: 'overview' as const, label: 'Overview', icon: BarChart3 },
+      { id: 'members' as const, label: 'Members', icon: Users },
+      ...(isTeam
+        ? [{ id: 'groups' as const, label: 'Groups', icon: UsersRound }]
+        : []),
+      { id: 'activity' as const, label: 'Activity', icon: Activity },
+    ] as const
+  );
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-6">
@@ -45,13 +58,7 @@ export const OrgAdminPage = () => {
       </div>
 
       <div className="flex gap-1 rounded-xl bg-slate-100 p-1 ring-1 ring-slate-200/80">
-        {(
-          [
-            { id: 'overview', label: 'Overview', icon: BarChart3 },
-            { id: 'members', label: 'Members', icon: Users },
-            { id: 'activity', label: 'Activity', icon: Activity },
-          ] as const
-        ).map(({ id, label, icon: Icon }) => (
+        {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
@@ -79,6 +86,9 @@ export const OrgAdminPage = () => {
           currentUserEmail={context.userEmail}
           currentUserDisplayName={context.userDisplayName}
         />
+      ) : null}
+      {tab === 'groups' && isTeam ? (
+        <OrgAdminGroupsPanel organizationId={organizationId} />
       ) : null}
       {tab === 'activity' ? <OrgAdminActivityTab organizationId={organizationId} /> : null}
     </div>

@@ -16,18 +16,21 @@ import {
   resolveDisplayNameFromEmails,
 } from '@/utils/formatUpdatedByLine'
 import { FlowDocumentActions } from './FlowDocumentActions'
+import { FlowStatusBadge } from './FlowStatusBadge'
 import { FlowVersionBadge } from './FlowVersionBadge'
 
 interface FlowLibraryCardsProps {
   summaries: SavedFlowSummary[]
   displayNamesByEmail?: Record<string, string>
   onRequestDelete: (summary: SavedFlowSummary) => void
+  onRequestDuplicate?: (summary: SavedFlowSummary) => void
 }
 
 export const FlowLibraryCards = ({
   summaries,
   displayNamesByEmail = {},
   onRequestDelete,
+  onRequestDuplicate,
 }: FlowLibraryCardsProps) => (
   <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
     {summaries.map((summary, index) => (
@@ -37,6 +40,9 @@ export const FlowLibraryCards = ({
         index={index}
         displayNamesByEmail={displayNamesByEmail}
         onRequestDelete={() => onRequestDelete(summary)}
+        onRequestDuplicate={
+          onRequestDuplicate ? () => onRequestDuplicate(summary) : undefined
+        }
       />
     ))}
   </div>
@@ -47,6 +53,7 @@ interface FlowLibraryCardProps {
   index: number
   displayNamesByEmail: Record<string, string>
   onRequestDelete: () => void
+  onRequestDuplicate?: () => void
 }
 
 const FlowLibraryCard = ({
@@ -54,6 +61,7 @@ const FlowLibraryCard = ({
   index,
   displayNamesByEmail,
   onRequestDelete,
+  onRequestDuplicate,
 }: FlowLibraryCardProps) => {
   const wasUpdated = summary.updatedAt > summary.generatedAt + 60_000
   const auditName = resolveDisplayNameFromEmails(
@@ -108,7 +116,8 @@ const FlowLibraryCard = ({
           )}
         </Link>
 
-        <div className="mt-4">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <FlowStatusBadge status={summary.status} />
           <FlowVersionBadge version={summary.version} />
         </div>
 
@@ -141,8 +150,10 @@ const FlowLibraryCard = ({
       <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4">
         <FlowDocumentActions
           documentId={summary.id}
+          status={summary.status}
           layout="stack"
           onRequestDelete={onRequestDelete}
+          onRequestDuplicate={onRequestDuplicate}
         />
       </div>
     </motion.article>

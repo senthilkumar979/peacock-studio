@@ -1,5 +1,5 @@
 import type { DashboardViewMode } from '@/types/savedFlow';
-import type { DashboardSortMode } from '@/utils/dashboardLibrary';
+import type { DashboardSortMode, DashboardStatusFilter } from '@/utils/dashboardLibrary';
 import { ArrowDownUp, ScanEye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ExpandableLibrarySearch } from '@/components/dashboard/ExpandableLibrarySearch';
@@ -9,9 +9,11 @@ import { getFlowDocsBackState } from '@/utils/libraryNavigation';
 interface FlowDocsLibraryToolbarProps {
   searchQuery: string;
   sortMode: DashboardSortMode;
+  statusFilter: DashboardStatusFilter;
   viewMode: DashboardViewMode;
   onSearchChange: (value: string) => void;
   onSortChange: (mode: DashboardSortMode) => void;
+  onStatusFilterChange: (filter: DashboardStatusFilter) => void;
   onViewChange: (mode: DashboardViewMode) => void;
 }
 
@@ -22,12 +24,20 @@ const SORT_OPTIONS: { value: DashboardSortMode; label: string }[] = [
   { value: 'title', label: 'Title A–Z' },
 ];
 
+const STATUS_OPTIONS: { value: DashboardStatusFilter; label: string }[] = [
+  { value: 'all', label: 'All statuses' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'live', label: 'Live' },
+];
+
 export const FlowDocsLibraryToolbar = ({
   searchQuery,
   sortMode,
+  statusFilter,
   viewMode,
   onSearchChange,
   onSortChange,
+  onStatusFilterChange,
   onViewChange,
 }: FlowDocsLibraryToolbarProps) => (
   <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-3 gap-y-3 border-b border-slate-100 px-5 py-4">
@@ -45,6 +55,23 @@ export const FlowDocsLibraryToolbar = ({
     </Link>
 
     <div className="flex items-center justify-end gap-3 justify-self-end">
+      <label className="relative block shrink-0">
+        <span className="sr-only">Filter by status</span>
+        <select
+          value={statusFilter}
+          onChange={(event) =>
+            onStatusFilterChange(event.target.value as DashboardStatusFilter)
+          }
+          className="appearance-none rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-3 pr-8 text-sm font-medium text-slate-700 outline-none ring-peacock-500 focus:border-peacock-300 focus:bg-white focus:ring-2"
+        >
+          {STATUS_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <label className="relative block shrink-0">
         <span className="sr-only">Sort documentations</span>
         <ArrowDownUp

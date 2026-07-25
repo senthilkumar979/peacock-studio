@@ -5,6 +5,8 @@ export function formatUpdatedByLine(
   formatDate: (ms: number) => string,
   createdByEmail?: string | null,
   displayNamesByEmail: Record<string, string> = {},
+  includeUpdatedPrefix = true,
+  includeOwnerName = true,
 ): string {
   const when = formatDate(updatedAt);
   const name = resolveDisplayNameFromEmails(
@@ -12,8 +14,8 @@ export function formatUpdatedByLine(
     createdByEmail,
     displayNamesByEmail,
   );
-  if (!name) return `Updated ${when}`;
-  return `Updated ${when} · ${name}`;
+  if (!name) return `${when}`;
+  return `${includeUpdatedPrefix ? "Updated " : ""}${when} ${includeOwnerName ? `· ${name}` : ""}`;
 }
 
 export function resolveDisplayNameFromEmails(

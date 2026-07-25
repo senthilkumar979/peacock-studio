@@ -104,6 +104,36 @@ export function classifyAppError(error: unknown): ClassifiedAppError {
     };
   }
 
+  if (/document limit reached|storage.*limit|quota/i.test(lower)) {
+    return {
+      kind: 'validation',
+      title: 'Workspace limit',
+      userMessage:
+        message ||
+        'This workspace has reached its documentation limit. Delete an unused doc or upgrade the plan.',
+      isHard: false,
+      cause: error,
+    };
+  }
+
+  if (
+    like.name === 'TitleVersionConflictError' ||
+    /documentation named .+ with version .+ already exists|title.?version|flow_documents_org_title_version/i.test(
+      lower,
+    ) ||
+    (code === '23505' && /title|version|flow_documents/i.test(lower))
+  ) {
+    return {
+      kind: 'validation',
+      title: 'Name already in use',
+      userMessage:
+        message ||
+        'Another documentation already uses this title and version. Change the version, or save with the next free version on this documentation.',
+      isHard: false,
+      cause: error,
+    };
+  }
+
   if (
     status === 404 ||
     code === 'PGRST116' ||

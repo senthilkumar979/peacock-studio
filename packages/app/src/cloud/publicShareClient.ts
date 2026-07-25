@@ -5,7 +5,8 @@ import { getSupabaseAnonKey, getSupabaseUrl } from '@/cloud/config';
 import type { Persona } from '@/types/persona';
 import type { ProductTour, ProductTourCompletionCta, TourFeature } from '@/types/productTour';
 import type { EditableShareVerification, ResolvedShareLink, ShareLinkSettings } from '@/types/shareLink';
-import type { FlowShareSettings, SavedFlowDocument } from '@/types/savedFlow';
+import type { FlowDocumentStatus, FlowShareSettings, SavedFlowDocument } from '@/types/savedFlow';
+import { normalizeFlowStatus } from '@/utils/flowDocumentMeta';
 import { normalizePersona } from '@/utils/normalizePersona';
 import { normalizeProductTour } from '@/utils/normalizeProductTour';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
@@ -17,6 +18,7 @@ interface SharedFlowDocumentPayload {
   updatedAt: string | number;
   createdBy?: string | null;
   updatedBy?: string | null;
+  status?: FlowDocumentStatus | null;
   flow: FlowPayload;
   steps: FlowOutlineItem[];
   shareSettings?: FlowShareSettings;
@@ -122,6 +124,7 @@ export async function fetchPublicFlowDocument(
     id: payload.id,
     savedAt: isoToMs(payload.savedAt),
     updatedAt: isoToMs(payload.updatedAt),
+    status: normalizeFlowStatus(payload.status, 'live'),
     createdBy: payload.createdBy ?? null,
     updatedBy: payload.updatedBy ?? null,
     flow: payload.flow,

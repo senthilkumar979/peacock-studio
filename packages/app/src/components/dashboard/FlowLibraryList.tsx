@@ -5,6 +5,7 @@ import { useLibraryNavigationState } from '@/hooks/useLibraryBackState';
 import { formatFlowDate } from '@/utils/formatFlowDate';
 import { getDocumentPath } from '@/utils/shareLink';
 import { FlowDocumentActions } from './FlowDocumentActions';
+import { FlowStatusBadge } from './FlowStatusBadge';
 import { FlowStepCountBadge } from './FlowStepCountBadge';
 import { FlowVersionBadge } from './FlowVersionBadge';
 
@@ -12,11 +13,13 @@ interface FlowLibraryListProps {
   summaries: SavedFlowSummary[];
   displayNamesByEmail?: Record<string, string>;
   onRequestDelete: (summary: SavedFlowSummary) => void;
+  onRequestDuplicate?: (summary: SavedFlowSummary) => void;
 }
 
 export const FlowLibraryList = ({
   summaries,
   onRequestDelete,
+  onRequestDuplicate,
 }: FlowLibraryListProps) => {
   const navigationState = useLibraryNavigationState();
 
@@ -40,6 +43,7 @@ export const FlowLibraryList = ({
               {summary.title}
             </p>
             <p className="mt-1.5 flex flex-wrap items-center gap-2">
+              <FlowStatusBadge status={summary.status} />
               <FlowVersionBadge version={summary.version} />
               <span className="inline-flex items-center gap-1 text-sm text-slate-500">
                 <Calendar className="h-3.5 w-3.5 text-slate-400" aria-hidden />
@@ -52,8 +56,12 @@ export const FlowLibraryList = ({
         <div className="shrink-0 sm:ml-4">
           <FlowDocumentActions
             documentId={summary.id}
+            status={summary.status}
             layout="row"
             onRequestDelete={() => onRequestDelete(summary)}
+            onRequestDuplicate={
+              onRequestDuplicate ? () => onRequestDuplicate(summary) : undefined
+            }
           />
         </div>
       </li>

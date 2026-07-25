@@ -286,6 +286,7 @@ export const DocumentView = ({
       <FlowDocViewHeader
         documentId={documentId}
         title={flow?.flow.title ?? "Untitled Flow"}
+        version={flow?.flow.version}
         viewMode="doc"
         onViewModeChange={onModeChange}
         onOverview={onOverview}

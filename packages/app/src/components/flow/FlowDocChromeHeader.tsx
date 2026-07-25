@@ -14,6 +14,8 @@ type ModeBadgeTone = 'peacock' | 'slate';
 
 interface FlowDocChromeHeaderProps {
   title: string;
+  /** Shown next to the title when set (e.g. flow doc version). */
+  version?: string | null;
   modeBadge?: {
     label: string;
     tone?: ModeBadgeTone;
@@ -37,6 +39,7 @@ const MODE_BADGE_TONES: Record<ModeBadgeTone, string> = {
 
 export const FlowDocChromeHeader = ({
   title,
+  version,
   modeBadge,
   showBack = true,
   homeTo,
@@ -46,6 +49,7 @@ export const FlowDocChromeHeader = ({
 }: FlowDocChromeHeaderProps) => {
   const backLink = useLibraryBackLink();
   const badgeTone = modeBadge?.tone ?? 'peacock';
+  const versionLabel = version?.trim() || null;
 
   return (
     <header
@@ -82,7 +86,7 @@ export const FlowDocChromeHeader = ({
           <div className="hidden h-6 w-px shrink-0 bg-slate-200 lg:block" aria-hidden />
 
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               {modeBadge ? (
                 <span
                   className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ring-1 ${MODE_BADGE_TONES[badgeTone]}`}
@@ -91,6 +95,14 @@ export const FlowDocChromeHeader = ({
                 </span>
               ) : null}
               <h1 className="truncate text-sm font-bold text-slate-900 sm:text-base">{title}</h1>
+              {versionLabel ? (
+                <span
+                  className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-slate-600 ring-1 ring-slate-200/80"
+                  title={`Version ${versionLabel}`}
+                >
+                  v{versionLabel}
+                </span>
+              ) : null}
             </div>
           </div>
         </div>

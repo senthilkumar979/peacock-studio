@@ -34,5 +34,6 @@ export function usePersistDocument(enabled: boolean, routeDocumentId?: string): 
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
     };
+    // Status is persisted via persistDocumentStatus — do not full-save on status toggles.
   }, [enabled, documentId, isLoaded, flow, steps, screenshotUrls]);
 }
