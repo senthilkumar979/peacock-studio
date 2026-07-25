@@ -141,17 +141,19 @@ export async function createOrganizationInvitation(input: {
     p_capabilities: input.capabilities ?? null,
   });
   if (error) throw error;
-  const result = data as {
+  const result = (typeof data === 'string' ? JSON.parse(data) : data) as {
     id?: string;
+    invitationId?: string;
     token?: string;
     email?: string;
     expiresAt?: string;
   } | null;
-  if (!result?.id || !result.token || !result.email || !result.expiresAt) {
+  const id = result?.id ?? result?.invitationId;
+  if (!id || !result?.token || !result?.email || !result?.expiresAt) {
     throw new Error('Failed to create invitation');
   }
   return {
-    id: result.id,
+    id,
     token: result.token,
     email: result.email,
     expiresAt: result.expiresAt,
@@ -166,17 +168,19 @@ export async function resendOrganizationInvitation(
     p_invitation_id: invitationId,
   });
   if (error) throw error;
-  const result = data as {
+  const result = (typeof data === 'string' ? JSON.parse(data) : data) as {
     id?: string;
+    invitationId?: string;
     token?: string;
     email?: string;
     expiresAt?: string;
   } | null;
-  if (!result?.id || !result.token || !result.email || !result.expiresAt) {
+  const id = result?.id ?? result?.invitationId;
+  if (!id || !result?.token || !result?.email || !result?.expiresAt) {
     throw new Error('Failed to resend invitation');
   }
   return {
-    id: result.id,
+    id,
     token: result.token,
     email: result.email,
     expiresAt: result.expiresAt,
@@ -398,11 +402,18 @@ export async function sendOrgInviteEmail(input: {
   invitationId: string;
   inviterName: string;
 }): Promise<{ sent: true } | { sent: false; skipped: true }> {
+  const invitationId = input.invitationId?.trim();
+  if (!invitationId) {
+    throw new InviteEmailSendError(
+      'Missing invitation id. Refresh the page and try inviting again.',
+    );
+  }
+
   const turnstileToken = await getTurnstileToken('send-org-invite');
   const supabase = getAuthenticatedSupabaseClient();
   const { data, error } = await supabase.functions.invoke('send-org-invite', {
     body: {
-      invitationId: input.invitationId,
+      invitationId,
       inviterName: input.inviterName,
       turnstileToken,
     },

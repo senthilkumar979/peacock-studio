@@ -1,18 +1,22 @@
 // Supabase Edge Function: send organization invite emails via Resend.
 // Deploy with verify_jwt=false — Clerk third-party JWTs fail the legacy gateway check.
-// Auth + ownership verified via claim_org_invite_email_send RPC with the caller's Bearer token.
+// Prefer invitationId + claim_org_invite_email_send; legacy body fields still accepted.
 // Secrets: RESEND_API_KEY, APP_ORIGIN, RESEND_FROM, TURNSTILE_SECRET_KEY,
 //          SUPABASE_URL, SUPABASE_ANON_KEY
-//
-// Resend note: onboarding@resend.dev can only send to your Resend account email.
-// For teammate invites, verify a domain and set RESEND_FROM to that domain.
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 
 interface InviteBody {
   invitationId?: string;
+  invitation_id?: string;
   inviterName?: string;
   turnstileToken?: string;
+  turnstile_token?: string;
+  /** Legacy fields (pre claim_org_invite_email_send) */
+  toEmail?: string;
+  organizationName?: string;
+  inviteToken?: string;
+  expiresAt?: string;
 }
 
 serve(async (req) => {
@@ -38,56 +42,89 @@ serve(async (req) => {
     }
 
     const body = (await req.json()) as InviteBody;
-    const invitationId = body.invitationId?.trim();
-    const turnstileToken = body.turnstileToken?.trim();
+    const invitationId = (body.invitationId ?? body.invitation_id)?.trim();
+    const turnstileToken = (body.turnstileToken ?? body.turnstile_token)?.trim();
     const inviterName = body.inviterName?.trim() || 'A teammate';
 
-    if (!invitationId) {
-      return json({ error: 'Missing invitationId' }, 400, cors);
-    }
-    if (!turnstileToken) {
+    if (turnstileToken) {
+      const turnstileOk = await verifyTurnstile(turnstileToken, clientIp(req));
+      if (!turnstileOk) {
+        return json({ error: 'Bot check failed' }, 403, cors);
+      }
+    } else if (Deno.env.get('TURNSTILE_SECRET_KEY')?.trim()) {
       return json({ error: 'Missing Turnstile token' }, 400, cors);
     }
 
-    const turnstileOk = await verifyTurnstile(turnstileToken, clientIp(req));
-    if (!turnstileOk) {
-      return json({ error: 'Bot check failed' }, 403, cors);
+    let toEmail: string | undefined;
+    let organizationName: string | undefined;
+    let inviteToken: string | undefined;
+    let expiresAt: string | undefined;
+
+    if (invitationId) {
+      const claimRes = await fetch(`${supabaseUrl}/rest/v1/rpc/claim_org_invite_email_send`, {
+        method: 'POST',
+        headers: {
+          Authorization: authHeader,
+          apikey: supabaseAnonKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ p_invitation_id: invitationId }),
+      });
+
+      if (claimRes.status === 401 || claimRes.status === 403) {
+        return json({ error: 'Unauthorized' }, 401, cors);
+      }
+
+      if (!claimRes.ok) {
+        const detail = await claimRes.text();
+        return json(
+          { error: summarizeClaimError(detail) },
+          claimRes.status >= 400 && claimRes.status < 500 ? 400 : 502,
+          cors,
+        );
+      }
+
+      const claimed = (await claimRes.json()) as {
+        toEmail?: string;
+        organizationName?: string;
+        inviteToken?: string;
+        expiresAt?: string;
+      };
+      toEmail = claimed.toEmail?.trim().toLowerCase();
+      organizationName = claimed.organizationName?.trim();
+      inviteToken = claimed.inviteToken?.trim();
+      expiresAt = claimed.expiresAt;
+    } else {
+      // Legacy clients: authenticate via memberships probe, use body fields.
+      const authProbe = await fetch(`${supabaseUrl}/rest/v1/rpc/list_my_memberships`, {
+        method: 'POST',
+        headers: {
+          Authorization: authHeader,
+          apikey: supabaseAnonKey,
+          'Content-Type': 'application/json',
+        },
+        body: '{}',
+      });
+      if (!authProbe.ok) {
+        return json({ error: 'Unauthorized' }, 401, cors);
+      }
+
+      toEmail = body.toEmail?.trim().toLowerCase();
+      organizationName = body.organizationName?.trim();
+      inviteToken = body.inviteToken?.trim();
+      expiresAt = body.expiresAt;
+
+      if (!toEmail || !organizationName || !inviteToken) {
+        return json(
+          {
+            error:
+              'Missing invitationId (or legacy toEmail/organizationName/inviteToken). Refresh the app and try again.',
+          },
+          400,
+          cors,
+        );
+      }
     }
-
-    const claimRes = await fetch(`${supabaseUrl}/rest/v1/rpc/claim_org_invite_email_send`, {
-      method: 'POST',
-      headers: {
-        Authorization: authHeader,
-        apikey: supabaseAnonKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ p_invitation_id: invitationId }),
-    });
-
-    if (claimRes.status === 401 || claimRes.status === 403) {
-      return json({ error: 'Unauthorized' }, 401, cors);
-    }
-
-    if (!claimRes.ok) {
-      const detail = await claimRes.text();
-      return json(
-        { error: summarizeClaimError(detail) },
-        claimRes.status >= 400 && claimRes.status < 500 ? 400 : 502,
-        cors,
-      );
-    }
-
-    const claimed = (await claimRes.json()) as {
-      toEmail?: string;
-      organizationName?: string;
-      inviteToken?: string;
-      expiresAt?: string;
-    };
-
-    const toEmail = claimed.toEmail?.trim().toLowerCase();
-    const organizationName = claimed.organizationName?.trim();
-    const inviteToken = claimed.inviteToken?.trim();
-    const expiresAt = claimed.expiresAt;
 
     if (!toEmail || !organizationName || !inviteToken) {
       return json({ error: 'Invite claim incomplete' }, 500, cors);
@@ -155,8 +192,11 @@ serve(async (req) => {
 
 function corsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get('Origin') ?? '';
-  const allowed = (Deno.env.get('APP_ORIGIN') ?? '').replace(/\/$/, '');
-  const allowOrigin = allowed && origin === allowed ? origin : allowed || '*';
+  const appOrigin = (Deno.env.get('APP_ORIGIN') ?? '').replace(/\/$/, '');
+  const allowed = new Set(
+    [appOrigin, 'http://localhost:5173', 'http://127.0.0.1:5173'].filter(Boolean),
+  );
+  const allowOrigin = origin && allowed.has(origin) ? origin : appOrigin || '*';
 
   return {
     'Access-Control-Allow-Origin': allowOrigin,
@@ -191,6 +231,9 @@ async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
   if (!secret) {
     console.warn('TURNSTILE_SECRET_KEY not set — skipping verification');
     return true;
+  }
+  if (token.startsWith('dev-bypass:')) {
+    return false;
   }
 
   const form = new URLSearchParams();
