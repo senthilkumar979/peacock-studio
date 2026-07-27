@@ -7,6 +7,7 @@ import {
   type OrgAnalyticsSummary,
   type ShareAnalyticsEventType,
 } from '@/types/analytics';
+import { logSoftFailure } from '@/utils/appError';
 
 /**
  * Records a public share/embed view via a security-definer RPC. The server
@@ -28,8 +29,9 @@ export async function recordShareEvent(
       p_referrer_domain: referrerDomain,
       p_metadata: metadata,
     });
-  } catch {
+  } catch (error) {
     // Analytics must never break the shared view.
+    logSoftFailure('recordShareEvent failed', error);
   }
 }
 
@@ -57,8 +59,9 @@ export async function recordOrgEvent(
       p_resource_id: options.resourceId ?? null,
       p_metadata: options.metadata ?? {},
     });
-  } catch {
+  } catch (error) {
     // Best-effort telemetry.
+    logSoftFailure('recordOrgEvent failed', error);
   }
 }
 
@@ -80,14 +83,14 @@ export async function fetchOrgAnalyticsSummary(days = 30): Promise<OrgAnalyticsS
 
     if (error) {
       // Common before `supabase db push` applies the analytics migration.
-      console.warn('[Peacock] Analytics summary unavailable:', error.message);
+      logSoftFailure('Analytics summary unavailable', error.message);
       return EMPTY_ANALYTICS_SUMMARY;
     }
 
     if (!data) return EMPTY_ANALYTICS_SUMMARY;
     return data as OrgAnalyticsSummary;
   } catch (error) {
-    console.warn('[Peacock] Analytics summary failed:', error);
+    logSoftFailure('Analytics summary failed', error);
     return EMPTY_ANALYTICS_SUMMARY;
   }
 }

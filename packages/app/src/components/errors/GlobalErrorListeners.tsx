@@ -1,14 +1,31 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { classifyAppError, isBenignBrowserNoise, logAppError } from '@/utils/appError';
 import { notifyError, notifyWarning } from '@/utils/notify';
+import { buildHardErrorPath } from '@/pages/ErrorPage';
 
 /**
  * Captures window-level failures that React boundaries miss
  * (async exceptions, unhandled promise rejections).
- * Soft by default via gooey toasts; React render crashes use AppErrorBoundary.
+ * Soft by default via gooey toasts; hard cases navigate to ErrorPage.
+ * React render crashes use AppErrorBoundary.
  */
 export const GlobalErrorListeners = () => {
+  const navigate = useNavigate();
+
   useEffect(() => {
+    const escalateOrToast = (classified: ReturnType<typeof classifyAppError>) => {
+      if (classified.isHard) {
+        navigate(buildHardErrorPath(classified.title, classified.userMessage), { replace: true });
+        return;
+      }
+      if (classified.kind === 'session' || classified.kind === 'auth') {
+        notifyWarning(classified.title, classified.userMessage);
+        return;
+      }
+      notifyError(classified.title, classified.userMessage);
+    };
+
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
       const reason = event.reason;
       if (isBenignBrowserNoise(reason)) {
@@ -18,13 +35,7 @@ export const GlobalErrorListeners = () => {
 
       const classified = classifyAppError(reason);
       logAppError('Unhandled promise rejection', reason);
-
-      if (classified.kind === 'session' || classified.kind === 'auth') {
-        notifyWarning(classified.title, classified.userMessage);
-        return;
-      }
-
-      notifyError(classified.title, classified.userMessage);
+      escalateOrToast(classified);
     };
 
     const onWindowError = (event: ErrorEvent) => {
@@ -39,7 +50,7 @@ export const GlobalErrorListeners = () => {
       const error = event.error ?? new Error(event.message || 'Unknown window error');
       const classified = classifyAppError(error);
       logAppError('Window error', error);
-      notifyError(classified.title, classified.userMessage);
+      escalateOrToast(classified);
     };
 
     window.addEventListener('unhandledrejection', onUnhandledRejection);
@@ -49,7 +60,7 @@ export const GlobalErrorListeners = () => {
       window.removeEventListener('unhandledrejection', onUnhandledRejection);
       window.removeEventListener('error', onWindowError);
     };
-  }, []);
+  }, [navigate]);
 
   return null;
 };

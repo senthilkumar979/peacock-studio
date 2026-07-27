@@ -15,7 +15,7 @@ export interface PendingHandoff {
 
 function getScreenshotId(event: FlowEvent): string {
   if (event.type === 'navigation') return '';
-  if (event.type === 'page-view') return event.screenshotId;
+  if (event.type === 'page-view' || event.type === 'submit') return event.screenshotId;
   return event.screenshotId;
 }
 

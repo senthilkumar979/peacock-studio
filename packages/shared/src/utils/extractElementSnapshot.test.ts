@@ -60,4 +60,44 @@ describe('extractElementSnapshot', () => {
     expect(snapshot.isSelect).toBe(true);
     expect(snapshot.valuePreview).toBe('Karnataka');
   });
+
+  it('captures icon-only button via aria-label', () => {
+    document.body.innerHTML =
+      '<button aria-label="Add to cart"><svg><path d="M0 0"/></svg></button>';
+    const button = document.querySelector('button') as HTMLButtonElement;
+    const snapshot = extractElementSnapshot(button);
+
+    expect(snapshot.isButton).toBe(true);
+    expect(snapshot.label.ariaLabel).toBe('Add to cart');
+    expect(snapshot.innerText).toBe('');
+  });
+
+  it('captures contenteditable text and flags', () => {
+    document.body.innerHTML =
+      '<div id="editor" contenteditable="true" role="textbox">Hello world</div>';
+    const editor = document.querySelector('#editor') as HTMLDivElement;
+    const snapshot = extractElementSnapshot(editor);
+
+    expect(snapshot.isContentEditable).toBe(true);
+    expect(snapshot.isInput).toBe(true);
+    expect(snapshot.valuePreview).toBe('Hello world');
+  });
+
+  it('captures aria textbox values without contenteditable', () => {
+    document.body.innerHTML = '<div id="notes" role="textbox">Line one</div>';
+    const editor = document.querySelector('#notes') as HTMLDivElement;
+    const snapshot = extractElementSnapshot(editor);
+
+    expect(snapshot.isInput).toBe(true);
+    expect(snapshot.valuePreview).toBe('Line one');
+  });
+
+  it('treats input type button as button role', () => {
+    document.body.innerHTML = '<input type="button" value="Dismiss" />';
+    const input = document.querySelector('input') as HTMLInputElement;
+    const snapshot = extractElementSnapshot(input);
+
+    expect(snapshot.isButton).toBe(true);
+    expect(snapshot.isInput).toBe(false);
+  });
 });

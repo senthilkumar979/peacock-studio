@@ -30,7 +30,7 @@ export async function ensureContentScript(tabId: number): Promise<boolean> {
   if (!canInjectIntoUrl(tab.url)) return false;
 
   await chrome.scripting.executeScript({
-    target: { tabId },
+    target: { tabId, allFrames: true },
     files: [CONTENT_SCRIPT_PATH],
   });
 

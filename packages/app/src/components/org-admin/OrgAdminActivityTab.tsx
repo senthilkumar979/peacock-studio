@@ -88,6 +88,14 @@ export const OrgAdminActivityTab = ({ organizationId }: OrgAdminActivityTabProps
       <OrgContributorLeaders activity={activity} days={ACTIVITY_DAYS} />
       <OrgDomainUsageTable rows={domains} />
 
+      <section className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-5">
+        <h2 className="text-sm font-semibold text-slate-900">Audit log</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Audit log coming soon — an immutable admin history of invites, role changes, shares, and
+          exports will appear here.
+        </p>
+      </section>
+
       <section>
         <h2 className="mb-3 text-lg font-semibold text-slate-900">Events by user (30d)</h2>
         {activity.byActor.length === 0 ? (

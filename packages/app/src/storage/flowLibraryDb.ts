@@ -69,6 +69,15 @@ function getDb(): Promise<IDBPDatabase<FlowLibrarySchema>> {
           }
         }
       },
+    }).catch((error: unknown) => {
+      dbPromise = null;
+      const wrapped = new Error(
+        error instanceof Error
+          ? `IndexedDB open failed: ${error.message}`
+          : 'IndexedDB open failed',
+      );
+      wrapped.name = 'IndexedDBOpenError';
+      throw wrapped;
     });
   }
   return dbPromise;

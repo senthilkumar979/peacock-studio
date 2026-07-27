@@ -12,6 +12,7 @@ export type ExtensionMessage =
   | { type: 'CAPTURE_SCREENSHOT'; tabId?: number }
   | { type: 'CAPTURE_PAGE_SNAPSHOT' }
   | { type: 'CAPTURE_FINAL_PAGE' }
+  | { type: 'FLUSH_PENDING_INPUTS' }
   | { type: 'CAPTURE_NAVIGATION_PAGE_VIEW' }
   | { type: 'CAPTURE_ENVIRONMENT'; recordingStartedAt: number }
   | { type: 'START_SCREENSHOT_TOOL'; mode: 'full-page' | 'visible' | 'selection' }

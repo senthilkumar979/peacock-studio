@@ -1,10 +1,12 @@
 import { useSyncExternalStore } from 'react';
+import { isPublicShareFeatureEnabled } from '@/analytics/featureFlags';
 import {
   getCloudAuthContext,
   hasCapability,
   subscribeCloudAuthContext,
   type CloudAuthContext,
 } from '@/cloud/authContext';
+import { isCloudSyncFlagEnabled } from '@/cloud/config';
 import type { CapabilityKey, MemberCapabilities } from '@/cloud/types/organization';
 import { useCloudInitError } from '@/hooks/useCloudInitError';
 import { useCanDeleteLibraryItems, useSessionMode } from '@/hooks/useSessionMode';
@@ -129,7 +131,12 @@ export function useShareMethodAccess(): ShareMethodAccess {
   }
 
   // mode === 'cloud'
+  const publicShareEnabled = !isCloudSyncFlagEnabled() || isPublicShareFeatureEnabled();
   const disabledReasons: Partial<Record<ShareMethodKey, string>> = {};
+  if (!publicShareEnabled) {
+    disabledReasons.link = 'Public sharing is temporarily disabled.';
+    disabledReasons.embed = 'Embeds are temporarily disabled.';
+  }
   if (!canShareCap) disabledReasons.link = 'Your workspace role cannot share.';
   if (!canExportCap) disabledReasons.pdf = 'Your workspace role cannot export.';
   if (!canEmbedCap) {
@@ -138,9 +145,9 @@ export function useShareMethodAccess(): ShareMethodAccess {
   }
 
   return {
-    canShare: canShareCap,
+    canShare: canShareCap && publicShareEnabled,
     canExport: canExportCap,
-    canEmbed: canEmbedCap,
+    canEmbed: canEmbedCap && publicShareEnabled,
     disabledReasons,
   };
 }

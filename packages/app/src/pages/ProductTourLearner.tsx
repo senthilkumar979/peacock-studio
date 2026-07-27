@@ -65,7 +65,7 @@ export const ProductTourLearner = ({
     () => getProductTourLearnerHintSequence({ canEdit }),
     [canEdit],
   );
-  const { activeHintId, dismissHint } = useFirstTimeHintTour(learnerHintSequence, {
+  const { activeHintId, dismissHint, skipAllHints } = useFirstTimeHintTour(learnerHintSequence, {
     ready: isLoaded && Boolean(tour) && !isPresenter,
   });
   const pageHints: PageHintControl = useMemo(
@@ -73,8 +73,9 @@ export const ProductTourLearner = ({
       activeHintId,
       hintStep: (hintId) => getHintStepLabel(hintId, learnerHintSequence),
       dismissHint,
+      skipAllHints,
     }),
-    [activeHintId, dismissHint, learnerHintSequence],
+    [activeHintId, dismissHint, learnerHintSequence, skipAllHints],
   );
 
   const [persona, setPersona] = useState<Persona | null>(null);

@@ -13,6 +13,8 @@ interface FirstTimeTooltipProps {
   stepLabel?: string;
   placement?: FirstTimeTooltipPlacement;
   onDismiss: () => void;
+  /** When set, shows a Skip tips control that exits the whole tour. */
+  onSkipAll?: () => void;
   children: ReactNode;
 }
 
@@ -49,6 +51,7 @@ export const FirstTimeTooltip = ({
   stepLabel,
   placement = 'bottom-start',
   onDismiss,
+  onSkipAll,
   children,
 }: FirstTimeTooltipProps) => {
   const anchorRef = useRef<HTMLSpanElement>(null);
@@ -118,13 +121,24 @@ export const FirstTimeTooltip = ({
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={onDismiss}
-                  className="mt-3 rounded-lg bg-peacock-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-peacock-400"
-                >
-                  Got it
-                </button>
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={onDismiss}
+                    className="rounded-lg bg-peacock-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-peacock-400"
+                  >
+                    Got it
+                  </button>
+                  {onSkipAll ? (
+                    <button
+                      type="button"
+                      onClick={onSkipAll}
+                      className="rounded-lg px-2 py-1.5 text-xs font-medium text-slate-400 hover:bg-slate-800 hover:text-white"
+                    >
+                      Skip tips
+                    </button>
+                  ) : null}
+                </div>
               </div>
             </motion.div>
           </AnimatePresence>,

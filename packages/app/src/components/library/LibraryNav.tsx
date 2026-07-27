@@ -12,7 +12,6 @@ import {
   ORG_ADMIN_PATH,
   SUPER_ADMIN_PATH,
 } from "@/constants/routes";
-import { OrgSwitcher } from "@/components/library/OrgSwitcher";
 import { useIsPlatformSuperAdmin } from "@/hooks/useIsPlatformSuperAdmin";
 import { useActiveOrganization } from "@/hooks/useOrganization";
 import { useSessionMode } from "@/hooks/useSessionMode";

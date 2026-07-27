@@ -1,7 +1,9 @@
 import { AppFooter } from "@/components/AppFooter";
+import { SkipToContent } from "@/components/a11y/SkipToContent";
 import { LandingSubNav } from "@/components/site/LandingSubNav";
 import { SiteNav } from "@/components/site/SiteNav";
 import { useLandingNavVisibility } from "@/hooks/useLandingNavVisibility";
+import { MotionConfig } from "framer-motion";
 import { Suspense, lazy } from "react";
 import { HeroSection } from "./landing/HeroSection";
 
@@ -30,11 +32,6 @@ const AutomationSection = lazy(() =>
     default: m.AutomationSection,
   })),
 );
-const TrustArchitectureSection = lazy(() =>
-  import("./landing/TrustArchitectureSection").then((m) => ({
-    default: m.TrustArchitectureSection,
-  })),
-);
 const ComparisonSection = lazy(() =>
   import("./landing/ComparisonSection").then((m) => ({
     default: m.ComparisonSection,
@@ -50,9 +47,9 @@ const PreviewSection = lazy(() =>
     default: m.PreviewSection,
   })),
 );
-const TestimonialsSection = lazy(() =>
-  import("./landing/TestimonialsSection").then((m) => ({
-    default: m.TestimonialsSection,
+const ExampleFlowDocSection = lazy(() =>
+  import("./landing/ExampleFlowDocSection").then((m) => ({
+    default: m.ExampleFlowDocSection,
   })),
 );
 const FAQSection = lazy(() =>
@@ -68,26 +65,29 @@ export const Landing = () => {
   const { showMainNav, showSubNav } = useLandingNavVisibility();
 
   return (
-    <div className="landing-page">
-      <SiteNav visible={showMainNav} />
-      <LandingSubNav visible={showSubNav} />
-      <main>
-        <HeroSection />
-        <Suspense fallback={<BelowFoldFallback />}>
-          <ProblemSection />
-          <SolutionSection />
-          <PreviewSection />
-          <FeaturesSection />
-          <WorkflowSection />
-          <AutomationSection />
-          <ComparisonSection />
-          <PlatformComparisonSection />
-          {/* <TestimonialsSection /> */}
-          <FAQSection />
-          <CTASection />
-        </Suspense>
-      </main>
-      <AppFooter />
-    </div>
+    <MotionConfig reducedMotion="user">
+      <div className="landing-page">
+        <SkipToContent />
+        <SiteNav visible={showMainNav} />
+        <LandingSubNav visible={showSubNav} />
+        <main id="main-content">
+          <HeroSection />
+          <Suspense fallback={<BelowFoldFallback />}>
+            <ProblemSection />
+            <SolutionSection />
+            <PreviewSection />
+            <ExampleFlowDocSection />
+            <FeaturesSection />
+            <WorkflowSection />
+            <AutomationSection />
+            <ComparisonSection />
+            <PlatformComparisonSection />
+            <FAQSection />
+            <CTASection />
+          </Suspense>
+        </main>
+        <AppFooter />
+      </div>
+    </MotionConfig>
   );
 };

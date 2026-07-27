@@ -5,6 +5,7 @@ export interface PageHintControl {
   activeHintId: string | null;
   hintStep: (hintId: string) => string;
   dismissHint: (hintId: string) => void;
+  skipAllHints?: () => void;
 }
 
 export function isPageHintActive(
@@ -38,6 +39,7 @@ export const HintAnchor = ({
     description={description}
     placement={placement}
     onDismiss={() => hints?.dismissHint(hintId)}
+    onSkipAll={hints?.skipAllHints}
   >
     {children}
   </FirstTimeTooltip>

@@ -70,19 +70,19 @@ set search_path = public
 set row_security = off
 as $$
 declare
-  window_start timestamptz;
+  v_window_start timestamptz;
   current_count integer;
 begin
   if p_bucket = '' or p_rate_key = '' or p_limit < 1 or p_window_seconds < 1 then
     return false;
   end if;
 
-  window_start := to_timestamp(
+  v_window_start := to_timestamp(
     floor(extract(epoch from now()) / p_window_seconds) * p_window_seconds
   );
 
   insert into public.edge_rate_limits (bucket, rate_key, window_start, hit_count)
-  values (p_bucket, p_rate_key, window_start, 1)
+  values (p_bucket, p_rate_key, v_window_start, 1)
   on conflict (bucket, rate_key, window_start)
   do update set hit_count = public.edge_rate_limits.hit_count + 1
   returning hit_count into current_count;

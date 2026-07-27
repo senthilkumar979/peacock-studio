@@ -4,6 +4,7 @@ import {
   isFlowStep,
   type FlowOutlineItem,
 } from '../../types/events';
+import { resolveStepDescription } from '../../utils/resolveStepDescription';
 
 export function generateTestCasesMarkdown(
   title: string,
@@ -72,7 +73,11 @@ export function generateTestCasesMarkdown(
     if (!isFlowStep(item)) continue;
 
     stepNumber += 1;
-    const action = item.generatedDescription.trim() || item.generatedTitle.trim() || item.title.trim() || `Step ${stepNumber}`;
+    const action =
+      resolveStepDescription(item).trim() ||
+      item.generatedTitle.trim() ||
+      item.title.trim() ||
+      `Step ${stepNumber}`;
     mainPathRows.push(
       `| ${stepNumber} | ${action.replace(/\|/g, '\\|')} | Next step is reachable |`,
     );

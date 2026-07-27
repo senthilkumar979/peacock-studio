@@ -148,7 +148,7 @@ export const LANDING_FEATURES: LandingFeature[] = [
   {
     name: 'Embed player',
     explanation:
-      'Share guided player links for step-through playback; embeddable widgets for docs and tours are on the roadmap.',
+      'Share guided player links for step-through playback, or embed Flow Documents and Product Tours with an iframe.',
     benefit: 'Let viewers explore flows interactively instead of scrolling static screenshots alone.',
     impact: 'Improve comprehension with the same player experience you use on live calls.',
     icon: AppWindow,
@@ -232,7 +232,7 @@ export const WORKFLOW_STEPS: LandingWorkflowStep[] = [
     deliverables: [
       'Publish Flow Documents for execution and reference',
       'Compose Product Tours for adoption narratives',
-      'Share readonly links, export PDFs, or present live',
+      'Share links & embeds, export PDFs, or present live',
     ],
     outcome: 'Sales, success, and support share the same narrative instantly',
     icon: Layers3,

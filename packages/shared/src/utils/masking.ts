@@ -16,6 +16,15 @@ export const SENSITIVE_PATTERNS = {
 /** Input `type` values that should always be treated as sensitive. */
 export const SENSITIVE_INPUT_TYPES = ['password'] as const;
 
+/** Input types that must never be recorded as input steps. */
+export const NON_RECORDABLE_INPUT_TYPES = [
+  'button',
+  'submit',
+  'reset',
+  'hidden',
+  'file',
+] as const;
+
 /** `autocomplete` tokens that mark a field as sensitive regardless of name. */
 export const SENSITIVE_AUTOCOMPLETE = [
   'current-password',
@@ -52,6 +61,21 @@ export function getFieldIdentity(el: HTMLElement): string {
   return `${el.getAttribute('name') ?? ''} ${el.id} ${autocomplete}`.trim();
 }
 
+export function hasSensitiveAutocomplete(el: HTMLElement): boolean {
+  const autocomplete = (el.getAttribute('autocomplete') ?? '').toLowerCase().trim();
+  if (!autocomplete) return false;
+
+  const tokens = autocomplete.split(/\s+/);
+  return tokens.some((token) =>
+    (SENSITIVE_AUTOCOMPLETE as readonly string[]).includes(token),
+  );
+}
+
+export function isNonRecordableInput(el: HTMLInputElement): boolean {
+  const type = el.type.toLowerCase();
+  return (NON_RECORDABLE_INPUT_TYPES as readonly string[]).includes(type);
+}
+
 export function isSensitiveField(el: HTMLElement): boolean {
   if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) {
     return false;
@@ -62,8 +86,7 @@ export function isSensitiveField(el: HTMLElement): boolean {
     if ((SENSITIVE_INPUT_TYPES as readonly string[]).includes(type)) return true;
   }
 
-  const autocomplete = (el.getAttribute('autocomplete') ?? '').toLowerCase();
-  if ((SENSITIVE_AUTOCOMPLETE as readonly string[]).includes(autocomplete)) return true;
+  if (hasSensitiveAutocomplete(el)) return true;
 
   return SECRET_NAME_PATTERN.test(getFieldIdentity(el));
 }

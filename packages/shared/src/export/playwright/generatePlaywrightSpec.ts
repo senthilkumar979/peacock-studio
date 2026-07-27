@@ -45,9 +45,13 @@ function statementForStep(step: FlowStep): string[] {
   const lines: string[] = [];
 
   if (event.type === 'input') {
-    const value = event.element.valuePreview?.trim();
+    const value = event.valuePreview?.trim();
     if (event.element.isCheckbox || event.element.isRadio) {
-      lines.push(`await ${locator.expression}.check();`);
+      if (value) {
+        lines.push(`await ${locator.expression}.check();`);
+      } else {
+        lines.push(`await ${locator.expression}.uncheck();`);
+      }
       return lines;
     }
     if (value && value !== '••••') {
@@ -55,6 +59,11 @@ function statementForStep(step: FlowStep): string[] {
     } else {
       lines.push(`await ${locator.expression}.fill(process.env.PEACOCK_INPUT ?? '');`);
     }
+    return lines;
+  }
+
+  if (event.type === 'submit') {
+    lines.push(`await ${locator.expression}.press('Enter');`);
     return lines;
   }
 

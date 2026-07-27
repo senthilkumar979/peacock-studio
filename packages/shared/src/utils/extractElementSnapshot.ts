@@ -145,6 +145,17 @@ function getCheckboxRadioLabel(el: HTMLInputElement): string {
 }
 
 function captureValuePreview(el: HTMLElement): string | null {
+  if (el.isContentEditable) {
+    const text = (el.innerText ?? '').trim();
+    return text ? maskValue(text) : null;
+  }
+
+  const role = el.getAttribute('role');
+  if (role === 'textbox' || role === 'searchbox') {
+    const text = (el.innerText ?? el.textContent ?? '').trim();
+    return text ? maskValue(text) : null;
+  }
+
   if (el instanceof HTMLSelectElement) {
     const selected = el.selectedOptions[0];
     const value = selected?.text?.trim() || selected?.value || el.value;
@@ -187,16 +198,26 @@ function getElementRoles(el: HTMLElement) {
         : null;
   const role = el.getAttribute('role');
 
+  const isInputType =
+    tag === 'input' &&
+    type !== null &&
+    !['button', 'submit', 'reset', 'checkbox', 'radio', 'hidden'].includes(type);
+
   return {
-    isButton: tag === 'button' || role === 'button' || (tag === 'input' && type === 'submit'),
+    isButton:
+      tag === 'button' ||
+      role === 'button' ||
+      (tag === 'input' && (type === 'submit' || type === 'button' || type === 'reset')),
     isLink: tag === 'a' || role === 'link',
-    isInput:
-      tag === 'input' &&
-      type !== null &&
-      !['button', 'submit', 'reset', 'checkbox', 'radio', 'hidden'].includes(type),
+    isInput: isInputType || role === 'textbox' || role === 'searchbox',
     isSelect: tag === 'select',
     isCheckbox: (tag === 'input' && type === 'checkbox') || role === 'checkbox',
     isRadio: (tag === 'input' && type === 'radio') || role === 'radio',
+    isOption: role === 'option',
+    isTab: role === 'tab',
+    isMenuItem: role === 'menuitem',
+    isCombobox: role === 'combobox',
+    isContentEditable: el.isContentEditable,
   };
 }
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DASHBOARD_PATH } from '@/constants/routes';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { createAndSaveProductTourOnce } from '@/services/productTourLibraryService';
+import { notifyError } from '@/utils/notify';
 
 export const NewProductTour = () => {
   const navigate = useNavigate();
@@ -15,8 +16,9 @@ export const NewProductTour = () => {
         if (cancelled) return;
         navigate(`/tours/${tour.id}/edit`, { replace: true });
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (cancelled) return;
+        notifyError(error, 'Create product tour');
         navigate(DASHBOARD_PATH, { replace: true });
       });
 

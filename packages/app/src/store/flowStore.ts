@@ -49,6 +49,7 @@ interface FlowStore {
   deleteOutlineItem: (id: string) => void;
   updateStepTitle: (id: string, title: string) => void;
   updateStepNotes: (id: string, notes: string) => void;
+  setStepDescriptionHidden: (id: string, hidden: boolean) => void;
   updateSectionTitle: (id: string, title: string) => void;
   updateSectionDescription: (id: string, description: string) => void;
   setStepCustomScreenshot: (id: string, dataUrl: string) => void;
@@ -210,7 +211,18 @@ export const useFlowStore = create<FlowStore>()(
     updateStepNotes: (id, notes) =>
       set((state) => {
         const step = state.steps.find((item) => item.id === id);
-        if (step && isFlowStep(step)) step.notes = notes;
+        if (step && isFlowStep(step)) {
+          step.notes = notes;
+          if (notes.trim()) step.hideDescription = false;
+        }
+      }),
+
+    setStepDescriptionHidden: (id, hidden) =>
+      set((state) => {
+        const step = state.steps.find((item) => item.id === id);
+        if (!step || !isFlowStep(step)) return;
+        step.hideDescription = hidden;
+        if (hidden) step.notes = '';
       }),
 
     updateSectionTitle: (id, title) =>

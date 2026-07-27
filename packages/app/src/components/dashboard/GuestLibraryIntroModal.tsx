@@ -8,6 +8,11 @@ interface GuestLibraryIntroModalProps {
   visibleCount: number;
   totalCount: number;
   onClose: () => void;
+  /**
+   * `hidden` — some docs are already capped out of view.
+   * `preview` — early heads-up before the guest hits the wall.
+   */
+  mode?: 'hidden' | 'preview';
 }
 
 export const GuestLibraryIntroModal = ({
@@ -15,11 +20,13 @@ export const GuestLibraryIntroModal = ({
   visibleCount,
   totalCount,
   onClose,
+  mode = 'hidden',
 }: GuestLibraryIntroModalProps) => {
   if (!isOpen) return null;
 
-  const hiddenCount = totalCount - visibleCount;
+  const hiddenCount = Math.max(0, totalCount - visibleCount);
   const previewLimit = getGuestVisibleDocLimit();
+  const isPreview = mode === 'preview';
 
   return createPortal(
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
@@ -49,24 +56,43 @@ export const GuestLibraryIntroModal = ({
         </div>
 
         <h2 id="guest-library-intro-title" className="mt-4 text-xl font-bold text-slate-900">
-          Some recordings are hidden
+          {isPreview ? 'Guest preview limits' : 'Some recordings are hidden'}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">
-          You have <strong>{totalCount}</strong> recording{totalCount === 1 ? '' : 's'} saved on
-          this device. While browsing without an account, Peacock only shows your{' '}
-          <strong>oldest {previewLimit}</strong>.
+          {isPreview ? (
+            <>
+              Without an account, Peacock shows up to your{' '}
+              <strong>oldest {previewLimit}</strong> recording
+              {previewLimit === 1 ? '' : 's'} on this device. Sign up free to keep your full library
+              and sync across devices.
+            </>
+          ) : (
+            <>
+              You have <strong>{totalCount}</strong> recording{totalCount === 1 ? '' : 's'} saved on
+              this device. While browsing without an account, Peacock only shows your{' '}
+              <strong>oldest {previewLimit}</strong>.
+            </>
+          )}
         </p>
 
-        <ul className="mt-4 space-y-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-          <li>
-            <span className="font-semibold text-slate-900">Visible now:</span> {visibleCount}{' '}
-            recording{visibleCount === 1 ? '' : 's'}
-          </li>
-          <li>
-            <span className="font-semibold text-slate-900">Hidden:</span> {hiddenCount} newer
-            recording{hiddenCount === 1 ? '' : 's'}
-          </li>
-        </ul>
+        {!isPreview ? (
+          <ul className="mt-4 space-y-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <li>
+              <span className="font-semibold text-slate-900">Visible now:</span> {visibleCount}{' '}
+              recording{visibleCount === 1 ? '' : 's'}
+            </li>
+            <li>
+              <span className="font-semibold text-slate-900">Hidden:</span> {hiddenCount} newer
+              recording{hiddenCount === 1 ? '' : 's'}
+            </li>
+          </ul>
+        ) : (
+          <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            You currently have <strong>{totalCount}</strong> recording
+            {totalCount === 1 ? '' : 's'} on this device
+            {totalCount > 0 ? ` (limit ${previewLimit})` : ''}.
+          </p>
+        )}
 
         <p className="mt-4 text-sm text-slate-600">
           Create a free account to unlock your full library, sync across devices, and keep every

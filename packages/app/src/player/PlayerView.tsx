@@ -226,8 +226,18 @@ export const PlayerView = ({
           pageHints={pageHints}
         />
       ) : (
-        <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-slate-900/70 px-3 py-1 text-xs text-white">
-          Esc to exit presenter · {progressLabel}
+        <div className="pointer-events-none absolute bottom-4 left-1/2 z-10 flex max-w-[min(100%-2rem,36rem)] -translate-x-1/2 flex-col items-center gap-1.5 rounded-2xl bg-slate-900/80 px-4 py-2 text-center text-xs text-white shadow-lg backdrop-blur-sm">
+          <p className="font-medium">{progressLabel}</p>
+          <p className="text-[11px] leading-relaxed text-slate-200">
+            <kbd className="rounded bg-white/15 px-1.5 py-0.5 font-sans">←</kbd>
+            {' / '}
+            <kbd className="rounded bg-white/15 px-1.5 py-0.5 font-sans">→</kbd>
+            {' step · '}
+            <kbd className="rounded bg-white/15 px-1.5 py-0.5 font-sans">Space</kbd>
+            {' play/pause · '}
+            <kbd className="rounded bg-white/15 px-1.5 py-0.5 font-sans">Esc</kbd>
+            {' exit'}
+          </p>
         </div>
       )}
     </div>

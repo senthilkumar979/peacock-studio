@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom';
-import { BookOpen, HeartPulse, Shield } from 'lucide-react';
+import { BookOpen, HeartPulse, Shield, TrendingUp } from 'lucide-react';
 import { RequirePlatformSuperAdmin } from '@/components/auth/RequirePlatformSuperAdmin';
+import { SuperAdminAcquisitionTab } from '@/components/super-admin/SuperAdminAcquisitionTab';
 import { SuperAdminApiTab } from '@/components/super-admin/SuperAdminApiTab';
 import { SuperAdminHealthTab } from '@/components/super-admin/SuperAdminHealthTab';
 import { SuperAdminPlatformTab } from '@/components/super-admin/SuperAdminPlatformTab';
@@ -9,6 +10,7 @@ import { DASHBOARD_PATH } from '@/constants/routes';
 /** Top-level Super Admin tabs — add future sections here. */
 export const SUPER_ADMIN_TABS = [
   { id: 'platform', label: 'Platform', icon: Shield },
+  { id: 'acquisition', label: 'Acquisition', icon: TrendingUp },
   { id: 'health', label: 'Health', icon: HeartPulse },
   { id: 'api', label: 'API', icon: BookOpen },
 ] as const;
@@ -71,6 +73,7 @@ const SuperAdminPageInner = () => {
       </div>
 
       {tab === 'platform' ? <SuperAdminPlatformTab /> : null}
+      {tab === 'acquisition' ? <SuperAdminAcquisitionTab /> : null}
       {tab === 'health' ? <SuperAdminHealthTab /> : null}
       {tab === 'api' ? <SuperAdminApiTab /> : null}
     </div>

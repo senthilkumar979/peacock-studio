@@ -3,6 +3,7 @@ import {
   getStepMarkerPosition,
   getStepScreenshotUrl,
   getStepUrl,
+  resolveStepDescription,
 } from '@peacock/shared';
 import type { SavedFlowDocument, SavedFlowSummary } from '@/types/savedFlow';
 import { BrowserMockup } from './BrowserMockup';
@@ -32,7 +33,7 @@ export const CompareDocumentPane = ({
   const screenshotUrl = step ? getStepScreenshotUrl(step, document?.screenshotUrls ?? {}) : null;
   const markerPosition = step ? getStepMarkerPosition(step) : null;
   const stepUrl = step ? getStepUrl(step) : '';
-  const description = step?.notes || step?.generatedDescription || '';
+  const description = step ? resolveStepDescription(step) : '';
 
   return (
     <section className="flex min-h-[32rem] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

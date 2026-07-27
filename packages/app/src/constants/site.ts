@@ -15,7 +15,7 @@ export const DEFAULT_META_DESCRIPTION =
 
 export const DEFAULT_DOCUMENT_TITLE = `${PEACOCK_APP_NAME} — Flow docs & product tours from real workflows`;
 
-export const OG_IMAGE_PATH = '/peacock-logo.png' as const;
+export const OG_IMAGE_PATH = '/og-social.png' as const;
 
 export function absoluteUrl(path = '/'): string {
   if (path.startsWith('http://') || path.startsWith('https://')) return path;

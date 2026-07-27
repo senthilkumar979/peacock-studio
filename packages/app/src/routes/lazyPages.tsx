@@ -8,6 +8,12 @@ export const RouteChunkFallback = () => (
   </div>
 );
 
+/**
+ * Pair with `ChunkErrorBoundary` around Suspense in AppRoutes so failed
+ * dynamic imports show a retry UI instead of a blank screen.
+ */
+export { ChunkErrorBoundary, isChunkLoadError } from '@/components/errors/ChunkErrorBoundary';
+
 export const Dashboard = lazy(() =>
   import('@/pages/Dashboard').then((m) => ({ default: m.Dashboard })),
 );
@@ -126,6 +132,9 @@ export const HealthCheckerPage = lazy(() =>
 );
 export const ApiDocsPage = lazy(() =>
   import('@/pages/ApiDocsPage').then((m) => ({ default: m.ApiDocsPage })),
+);
+export const NotFoundPage = lazy(() =>
+  import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
 );
 export const LibraryLayout = lazy(() =>
   import('@/layouts/LibraryLayout').then((m) => ({ default: m.LibraryLayout })),

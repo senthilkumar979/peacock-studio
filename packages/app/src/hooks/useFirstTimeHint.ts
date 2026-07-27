@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   dismissFirstTimeHint,
+  dismissFirstTimeHintSequence,
   getNextDashboardHintId,
   getNextHintInSequence,
   isFirstTimeHintDismissed,
@@ -30,7 +31,12 @@ export function useFirstTimeHintTour(
     setRevision((value) => value + 1);
   }, []);
 
-  return { activeHintId, dismissHint };
+  const skipAllHints = useCallback(() => {
+    dismissFirstTimeHintSequence(hintIds);
+    setRevision((value) => value + 1);
+  }, [hintIds]);
+
+  return { activeHintId, dismissHint, skipAllHints };
 }
 
 interface UseDashboardFirstTimeHintOptions {

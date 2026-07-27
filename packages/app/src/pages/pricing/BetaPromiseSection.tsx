@@ -3,6 +3,10 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, MessageSquare } from 'lucide-react';
 import { trackEvent } from '@/analytics/analyticsClient';
 import { AnalyticsEvents } from '@/analytics/events';
+import {
+  hasFoundingUserInterest,
+  markFoundingUserInterest,
+} from '@/constants/foundingUser';
 import { openSupportChat } from '@/utils/support';
 import { BETA_PERKS } from './pricingData';
 
@@ -10,7 +14,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const BetaPromiseSection = () => {
   const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(() => hasFoundingUserInterest());
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (event: FormEvent) => {
@@ -21,6 +25,7 @@ export const BetaPromiseSection = () => {
     }
     // Never send the raw email as an analytics prop — just the intent signal.
     trackEvent(AnalyticsEvents.betaPricingInterest);
+    markFoundingUserInterest(email.trim());
     setError(null);
     setSubmitted(true);
   };

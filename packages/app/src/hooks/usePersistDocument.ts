@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react';
+import { trackEvent } from '@/analytics/analyticsClient';
+import { AnalyticsEvents } from '@/analytics/events';
 import { persistCurrentFlow } from '@/services/flowLibraryService';
 import { useFlowStore } from '@/store/flowStore';
 import { notifyPersistError } from '@/utils/notify';
@@ -26,9 +28,16 @@ export function usePersistDocument(enabled: boolean, routeDocumentId?: string): 
     if (timerRef.current) window.clearTimeout(timerRef.current);
 
     timerRef.current = window.setTimeout(() => {
-      void persistCurrentFlow(documentId).catch((error) => {
-        notifyPersistError(error, 'Save documentation');
-      });
+      void persistCurrentFlow(documentId)
+        .then(() => {
+          trackEvent(AnalyticsEvents.documentSaved, {
+            document_id: documentId,
+            step_count: useFlowStore.getState().steps.length,
+          });
+        })
+        .catch((error) => {
+          notifyPersistError(error, 'Save documentation');
+        });
     }, PERSIST_DEBOUNCE_MS);
 
     return () => {

@@ -1,6 +1,5 @@
 import * as Sentry from '@sentry/react';
-import { trackEvent, trackException } from '@/analytics/analyticsClient';
-import { AnalyticsEvents } from '@/analytics/events';
+import { trackException } from '@/analytics/analyticsClient';
 import { isSentryInitialized } from '@/observability/sentry';
 
 export const GENERIC_USER_ERROR_MESSAGE =
@@ -63,6 +62,30 @@ export function isBenignBrowserNoise(error: unknown): boolean {
   return BENIGN_BROWSER_NOISE_RE.test(rawMessage(error));
 }
 
+function isIndexedDbOpenFailure(error: unknown, lower: string, name: string): boolean {
+  if (name === 'IndexedDBOpenError') return true;
+  if (name === 'VersionError' || name === 'InvalidStateError') {
+    return /indexeddb|idb|object store|database/i.test(lower);
+  }
+  return (
+    /indexeddb open failed|failed to open.*indexeddb|indexeddb.*(?:blocked|corrupt|upgrade)|could not open.*(?:indexeddb|database)|idbopen/i.test(
+      lower,
+    )
+  );
+}
+
+function isCorruptPayloadFailure(error: unknown, lower: string, name: string): boolean {
+  if (name === 'CorruptDocumentPayloadError' || name === 'SyntaxError') {
+    return (
+      name === 'CorruptDocumentPayloadError' ||
+      /json|unexpected token|unparseable|corrupt|malformed|payload|document/i.test(lower)
+    );
+  }
+  return /corrupt(?:ed)?(?:\s+or\s+)?unparseable|unparseable document|malformed document|invalid document payload|corrupt.*payload/i.test(
+    lower,
+  );
+}
+
 /**
  * Maps unknown failures (API, DB, auth, validation, etc.) to a stable user-facing shape.
  */
@@ -72,6 +95,29 @@ export function classifyAppError(error: unknown): ClassifiedAppError {
   const code = String(like.code ?? '');
   const status = Number(like.status ?? like.statusCode ?? NaN);
   const lower = message.toLowerCase();
+  const name = like.name ?? (error instanceof Error ? error.name : '');
+
+  if (isIndexedDbOpenFailure(error, lower, name)) {
+    return {
+      kind: 'database',
+      title: 'Local library unavailable',
+      userMessage:
+        'Peacock could not open local browser storage. Check that IndexedDB is allowed for this site, then refresh.',
+      isHard: true,
+      cause: error,
+    };
+  }
+
+  if (isCorruptPayloadFailure(error, lower, name)) {
+    return {
+      kind: 'validation',
+      title: 'Documentation is unreadable',
+      userMessage:
+        'This documentation payload is corrupt or unreadable. Try another document, or restore from a share link if you have one.',
+      isHard: true,
+      cause: error,
+    };
+  }
 
   if (
     status === 401 ||
@@ -214,14 +260,11 @@ export function logAppError(context: string, error: unknown): void {
   console.error(`[Peacock] ${context}`, error);
   const classified = classifyAppError(error);
 
+  // PostHog exception + Sentry only (skip duplicate exceptionCaptured event).
   trackException(error instanceof Error ? error : new Error(classified.userMessage), {
     peacock_context: context,
     peacock_error_kind: classified.kind,
-  });
-  trackEvent(AnalyticsEvents.exceptionCaptured, {
-    context,
-    kind: classified.kind,
-    title: classified.title,
+    peacock_error_title: classified.title,
   });
 
   if (isSentryInitialized()) {
@@ -237,6 +280,14 @@ export function logAppError(context: string, error: unknown): void {
       }
     });
   }
+}
+
+/**
+ * Soft / intentional failures (analytics best-effort, expected handoff misses).
+ * Console only — does not toast or send to Sentry/PostHog.
+ */
+export function logSoftFailure(context: string, error: unknown): void {
+  console.warn(`[Peacock] ${context}`, error);
 }
 
 /** Log + classify; returns the user-facing message. */

@@ -1,5 +1,6 @@
 import posthog from 'posthog-js';
 import { getPostHogHost, getPostHogKey } from './config';
+import { registerPostHogFeatureFlagReader } from './featureFlags';
 import type { AnalyticsSink } from './types';
 
 /**
@@ -36,10 +37,12 @@ export function createPostHogSink(): AnalyticsSink {
       if (typeof posthog.startExceptionAutocapture === 'function') {
         posthog.startExceptionAutocapture();
       }
+      registerPostHogFeatureFlagReader((flag) => posthog.isFeatureEnabled(flag));
       started = true;
     },
     shutdown: () => {
       if (!started) return;
+      registerPostHogFeatureFlagReader(null);
       posthog.reset();
       started = false;
     },
@@ -61,6 +64,10 @@ export function createPostHogSink(): AnalyticsSink {
     identify: (userId, traits) => {
       if (!started) return;
       posthog.identify(userId, traits);
+    },
+    registerSuperProperties: (props) => {
+      if (!started) return;
+      posthog.register_once(props);
     },
     reset: () => {
       if (!started) return;

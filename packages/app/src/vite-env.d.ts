@@ -13,6 +13,7 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_ANON_KEY?: string;
   readonly VITE_GUEST_VISIBLE_DOC_LIMIT?: string;
   readonly VITE_FREE_ACCOUNT_DOC_LIMIT?: string;
+  readonly VITE_FREE_ACCOUNT_STORAGE_BYTES_LIMIT?: string;
   readonly VITE_TURNSTILE_SITE_KEY?: string;
   readonly VITE_POSTHOG_KEY?: string;
   readonly VITE_POSTHOG_HOST?: string;

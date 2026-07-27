@@ -7,9 +7,9 @@ import {
   type HandoffBridgeMessage,
   type HandoffResponse,
 } from '@peacock/shared';
-import { saveNewFlowFromStore } from '@/services/flowLibraryService';
 import { useFlowStore } from '@/store/flowStore';
 import { getExtensionId } from '@/utils/getExtensionId';
+import { logSoftFailure, reportAppError } from '@/utils/appError';
 
 function notifyExtensionAppReady(extensionId: string): void {
   const runtime = window.chrome?.runtime;
@@ -59,7 +59,7 @@ function requestHandoffViaBridge(timeoutMs = 12000): Promise<HandoffResponse | n
     const retryTimer = window.setInterval(postRequest, 500);
     const timer = window.setTimeout(() => {
       if (lastBridgeError) {
-        console.error('[Peacock] Bridge handoff error:', lastBridgeError);
+        logSoftFailure('Bridge handoff error', lastBridgeError);
       }
       finish(null);
     }, timeoutMs);
@@ -79,7 +79,7 @@ function requestHandoffViaExtensionId(extensionId: string): Promise<HandoffRespo
       { type: 'GET_PENDING_HANDOFF' },
       (response) => {
         if (runtime.lastError) {
-          console.error('[Peacock] Extension handoff error:', runtime.lastError.message);
+          logSoftFailure('Extension handoff error', runtime.lastError.message);
           resolve(null);
           return;
         }
@@ -105,30 +105,25 @@ interface ResolvedHandoff {
   screenshotUrls: Record<string, string>;
 }
 
-interface HandoffSaveResult {
-  documentId: string;
+interface HandoffLoadResult {
+  loaded: true;
 }
 
-let activeHandoffSave: Promise<HandoffSaveResult | null> | null = null;
+let activeHandoffLoad: Promise<HandoffLoadResult | null> | null = null;
 
-async function saveHandoffOnce(handoff: ResolvedHandoff): Promise<HandoffSaveResult | null> {
-  if (activeHandoffSave) return activeHandoffSave;
+async function loadHandoffOnce(handoff: ResolvedHandoff): Promise<HandoffLoadResult | null> {
+  if (activeHandoffLoad) return activeHandoffLoad;
 
-  activeHandoffSave = (async () => {
+  activeHandoffLoad = (async () => {
     useFlowStore.getState().resetFlow();
     useFlowStore.getState().setFlow(handoff.payload, handoff.screenshotUrls);
-
-    const documentId = await saveNewFlowFromStore();
-    if (!documentId) return null;
-
-    return { documentId };
+    return { loaded: true };
   })();
 
   try {
-    return await activeHandoffSave;
-  } catch (error) {
-    activeHandoffSave = null;
-    throw error;
+    return await activeHandoffLoad;
+  } finally {
+    activeHandoffLoad = null;
   }
 }
 
@@ -157,7 +152,6 @@ export function usePayload({ enabled = true }: UsePayloadOptions = {}) {
         (await requestHandoffViaBridge());
 
       if (!handoff?.payload) {
-        activeHandoffSave = null;
         setIsLoading(false);
         setError(
           extensionId
@@ -168,24 +162,25 @@ export function usePayload({ enabled = true }: UsePayloadOptions = {}) {
       }
 
       try {
-        const result = await saveHandoffOnce({
+        const result = await loadHandoffOnce({
           payload: handoff.payload,
           screenshotUrls: handoff.screenshotUrls ?? {},
         });
         setIsLoading(false);
 
-        if (!result?.documentId) {
-          activeHandoffSave = null;
+        if (!result) {
           setError('Recording had no steps to save.');
           return;
         }
 
-        navigate(`/docs/${result.documentId}/edit`, { replace: true });
-      } catch (saveError) {
-        activeHandoffSave = null;
-        console.error('[Peacock] Failed to save flow after handoff', saveError);
+        navigate('/editor', {
+          replace: true,
+          state: { pendingCapture: true },
+        });
+      } catch (loadError) {
+        reportAppError('Failed to load flow after handoff', loadError);
         setIsLoading(false);
-        setError(formatSaveError(saveError));
+        setError(formatSaveError(loadError));
       }
     })();
   }, [enabled, isLoaded, navigate]);

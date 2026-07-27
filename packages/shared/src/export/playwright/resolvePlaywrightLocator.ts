@@ -23,6 +23,20 @@ function pickRoleName(snapshot: ElementSnapshot): string | null {
   return null;
 }
 
+function inferPlaywrightRole(snapshot: ElementSnapshot): string | null {
+  if (snapshot.role) return snapshot.role;
+  if (snapshot.isButton) return 'button';
+  if (snapshot.isLink) return 'link';
+  if (snapshot.isTab) return 'tab';
+  if (snapshot.isMenuItem) return 'menuitem';
+  if (snapshot.isOption) return 'option';
+  if (snapshot.isCombobox) return 'combobox';
+  if (snapshot.isCheckbox) return 'checkbox';
+  if (snapshot.isRadio) return 'radio';
+  if (snapshot.isInput || snapshot.isContentEditable) return 'textbox';
+  return null;
+}
+
 export function resolvePlaywrightLocator(snapshot: ElementSnapshot): PlaywrightLocator {
   const testId = snapshot.dataAttributes.testid ?? snapshot.dataAttributes['test-id'];
   if (testId) {
@@ -32,7 +46,7 @@ export function resolvePlaywrightLocator(snapshot: ElementSnapshot): PlaywrightL
     };
   }
 
-  const role = snapshot.role ?? (snapshot.isButton ? 'button' : snapshot.isLink ? 'link' : null);
+  const role = inferPlaywrightRole(snapshot);
   const name = pickRoleName(snapshot);
   if (role && name) {
     return {

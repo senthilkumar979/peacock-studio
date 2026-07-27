@@ -161,6 +161,55 @@ describe('stepDescription', () => {
     );
   });
 
+  it('describes an unchecked checkbox', () => {
+    document.body.innerHTML = `
+      <label>
+        <input type="checkbox" value="Furniture 24" />
+        Furniture 24
+      </label>
+    `;
+
+    const checkbox = document.querySelector('input') as HTMLInputElement;
+    const snapshot = extractElementSnapshot(checkbox);
+    const event: InputEvent = {
+      id: '6b',
+      type: 'input',
+      timestamp: Date.now(),
+      url: 'https://example.com',
+      title: 'Inventory',
+      element: snapshot,
+      valuePreview: '',
+      screenshotId: 'shot-6b',
+    };
+
+    expect(generateStepTitle(snapshot, event)).toBe('Uncheck Furniture 24');
+    expect(generateStepDescription(snapshot, event)).toBe(
+      'On the Inventory page, uncheck Furniture 24.',
+    );
+  });
+
+  it('describes an enter-key submit step', () => {
+    document.body.innerHTML = `<form id="signup-form" name="signupForm"><input name="email" /></form>`;
+    const form = document.querySelector('form') as HTMLFormElement;
+    const snapshot = extractElementSnapshot(form);
+    const event = {
+      id: 'submit-1',
+      type: 'submit' as const,
+      timestamp: Date.now(),
+      url: 'https://example.com',
+      title: 'Sign up',
+      viewport: { width: 1440, height: 900, scrollX: 0, scrollY: 0, dpr: 1 },
+      element: snapshot,
+      trigger: 'enter-key' as const,
+      screenshotId: 'shot-submit',
+    };
+
+    expect(generateStepTitle(snapshot, event)).toBe('Submit signupForm');
+    expect(generateStepDescription(snapshot, event)).toBe(
+      'On the Sign up page, press Enter to submit signupForm.',
+    );
+  });
+
   it('describes a link click', () => {
     document.body.innerHTML = `<a href="/settings">Account settings</a>`;
 
@@ -268,5 +317,74 @@ describe('stepDescription', () => {
     expect(step.generatedDescription).toBe('Open the Start page.');
     expect(step.title).toBe('Open Start');
     expect(step.notes).toBe('');
+  });
+
+  it('describes a listbox option', () => {
+    document.body.innerHTML =
+      '<div role="option" aria-label="Large">Large</div>';
+    const option = document.querySelector('[role="option"]') as HTMLDivElement;
+    const snapshot = extractElementSnapshot(option);
+    const event: ClickEvent = {
+      id: '1',
+      type: 'click',
+      timestamp: Date.now(),
+      url: 'https://example.com',
+      title: 'Shop',
+      viewport: { width: 1440, height: 900, scrollX: 0, scrollY: 0, dpr: 1 },
+      position: { x: 0, y: 0, xPercent: 0, yPercent: 0 },
+      element: snapshot,
+      screenshotId: 'shot',
+    };
+
+    expect(generateStepTitle(snapshot, event)).toBe('Select Large');
+    expect(generateStepDescription(snapshot, event)).toBe(
+      'On the Shop page, choose an option from the Large dropdown.',
+    );
+  });
+
+  it('describes a tab click', () => {
+    document.body.innerHTML = '<div role="tab" aria-label="Shipping">Shipping</div>';
+    const tab = document.querySelector('[role="tab"]') as HTMLDivElement;
+    const snapshot = extractElementSnapshot(tab);
+    const event: ClickEvent = {
+      id: '1',
+      type: 'click',
+      timestamp: Date.now(),
+      url: 'https://example.com',
+      title: 'Checkout',
+      viewport: { width: 1440, height: 900, scrollX: 0, scrollY: 0, dpr: 1 },
+      position: { x: 0, y: 0, xPercent: 0, yPercent: 0 },
+      element: snapshot,
+      screenshotId: 'shot',
+    };
+
+    expect(generateStepTitle(snapshot, event)).toBe('Switch to Shipping');
+    expect(generateStepDescription(snapshot, event)).toBe(
+      'On the Checkout page, switch to the Shipping tab.',
+    );
+  });
+
+  it('describes contenteditable input', () => {
+    document.body.innerHTML =
+      '<label for="notes">Notes</label><div id="notes" contenteditable="true" role="textbox">Line one</div>';
+    const editor = document.querySelector('#notes') as HTMLDivElement;
+    const snapshot = extractElementSnapshot(editor);
+    const event: InputEvent = {
+      id: '1',
+      type: 'input',
+      timestamp: Date.now(),
+      url: 'https://example.com',
+      title: 'Form',
+      viewport: { width: 1440, height: 900, scrollX: 0, scrollY: 0, dpr: 1 },
+      position: { x: 0, y: 0, xPercent: 0, yPercent: 0 },
+      element: snapshot,
+      valuePreview: 'Line one',
+      screenshotId: 'shot',
+    };
+
+    expect(generateStepTitle(snapshot, event)).toBe('Enter Line one in notes');
+    expect(generateStepDescription(snapshot, event)).toBe(
+      'On the Form page, enter Line one in the notes field.',
+    );
   });
 });

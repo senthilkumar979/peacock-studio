@@ -1,4 +1,5 @@
 import type { FlowStep } from '@peacock/shared';
+import { resolveStepDescription } from '@peacock/shared';
 import { PulseMarker } from '@/editor/PulseMarker';
 import { getPopoverPlacement } from './getPopoverPlacement';
 import { StepDetailPopover } from './StepDetailPopover';
@@ -23,7 +24,7 @@ export const PlayerClickMarker = ({
   isEmbed = false,
 }: PlayerClickMarkerProps) => {
   const isInteractive = Boolean(onToggle);
-  const description = step.notes || step.generatedDescription;
+  const description = resolveStepDescription(step);
   const placement = getPopoverPlacement(xPercent, yPercent);
 
   return (

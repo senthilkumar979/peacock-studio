@@ -5,6 +5,12 @@ import { logAppError } from '@/utils/appError';
 
 interface AppErrorBoundaryProps {
   children: ReactNode;
+  /** Nested boundaries use a compact hard-error card so shell chrome can remain. */
+  compact?: boolean;
+  title?: string;
+  description?: string;
+  homePath?: string;
+  homeLabel?: string;
 }
 
 interface AppErrorBoundaryState {
@@ -39,12 +45,16 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
     if (this.state.hasError) {
       return (
         <HardErrorPage
-          title="This page crashed"
-          description="A rendering error stopped Peacock. You can retry this view or return to your dashboard."
+          compact={this.props.compact}
+          title={this.props.title ?? 'This page crashed'}
+          description={
+            this.props.description ??
+            'A rendering error stopped Peacock. You can retry this view or return to your dashboard.'
+          }
           detail={this.state.message}
           onRetry={this.handleRetry}
-          homePath={DASHBOARD_PATH}
-          homeLabel="Go to dashboard"
+          homePath={this.props.homePath ?? DASHBOARD_PATH}
+          homeLabel={this.props.homeLabel ?? 'Go to dashboard'}
         />
       );
     }

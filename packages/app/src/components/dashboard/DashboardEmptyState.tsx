@@ -36,11 +36,14 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
 interface DashboardEmptyStateProps {
   showRecordHint?: boolean;
   onDismissRecordHint?: () => void;
+  /** When cloud sync is active, avoid “on this device” guest-only copy */
+  storageHint?: 'local' | 'cloud';
 }
 
 export const DashboardEmptyState = ({
   showRecordHint = false,
   onDismissRecordHint,
+  storageHint = 'local',
 }: DashboardEmptyStateProps) => (
   <motion.div
     initial={{ opacity: 0, y: 12 }}
@@ -75,7 +78,10 @@ export const DashboardEmptyState = ({
       </FirstTimeTooltip>
       <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600">
         Your library is empty. Record a browser flow and Peacock will turn it into a polished,
-        step-by-step guide stored securely on this device.
+        step-by-step guide
+        {storageHint === 'cloud'
+          ? ' synced to your workspace.'
+          : ' stored securely on this device.'}
       </p>
       <ChromeWebStoreLink className="mt-5 inline-flex items-center gap-2 rounded-xl bg-peacock-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-peacock-800" />
     </motion.div>

@@ -20,8 +20,12 @@ type ControlKind =
   | 'text-input'
   | 'textarea'
   | 'select'
+  | 'option'
   | 'checkbox'
   | 'radio'
+  | 'tab'
+  | 'menuitem'
+  | 'combobox'
   | 'generic';
 
 function cleanLabel(value: string | null | undefined): string {
@@ -142,9 +146,14 @@ export function getControlKind(snapshot: ElementSnapshot): ControlKind {
   if (snapshot.isButton) return 'button';
   if (snapshot.isLink) return 'link';
   if (snapshot.isSelect) return 'select';
+  if (snapshot.isOption) return 'option';
   if (snapshot.isCheckbox) return 'checkbox';
   if (snapshot.isRadio) return 'radio';
+  if (snapshot.isTab) return 'tab';
+  if (snapshot.isMenuItem) return 'menuitem';
+  if (snapshot.isCombobox) return 'combobox';
   if (snapshot.tagName === 'textarea') return 'textarea';
+  if (snapshot.isContentEditable) return 'text-input';
   if (snapshot.isInput) return 'text-input';
   return 'generic';
 }
@@ -172,9 +181,14 @@ export function resolveStepLabels(snapshot: ElementSnapshot, event: FlowEvent): 
       kind === 'checkbox' || kind === 'radio'
         ? resolveOptionLabel(snapshot, event)
         : resolveTargetLabel(snapshot),
-    field: kind === 'text-input' || kind === 'textarea' || kind === 'select'
-      ? resolveFieldLabel(snapshot)
-      : null,
+    field:
+      kind === 'text-input' ||
+      kind === 'textarea' ||
+      kind === 'select' ||
+      kind === 'option' ||
+      kind === 'combobox'
+        ? resolveFieldLabel(snapshot)
+        : null,
     value,
     pageTitle: getPageTitle(event),
     contextHint: resolveContextHint(snapshot),

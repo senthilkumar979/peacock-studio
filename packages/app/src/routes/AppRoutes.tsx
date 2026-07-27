@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppRouteTransition } from '@/components/motion/AppRouteTransition';
 import { WorkspaceOnboardingGate } from '@/components/auth/WorkspaceOnboardingGate';
+import { ChunkErrorBoundary } from '@/components/errors/ChunkErrorBoundary';
 import { RouteDocumentMeta } from '@/seo/RouteDocumentMeta';
 import {
   ACCEPT_INVITE_PATH,
@@ -43,6 +44,7 @@ import {
   LegacyRouteRedirect,
   LibraryLayout,
   NewProductTour,
+  NotFoundPage,
   OrgAdminPage,
   PlatformAdminPage,
   Player,
@@ -75,8 +77,9 @@ export const App = () => {
     <WorkspaceOnboardingGate>
       <RouteDocumentMeta />
       <AppRouteTransition>
-        <Suspense fallback={<RouteChunkFallback />}>
-          <Routes location={location}>
+        <ChunkErrorBoundary>
+          <Suspense fallback={<RouteChunkFallback />}>
+            <Routes location={location}>
             <Route path={LANDING_PATH} element={<Landing />} />
             <Route path="/landing" element={<Navigate to={LANDING_PATH} replace />} />
             <Route
@@ -176,9 +179,10 @@ export const App = () => {
               element={<CaptureEditorLegacyRedirect />}
             />
             <Route path="/player" element={<Navigate to={DASHBOARD_PATH} replace />} />
-            <Route path="*" element={<Navigate to={LANDING_PATH} replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
-        </Suspense>
+          </Suspense>
+        </ChunkErrorBoundary>
       </AppRouteTransition>
     </WorkspaceOnboardingGate>
   );

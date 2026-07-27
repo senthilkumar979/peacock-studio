@@ -1,13 +1,12 @@
 /**
  * Company / contact details shown on the legal pages.
- * TODO: replace these placeholder values with the real operating entity,
- * support email, website, and governing jurisdiction before public launch.
+ * Aligned with the production origin (peacock.mentorbridge.in).
  */
 export const LEGAL_ENTITY = {
-  companyName: 'Peacock Studio',
-  supportEmail: 'support@peacock.studio',
-  websiteUrl: 'https://peacock.studio',
-  governingLaw: 'the jurisdiction in which the product operator is established',
+  companyName: 'Mentor Bridge',
+  supportEmail: 'support@mentorbridge.in',
+  websiteUrl: 'https://peacock.mentorbridge.in',
+  governingLaw: 'India',
 } as const;
 
-export const LEGAL_LAST_UPDATED = 'July 18, 2026';
+export const LEGAL_LAST_UPDATED = 'July 26, 2026';

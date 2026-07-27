@@ -5,6 +5,7 @@ import {
   getPlayerHintSequence,
 } from '@/constants/firstTimeHints';
 import { GuestDocumentGate } from '@/components/auth/GuestDocumentGate';
+import { AppErrorBoundary } from '@/components/errors/AppErrorBoundary';
 import { ResourceNotFoundPage } from '@/components/errors/ResourceNotFoundPage';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import type { PageHintControl } from '@/components/onboarding/HintAnchor';
@@ -68,7 +69,7 @@ export const Player = () => {
     () => getPlayerHintSequence(resolvedView === 'player' ? 'player' : 'doc'),
     [resolvedView],
   );
-  const { activeHintId, dismissHint } = useFirstTimeHintTour(playerHintSequence, {
+  const { activeHintId, dismissHint, skipAllHints } = useFirstTimeHintTour(playerHintSequence, {
     ready: isLoaded,
   });
   const pageHints: PageHintControl = useMemo(
@@ -76,8 +77,9 @@ export const Player = () => {
       activeHintId,
       hintStep: (hintId) => getHintStepLabel(hintId, playerHintSequence),
       dismissHint,
+      skipAllHints,
     }),
-    [activeHintId, dismissHint, playerHintSequence],
+    [activeHintId, dismissHint, playerHintSequence, skipAllHints],
   );
 
   if (!documentId) {
@@ -115,13 +117,19 @@ export const Player = () => {
 
   return (
     <GuestDocumentGate documentId={documentId}>
-      <FlowDocExperienceViews
-        documentId={documentId}
-        resolvedView={resolvedView}
-        onModeChange={handleModeChange}
-        onOverview={handleHubNavigation}
-        pageHints={pageHints}
-      />
+      <AppErrorBoundary
+        compact
+        title="Player crashed"
+        description="A rendering error stopped the player. You can retry this view or return to your dashboard."
+      >
+        <FlowDocExperienceViews
+          documentId={documentId}
+          resolvedView={resolvedView}
+          onModeChange={handleModeChange}
+          onOverview={handleHubNavigation}
+          pageHints={pageHints}
+        />
+      </AppErrorBoundary>
     </GuestDocumentGate>
   );
 };

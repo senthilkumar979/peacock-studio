@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DeleteProductTourConfirmContent } from '@/components/dashboard/DeleteProductTourConfirmContent';
+import { LibraryEmptyCta } from '@/components/dashboard/LibraryEmptyCta';
 import { ProductTourLibraryCards } from '@/components/dashboard/ProductTourLibraryCards';
 import { GenericErrorPage } from '@/components/errors/GenericErrorPage';
 import { LibraryGuideInfoButton } from '@/components/library/LibraryGuideInfoButton';
@@ -84,6 +85,16 @@ export const ProductToursLibraryPanel = () => {
                 <ProductTourLibraryCards
                   summaries={summaries}
                   onRequestDelete={setPendingTourDelete}
+                />
+              </div>
+            ) : !isLoading ? (
+              <div className="mx-6 mb-6">
+                <LibraryEmptyCta
+                  icon={Map}
+                  title="No product tours yet"
+                  description="Bundle saved demos into a persona-led tour for sales, onboarding, or feature education."
+                  primaryHref={getExtensionGatePath('/tours/new')}
+                  primaryLabel="Create your first tour"
                 />
               </div>
             ) : null}

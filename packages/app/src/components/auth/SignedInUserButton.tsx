@@ -1,6 +1,7 @@
 import { LogOut } from 'lucide-react';
 import { useClerk, UserButton } from '@clerk/react';
 import { markIntentionalSignOut } from '@/cloud/sessionIntent';
+import { notifyInfo } from '@/utils/notify';
 
 interface SignedInUserButtonProps {
   avatarClassName?: string;
@@ -30,6 +31,10 @@ export const SignedInUserButton = ({
           labelIcon={<LogOut className="h-4 w-4" aria-hidden />}
           onClick={() => {
             markIntentionalSignOut();
+            notifyInfo(
+              'Signed out',
+              'Your local guest library remains on this device.',
+            );
             void signOut({ redirectUrl: '/' });
           }}
         />

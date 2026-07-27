@@ -363,8 +363,15 @@ export const ShareDocumentModal = ({
             <>
               {isDraft ? (
                 <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                  This documentation is still a draft. Set status to Live in the editor before
-                  creating a public link or embed. PDF export remains available.
+                  <p>
+                    This documentation is still a <strong>Draft</strong>. Set status to{' '}
+                    <strong>Live</strong> in the editor toolbar before creating a public link or
+                    embed. PDF export remains available.
+                  </p>
+                  <p className="mt-2 text-xs text-amber-800/90">
+                    Tip: use the Draft / Live switch next to Share — Live docs can be shared;
+                    Drafts stay private.
+                  </p>
                 </div>
               ) : null}
               <ShareMethodPicker

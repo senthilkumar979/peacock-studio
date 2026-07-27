@@ -4,6 +4,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DeleteDocumentConfirmContent } from '@/components/dashboard/DeleteDocumentConfirmContent';
 import { FlowLibrarySection } from '@/components/dashboard/FlowLibrarySection';
 import { GuestLibraryHiddenNotice } from '@/components/dashboard/GuestLibraryHiddenNotice';
+import { LibraryEmptyCta } from '@/components/dashboard/LibraryEmptyCta';
 import { FlowDocsLibraryToolbar } from '@/components/library/FlowDocsLibraryToolbar';
 import { LibraryGuideInfoButton } from '@/components/library/LibraryGuideInfoButton';
 import { LibraryGuideReveal } from '@/components/library/LibraryGuideSection';
@@ -160,6 +161,17 @@ export const FlowDocsLibraryPanel = () => {
                   onRequestDuplicate={(summary) => {
                     void duplicateDocument(summary.id);
                   }}
+                />
+              </div>
+            ) : null}
+
+            {!isLoading && summaries.length === 0 ? (
+              <div className="mx-6 mb-6">
+                <LibraryEmptyCta
+                  icon={FileText}
+                  title="No flow docs yet"
+                  description="Install the Peacock Chrome extension, record a flow on any site, then stop to open the editor."
+                  showExtensionCta
                 />
               </div>
             ) : null}

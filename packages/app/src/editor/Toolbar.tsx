@@ -26,7 +26,7 @@ import {
   DEFAULT_FLOW_VERSION,
   isTitleVersionConflictError,
 } from '@/utils/flowDocumentMeta';
-import { notifyPersistError } from '@/utils/notify';
+import { notifyInfo, notifyPersistError } from '@/utils/notify';
 
 interface PendingVersionBump {
   title: string;
@@ -62,6 +62,8 @@ export const Toolbar = ({
   const updateFlowDetails = useFlowStore((state) => state.updateFlowDetails);
 
   const [isFlowDetailsOpen, setIsFlowDetailsOpen] = useState(false);
+  const [isSavingStatus, setIsSavingStatus] = useState(false);
+  const [isSavingVersionBump, setIsSavingVersionBump] = useState(false);
   const [pendingVersionBump, setPendingVersionBump] =
     useState<PendingVersionBump | null>(null);
   const { openShare, shareModal } = useDocumentShareModal(documentId ?? '');
@@ -134,6 +136,7 @@ export const Toolbar = ({
 
   const handleVersionBumpConfirm = async () => {
     if (!documentId || !pendingVersionBump) return;
+    setIsSavingVersionBump(true);
     try {
       await persistCurrentFlow(documentId, { bumpOwnVersionOnConflict: true });
       setPendingVersionBump(null);
@@ -141,6 +144,8 @@ export const Toolbar = ({
       markFlowDetailsSettled();
     } catch (error) {
       notifyPersistError(error, 'Save with new version');
+    } finally {
+      setIsSavingVersionBump(false);
     }
   };
 
@@ -156,13 +161,25 @@ export const Toolbar = ({
     const previous = useFlowStore.getState().status;
     setDocumentStatus(nextStatus);
     if (!documentId) return;
+
+    setIsSavingStatus(true);
     try {
       await persistDocumentStatus(documentId, nextStatus);
+      notifyInfo(
+        nextStatus === 'live' ? 'Documentation is live' : 'Documentation set to draft',
+        nextStatus === 'live'
+          ? 'This flow can now be shared publicly.'
+          : 'Public sharing is disabled while in draft.',
+      );
     } catch (error) {
       setDocumentStatus(previous);
       notifyPersistError(error, 'Update documentation status');
+    } finally {
+      setIsSavingStatus(false);
     }
   };
+
+  const isToolbarBusy = isSavingStatus;
 
   const flowTitle = flow?.flow.title ?? 'Untitled Flow';
   const flowDescription = flow?.flow.description ?? '';
@@ -188,6 +205,8 @@ export const Toolbar = ({
                   void handleStatusChange(next);
                 }}
                 size="sm"
+                isLoading={isSavingStatus}
+                disabled={isToolbarBusy}
               />
 
               {documentId ? (
@@ -202,7 +221,7 @@ export const Toolbar = ({
                   <button
                     type="button"
                     onClick={openShare}
-                    disabled={!canShare}
+                    disabled={!canShare || isToolbarBusy}
                     className={`${FLOW_DOC_ACTION_CLASS} disabled:cursor-not-allowed disabled:opacity-50`}
                     aria-label={canShare ? 'Share' : 'Share unavailable while draft'}
                   >
@@ -219,6 +238,7 @@ export const Toolbar = ({
                 description="Set the documentation title, description, and version shown on your dashboard and share cards."
                 placement="bottom"
                 onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.flowDetails)}
+                onSkipAll={editorHints?.skipAllHints}
               >
                 <ActionTooltip label="Flow details">
                   <button
@@ -226,6 +246,7 @@ export const Toolbar = ({
                     onClick={() => setIsFlowDetailsOpen(true)}
                     className={FLOW_DOC_ACTION_CLASS}
                     aria-label="Flow details"
+                    disabled={isToolbarBusy}
                   >
                     <PanelRight className="h-4 w-4 shrink-0" aria-hidden />
                     <span className="hidden sm:inline">Flow details</span>
@@ -241,6 +262,7 @@ export const Toolbar = ({
                   description="Open the learner player and walk through your flow exactly as viewers will experience it."
                   placement="bottom"
                   onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.play)}
+                  onSkipAll={editorHints?.skipAllHints}
                 >
                   <ActionTooltip label="Play">
                     <Link
@@ -270,9 +292,7 @@ export const Toolbar = ({
         initialVersion={flowVersion}
         captureEnvironment={captureEnvironment}
         confirmLabel="Save"
-        onSave={(details) => {
-          void handleFlowDetailsSave(details);
-        }}
+        onSave={handleFlowDetailsSave}
         onClose={() => {
           setIsFlowDetailsOpen(false);
           markFlowDetailsSettled();
@@ -289,6 +309,7 @@ export const Toolbar = ({
         }
         confirmLabel={`Save as ${pendingVersionBump?.suggestedVersion ?? 'new version'}`}
         cancelLabel="Cancel"
+        isConfirmLoading={isSavingVersionBump}
         onConfirm={() => {
           void handleVersionBumpConfirm();
         }}

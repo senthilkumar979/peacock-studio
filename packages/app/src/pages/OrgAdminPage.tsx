@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Activity, BarChart3, Users, UsersRound } from 'lucide-react';
 import { OrgAdminActivityTab } from '@/components/org-admin/OrgAdminActivityTab';
@@ -9,6 +9,7 @@ import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { DASHBOARD_PATH } from '@/constants/routes';
 import { useActiveOrganization, useCloudAuthContext } from '@/hooks/useOrganization';
 import { useSessionMode } from '@/hooks/useSessionMode';
+import { notifyWarning } from '@/utils/notify';
 
 type AdminTab = 'overview' | 'members' | 'groups' | 'activity';
 
@@ -18,6 +19,21 @@ export const OrgAdminPage = () => {
   const { isAdmin, organizationId, organizationName } = useActiveOrganization();
   const [tab, setTab] = useState<AdminTab>('overview');
   const isTeam = context?.workspaceType === 'team';
+  const deniedNotified = useRef(false);
+
+  const isDenied =
+    sessionMode !== 'loading' &&
+    sessionMode !== 'connecting' &&
+    (sessionMode !== 'cloud' || !isAdmin || !organizationId);
+
+  useEffect(() => {
+    if (!isDenied || deniedNotified.current) return;
+    deniedNotified.current = true;
+    notifyWarning(
+      'Admin access required',
+      'Only organization admins can open workspace settings.',
+    );
+  }, [isDenied]);
 
   if (sessionMode === 'loading' || sessionMode === 'connecting') {
     return (
@@ -27,7 +43,7 @@ export const OrgAdminPage = () => {
     );
   }
 
-  if (sessionMode !== 'cloud' || !isAdmin || !organizationId) {
+  if (isDenied || !organizationId) {
     return <Navigate to={DASHBOARD_PATH} replace />;
   }
 
@@ -75,7 +91,13 @@ export const OrgAdminPage = () => {
         ))}
       </div>
 
-      {tab === 'overview' ? <OrgAdminOverviewTab organizationId={organizationId} /> : null}
+      {tab === 'overview' ? (
+        <OrgAdminOverviewTab
+          organizationId={organizationId}
+          onOpenMembers={() => setTab('members')}
+          onOpenActivity={() => setTab('activity')}
+        />
+      ) : null}
       {tab === 'members' && context ? (
         <OrgAdminMembersPanel
           organizationId={organizationId}

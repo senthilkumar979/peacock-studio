@@ -4,6 +4,7 @@
  * these are named, intentional product events.
  */
 export const AnalyticsEvents = {
+  acquisitionContextCaptured: 'acquisition_context_captured',
   analyticsEnabled: 'analytics_enabled',
   consentAccepted: 'consent_accepted',
   consentRejected: 'consent_rejected',
@@ -45,6 +46,7 @@ export const AnalyticsEvents = {
 
   localLibraryImported: 'local_library_imported',
   betaPricingInterest: 'beta_pricing_interest',
+  captureBlockedMobile: 'capture_blocked_mobile',
 
   actionSucceeded: 'action_succeeded',
   actionFailed: 'action_failed',

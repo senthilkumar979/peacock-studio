@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Menu, X } from 'lucide-react';
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
 import { DASHBOARD_PATH, LANDING_PATH, PRICING_PATH } from '@/constants/routes';
+import { isCloudSyncEnabled } from '@/cloud/config';
 import { getExtensionGatePath } from '@/utils/extensionGate';
 import { SiteNavDropdown } from './SiteNavDropdown';
 import { PRODUCT_NAV_ITEMS, SOLUTION_NAV_ITEMS } from './siteNavData';
@@ -27,12 +28,21 @@ const desktopLinkClass = (active: boolean) =>
 export const SiteNav = ({ visible = true }: SiteNavProps) => {
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const showAuthLinks = isCloudSyncEnabled();
 
   const isActive = (href: string) =>
     href === LANDING_PATH ? pathname === LANDING_PATH : pathname.startsWith(href);
 
-  const productItems = PRODUCT_NAV_ITEMS.map(({ label, href, description }) => ({ label, href, description }));
-  const solutionItems = SOLUTION_NAV_ITEMS.map(({ label, href, description }) => ({ label, href, description }));
+  const productItems = PRODUCT_NAV_ITEMS.map(({ label, href, description }) => ({
+    label,
+    href,
+    description,
+  }));
+  const solutionItems = SOLUTION_NAV_ITEMS.map(({ label, href, description }) => ({
+    label,
+    href,
+    description,
+  }));
 
   return (
     <header
@@ -63,6 +73,22 @@ export const SiteNav = ({ visible = true }: SiteNavProps) => {
         </div>
 
         <div className="flex items-center gap-2">
+          {showAuthLinks ? (
+            <>
+              <Link
+                to="/sign-in"
+                className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white md:inline-flex"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/sign-up"
+                className="hidden rounded-lg border border-white/25 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10 md:inline-flex"
+              >
+                Sign up
+              </Link>
+            </>
+          ) : null}
           <Link
             to={getExtensionGatePath(DASHBOARD_PATH)}
             className="hidden items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-xs font-semibold text-peacock-800 shadow-sm transition hover:bg-slate-100 md:inline-flex"
@@ -103,6 +129,24 @@ export const SiteNav = ({ visible = true }: SiteNavProps) => {
                   {link.label}
                 </Link>
               ))}
+              {showAuthLinks ? (
+                <>
+                  <Link
+                    to="/sign-in"
+                    onClick={() => setMenuOpen(false)}
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    to="/sign-up"
+                    onClick={() => setMenuOpen(false)}
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                  >
+                    Sign up
+                  </Link>
+                </>
+              ) : null}
               <Link
                 to={getExtensionGatePath(DASHBOARD_PATH)}
                 onClick={() => setMenuOpen(false)}

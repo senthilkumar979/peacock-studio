@@ -3,12 +3,14 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle2, Puzzle, RefreshCw } from 'lucide-react';
 import { AppFooter } from '@/components/AppFooter';
+import { CaptureDesktopRequired } from '@/components/extension/CaptureDesktopRequired';
 import { ChromeWebStoreLink } from '@/components/extension/ChromeWebStoreLink';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { SiteNav } from '@/components/site/SiteNav';
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
 import { DASHBOARD_PATH } from '@/constants/routes';
 import { useExtensionInstalled } from '@/hooks/useExtensionInstalled';
+import { isCaptureUnsupportedClient } from '@/utils/isCaptureUnsupportedClient';
 import { readExtensionGateNext } from '@/utils/extensionGate';
 
 const BENEFITS = [
@@ -22,13 +24,19 @@ export const ExtensionInstallPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const nextPath = readExtensionGateNext(location.search, DASHBOARD_PATH);
+  const captureUnsupported = isCaptureUnsupportedClient();
   const { status, isInstalled, isChecking, recheck } = useExtensionInstalled();
 
   useEffect(() => {
+    if (captureUnsupported) return;
     if (isInstalled) {
       navigate(nextPath, { replace: true });
     }
-  }, [isInstalled, navigate, nextPath]);
+  }, [captureUnsupported, isInstalled, navigate, nextPath]);
+
+  if (captureUnsupported) {
+    return <CaptureDesktopRequired variant="page" surface="install_page" />;
+  }
 
   if (isChecking || status === 'installed') {
     return (
@@ -86,8 +94,9 @@ export const ExtensionInstallPage = () => {
             transition={{ delay: 0.15 }}
             className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-300"
           >
-            Peacock needs the browser extension to record workflows and screenshots. Install it from
-            the Chrome Web Store, then come back here — we&apos;ll open the app automatically.
+            Peacock needs the browser extension to record workflows and screenshots. Chrome is
+            supported today via the Chrome Web Store; an Edge Add-ons path is planned. Install, then
+            come back here — we&apos;ll open the app automatically.
           </motion.p>
 
           <motion.div

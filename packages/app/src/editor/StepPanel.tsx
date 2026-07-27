@@ -1,9 +1,16 @@
 import { useState } from "react";
 import type { FlowStep } from "@peacock/shared";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { Button, FieldInput, FieldTextarea, FormField } from "@/components/ui";
+import {
+  ActionTooltip,
+  Button,
+  FieldInput,
+  FieldTextarea,
+  FormField,
+} from "@/components/ui";
 import { StepImageUpload } from "@/editor/StepImageUpload";
 import { useFlowStore } from "@/store/flowStore";
+import { notifySuccess } from "@/utils/notify";
 
 interface StepPanelProps {
   step: FlowStep | null;
@@ -12,6 +19,9 @@ interface StepPanelProps {
 export const StepPanel = ({ step }: StepPanelProps) => {
   const updateStepTitle = useFlowStore((state) => state.updateStepTitle);
   const updateStepNotes = useFlowStore((state) => state.updateStepNotes);
+  const setStepDescriptionHidden = useFlowStore(
+    (state) => state.setStepDescriptionHidden,
+  );
   const deleteOutlineItem = useFlowStore((state) => state.deleteOutlineItem);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -23,9 +33,13 @@ export const StepPanel = ({ step }: StepPanelProps) => {
     );
   }
 
+  const showDescription = !step.hideDescription;
+
   const handleConfirmDelete = () => {
+    const label = step.title.trim() || "Step";
     deleteOutlineItem(step.id);
     setIsDeleteDialogOpen(false);
+    notifySuccess(`${label} deleted`);
   };
 
   return (
@@ -42,22 +56,36 @@ export const StepPanel = ({ step }: StepPanelProps) => {
           />
         </FormField>
 
-        <FormField
-          label="Notes"
-          hint="Leave blank to use the auto-generated description below."
-          className="px-1"
-        >
-          <FieldTextarea
-            value={step.notes}
-            onChange={(event) => updateStepNotes(step.id, event.target.value)}
-            rows={8}
-            placeholder="Add context, tips, or warnings for this step…"
+        <label className="flex cursor-pointer items-center gap-2 px-1 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={showDescription}
+            onChange={(event) =>
+              setStepDescriptionHidden(step.id, !event.target.checked)
+            }
+            className="h-4 w-4 rounded border-slate-300 text-peacock-600 focus:ring-peacock-500"
           />
-        </FormField>
+          Show step description
+        </label>
+
+        {showDescription && (
+          <FormField
+            label="Notes"
+            hint="Leave blank to use the auto-generated description below."
+            className="px-1"
+          >
+            <FieldTextarea
+              value={step.notes}
+              onChange={(event) => updateStepNotes(step.id, event.target.value)}
+              rows={8}
+              placeholder="Add context, tips, or warnings for this step…"
+            />
+          </FormField>
+        )}
 
         <StepImageUpload step={step} />
 
-        {step.generatedDescription && (
+        {showDescription && step.generatedDescription && (
           <div className="rounded-lg bg-slate-100 p-3 text-sm text-slate-600">
             <p className="mb-1 font-medium text-slate-700">
               Auto-generated description

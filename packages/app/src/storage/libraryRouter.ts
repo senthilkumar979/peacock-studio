@@ -1,5 +1,6 @@
 import { isCloudLibraryActive } from '@/cloud/authContext';
 import { isCloudSyncEnabled } from '@/cloud/config';
+import { isCloudLibraryFeatureEnabled } from '@/analytics/featureFlags';
 import {
   fetchPublicFlowDocument,
   fetchPublicPersona,
@@ -53,7 +54,9 @@ import {
 } from '@/utils/flowDocumentMeta';
 
 function useCloudLibrary(): boolean {
-  return isCloudSyncEnabled() && isCloudLibraryActive();
+  return (
+    isCloudSyncEnabled() && isCloudLibraryActive() && isCloudLibraryFeatureEnabled()
+  );
 }
 
 export async function listFlowSummaries(): Promise<SavedFlowSummary[]> {

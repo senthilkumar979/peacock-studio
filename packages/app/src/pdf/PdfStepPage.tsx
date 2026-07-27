@@ -1,6 +1,6 @@
 import { Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import type { FlowStep } from '@peacock/shared';
-import { getStepMarkerPosition, getStepScreenshotUrl, getStepUrl, getStepViewport } from '@peacock/shared';
+import { getStepMarkerPosition, getStepScreenshotUrl, getStepUrl, getStepViewport, resolveStepDescription } from '@peacock/shared';
 import { PdfPageFooter, PdfPageHeader } from './PdfPageChrome';
 import { PDF_COLORS, PDF_FONT_FAMILY } from './pdfTheme';
 
@@ -127,7 +127,7 @@ export const PdfStepPage = ({
 }: PdfStepPageProps) => {
   const screenshotSrc = getStepScreenshotUrl(step, screenshotUrls);
   const stepUrl = getStepUrl(step);
-  const description = step.notes || step.generatedDescription;
+  const description = resolveStepDescription(step);
   const screenshotLayout = getPdfScreenshotLayout(step);
   const marker = getStepMarkerPosition(step);
   const markerPosition =

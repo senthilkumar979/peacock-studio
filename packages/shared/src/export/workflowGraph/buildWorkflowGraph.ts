@@ -4,6 +4,7 @@ import {
   isFlowStep,
   type FlowOutlineItem,
 } from '../../types/events';
+import { resolveStepDescription } from '../../utils/resolveStepDescription';
 import type { WorkflowGraph, WorkflowGraphEdge, WorkflowGraphNode } from './types';
 
 function sanitizeMermaidLabel(value: string): string {
@@ -69,7 +70,7 @@ export function buildWorkflowGraph(
       kind: 'step',
       label: sanitizeMermaidLabel(item.generatedTitle || item.title || `Step ${stepNumber}`),
       stepNumber,
-      description: item.generatedDescription.trim() || undefined,
+      description: resolveStepDescription(item).trim() || undefined,
     });
     edges.push({ from: previousId, to: id });
     previousId = id;

@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { FlowCaptureEnvironment } from "@peacock/shared";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { MinimalRichTextEditor } from "@/components/editor/MinimalRichTextEditor";
 import {
   Button,
@@ -34,7 +34,7 @@ interface FlowDetailsDrawerProps {
   initialVersion: string;
   captureEnvironment?: FlowCaptureEnvironment | null;
   confirmLabel?: string;
-  onSave: (details: FlowDetailsInput) => void;
+  onSave: (details: FlowDetailsInput) => void | Promise<void>;
   onClose: () => void;
 }
 
@@ -67,6 +67,7 @@ export const FlowDetailsDrawer = ({
     version: initialVersion,
   }));
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Reset draft during render when opening or switching docs — avoids one frame of
   // stale TipTap content from the previous flow (useEffect would be too late).
@@ -81,16 +82,18 @@ export const FlowDetailsDrawer = ({
         version: initialVersion,
       });
       setError(null);
+      setIsSaving(false);
     }
   } else if (draft.isOpen) {
     setDraft((prev) => ({ ...prev, isOpen: false }));
+    setIsSaving(false);
   }
 
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !isSaving) onClose();
     };
 
     const previousOverflow = document.body.style.overflow;
@@ -101,9 +104,9 @@ export const FlowDetailsDrawer = ({
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, isSaving, onClose]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const trimmedTitle = draft.title.trim();
     if (!trimmedTitle) {
       setError("Flow title is required.");
@@ -124,11 +127,21 @@ export const FlowDetailsDrawer = ({
       return;
     }
 
-    onSave({
-      title: trimmedTitle,
-      description,
-      version: trimmedVersion,
-    });
+    setIsSaving(true);
+    try {
+      await onSave({
+        title: trimmedTitle,
+        description,
+        version: trimmedVersion,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRequestClose = () => {
+    if (isSaving) return;
+    onClose();
   };
 
   return (
@@ -138,8 +151,9 @@ export const FlowDetailsDrawer = ({
           <motion.button
             type="button"
             aria-label="Close drawer"
-            className="absolute inset-0 bg-slate-900/50"
-            onClick={onClose}
+            className="absolute inset-0 bg-slate-900/50 disabled:cursor-not-allowed"
+            onClick={handleRequestClose}
+            disabled={isSaving}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -149,12 +163,23 @@ export const FlowDetailsDrawer = ({
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
+            aria-busy={isSaving}
             className="absolute inset-y-0 right-0 flex w-full max-w-2xl flex-col bg-white shadow-2xl ring-1 ring-slate-900/5 mt-2 mb-2 rounded-lg mr-2"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={DRAWER_SLIDE_TRANSITION}
           >
+            {isSaving ? (
+              <div
+                className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-lg bg-white/75 backdrop-blur-[1px]"
+                aria-live="polite"
+              >
+                <Loader2 className="h-7 w-7 animate-spin text-peacock-600" aria-hidden />
+                <p className="text-sm font-medium text-slate-700">Saving flow details…</p>
+              </div>
+            ) : null}
+
             <header className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-peacock-600">
@@ -174,7 +199,8 @@ export const FlowDetailsDrawer = ({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={onClose}
+                onClick={handleRequestClose}
+                disabled={isSaving}
                 aria-label="Close flow details"
               >
                 <X className="h-5 w-5" aria-hidden />
@@ -182,7 +208,7 @@ export const FlowDetailsDrawer = ({
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-              <div className="flex flex-col gap-4">
+              <fieldset disabled={isSaving} className="flex flex-col gap-4 disabled:opacity-80">
                 <FormField label="Flow title" error={error ?? undefined}>
                   <FieldInput
                     hasError={Boolean(error)}
@@ -192,6 +218,7 @@ export const FlowDetailsDrawer = ({
                       setError(null);
                     }}
                     placeholder="e.g. Create a new order"
+                    disabled={isSaving}
                   />
                 </FormField>
 
@@ -207,6 +234,7 @@ export const FlowDetailsDrawer = ({
                     }
                     placeholder="What does this flow help someone accomplish?"
                     maxChars={FLOW_DESCRIPTION_MAX_CHARS}
+                    disabled={isSaving}
                   />
                 </FormField>
 
@@ -221,16 +249,21 @@ export const FlowDetailsDrawer = ({
                     }
                     placeholder="e.g. 1.0.0"
                     required
+                    disabled={isSaving}
                   />
                 </FormField>
-              </div>
+              </fieldset>
             </div>
 
             <footer className="shrink-0 border-t border-slate-200 px-6 py-4">
               <ModalFooterActions
-                onCancel={onClose}
-                onConfirm={handleSubmit}
+                onCancel={handleRequestClose}
+                onConfirm={() => {
+                  void handleSubmit();
+                }}
                 confirmLabel={confirmLabel}
+                isConfirmLoading={isSaving}
+                confirmLoadingLabel="Saving…"
               />
             </footer>
           </motion.aside>

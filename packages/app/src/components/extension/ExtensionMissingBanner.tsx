@@ -1,13 +1,21 @@
 import { AlertTriangle } from 'lucide-react';
+import { CaptureDesktopRequired } from '@/components/extension/CaptureDesktopRequired';
 import { ChromeWebStoreLink } from '@/components/extension/ChromeWebStoreLink';
 import { useExtensionInstalled } from '@/hooks/useExtensionInstalled';
+import { isCaptureUnsupportedClient } from '@/utils/isCaptureUnsupportedClient';
 
 /**
  * Sticky dashboard warning when the Peacock Chrome extension is not detected.
- * Hidden while probing and when the extension is installed.
+ * On phones/tablets, shows a desktop-Chrome message instead of the Web Store CTA.
+ * Hidden while probing and when the extension is installed (desktop).
  */
 export const ExtensionMissingBanner = () => {
+  const captureUnsupported = isCaptureUnsupportedClient();
   const { status } = useExtensionInstalled();
+
+  if (captureUnsupported) {
+    return <CaptureDesktopRequired variant="banner" surface="banner" />;
+  }
 
   if (status !== 'missing') return null;
 

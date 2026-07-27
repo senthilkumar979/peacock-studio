@@ -7,6 +7,6 @@ export function isSensitiveUrl(url: string): boolean {
 import { UI_HOST_ID } from './recordingUi';
 
 export function isPeacockUiElement(element: EventTarget | null): boolean {
-  if (!(element instanceof HTMLElement)) return false;
+  if (!(element instanceof Element)) return false;
   return Boolean(element.closest(`#${UI_HOST_ID}`));
 }

@@ -2,7 +2,7 @@
   "name": "peacock",
   "private": true,
   "scripts": {
-    "test": "pnpm --filter @peacock/shared test",
+    "test": "pnpm --filter @peacock/shared test && pnpm --filter @peacock/app test",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "dev:extension": "pnpm --filter @peacock/extension dev",

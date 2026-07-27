@@ -67,6 +67,11 @@ export interface ElementSnapshot {
   isSelect: boolean;
   isCheckbox: boolean;
   isRadio: boolean;
+  isOption: boolean;
+  isTab: boolean;
+  isMenuItem: boolean;
+  isCombobox: boolean;
+  isContentEditable: boolean;
 }
 
 export interface ClickEvent {
@@ -114,7 +119,25 @@ export interface PageViewEvent {
   navigationRedirect?: boolean;
 }
 
-export type FlowEvent = ClickEvent | InputEvent | NavigationEvent | PageViewEvent;
+export interface SubmitEvent {
+  id: string;
+  type: 'submit';
+  timestamp: number;
+  url: string;
+  title: string;
+  viewport: Viewport;
+  position?: NormalizedPosition;
+  element: ElementSnapshot;
+  trigger: 'enter-key';
+  screenshotId: string;
+}
+
+export type FlowEvent =
+  | ClickEvent
+  | InputEvent
+  | SubmitEvent
+  | NavigationEvent
+  | PageViewEvent;
 
 export interface FlowStep {
   id: string;
@@ -126,6 +149,8 @@ export interface FlowStep {
   screenshotId: string;
   /** When set, display and export use this id in screenshotUrls instead of the captured screenshot. */
   customScreenshotId?: string;
+  /** When true, no description is shown in player/PDF/export (notes stays ""). */
+  hideDescription?: boolean;
 }
 
 export interface FlowSection {

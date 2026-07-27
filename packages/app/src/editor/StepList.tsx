@@ -225,6 +225,7 @@ export const StepList = ({ onLinkPeacockDoc, editorHints }: StepListProps) => {
           title="Flow outline"
           description="Your recorded and manual steps appear here. Select one to preview it, drag to reorder, and build the path learners follow."
           onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.stepList)}
+          onSkipAll={editorHints?.skipAllHints}
         >
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             Outline
@@ -241,6 +242,7 @@ export const StepList = ({ onLinkPeacockDoc, editorHints }: StepListProps) => {
             description="Insert a manual step with your own screenshot and notes — useful for intro slides or steps you couldn't record live."
             placement="bottom"
             onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.addStep)}
+            onSkipAll={editorHints?.skipAllHints}
           >
             <button
               type="button"
@@ -258,6 +260,7 @@ export const StepList = ({ onLinkPeacockDoc, editorHints }: StepListProps) => {
             description="Group steps under a titled section card — great for chapters like “Getting started” or “Advanced settings”."
             placement="bottom"
             onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.addSection)}
+            onSkipAll={editorHints?.skipAllHints}
           >
             <button
               type="button"
@@ -277,6 +280,7 @@ export const StepList = ({ onLinkPeacockDoc, editorHints }: StepListProps) => {
             description="Link to another Peacock doc so learners choose different paths — perfect for role-based flows or optional deep dives."
             placement="bottom"
             onDismiss={() => editorHints?.dismissHint(EDITOR_HINT_IDS.addBranching)}
+            onSkipAll={editorHints?.skipAllHints}
           >
             <button
               type="button"

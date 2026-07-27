@@ -16,9 +16,9 @@ export interface MinimalRichTextEditorProps {
 }
 
 const EDITOR_CONTENT_CLASS =
-  'min-h-[9.5rem] px-3 py-2 text-sm text-slate-800 outline-none ' +
-  '[&_.ProseMirror]:min-h-[8.5rem] [&_.ProseMirror]:outline-none ' +
-  '[&_.ProseMirror_p]:my-1 [&_.ProseMirror_p]:leading-relaxed ' +
+  'min-h-[9.5rem] text-sm text-slate-800 outline-none ' +
+  '[&_.ProseMirror]:min-h-[9.5rem] [&_.ProseMirror]:px-3 [&_.ProseMirror]:py-2 [&_.ProseMirror]:outline-none ' +
+  '[&_.ProseMirror_p]:my-1 [&_.ProseMirror_p]:leading-relaxed [&_.ProseMirror_p:first-child]:mt-0 ' +
   '[&_.ProseMirror_h1]:my-2 [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold ' +
   '[&_.ProseMirror_h2]:my-1.5 [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-semibold ' +
   '[&_.ProseMirror_h3]:my-1 [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-semibold ' +
@@ -108,7 +108,7 @@ export const MinimalRichTextEditor = ({
       <MinimalRichTextToolbar editor={editor} disabled={disabled} />
       <div className={`relative ${EDITOR_CONTENT_CLASS}`}>
         {showPlaceholder ? (
-          <span className="pointer-events-none absolute left-3 top-2 text-sm text-slate-400">
+          <span className="pointer-events-none absolute left-3 top-2 text-sm leading-relaxed text-slate-400">
             {placeholder}
           </span>
         ) : null}

@@ -29,6 +29,15 @@ export function dismissFirstTimeHint(hintId: string): void {
   writeDismissedHints(hints);
 }
 
+/** Dismiss an entire tip sequence so "Skip tips" can exit the tour. */
+export function dismissFirstTimeHintSequence(hintIds: readonly string[]): void {
+  const hints = readDismissedHints();
+  for (const hintId of hintIds) {
+    hints[hintId] = true;
+  }
+  writeDismissedHints(hints);
+}
+
 export const DASHBOARD_HINT_IDS = {
   library: 'dashboard-library',
   productTours: 'dashboard-product-tours',

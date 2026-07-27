@@ -1,5 +1,10 @@
 import { createConsoleSink } from './consoleSink';
+import { AnalyticsEvents } from './events';
 import type { AnalyticsProps, AnalyticsSink } from './types';
+import {
+  readAcquisitionContext,
+  toAcquisitionTraits,
+} from '@/utils/acquisitionContext';
 
 let sink: AnalyticsSink = createConsoleSink();
 let isEnabled = false;
@@ -54,6 +59,20 @@ export function trackException(error: unknown, props?: AnalyticsProps): void {
 export function identifyAnalyticsUser(userId: string, traits?: AnalyticsProps): void {
   if (!isEnabled) return;
   sink.identify?.(userId, traits);
+}
+
+/**
+ * Registers first-touch acquisition traits as PostHog super properties and emits
+ * a one-time capture event. No-op when analytics is disabled or context is empty.
+ */
+export function flushAcquisitionToAnalytics(): void {
+  if (!isEnabled) return;
+
+  const traits = toAcquisitionTraits(readAcquisitionContext());
+  if (Object.keys(traits).length === 0) return;
+
+  sink.registerSuperProperties?.(traits);
+  sink.track(AnalyticsEvents.acquisitionContextCaptured, traits);
 }
 
 /** Clear identity on sign-out. */

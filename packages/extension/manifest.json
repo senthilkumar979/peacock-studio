@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Peacock Studio",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Record clicks and screenshots on any site, then turn your workflow into step-by-step guides in Peacock Studio.",
   "permissions": [
     "activeTab",
@@ -25,7 +25,8 @@
       "matches": ["<all_urls>"],
       "exclude_matches": ["http://localhost:5173/*", "http://127.0.0.1:5173/*"],
       "js": ["content/index.js"],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "all_frames": true
     },
     {
       "matches": ["http://localhost:5173/*", "http://127.0.0.1:5173/*"],

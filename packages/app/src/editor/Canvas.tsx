@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import type { FlowStep } from '@peacock/shared';
-import { getStepMarkerPosition, getStepUrl } from '@peacock/shared';
+import { getStepMarkerPosition, getStepUrl, resolveStepDescription } from '@peacock/shared';
 import { getStepScreenshotUrl, useFlowStore } from '@/store/flowStore';
 import { ClickMarker } from './ClickMarker';
 
@@ -23,12 +23,15 @@ export const Canvas = ({ step }: CanvasProps) => {
   const screenshotUrl = getStepScreenshotUrl(step, screenshotUrls);
   const markerPosition = getStepMarkerPosition(step);
   const stepUrl = getStepUrl(step);
+  const description = resolveStepDescription(step);
 
   return (
     <div className="flex h-full flex-col gap-3">
       <div className="rounded-lg bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200">
         <h2 className="text-base font-semibold text-slate-900">{step.title}</h2>
-        <p className="mt-1 text-sm text-slate-600">{step.notes || step.generatedDescription}</p>
+        {description ? (
+          <p className="mt-1 text-sm text-slate-600">{description}</p>
+        ) : null}
         <p className="mt-2 truncate text-xs text-slate-500" title={stepUrl}>
           {stepUrl}
         </p>

@@ -2,10 +2,29 @@ import type { RecordingStateSnapshot } from '@peacock/shared';
 
 export const UI_HOST_ID = 'peacock-recording-ui';
 
-let badgeEl: HTMLDivElement | null = null;
+let fabButton: HTMLButtonElement | null = null;
+let fabCountEl: HTMLSpanElement | null = null;
+let statusEl: HTMLSpanElement | null = null;
+let panelEl: HTMLDivElement | null = null;
 let captureHideDepth = 0;
+let isPanelExpanded = false;
+let lastState: RecordingStateSnapshot | null = null;
 
-function createBadgeButton(label: string, background: string, onClick: () => void): HTMLButtonElement {
+function formatFabCount(eventCount: number): string {
+  return String(eventCount);
+}
+
+function formatRecordingStatus(state: RecordingStateSnapshot): string {
+  const label = state.status === 'paused' ? 'Paused' : 'Recording';
+  return `${label} · ${state.eventCount} steps`;
+}
+
+function formatFabAriaLabel(state: RecordingStateSnapshot): string {
+  const label = state.status === 'paused' ? 'Paused' : 'Recording';
+  return `${label}: ${state.eventCount} steps captured`;
+}
+
+function createActionButton(label: string, background: string, onClick: () => void): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
   button.textContent = label;
@@ -17,12 +36,29 @@ function createBadgeButton(label: string, background: string, onClick: () => voi
     'color: #fff',
     'cursor: pointer',
     'font: inherit',
+    'white-space: nowrap',
   ].join(';');
   button.addEventListener('click', (event) => {
     event.stopPropagation();
     onClick();
   });
   return button;
+}
+
+function setExpanded(expanded: boolean): void {
+  isPanelExpanded = expanded;
+  if (!fabButton || !panelEl) return;
+
+  fabButton.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  panelEl.hidden = !expanded;
+}
+
+function updateLabels(state: RecordingStateSnapshot): void {
+  if (!fabButton || !fabCountEl || !statusEl) return;
+
+  fabCountEl.textContent = formatFabCount(state.eventCount);
+  statusEl.textContent = formatRecordingStatus(state);
+  fabButton.setAttribute('aria-label', formatFabAriaLabel(state));
 }
 
 function ensureUi(onStop: () => void, onCaptureScreenshot: () => void): HTMLDivElement {
@@ -34,28 +70,106 @@ function ensureUi(onStop: () => void, onCaptureScreenshot: () => void): HTMLDivE
   host.style.cssText = [
     'position: fixed',
     'bottom: 20px',
-    'right: 20px',
+    'left: 20px',
     'z-index: 2147483647',
     'display: none',
+    'pointer-events: none',
+    'font: 12px/1.2 system-ui, sans-serif',
+  ].join(';');
+
+  const inner = document.createElement('div');
+  inner.style.cssText = [
+    'display: flex',
+    'align-items: center',
+    'gap: 8px',
+    'pointer-events: auto',
+  ].join(';');
+
+  fabButton = document.createElement('button');
+  fabButton.type = 'button';
+  fabButton.setAttribute('data-peacock-fab', '');
+  fabButton.setAttribute('aria-expanded', 'false');
+  fabButton.setAttribute('aria-label', 'Recording controls');
+  fabButton.style.cssText = [
+    'display: flex',
+    'align-items: center',
+    'justify-content: center',
+    'width: 48px',
+    'height: 48px',
+    'border: 0',
+    'border-radius: 999px',
+    'background: #111827',
+    'color: #fff',
+    'cursor: pointer',
+    'font: 700 14px/1 system-ui, sans-serif',
+    'box-shadow: 0 8px 24px rgba(0,0,0,0.25)',
+    'flex-shrink: 0',
+  ].join(';');
+
+  fabCountEl = document.createElement('span');
+  fabCountEl.setAttribute('data-peacock-fab-count', '');
+  fabCountEl.textContent = '0';
+  fabButton.appendChild(fabCountEl);
+
+  fabButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (!isPanelExpanded) setExpanded(true);
+  });
+
+  panelEl = document.createElement('div');
+  panelEl.setAttribute('data-peacock-panel', '');
+  panelEl.hidden = true;
+  panelEl.style.cssText = [
+    'display: flex',
     'align-items: center',
     'gap: 8px',
     'padding: 10px 12px',
     'border-radius: 999px',
     'background: #111827',
     'color: #fff',
-    'font: 12px/1.2 system-ui, sans-serif',
     'box-shadow: 0 8px 24px rgba(0,0,0,0.25)',
   ].join(';');
 
-  badgeEl = document.createElement('div');
-  badgeEl.textContent = 'Recording';
+  statusEl = document.createElement('span');
+  statusEl.setAttribute('data-peacock-status', '');
+  statusEl.textContent = 'Recording · 0 steps';
+  statusEl.style.whiteSpace = 'nowrap';
 
-  const captureButton = createBadgeButton('Capture Screenshot', '#2563eb', onCaptureScreenshot);
-  const stopButton = createBadgeButton('Stop', '#ef4444', onStop);
+  const captureButton = createActionButton('Capture Screenshot', '#2563eb', onCaptureScreenshot);
+  const stopButton = createActionButton('Stop', '#ef4444', onStop);
 
-  host.appendChild(badgeEl);
-  host.appendChild(captureButton);
-  host.appendChild(stopButton);
+  const collapseButton = document.createElement('button');
+  collapseButton.type = 'button';
+  collapseButton.setAttribute('data-peacock-collapse', '');
+  collapseButton.setAttribute('aria-label', 'Collapse recording controls');
+  collapseButton.textContent = '×';
+  collapseButton.style.cssText = [
+    'display: flex',
+    'align-items: center',
+    'justify-content: center',
+    'width: 32px',
+    'height: 32px',
+    'border: 0',
+    'border-radius: 999px',
+    'background: #374151',
+    'color: #fff',
+    'cursor: pointer',
+    'font: 18px/1 system-ui, sans-serif',
+    'flex-shrink: 0',
+  ].join(';');
+  collapseButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    setExpanded(false);
+  });
+
+  panelEl.appendChild(statusEl);
+  panelEl.appendChild(captureButton);
+  panelEl.appendChild(stopButton);
+  panelEl.appendChild(collapseButton);
+
+  inner.appendChild(fabButton);
+  inner.appendChild(panelEl);
+  host.appendChild(inner);
   document.body.appendChild(host);
 
   return host;
@@ -84,16 +198,24 @@ export function restoreRecordingUiAfterCapture(state: RecordingStateSnapshot): v
 
 export function updateRecordingUi(state: RecordingStateSnapshot): void {
   const host = document.getElementById(UI_HOST_ID) as HTMLDivElement | null;
-  if (!host || !badgeEl) return;
+  if (!host || !fabButton || !fabCountEl || !statusEl) return;
   if (captureHideDepth > 0) return;
 
   const isActive = state.status === 'recording' || state.status === 'paused';
-  host.style.display = isActive ? 'flex' : 'none';
+  const wasActive = lastState?.status === 'recording' || lastState?.status === 'paused';
 
-  if (state.status === 'paused') {
-    badgeEl.textContent = `Paused · ${state.eventCount} steps`;
+  if (!isActive) {
+    host.style.display = 'none';
+    setExpanded(false);
+    lastState = state;
     return;
   }
 
-  badgeEl.textContent = `Recording · ${state.eventCount} steps`;
+  if (!wasActive) {
+    setExpanded(false);
+  }
+
+  host.style.display = 'block';
+  updateLabels(state);
+  lastState = state;
 }

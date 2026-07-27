@@ -1,5 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useLocation, useOutlet } from 'react-router-dom';
+import { SkipToContent } from '@/components/a11y/SkipToContent';
 import { AppFooter } from '@/components/AppFooter';
 import { pageTransitionTiming, pageTransitionVariants } from '@/components/motion/pageMotion';
 import { LibraryNav } from '@/components/library/LibraryNav';
@@ -11,8 +12,9 @@ export const LibraryLayout = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100/80">
+      <SkipToContent />
       <LibraryNav />
-      <div className="flex-1 overflow-x-hidden">
+      <main id="main-content" className="flex-1 overflow-x-hidden">
         {shouldReduceMotion ? (
           <div className="h-full">{outlet}</div>
         ) : (
@@ -29,7 +31,7 @@ export const LibraryLayout = () => {
             </motion.div>
           </AnimatePresence>
         )}
-      </div>
+      </main>
       <AppFooter />
     </div>
   );

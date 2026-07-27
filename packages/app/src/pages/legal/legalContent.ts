@@ -51,6 +51,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     heading: 'Local storage & cloud sync',
     paragraphs: [
       'As a guest, saved documentation and screenshots stay in your browser (IndexedDB) on your device. When cloud sync is enabled for your deployment and you sign in, your library is stored with our cloud provider to sync across devices, support team workspaces, and power secure share links.',
+      'When cloud sync is enabled, retention of cloud-hosted library data is configured by the operator of that deployment. Guest (local-only) data remains in your browser until you clear it.',
     ],
   },
   {

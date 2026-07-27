@@ -27,6 +27,9 @@ export function createConsoleSink(): AnalyticsSink {
     identify: (userId, traits) => {
       if (isDev) console.info('[analytics] identify', userId, traits ?? {});
     },
+    registerSuperProperties: (props) => {
+      if (isDev) console.info('[analytics] registerSuperProperties', props);
+    },
     reset: () => {
       if (isDev) console.info('[analytics] reset');
     },

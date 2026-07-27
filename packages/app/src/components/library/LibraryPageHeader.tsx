@@ -1,12 +1,14 @@
 import type { LucideIcon } from 'lucide-react';
 import { ArrowRight } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { FirstTimeTooltip } from '@/components/onboarding/FirstTimeTooltip';
 
 interface LibraryPageHeaderProps {
   title: string;
   description: string;
   icon: LucideIcon;
-  action?: React.ReactNode;
+  action?: ReactNode;
 }
 
 export const LibraryPageHeader = ({
@@ -33,8 +35,15 @@ interface DashboardRecentSectionProps {
   icon: LucideIcon;
   viewAllHref: string;
   viewAllLabel?: string;
-  toolbar?: React.ReactNode;
-  children: React.ReactNode;
+  toolbar?: ReactNode;
+  children: ReactNode;
+  tip?: {
+    isOpen: boolean;
+    stepLabel: string;
+    title: string;
+    description: string;
+    onDismiss: () => void;
+  };
 }
 
 export const DashboardRecentSection = ({
@@ -45,14 +54,30 @@ export const DashboardRecentSection = ({
   viewAllLabel = 'View all',
   toolbar,
   children,
+  tip,
 }: DashboardRecentSectionProps) => (
   <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl shadow-slate-200/60">
     <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-          <Icon className="h-5 w-5 text-peacock-600" aria-hidden />
-          {title}
-        </h2>
+        {tip ? (
+          <FirstTimeTooltip
+            isOpen={tip.isOpen}
+            stepLabel={tip.stepLabel}
+            title={tip.title}
+            description={tip.description}
+            onDismiss={tip.onDismiss}
+          >
+            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+              <Icon className="h-5 w-5 text-peacock-600" aria-hidden />
+              {title}
+            </h2>
+          </FirstTimeTooltip>
+        ) : (
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+            <Icon className="h-5 w-5 text-peacock-600" aria-hidden />
+            {title}
+          </h2>
+        )}
         <p className="mt-1 text-sm text-slate-500">{description}</p>
       </div>
       <div className="flex flex-wrap items-center gap-3">

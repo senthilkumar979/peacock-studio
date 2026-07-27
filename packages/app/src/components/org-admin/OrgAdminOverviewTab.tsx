@@ -4,6 +4,7 @@ import {
   OrgContributorLeaders,
   overviewLeaderHints,
 } from '@/components/org-admin/OrgContributorLeaders';
+import { OrgAdminFirstWeekChecklist } from '@/components/org-admin/OrgAdminFirstWeekChecklist';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import {
   fetchOrgAdminActivity,
@@ -17,9 +18,15 @@ const ACTIVITY_DAYS = 30;
 
 interface OrgAdminOverviewTabProps {
   organizationId: string;
+  onOpenMembers?: () => void;
+  onOpenActivity?: () => void;
 }
 
-export const OrgAdminOverviewTab = ({ organizationId }: OrgAdminOverviewTabProps) => {
+export const OrgAdminOverviewTab = ({
+  organizationId,
+  onOpenMembers,
+  onOpenActivity,
+}: OrgAdminOverviewTabProps) => {
   const { summary, isLoading: summaryLoading } = useOrgAnalytics(ACTIVITY_DAYS);
   const [activity, setActivity] = useState<OrgAdminActivity | null>(null);
   const [activityLoading, setActivityLoading] = useState(true);
@@ -56,9 +63,18 @@ export const OrgAdminOverviewTab = ({ organizationId }: OrgAdminOverviewTabProps
     activity && activity.documentCount > 0
       ? summary.totals.views / activity.documentCount
       : 0;
+  const showFirstWeekChecklist = Boolean(
+    activity && activity.memberCount <= 1 && onOpenMembers,
+  );
 
   return (
     <div className="space-y-8">
+      {showFirstWeekChecklist && onOpenMembers ? (
+        <OrgAdminFirstWeekChecklist
+          onOpenMembers={onOpenMembers}
+          onOpenActivity={onOpenActivity}
+        />
+      ) : null}
       <AnalyticsSummaryCards
         summary={summary}
         avgViewsPerDoc={avgViewsPerDoc}

@@ -1,5 +1,9 @@
 import Dexie, { type Table } from 'dexie';
 import type { FlowEvent } from '@peacock/shared';
+import {
+  mergeCoalescedInputEvent,
+  shouldCoalesceInputEvents,
+} from '@peacock/shared';
 
 export interface StoredScreenshot {
   id: string;
@@ -55,6 +59,20 @@ export async function addStoredEvent(event: FlowEvent): Promise<void> {
     data: event,
     timestamp: event.timestamp,
   });
+}
+
+export async function storeEventWithCoalescing(event: FlowEvent): Promise<'added' | 'updated'> {
+  await ensureDbOpen();
+
+  const latest = await getLatestStoredEvent();
+  if (event.type === 'input' && shouldCoalesceInputEvents(latest, event)) {
+    const merged = mergeCoalescedInputEvent(latest, event);
+    await putStoredEvent(merged);
+    return 'updated';
+  }
+
+  await addStoredEvent(event);
+  return 'added';
 }
 
 export async function getLatestStoredEvent(): Promise<FlowEvent | null> {

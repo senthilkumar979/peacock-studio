@@ -9,6 +9,8 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   isDestructive?: boolean;
+  isConfirmLoading?: boolean;
+  confirmLoadingLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -21,6 +23,8 @@ export const ConfirmDialog = ({
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
   isDestructive = false,
+  isConfirmLoading = false,
+  confirmLoadingLabel = 'Saving…',
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) => {
@@ -31,12 +35,12 @@ export const ConfirmDialog = ({
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onCancel();
+      if (event.key === 'Escape' && !isConfirmLoading) onCancel();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onCancel]);
+  }, [isOpen, onCancel, isConfirmLoading]);
 
   if (!isOpen) return null;
 
@@ -49,6 +53,7 @@ export const ConfirmDialog = ({
         aria-label="Close dialog"
         className="absolute inset-0 bg-slate-900/50"
         onClick={onCancel}
+        disabled={isConfirmLoading}
       />
       <div
         role="alertdialog"
@@ -75,6 +80,8 @@ export const ConfirmDialog = ({
           cancelLabel={cancelLabel}
           confirmLabel={confirmLabel}
           isDestructive={isDestructive}
+          isConfirmLoading={isConfirmLoading}
+          confirmLoadingLabel={confirmLoadingLabel}
         />
       </div>
     </div>

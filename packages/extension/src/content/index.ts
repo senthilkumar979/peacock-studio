@@ -2,19 +2,25 @@ import {
   createId,
   collectCaptureEnvironmentFromWindow,
   extractElementSnapshot,
+  getEventTargetElement,
   getViewport,
   isSensitiveField,
   normalizePosition,
+  resolveClickTarget,
   type ClickEvent,
-  type ElementSnapshot,
-  type PageViewEvent,
   type ExtensionMessage,
   type FlowEvent,
-  type InputEvent,
   type NavigationEvent,
+  type PageViewEvent,
   type RecordingStateSnapshot,
 } from '@peacock/shared';
 import { sendExtensionMessage } from '../messaging/sendExtensionMessage';
+import {
+  initInputCapture,
+  isSubmitClickTarget,
+  markSubmitSuppressedByClick,
+  shouldDeferClickToInputEvent,
+} from './inputCapture';
 import { initNavigationTracking } from './navigation';
 import { isPeacockUiElement, isSensitiveUrl } from './privacy';
 import {
@@ -31,8 +37,6 @@ let recordingState: RecordingStateSnapshot = {
   startedAt: null,
 };
 
-const inputDebounceMs = 400;
-const inputTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const pointerCaptureMaxAgeMs = 800;
 
 interface PendingPointerCapture {
@@ -42,8 +46,13 @@ interface PendingPointerCapture {
 }
 
 let pendingPointerCapture: PendingPointerCapture | null = null;
+let flushPendingInputs: (() => Promise<void>) | null = null;
 
 const PEACOCK_INIT_KEY = '__peacockContentScriptInitialized';
+
+function isTopFrame(): boolean {
+  return window === window.top;
+}
 
 async function refreshRecordingState(): Promise<RecordingStateSnapshot> {
   recordingState = await syncRecordingStateFromBackground();
@@ -60,58 +69,19 @@ async function isRecordingActive(): Promise<boolean> {
   return state.status === 'recording';
 }
 
-function isValidClickTarget(target: EventTarget | null): target is HTMLElement {
-  if (!(target instanceof HTMLElement)) return false;
-  if (isPeacockUiElement(target)) return false;
-  if (target instanceof HTMLInputElement && isSensitiveField(target)) return false;
-  return true;
+function resolveRecordingTarget(event: Event): HTMLElement | null {
+  const raw = getEventTargetElement(event);
+  const resolved = resolveClickTarget(raw);
+  if (!resolved) return null;
+  if (isPeacockUiElement(resolved)) return null;
+  if (resolved instanceof HTMLInputElement && isSensitiveField(resolved)) return null;
+  return resolved;
 }
 
-function isSameClickInteraction(pendingTarget: EventTarget, clickTarget: EventTarget): boolean {
-  if (pendingTarget === clickTarget) return true;
-  if (!(pendingTarget instanceof Node) || !(clickTarget instanceof Node)) return false;
-  return pendingTarget.contains(clickTarget) || clickTarget.contains(pendingTarget);
-}
-
-function isRecordableFormControl(
-  target: Element | null
-): target is HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement {
-  if (
-    !(target instanceof HTMLInputElement) &&
-    !(target instanceof HTMLSelectElement) &&
-    !(target instanceof HTMLTextAreaElement)
-  ) {
-    return false;
-  }
-
-  if (target instanceof HTMLInputElement) {
-    const inputType = target.type.toLowerCase();
-    return !['button', 'submit', 'reset', 'hidden'].includes(inputType);
-  }
-
-  return true;
-}
-
-function getAssociatedFormControl(
-  target: HTMLElement
-): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null {
-  if (isRecordableFormControl(target)) return target;
-
-  const label = target.closest('label');
-  if (!label) return null;
-
-  const nestedControl = label.querySelector('input, select, textarea');
-  if (isRecordableFormControl(nestedControl)) return nestedControl;
-
-  const htmlFor = label.getAttribute('for');
-  if (!htmlFor) return null;
-
-  const referenced = document.getElementById(htmlFor);
-  return isRecordableFormControl(referenced) ? referenced : null;
-}
-
-function shouldDeferClickToInputEvent(target: HTMLElement): boolean {
-  return Boolean(getAssociatedFormControl(target));
+function isSameResolvedTarget(a: EventTarget, b: EventTarget): boolean {
+  if (a === b) return true;
+  if (!(a instanceof Node) || !(b instanceof Node)) return false;
+  return a.contains(b) || b.contains(a);
 }
 
 function beginPointerScreenshot(target: EventTarget): void {
@@ -129,7 +99,7 @@ async function screenshotIdForClick(target: EventTarget): Promise<string> {
   if (
     pending &&
     Date.now() - pending.startedAt < pointerCaptureMaxAgeMs &&
-    isSameClickInteraction(pending.target, target)
+    isSameResolvedTarget(pending.target, target)
   ) {
     return pending.promise;
   }
@@ -172,18 +142,23 @@ async function storeEvent(event: FlowEvent): Promise<void> {
 function handlePointerDown(event: PointerEvent): void {
   if (!isRecordingActiveSync()) return;
   if (event.button !== 0) return;
-  if (!isValidClickTarget(event.target)) return;
-  if (shouldDeferClickToInputEvent(event.target)) return;
 
-  beginPointerScreenshot(event.target);
+  const target = resolveRecordingTarget(event);
+  if (!target) return;
+  if (shouldDeferClickToInputEvent(target)) return;
+
+  beginPointerScreenshot(target);
 }
 
 async function handleClick(event: MouseEvent): Promise<void> {
   if (!(await isRecordingActive())) return;
 
-  const target = event.target;
-  if (!isValidClickTarget(target)) return;
+  const target = resolveRecordingTarget(event);
+  if (!target) return;
   if (shouldDeferClickToInputEvent(target)) return;
+  if (isSubmitClickTarget(target)) {
+    markSubmitSuppressedByClick();
+  }
 
   const screenshotId = await screenshotIdForClick(target);
   const viewport = getViewport();
@@ -209,85 +184,6 @@ async function handleClick(event: MouseEvent): Promise<void> {
   await storeEvent(clickEvent);
 }
 
-/**
- * Resolves the value to persist on an input event while honoring the field's
- * data classification. `secret` never yields a value, `sensitive` yields only
- * the masked preview, and `public` keeps the captured (or raw) value.
- */
-function resolveCapturedValue(element: ElementSnapshot, rawValue: string): string {
-  if (element.classification === 'secret') return '';
-  if (element.classification === 'sensitive') return element.maskedValue ?? '';
-  return element.valuePreview ?? rawValue;
-}
-
-async function flushInput(target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): Promise<void> {
-  if (!(await isRecordingActive())) return;
-  if (isSensitiveField(target)) return;
-
-  const screenshotId = await tryCaptureScreenshotId();
-  const viewport = getViewport();
-  const rect = target.getBoundingClientRect();
-  const centerX = rect.left + rect.width / 2;
-  const centerY = rect.top + rect.height / 2;
-  const element = extractElementSnapshot(target);
-  const valuePreview = resolveCapturedValue(element, target.value ?? '');
-
-  const inputEvent: InputEvent = {
-    id: createId(),
-    type: 'input',
-    timestamp: Date.now(),
-    url: location.href,
-    title: document.title,
-    viewport,
-    position: {
-      x: centerX,
-      y: centerY,
-      ...normalizePosition(centerX, centerY, viewport),
-    },
-    element,
-    valuePreview,
-    screenshotId,
-  };
-
-  await storeEvent(inputEvent);
-}
-
-function scheduleInputEvent(target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): void {
-  const key = target.id || target.name || target.tagName;
-  const existing = inputTimers.get(key);
-  if (existing) clearTimeout(existing);
-
-  inputTimers.set(
-    key,
-    setTimeout(() => {
-      inputTimers.delete(key);
-      void flushInput(target).catch((error) => {
-        console.error('[Peacock] Failed to store input event', error);
-      });
-    }, inputDebounceMs),
-  );
-}
-
-function handleInput(event: Event): void {
-  void (async () => {
-    if (!(await isRecordingActive())) return;
-
-    const target = event.target;
-    if (
-      !(target instanceof HTMLInputElement) &&
-      !(target instanceof HTMLTextAreaElement) &&
-      !(target instanceof HTMLSelectElement)
-    ) {
-      return;
-    }
-
-    if (isPeacockUiElement(target)) return;
-    if (isSensitiveField(target)) return;
-
-    scheduleInputEvent(target);
-  })();
-}
-
 async function waitForPageSettle(): Promise<void> {
   if (document.readyState === 'loading') {
     await new Promise<void>((resolve) => {
@@ -300,6 +196,7 @@ async function waitForPageSettle(): Promise<void> {
 }
 
 async function captureNavigationPageView(): Promise<void> {
+  if (!isTopFrame()) return;
   if (!(await isRecordingActive())) return;
 
   await waitForPageSettle();
@@ -320,6 +217,7 @@ async function captureNavigationPageView(): Promise<void> {
 }
 
 async function captureInitialPageView(): Promise<void> {
+  if (!isTopFrame()) return;
   if (!(await isRecordingActive())) return;
 
   const screenshotId = await tryCaptureScreenshotId();
@@ -378,8 +276,10 @@ async function handleRecordingStarted(): Promise<void> {
   await refreshRecordingState();
   if (!isRecordingActiveSync()) return;
 
-  updateRecordingUi(recordingState);
-  await captureInitialPageView();
+  if (isTopFrame()) {
+    updateRecordingUi(recordingState);
+    await captureInitialPageView();
+  }
 }
 
 async function handleNavigation(event: NavigationEvent): Promise<void> {
@@ -405,7 +305,7 @@ function initEventListeners(): void {
     (event) => {
       handlePointerDown(event);
     },
-    true
+    true,
   );
 
   document.addEventListener(
@@ -415,11 +315,16 @@ function initEventListeners(): void {
         console.error('[Peacock] Failed to store click event', error);
       });
     },
-    true
+    true,
   );
 
-  document.addEventListener('input', handleInput, true);
-  document.addEventListener('change', handleInput, true);
+  const inputCapture = initInputCapture({
+    isRecordingActive: isRecordingActiveSync,
+    storeEvent,
+    captureScreenshotId: tryCaptureScreenshotId,
+    isPeacockUi: isPeacockUiElement,
+  });
+  flushPendingInputs = inputCapture.flushAllPending;
 
   initNavigationTracking((navigationEvent) => {
     void handleNavigation(navigationEvent).catch((error) => {
@@ -447,6 +352,16 @@ function registerRuntimeListeners(): void {
       const startedAt = message.recordingStartedAt;
       const environment = collectCaptureEnvironmentFromWindow(startedAt, startedAt);
       sendResponse({ environment });
+      return true;
+    }
+
+    if (message.type === 'FLUSH_PENDING_INPUTS') {
+      void (flushPendingInputs?.() ?? Promise.resolve())
+        .then(() => sendResponse({ success: true }))
+        .catch((error) => {
+          console.error('[Peacock] Failed to flush pending inputs', error);
+          sendResponse({ error: error instanceof Error ? error.message : 'Unknown error' });
+        });
       return true;
     }
 
@@ -488,19 +403,21 @@ function bootstrapContentScript(): void {
       recordingState = state;
       updateRecordingUi(recordingState);
     },
-    () => recordingState
+    () => recordingState,
   );
 
-  initRecordingUi(
-    () => {
-      void stopRecordingFromUi();
-    },
-    () => {
-      void captureManualPageSnapshot().catch((error) => {
-        console.error('[Peacock] Failed to capture page snapshot from badge', error);
-      });
-    }
-  );
+  if (isTopFrame()) {
+    initRecordingUi(
+      () => {
+        void stopRecordingFromUi();
+      },
+      () => {
+        void captureManualPageSnapshot().catch((error) => {
+          console.error('[Peacock] Failed to capture page snapshot from badge', error);
+        });
+      },
+    );
+  }
   initEventListeners();
 
   void refreshRecordingState().catch((error) => {

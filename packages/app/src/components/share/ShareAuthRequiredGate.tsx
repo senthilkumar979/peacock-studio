@@ -29,8 +29,15 @@ export const ShareAuthRequiredGate = ({ returnPath }: ShareAuthRequiredGateProps
           Sign in to view
         </Link>
         <Link
-          to={LANDING_PATH}
+          to="/sign-up"
+          state={{ from: returnPath }}
           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+        >
+          Sign up
+        </Link>
+        <Link
+          to={LANDING_PATH}
+          className="inline-flex items-center gap-2 rounded-xl border border-transparent px-4 py-2.5 text-sm font-medium text-slate-500 transition hover:text-slate-800"
         >
           Go home
         </Link>

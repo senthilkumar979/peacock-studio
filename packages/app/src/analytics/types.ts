@@ -13,5 +13,7 @@ export interface AnalyticsSink {
   /** Optional: Error Tracking / exception capture. */
   captureException?: (error: unknown, props?: AnalyticsProps) => void;
   identify?: (userId: string, traits?: AnalyticsProps) => void;
+  /** Optional: first-touch super properties (PostHog register_once). */
+  registerSuperProperties?: (props: AnalyticsProps) => void;
   reset?: () => void;
 }

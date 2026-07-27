@@ -1,7 +1,7 @@
 import type { FlowStep, NormalizedPosition, Viewport } from '../types/events';
 
 export function getStepViewport(step: FlowStep): Viewport | null {
-  if (step.event.type === 'click' || step.event.type === 'page-view') {
+  if (step.event.type === 'click' || step.event.type === 'page-view' || step.event.type === 'submit') {
     return step.event.viewport;
   }
 
@@ -17,7 +17,7 @@ export function getStepMarkerPosition(step: FlowStep): NormalizedPosition | null
     return step.event.position;
   }
 
-  if (step.event.type === 'input') {
+  if (step.event.type === 'input' || step.event.type === 'submit') {
     return step.event.position ?? null;
   }
 

@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
 import { useConsent } from '@/hooks/useConsent';
 import { useCloudAuthContext } from '@/hooks/useOrganization';
 import {
   disableAnalytics,
   enableAnalytics,
+  flushAcquisitionToAnalytics,
   identifyAnalyticsUser,
   resetAnalyticsUser,
   setAnalyticsSink,
@@ -14,6 +16,12 @@ import {
 import { isPostHogConfigured } from '@/analytics/config';
 import { AnalyticsEvents } from '@/analytics/events';
 import { isCloudSyncEnabled } from '@/cloud/config';
+import { isSentryInitialized } from '@/observability/sentry';
+import {
+  captureAcquisitionContext,
+  readAcquisitionContext,
+  toAcquisitionTraits,
+} from '@/utils/acquisitionContext';
 
 let posthogSinkPromise: Promise<void> | null = null;
 
@@ -40,6 +48,10 @@ export const AnalyticsTracker = () => {
   const identifiedUserRef = useRef<string | null>(null);
 
   useEffect(() => {
+    captureAcquisitionContext();
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
 
     if (isAnalyticsAllowed) {
@@ -52,6 +64,7 @@ export const AnalyticsTracker = () => {
           trackEvent(AnalyticsEvents.analyticsEnabled, {
             provider: isPostHogConfigured() ? 'posthog' : 'console',
           });
+          flushAcquisitionToAnalytics();
         }
       });
       return () => {
@@ -86,6 +99,7 @@ export const AnalyticsTracker = () => {
 
     if (identifiedUserRef.current === userId) return;
     identifyAnalyticsUser(userId, {
+      ...toAcquisitionTraits(readAcquisitionContext()),
       email: cloudAuth?.userEmail,
       name: cloudAuth?.userDisplayName,
       organization_id: cloudAuth?.organizationId ?? undefined,
@@ -94,6 +108,17 @@ export const AnalyticsTracker = () => {
     });
     identifiedUserRef.current = userId;
   }, [isAnalyticsAllowed, cloudAuth]);
+
+  // Sentry user attribution is independent of analytics cookie consent.
+  useEffect(() => {
+    if (!isCloudSyncEnabled() || !isSentryInitialized()) return;
+    const userId = cloudAuth?.clerkUserId ?? null;
+    if (!userId) {
+      Sentry.setUser(null);
+      return;
+    }
+    Sentry.setUser({ id: userId });
+  }, [cloudAuth?.clerkUserId]);
 
   return null;
 };

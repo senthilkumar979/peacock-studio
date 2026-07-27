@@ -11,6 +11,7 @@ import {
   getEventCount,
   getLatestStoredEvent,
   putStoredEvent,
+  storeEventWithCoalescing,
 } from '../storage/db';
 import { buildPayloadFromRecording, type PendingHandoff } from '../utils/payload';
 import {
@@ -420,12 +421,33 @@ async function handleCapturePageSnapshot(tab?: chrome.tabs.Tab): Promise<void> {
   await broadcastRecordingState();
 }
 
+async function flushPendingInputsOnTab(tab?: chrome.tabs.Tab): Promise<void> {
+  const targetTab =
+    tab ??
+    (await chrome.tabs.query({ active: true, currentWindow: true })).find((candidate) =>
+      canInjectIntoUrl(candidate.url),
+    );
+
+  if (!targetTab?.id || !canInjectIntoUrl(targetTab.url)) return;
+
+  const isReady = await ensureContentScript(targetTab.id);
+  if (!isReady) return;
+
+  try {
+    await chrome.tabs.sendMessage(targetTab.id, { type: 'FLUSH_PENDING_INPUTS' });
+  } catch (error) {
+    console.warn('[Peacock] Could not flush pending inputs before stop', error);
+  }
+}
+
 async function handleStopRecording(tab?: chrome.tabs.Tab): Promise<void> {
   const endedAt = Date.now();
   const captureEnvironment = await finalizeCaptureSession(endedAt);
   if (captureEnvironment) {
     await saveFinalCaptureEnvironment(captureEnvironment);
   }
+
+  await flushPendingInputsOnTab(tab);
 
   const eventCount = await getEventCount();
   const capturedFinalPage = await captureFinalPageBeforeStop(tab);
@@ -519,7 +541,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
             return;
           }
 
-          await addStoredEvent(message.event);
+          await storeEventWithCoalescing(message.event);
           const eventCount = await getEventCount();
           console.info('[Peacock] Stored event', message.event.type, 'count=', eventCount);
           await broadcastRecordingState();

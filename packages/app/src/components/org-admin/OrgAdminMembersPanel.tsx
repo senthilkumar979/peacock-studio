@@ -33,6 +33,7 @@ import type {
 } from '@/cloud/types/organization';
 import { reportAppError } from '@/utils/appError';
 import { notifyError, notifyPromise, notifySuccess, notifyWarning } from '@/utils/notify';
+import { isOrgInvitesFeatureEnabled } from '@/analytics/featureFlags';
 import { AnalyticsEvents } from '@/analytics/events';
 import { trackEvent } from '@/analytics/analyticsClient';
 import { copyTextToClipboard } from '@/utils/shareLink';
@@ -183,6 +184,10 @@ export const OrgAdminMembersPanel = ({
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           Personal workspaces are single-user. Create or switch to a team workspace to invite
           members and manage roles.
+        </div>
+      ) : !isOrgInvitesFeatureEnabled() ? (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          Team invitations are temporarily disabled.
         </div>
       ) : showInviteForm ? (
         <InviteMemberForm

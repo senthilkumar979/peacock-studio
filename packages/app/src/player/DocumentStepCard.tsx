@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, Link2 } from "lucide-react";
 import type { FlowStep } from "@peacock/shared";
-import { getStepMarkerPosition, getStepUrl } from "@peacock/shared";
+import { getStepMarkerPosition, getStepUrl, resolveStepDescription } from "@peacock/shared";
 import { usePlayerStepDetailsVisibility } from "@/hooks/usePlayerStepDetailsVisibility";
 import { getDocumentAnchorShareUrl } from "@/utils/shareLink";
 import { BrowserMockup } from "./BrowserMockup";
@@ -29,7 +29,7 @@ export const DocumentStepCard = ({
   const screenshotUrl = getStepScreenshotUrl(step, screenshotUrls);
   const markerPosition = getStepMarkerPosition(step);
   const stepUrl = getStepUrl(step);
-  const description = step.notes || step.generatedDescription;
+  const description = resolveStepDescription(step);
   const { isDetailsVisible, toggleDetails } = usePlayerStepDetailsVisibility(
     step.id,
   );

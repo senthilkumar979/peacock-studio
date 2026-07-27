@@ -9,6 +9,7 @@ import { getFlowDocument, listFlowSummaries } from '@/services/flowLibraryServic
 import { getPlayableSteps } from '@peacock/shared';
 import type { SavedFlowDocument, SavedFlowSummary } from '@/types/savedFlow';
 import { CompareDocumentPane } from '@/player/CompareDocumentPane';
+import { reportAppError } from '@/utils/appError';
 
 function useComparedDocument(documentId: string) {
   const [document, setDocument] = useState<SavedFlowDocument | null>(null);
@@ -58,8 +59,8 @@ export const CompareDocs = () => {
         setError(null);
       })
       .catch((err) => {
-        console.error('[Peacock] Failed to load compare summaries', err);
-        setError('Could not load saved documentation.');
+        const classified = reportAppError('Failed to load compare summaries', err);
+        setError(classified.userMessage);
       })
       .finally(() => setIsLibraryLoading(false));
   }, []);
@@ -106,7 +107,7 @@ export const CompareDocs = () => {
       <AppHeader
         eyebrow="Peacock Compare"
         title="Compare Docs"
-        description="Select two documents and navigate both step-by-step together."
+        description="Index-aligned side-by-side view (same step number on both sides). Not a semantic diff."
         homeLink
       />
 
@@ -116,9 +117,13 @@ export const CompareDocs = () => {
             <div className="space-y-2">
               <p className="inline-flex items-center gap-2 text-sm font-medium text-slate-600">
                 <ArrowRightLeft className="h-4 w-4 text-peacock-600" aria-hidden />
-                Compare the same step number across both documents.
+                Index-aligned compare: step N next to step N.
               </p>
-              <p className="text-sm text-slate-500">Step {Math.min(currentIndex + 1, Math.max(totalSteps, 1))} of {Math.max(totalSteps, 1)}</p>
+              <p className="text-sm text-slate-500">
+                Step {Math.min(currentIndex + 1, Math.max(totalSteps, 1))} of {Math.max(totalSteps, 1)}
+                {' · '}
+                Not a semantic or visual diff
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <button

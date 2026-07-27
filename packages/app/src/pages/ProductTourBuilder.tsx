@@ -29,7 +29,7 @@ export const ProductTourBuilder = () => {
 
   usePersistProductTour(Boolean(tourId && isLoaded));
 
-  const { activeHintId, dismissHint } = useFirstTimeHintTour(PRODUCT_TOUR_HINT_SEQUENCE, {
+  const { activeHintId, dismissHint, skipAllHints } = useFirstTimeHintTour(PRODUCT_TOUR_HINT_SEQUENCE, {
     ready: isLoaded && Boolean(tour),
   });
 
@@ -38,8 +38,9 @@ export const ProductTourBuilder = () => {
       activeHintId,
       hintStep: (hintId) => getHintStepLabel(hintId, PRODUCT_TOUR_HINT_SEQUENCE),
       dismissHint,
+      skipAllHints,
     }),
-    [activeHintId, dismissHint],
+    [activeHintId, dismissHint, skipAllHints],
   );
 
   useEffect(() => {
