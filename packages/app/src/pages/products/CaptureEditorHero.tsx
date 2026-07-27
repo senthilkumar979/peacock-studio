@@ -82,6 +82,7 @@ export const CaptureEditorHero = ({ product }: CaptureEditorHeroProps) => {
               imageSrc={CAPTURE_EDITOR_HERO_IMAGE.src}
               suggestedPublicPath={CAPTURE_EDITOR_HERO_IMAGE.publicPath}
               variant="dark"
+              priority
             />
           </motion.div>
         </div>

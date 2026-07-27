@@ -87,6 +87,7 @@ export const FlowDocumentHero = ({ product }: FlowDocumentHeroProps) => {
               imageSrc={FLOW_DOCUMENT_HERO_IMAGE.src}
               suggestedPublicPath={FLOW_DOCUMENT_HERO_IMAGE.publicPath}
               variant="dark"
+              priority
             />
           </motion.div>
         </div>

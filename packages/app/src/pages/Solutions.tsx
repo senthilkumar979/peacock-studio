@@ -21,12 +21,12 @@ export const Solutions = () => (
         className="pointer-events-none absolute -right-32 top-0 h-96 w-96 rounded-full bg-brand-violet/20 blur-3xl"
         aria-hidden
       />
-      <div className="relative mx-auto flex max-w-7xl items-center justify-between">
+      <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="max-w-3xl"
+          className="w-full max-w-3xl"
         >
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-cyan">
             Solutions by role
@@ -46,14 +46,15 @@ export const Solutions = () => (
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="max-w-3xl"
+          className="shrink-0"
         >
           <img
             src="/peacock-logo.png"
             alt="Peacock Studio Logo"
             width={400}
             height={400}
-            style={{ display: "block", margin: "0 auto" }}
+            className="mx-auto h-28 w-28 object-contain sm:h-36 sm:w-36 lg:h-48 lg:w-48"
+            decoding="async"
           />
         </motion.div>
       </div>

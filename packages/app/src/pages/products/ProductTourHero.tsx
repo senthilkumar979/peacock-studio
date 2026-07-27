@@ -87,6 +87,7 @@ export const ProductTourHero = ({ product }: ProductTourHeroProps) => {
               imageSrc={PRODUCT_TOUR_HERO_IMAGE.src}
               suggestedPublicPath={PRODUCT_TOUR_HERO_IMAGE.publicPath}
               variant="dark"
+              priority
             />
           </motion.div>
         </div>

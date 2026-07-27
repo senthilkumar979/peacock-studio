@@ -7,7 +7,10 @@ interface ProductFeatureImageProps {
   imageAlt?: string;
   suggestedPublicPath: string;
   variant?: "light" | "dark";
+  /** Tall/portrait screenshots (e.g. tour builder structure). */
   isFullHeight?: boolean;
+  /** Above-the-fold images (heroes) — skip lazy loading. */
+  priority?: boolean;
 }
 
 export const ProductFeatureImage = ({
@@ -17,6 +20,7 @@ export const ProductFeatureImage = ({
   suggestedPublicPath,
   variant = "light",
   isFullHeight = false,
+  priority = false,
 }: ProductFeatureImageProps) => {
   const [hasLoadError, setHasLoadError] = useState(false);
   const isDark = variant === "dark";
@@ -33,9 +37,16 @@ export const ProductFeatureImage = ({
         <img
           src={imageSrc}
           alt={imageAlt ?? `${title} screenshot`}
-          width={100}
-          height={840}
-          className={`aspect-video w-full ${isFullHeight ? "h-full min-h-[900px]" : "min-h-[400px]"} object-top ${isFullHeight ? "object-contain" : "object-conver"}`}
+          width={isFullHeight ? 782 : 1280}
+          height={isFullHeight ? 1584 : 720}
+          loading={priority ? "eager" : "lazy"}
+          decoding="async"
+          fetchPriority={priority ? "high" : "auto"}
+          className={
+            isFullHeight
+              ? "mx-auto h-auto max-h-[min(70vh,40rem)] w-full max-w-md object-contain object-top"
+              : "aspect-video h-auto w-full object-cover object-top"
+          }
           onError={() => setHasLoadError(true)}
         />
       </div>
@@ -44,7 +55,9 @@ export const ProductFeatureImage = ({
 
   return (
     <div
-      className={`flex aspect-video w-full flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-6 text-center ${
+      className={`flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-6 text-center ${
+        isFullHeight ? "aspect-[9/16] max-h-[min(70vh,40rem)] max-w-md mx-auto" : "aspect-video"
+      } ${
         isDark
           ? "border-white/35 bg-white/5 text-white"
           : "border-slate-300 bg-slate-50 text-slate-700"
