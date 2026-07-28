@@ -10,6 +10,8 @@ let sink: AnalyticsSink = createConsoleSink();
 let isEnabled = false;
 let isInitialized = false;
 
+const FIRST_SAVED_DOCS_KEY = 'peacock-analytics-first-saved-docs';
+
 /** Replace the default sink with a real provider before enabling analytics. */
 export function setAnalyticsSink(next: AnalyticsSink): void {
   sink = next;
@@ -61,6 +63,16 @@ export function identifyAnalyticsUser(userId: string, traits?: AnalyticsProps): 
   sink.identify?.(userId, traits);
 }
 
+/** Associate the session with a B2B group (organization). */
+export function groupAnalytics(
+  groupType: string,
+  groupKey: string,
+  properties?: AnalyticsProps,
+): void {
+  if (!isEnabled) return;
+  sink.group?.(groupType, groupKey, properties);
+}
+
 /**
  * Registers first-touch acquisition traits as PostHog super properties and emits
  * a one-time capture event. No-op when analytics is disabled or context is empty.
@@ -79,4 +91,45 @@ export function flushAcquisitionToAnalytics(): void {
 export function resetAnalyticsUser(): void {
   if (!isEnabled) return;
   sink.reset?.();
+}
+
+function readFirstSavedDocIds(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = window.sessionStorage.getItem(FIRST_SAVED_DOCS_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((id): id is string => typeof id === 'string'));
+  } catch {
+    return new Set();
+  }
+}
+
+function writeFirstSavedDocIds(ids: Set<string>): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(FIRST_SAVED_DOCS_KEY, JSON.stringify([...ids]));
+  } catch {
+    // Ignore quota / private-mode failures.
+  }
+}
+
+/**
+ * Emits `document_first_saved` at most once per document per browser session.
+ * Use this for activation funnels instead of high-volume autosave events.
+ */
+export function trackDocumentFirstSaved(
+  documentId: string,
+  props?: AnalyticsProps,
+): void {
+  if (!isEnabled || !documentId) return;
+  const seen = readFirstSavedDocIds();
+  if (seen.has(documentId)) return;
+  seen.add(documentId);
+  writeFirstSavedDocIds(seen);
+  sink.track(AnalyticsEvents.documentFirstSaved, {
+    document_id: documentId,
+    ...props,
+  });
 }

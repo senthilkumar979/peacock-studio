@@ -1,6 +1,8 @@
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
+import { trackEvent } from '@/analytics/analyticsClient';
+import { AnalyticsEvents } from '@/analytics/events';
 import {
   getFreeAccountDocLimit,
   getFreeAccountStorageBytesLimit,
@@ -49,22 +51,32 @@ export const UpgradeAccountModal = ({
         </p>
         <p className="mt-3 text-sm text-slate-600">
           Upgrade to Pro to keep unlimited documentation, higher storage, advanced sharing, and team
-          features. During beta you can also join the founding-user waitlist on Pricing.
+          features. During beta, see what&apos;s included on the pricing page.
         </p>
         <div className="mt-6 flex flex-wrap justify-end gap-2">
           <Link
             to={PRICING_PATH}
-            onClick={onClose}
+            onClick={() => {
+              trackEvent(AnalyticsEvents.betaPricingInterest, {
+                surface: 'upgrade_modal_continue_free',
+              });
+              onClose();
+            }}
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             Continue on free plan
           </Link>
           <Link
-            to={`${PRICING_PATH}#beta-promise`}
-            onClick={onClose}
+            to={PRICING_PATH}
+            onClick={() => {
+              trackEvent(AnalyticsEvents.betaPricingInterest, {
+                surface: 'upgrade_modal_view_pricing',
+              });
+              onClose();
+            }}
             className="rounded-lg bg-peacock-600 px-4 py-2 text-sm font-semibold text-white hover:bg-peacock-700"
           >
-            View pricing & waitlist
+            View pricing
           </Link>
         </div>
       </div>

@@ -109,17 +109,27 @@ Use this checklist before uploading a new build to Chrome Web Store or Microsoft
 
 ## Cross-browser QA
 
+Load the **same** `packages/extension/dist` (or store zip) in each browser — do not use a forked build for Edge.
+
 ### Chrome
 
-- [ ] Fresh install works
+- [ ] Fresh unpacked load of `dist` works (regression gate before any store upload)
+- [ ] Fresh install from Chrome Web Store works
 - [ ] Update over existing install works
 - [ ] No console/runtime errors during normal usage
+- [ ] Install CTA in the SPA opens the Chrome Web Store listing
 
 ### Edge
 
-- [ ] Fresh install works
+- [ ] Fresh unpacked load of the **same** `dist` works
+- [ ] Fresh install from Edge Add-ons works (after publish)
 - [ ] Update over existing install works
 - [ ] No console/runtime errors during normal usage
+- [ ] Install CTA in the SPA opens Edge Add-ons when `EXTENSION_STORE_BY_FAMILY.edge.storeUrl` is set
+
+### Firefox (Phase 3 — not yet shipping)
+
+- [ ] Deferred until Firefox packaging track exists (see extension-store-deployment.md Phase 3)
 
 ## Store compliance QA
 
@@ -136,4 +146,6 @@ Use this checklist before uploading a new build to Chrome Web Store or Microsoft
 - [ ] Save the final extension zip uploaded to the store
 - [ ] Record Chrome extension ID after publish
 - [ ] Record Edge extension ID after publish
+- [ ] Update `EXTENSION_STORE_BY_FAMILY` in `packages/app/src/constants/extension.ts` for each new store
+- [ ] Confirm shared production app does **not** set `VITE_EXTENSION_ID` to a single-store ID
 - [ ] Save release notes for this version

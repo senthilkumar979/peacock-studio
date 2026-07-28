@@ -4,8 +4,26 @@ This document covers what is needed to ship the Peacock browser extension to:
 
 - Chrome Web Store
 - Microsoft Edge Add-ons
+- (Later) Firefox Add-ons — see [Phase 3: Firefox](#phase-3-firefox-amo-later)
 
 It is tailored to the current repo structure and build flow.
+
+## Chromium stores share one artifact
+
+**Do not fork the Vite extension pipeline for Edge (or Brave/Opera).** Keep:
+
+`vite build` → content → bridge → capture-tool
+
+Chrome Web Store and Edge Add-ons both upload the **same** zip of `packages/extension/dist` (zip the **contents** of `dist/`, not the folder itself).
+
+```bash
+pnpm build:extension   # production VITE_APP_URL must be set
+pnpm package:extension # optional: writes peacock-extension-<version>.zip from dist/
+```
+
+After Edge publishes, set `storeUrl` / `extensionId` for `edge` in [`packages/app/src/constants/extension.ts`](packages/app/src/constants/extension.ts). The SPA picks the preferred store link via `parseBrowserFamily` and probes all configured IDs (bridge-first).
+
+**Never** set production `VITE_EXTENSION_ID` to a single-store ID on the shared SPA — that breaks the other browser. Leave it unset and rely on the bridge + the published ID registry.
 
 ## What Peacock needs before store submission
 
@@ -94,10 +112,10 @@ VITE_EXTENSION_ID=
 
 Important:
 
-- If you set `VITE_EXTENSION_ID`, the app will try to message that one extension directly.
-- Chrome and Edge store builds will have different extension IDs.
-- If you want one deployed app build to work with both Chrome and Edge, leave `VITE_EXTENSION_ID` unset and rely on the injected bridge script.
-- If you want direct runtime messaging to a specific published extension, make separate app deployments per store or per environment.
+- If you set `VITE_EXTENSION_ID`, the app will try that ID first (useful for unpacked local builds).
+- Chrome, Edge, and Firefox store packages each get **different** extension IDs.
+- For one SPA that works with every published store build: leave `VITE_EXTENSION_ID` unset; keep published IDs in `EXTENSION_STORE_BY_FAMILY` and rely on the injected bridge.
+- Do not point production `VITE_EXTENSION_ID` at Chrome-only if Edge users share the same deploy.
 
 ## Build and package steps
 
@@ -161,6 +179,8 @@ Recommended listing assets:
 
 - icon: `128x128`
 - screenshots: `1280x800` or `640x400`
+- small promo tile: `440x280` — [`packages/extension/store-assets/promo-small-440x280.png`](packages/extension/store-assets/promo-small-440x280.png) (24-bit PNG, no alpha)
+- marquee promo tile: `1400x560` — [`packages/extension/store-assets/promo-marquee-1400x560.png`](packages/extension/store-assets/promo-marquee-1400x560.png) (24-bit PNG, no alpha)
 
 Prepare these listing fields:
 
@@ -197,6 +217,7 @@ Recommended listing assets:
 
 - extension logo: recommended `300x300`, minimum `128x128`
 - screenshots: up to 6, usually `640x480` or `1280x800`
+- promo tiles (same as Chrome): [`packages/extension/store-assets/`](packages/extension/store-assets/) — small `440x280`, marquee `1400x560`
 
 Prepare these listing fields:
 
@@ -258,9 +279,31 @@ Before uploading to either store:
 - save the final uploaded zip artifact
 - note the published extension ID for Chrome
 - note the published extension ID for Edge
-- decide whether the app should keep bridge-only handoff or use store-specific `VITE_EXTENSION_ID`
+- update `EXTENSION_STORE_BY_FAMILY` in `packages/app/src/constants/extension.ts` (URL + ID) for each new store
+- leave shared production `VITE_EXTENSION_ID` unset (bridge + registry)
 - test install/update from the store listing, not only unpacked mode
 - monitor store review feedback and permission/privacy questions
+
+## Phase 3: Firefox / AMO (later)
+
+Firefox is **not** drop-in Chromium. Do **not** add a second Vite app or fork the Chromium build for AMO yet.
+
+When ready, plan a **post-build packaging track**:
+
+| Topic | Likely need |
+|-------|-------------|
+| APIs | `webextension-polyfill` or careful `browser.*` usage without rewriting Chromium call sites blindly |
+| Manifest | `browser_specific_settings.gecko.id` (+ any AMO MV3/background requirements) |
+| Restricted pages | `about:` / `moz-extension://` alongside existing `chrome://` / `edge://` guards |
+| Packaging | Post-process `dist` → `dist-firefox` (manifest patch + zip); keep core Vite pipeline shared |
+| Handoff | Bridge-first remains required |
+| App CTA | Fill the existing `firefox` entry in `EXTENSION_STORE_BY_FAMILY` |
+
+Safari remains out of scope (different distribution model).
+
+Listing details for Edge: [`packages/extension/edge-addons.md`](packages/extension/edge-addons.md).
+Chrome listing: [`packages/extension/web-store.md`](packages/extension/web-store.md).
+Shared marketing copy: [`store-listing-copy.md`](store-listing-copy.md).
 
 ## Files relevant to deployment
 
@@ -283,3 +326,4 @@ You should also have these ready before store submission:
 - QA test checklist for extension release
 - screenshots for Chrome listing
 - screenshots for Edge listing
+- promo tiles in `packages/extension/store-assets/` (small `440x280`, marquee `1400x560`)

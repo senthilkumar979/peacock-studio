@@ -53,7 +53,13 @@ async function invokeResolveShare<T>(input: {
   documentId?: string;
   personaId?: string;
 }): Promise<T> {
-  const turnstileToken = await obtainShareTurnstileToken();
+  let turnstileToken: string;
+  try {
+    turnstileToken = await obtainShareTurnstileToken();
+  } catch (error) {
+    cachedTurnstile = null;
+    throw error;
+  }
   const accessToken = await resolveCallerAccessToken();
 
   const response = await fetch(`${getSupabaseUrl()}/functions/v1/resolve-share`, {
@@ -78,6 +84,10 @@ async function invokeResolveShare<T>(input: {
   } | null;
 
   if (!response.ok) {
+    // Stale challenge tokens should not poison the next attempt.
+    if (response.status === 403 || /turnstile|challenge|rate limit/i.test(payload?.error ?? '')) {
+      cachedTurnstile = null;
+    }
     throw new Error(payload?.error || `Share request failed (${response.status})`);
   }
 

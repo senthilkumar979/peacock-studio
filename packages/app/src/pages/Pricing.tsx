@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import { trackEvent } from '@/analytics/analyticsClient';
+import { AnalyticsEvents } from '@/analytics/events';
 import { AppFooter } from '@/components/AppFooter';
 import { SiteNav } from '@/components/site/SiteNav';
 import { DASHBOARD_PATH } from '@/constants/routes';
@@ -8,6 +10,10 @@ import { BetaPromiseSection } from '@/pages/pricing/BetaPromiseSection';
 import { PricingTiersPreview } from '@/pages/pricing/PricingTiersPreview';
 import { BETA_HERO } from '@/pages/pricing/pricingData';
 import { getExtensionGatePath } from '@/utils/extensionGate';
+
+function trackPricingInterest(surface: string): void {
+  trackEvent(AnalyticsEvents.betaPricingInterest, { surface });
+}
 
 export const Pricing = () => {
   const EyebrowIcon = BETA_HERO.eyebrowIcon;
@@ -57,6 +63,7 @@ export const Pricing = () => {
           >
             <Link
               to={getExtensionGatePath(DASHBOARD_PATH)}
+              onClick={() => trackPricingInterest('pricing_hero_start_free')}
               className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-peacock-800 shadow-sm transition hover:bg-slate-100"
             >
               Start using Peacock free
@@ -64,9 +71,10 @@ export const Pricing = () => {
             </Link>
             <a
               href="#beta-promise"
+              onClick={() => trackPricingInterest('pricing_hero_early_adopter')}
               className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
             >
-              See our early-adopter promise
+              Early-adopter promise
             </a>
           </motion.div>
         </div>

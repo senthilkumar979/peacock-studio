@@ -1,4 +1,5 @@
 import type { RecordingStateSnapshot } from '@peacock/shared';
+import { canInjectIntoUrl } from '../src/background/injectContentScript';
 import { sendExtensionMessage } from '../src/messaging/sendExtensionMessage';
 import { getDashboardPageUrl } from '../src/utils/appUrl';
 import {
@@ -30,11 +31,19 @@ if (logoEl) logoEl.src = chrome.runtime.getURL('logo.png');
 let lastState: RecordingStateSnapshot | null = null;
 let isBusy = false;
 let isCountdownActive = false;
+let isPageAllowed = true;
 
 type ScreenshotMode = 'full-page' | 'selection' | 'visible';
 
+interface ActivePageInfo {
+  label: string;
+  allowed: boolean;
+}
+
 const editorUrl = import.meta.env.VITE_APP_URL;
 const dashboardUrl = getDashboardPageUrl();
+const RESTRICTED_PAGE_TITLE = "This page can't be recorded.";
+const RESTRICTED_PAGE_DETAIL = 'Open a normal website tab, then start from the popup.';
 
 function formatElapsed(startedAt: number | null): string {
   if (!startedAt) return 'Ready';
@@ -44,24 +53,31 @@ function formatElapsed(startedAt: number | null): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-async function getCurrentPageLabel(): Promise<string> {
+async function getActivePageInfo(): Promise<ActivePageInfo> {
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!activeTab?.url) return 'No active page';
+  if (!activeTab?.url) return { label: 'No active page', allowed: false };
 
+  const allowed = canInjectIntoUrl(activeTab.url);
   try {
     const url = new URL(activeTab.url);
-    return url.hostname.replace(/^www\./, '') || activeTab.title || 'Current tab';
+    return {
+      label: url.hostname.replace(/^www\./, '') || activeTab.title || 'Current tab',
+      allowed,
+    };
   } catch {
-    return activeTab.title || 'Browser tab';
+    return { label: activeTab.title || 'Browser tab', allowed };
   }
 }
 
-function setButtonsDisabled(disabled: boolean): void {
-  if (startBtn) startBtn.disabled = disabled;
-  if (pauseBtn) pauseBtn.disabled = disabled;
-  if (resumeBtn) resumeBtn.disabled = disabled;
-  if (stopBtn) stopBtn.disabled = disabled;
-  if (screenshotModeEl) screenshotModeEl.disabled = disabled;
+function applyControlAvailability(state: RecordingStateSnapshot | null): void {
+  const restrictedIdle = Boolean(state && state.status === 'idle' && !isPageAllowed);
+  const disableCapture = isBusy || restrictedIdle;
+
+  if (startBtn) startBtn.disabled = disableCapture;
+  if (pauseBtn) pauseBtn.disabled = isBusy;
+  if (resumeBtn) resumeBtn.disabled = isBusy;
+  if (stopBtn) stopBtn.disabled = isBusy;
+  if (screenshotModeEl) screenshotModeEl.disabled = disableCapture;
 }
 
 function setQuickScreenshotsVisible(visible: boolean): void {
@@ -90,9 +106,17 @@ const countdownUi: StartRecordingCountdownUi = {
 async function startRecordingWithCountdown(): Promise<void> {
   if (isBusy || isCountdownActive || lastState?.status !== 'idle') return;
 
+  const page = await getActivePageInfo();
+  isPageAllowed = page.allowed;
+  if (!page.allowed) {
+    setPopupFeedback(RESTRICTED_PAGE_TITLE, RESTRICTED_PAGE_DETAIL);
+    applyControlAvailability(lastState);
+    return;
+  }
+
   isBusy = true;
   isCountdownActive = true;
-  setButtonsDisabled(true);
+  applyControlAvailability(lastState);
   setQuickScreenshotsVisible(false);
 
   try {
@@ -124,7 +148,7 @@ function renderState(state: RecordingStateSnapshot): void {
   if (resumeBtn) resumeBtn.hidden = state.status !== 'paused';
   if (stopBtn) stopBtn.hidden = state.status === 'idle';
   setQuickScreenshotsVisible(state.status === 'idle');
-  setButtonsDisabled(isBusy);
+  applyControlAvailability(state);
 
   if (statusBadgeEl) {
     statusBadgeEl.className = `status-badge status-badge--${state.status}`;
@@ -146,6 +170,11 @@ function renderState(state: RecordingStateSnapshot): void {
   }
 
   if (statusBadgeEl) statusBadgeEl.textContent = 'Idle';
+  if (!isPageAllowed) {
+    setPopupFeedback(RESTRICTED_PAGE_TITLE, RESTRICTED_PAGE_DETAIL);
+    return;
+  }
+
   setPopupFeedback(
     'Ready to record this tab.',
     'Start recording without refreshing the page, then stop to open the editor.'
@@ -154,11 +183,12 @@ function renderState(state: RecordingStateSnapshot): void {
 
 async function refreshState(): Promise<void> {
   try {
-    const [state, pageLabel] = await Promise.all([
+    const [state, page] = await Promise.all([
       sendExtensionMessage<RecordingStateSnapshot>({ type: 'GET_RECORDING_STATE' }),
-      getCurrentPageLabel(),
+      getActivePageInfo(),
     ]);
-    if (pageHostEl) pageHostEl.textContent = pageLabel;
+    isPageAllowed = page.allowed;
+    if (pageHostEl) pageHostEl.textContent = page.label;
     renderState(state);
   } catch (error) {
     setPopupFeedback(
@@ -172,7 +202,7 @@ async function runAction(
   message: 'START_RECORDING' | 'PAUSE_RECORDING' | 'RESUME_RECORDING' | 'STOP_RECORDING'
 ): Promise<void> {
   isBusy = true;
-  setButtonsDisabled(true);
+  applyControlAvailability(lastState);
   if (message === 'START_RECORDING' || message === 'PAUSE_RECORDING' || message === 'RESUME_RECORDING') {
     setQuickScreenshotsVisible(false);
   }
@@ -182,7 +212,7 @@ async function runAction(
     await refreshState();
   } finally {
     isBusy = false;
-    if (lastState) setButtonsDisabled(false);
+    applyControlAvailability(lastState);
   }
 }
 
@@ -198,6 +228,14 @@ function setPopupFeedback(title: string, detail: string): void {
 async function runScreenshotTool(mode: ScreenshotMode): Promise<void> {
   if (screenshotModeEl) screenshotModeEl.value = '';
 
+  const page = await getActivePageInfo();
+  isPageAllowed = page.allowed;
+  if (!page.allowed) {
+    setPopupFeedback(RESTRICTED_PAGE_TITLE, RESTRICTED_PAGE_DETAIL);
+    applyControlAvailability(lastState);
+    return;
+  }
+
   if (mode === 'selection') {
     chrome.runtime.sendMessage({ type: 'START_SCREENSHOT_TOOL', mode });
     window.close();
@@ -205,7 +243,7 @@ async function runScreenshotTool(mode: ScreenshotMode): Promise<void> {
   }
 
   isBusy = true;
-  setButtonsDisabled(true);
+  applyControlAvailability(lastState);
   setPopupFeedback(
     mode === 'full-page' ? 'Capturing the full page…' : 'Capturing the visible area…',
     mode === 'full-page'
@@ -223,7 +261,7 @@ async function runScreenshotTool(mode: ScreenshotMode): Promise<void> {
     );
   } finally {
     isBusy = false;
-    if (lastState) setButtonsDisabled(false);
+    applyControlAvailability(lastState);
   }
 }
 

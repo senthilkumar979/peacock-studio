@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle2, Puzzle, RefreshCw } from 'lucide-react';
+import { trackEvent } from '@/analytics/analyticsClient';
+import { AnalyticsEvents } from '@/analytics/events';
 import { AppFooter } from '@/components/AppFooter';
 import { CaptureDesktopRequired } from '@/components/extension/CaptureDesktopRequired';
 import { ChromeWebStoreLink } from '@/components/extension/ChromeWebStoreLink';
@@ -12,12 +14,13 @@ import { DASHBOARD_PATH } from '@/constants/routes';
 import { useExtensionInstalled } from '@/hooks/useExtensionInstalled';
 import { isCaptureUnsupportedClient } from '@/utils/isCaptureUnsupportedClient';
 import { readExtensionGateNext } from '@/utils/extensionGate';
+import { getPreferredExtensionStoreListing } from '@/utils/getPreferredExtensionStore';
 
 const BENEFITS = [
   'Record clicks, inputs, and screenshots on any website',
   'Capture visible, selected, or full-page screenshots',
   'Stop recording to open a polished Flow Document in the editor',
-  'Free during beta — install from the Chrome Web Store',
+  'Free during beta — install from your browser\'s extension store',
 ] as const;
 
 export const ExtensionInstallPage = () => {
@@ -26,10 +29,26 @@ export const ExtensionInstallPage = () => {
   const nextPath = readExtensionGateNext(location.search, DASHBOARD_PATH);
   const captureUnsupported = isCaptureUnsupportedClient();
   const { status, isInstalled, isChecking, recheck } = useExtensionInstalled();
+  const storeListing = getPreferredExtensionStoreListing();
+  const gateViewedRef = useRef(false);
+  const detectedRef = useRef(false);
+
+  useEffect(() => {
+    if (gateViewedRef.current) return;
+    gateViewedRef.current = true;
+    trackEvent(AnalyticsEvents.extensionGateViewed, {
+      next_path: nextPath,
+      capture_unsupported: captureUnsupported,
+    });
+  }, [captureUnsupported, nextPath]);
 
   useEffect(() => {
     if (captureUnsupported) return;
     if (isInstalled) {
+      if (!detectedRef.current) {
+        detectedRef.current = true;
+        trackEvent(AnalyticsEvents.extensionDetected, { next_path: nextPath });
+      }
       navigate(nextPath, { replace: true });
     }
   }, [captureUnsupported, isInstalled, navigate, nextPath]);
@@ -85,7 +104,7 @@ export const ExtensionInstallPage = () => {
             transition={{ delay: 0.1 }}
             className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl"
           >
-            Install the {PEACOCK_APP_NAME} Chrome extension
+            Install the {PEACOCK_APP_NAME} browser extension
           </motion.h1>
 
           <motion.p
@@ -94,9 +113,9 @@ export const ExtensionInstallPage = () => {
             transition={{ delay: 0.15 }}
             className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-300"
           >
-            Peacock needs the browser extension to record workflows and screenshots. Chrome is
-            supported today via the Chrome Web Store; an Edge Add-ons path is planned. Install, then
-            come back here — we&apos;ll open the app automatically.
+            Peacock needs the browser extension to record workflows and screenshots. Chrome and Edge
+            are supported (Firefox is planned). Install from {storeListing.label}, then come back
+            here — we&apos;ll open the app automatically.
           </motion.p>
 
           <motion.div
@@ -105,7 +124,15 @@ export const ExtensionInstallPage = () => {
             transition={{ delay: 0.2 }}
             className="mt-8 flex flex-wrap items-center justify-center gap-3"
           >
-            <ChromeWebStoreLink className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-peacock-800 shadow-lg transition hover:bg-slate-100" />
+            <ChromeWebStoreLink
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-peacock-800 shadow-lg transition hover:bg-slate-100"
+              onClick={() =>
+                trackEvent(AnalyticsEvents.extensionInstallCtaClicked, {
+                  surface: 'install_hero',
+                  next_path: nextPath,
+                })
+              }
+            />
             <button
               type="button"
               onClick={recheck}
@@ -135,22 +162,30 @@ export const ExtensionInstallPage = () => {
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="inline-flex items-center gap-2 rounded-lg bg-peacock-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-peacock-800">
               <Puzzle className="h-3.5 w-3.5" aria-hidden />
-              Chrome Web Store
+              {storeListing.label}
             </div>
             <h3 className="mt-4 text-lg font-semibold text-slate-900">After you install</h3>
             <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-600">
-              <li>Pin Peacock Studio to your Chrome toolbar.</li>
+              <li>Pin Peacock Studio to your browser toolbar.</li>
               <li>
                 Reload this tab (or click &ldquo;check again&rdquo;) so Peacock can detect the
-                extension on <span className="font-medium text-slate-800">localhost:5173</span>.
+                extension on this site.
               </li>
               <li>
                 We&apos;ll take you to{' '}
                 <span className="font-medium text-slate-800">{nextPath}</span> to continue.
               </li>
             </ol>
-            <ChromeWebStoreLink className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-peacock-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-peacock-800">
-              Open Chrome Web Store
+            <ChromeWebStoreLink
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-peacock-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-peacock-800"
+              onClick={() =>
+                trackEvent(AnalyticsEvents.extensionInstallCtaClicked, {
+                  surface: 'install_sidebar',
+                  next_path: nextPath,
+                })
+              }
+            >
+              Open {storeListing.label}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </ChromeWebStoreLink>
           </div>

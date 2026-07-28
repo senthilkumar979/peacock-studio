@@ -5,7 +5,7 @@ import { useExtensionInstalled } from '@/hooks/useExtensionInstalled';
 import { isCaptureUnsupportedClient } from '@/utils/isCaptureUnsupportedClient';
 
 /**
- * Sticky dashboard warning when the Peacock Chrome extension is not detected.
+ * Sticky dashboard warning when the Peacock browser extension is not detected.
  * On phones/tablets, shows a desktop-Chrome message instead of the Web Store CTA.
  * Hidden while probing and when the extension is installed (desktop).
  */
@@ -31,7 +31,7 @@ export const ExtensionMissingBanner = () => {
           </span>
           <div>
             <p className="text-sm font-semibold text-amber-950">
-              Peacock Chrome extension not detected
+              Peacock browser extension not detected
             </p>
             <p className="mt-0.5 text-sm text-amber-800">
               Install the extension to capture workflows, screenshots, and product-tour demos from

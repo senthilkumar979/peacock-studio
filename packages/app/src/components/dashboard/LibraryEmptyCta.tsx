@@ -9,7 +9,7 @@ interface LibraryEmptyCtaProps {
   /** When set, shows Create tour (or similar) primary link */
   primaryHref?: string;
   primaryLabel?: string;
-  /** Show Chrome Web Store install as primary when no primaryHref */
+  /** Show extension store install as primary when no primaryHref */
   showExtensionCta?: boolean;
 }
 

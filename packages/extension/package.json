@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm build --watch",
     "build": "vite build && vite build -c vite.content.config.ts && vite build -c vite.bridge.config.ts && vite build -c vite.capture-tool.config.ts",
+    "package": "node ./scripts/packageDist.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

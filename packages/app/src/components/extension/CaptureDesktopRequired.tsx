@@ -15,13 +15,13 @@ interface CaptureDesktopRequiredProps {
   surface: string;
 }
 
-const TITLE = 'Capture needs desktop Chrome';
+const TITLE = 'Capture needs a desktop browser';
 const BODY =
-  'Peacock records workflows with a Chrome extension, which phones and tablets cannot run. Open this site on a computer, install the extension, then capture. On this device you can still browse your library and open shared guides.';
+  'Peacock records workflows with a browser extension (Chrome or Edge), which phones and tablets cannot run. Open this site on a computer, install the extension, then capture. On this device you can still browse your library and open shared guides.';
 
 /**
  * Informational (non-throwing) UI when Flow Doc capture is attempted on a
- * client that cannot install Chrome MV3 extensions.
+ * client that cannot install Chromium MV3 extensions (Chrome / Edge).
  */
 export const CaptureDesktopRequired = ({
   variant = 'card',
@@ -46,8 +46,8 @@ export const CaptureDesktopRequired = ({
             <div>
               <p className="text-sm font-semibold text-sky-950">{TITLE}</p>
               <p className="mt-0.5 text-sm text-sky-800">
-                Open Peacock on a computer with Chrome to record workflows. You can still browse
-                guides here.
+                Open Peacock on a computer with Chrome or Edge to record workflows. You can still
+                browse guides here.
               </p>
             </div>
           </div>

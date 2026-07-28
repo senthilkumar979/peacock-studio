@@ -346,7 +346,7 @@ export const ShareProductTourModal = ({
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Link preview
                     </p>
-                    <p className="mt-2 break-all rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+                    <p className="ph-no-capture mt-2 break-all rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
                       {isShareUrlLoading
                         ? 'Generating share link…'
                         : shareUrl || 'Share link unavailable'}

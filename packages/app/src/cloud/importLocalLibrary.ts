@@ -1,3 +1,4 @@
+import { createId } from '@peacock/shared';
 import {
   getFlowDocument as localGetFlowDocument,
   getProductTour as localGetProductTour,
@@ -13,6 +14,7 @@ import {
   savePersona,
   saveProductTour,
 } from '@/storage/libraryRouter';
+import { cloudPersonaIdExistsGlobally } from '@/cloud/repositories/personaRepository';
 
 export interface LocalLibraryImportCounts {
   documents: number;
@@ -53,8 +55,17 @@ export async function importLocalLibraryToCloud(): Promise<LocalLibraryImportCou
     localListProductTourSummaries(),
   ]);
 
+  // personas.id is a global PK — remap any id already claimed by another org
+  // (common for the guest default persona id).
+  const personaIdMap = new Map<string, string>();
   for (const persona of localPersonas) {
-    await savePersona(persona, { preserveUpdatedAt: true });
+    const taken = await cloudPersonaIdExistsGlobally(persona.id);
+    const nextId = taken ? createId() : persona.id;
+    if (nextId !== persona.id) personaIdMap.set(persona.id, nextId);
+    await savePersona(
+      nextId === persona.id ? persona : { ...persona, id: nextId },
+      { preserveUpdatedAt: true },
+    );
   }
 
   for (const summary of localDocs) {
@@ -64,7 +75,12 @@ export async function importLocalLibraryToCloud(): Promise<LocalLibraryImportCou
 
   for (const summary of localTourSummaries) {
     const tour = await localGetProductTour(summary.id);
-    if (tour) await saveProductTour(tour, { preserveUpdatedAt: true });
+    if (!tour) continue;
+    const mappedPersonaId = personaIdMap.get(tour.personaId) ?? tour.personaId;
+    await saveProductTour(
+      mappedPersonaId === tour.personaId ? tour : { ...tour, personaId: mappedPersonaId },
+      { preserveUpdatedAt: true },
+    );
   }
 
   const counts = {

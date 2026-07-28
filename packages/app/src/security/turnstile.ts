@@ -93,38 +93,42 @@ export async function getTurnstileToken(action: string): Promise<string> {
     let settled = false;
     const cleanup = (widgetId?: string) => {
       try {
-        if (widgetId) api.remove(widgetId);
+        if (widgetId !== undefined) api.remove(widgetId);
+      } catch {
+        // Widget may already be gone ("Nothing to reset…") — ignore.
+      }
+      try {
+        host.remove();
       } catch {
         // ignore
       }
-      host.remove();
     };
 
-    const widgetId = api.render(host, {
-      sitekey: siteKey,
-      size: 'invisible',
-      appearance: 'execute',
-      callback: (token) => {
-        if (settled) return;
-        settled = true;
-        cleanup(widgetId);
-        resolve(token);
-      },
-      'error-callback': () => {
-        if (settled) return;
-        settled = true;
-        cleanup(widgetId);
-        reject(new Error('Turnstile challenge failed.'));
-      },
-      'expired-callback': () => {
-        if (settled) return;
-        settled = true;
-        cleanup(widgetId);
-        reject(new Error('Turnstile challenge expired.'));
-      },
-    });
-
+    let widgetId: string | undefined;
     try {
+      widgetId = api.render(host, {
+        sitekey: siteKey,
+        size: 'invisible',
+        appearance: 'execute',
+        callback: (token) => {
+          if (settled) return;
+          settled = true;
+          cleanup(widgetId);
+          resolve(token);
+        },
+        'error-callback': () => {
+          if (settled) return;
+          settled = true;
+          cleanup(widgetId);
+          reject(new Error('Turnstile challenge failed.'));
+        },
+        'expired-callback': () => {
+          if (settled) return;
+          settled = true;
+          cleanup(widgetId);
+          reject(new Error('Turnstile challenge expired.'));
+        },
+      });
       api.execute(widgetId);
     } catch (error) {
       if (!settled) {

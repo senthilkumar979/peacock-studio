@@ -257,7 +257,7 @@ export const Dashboard = () => {
                         <LibraryEmptyCta
                           icon={FileText}
                           title="No flow docs yet"
-                          description="Install the Peacock Chrome extension, record a flow on any site, then stop to open the editor."
+                          description="Install the Peacock browser extension, record a flow on any site, then stop to open the editor."
                           showExtensionCta
                         />
                       ) : (

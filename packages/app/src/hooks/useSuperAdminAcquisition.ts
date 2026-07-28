@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useSession } from '@clerk/react';
+import { fetchPlatformAcquisition } from '@/cloud/repositories/platformAdminRepository';
 import type { SuperAdminAcquisitionSummary } from '@/types/superAdminAcquisition';
 
 interface UseSuperAdminAcquisitionResult {
@@ -10,7 +10,6 @@ interface UseSuperAdminAcquisitionResult {
 }
 
 export function useSuperAdminAcquisition(days = 30): UseSuperAdminAcquisitionResult {
-  const { session } = useSession();
   const [summary, setSummary] = useState<SuperAdminAcquisitionSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,34 +20,13 @@ export function useSuperAdminAcquisition(days = 30): UseSuperAdminAcquisitionRes
   }, []);
 
   useEffect(() => {
-    if (!session) {
-      setSummary(null);
-      setIsLoading(false);
-      setError('Sign in required');
-      return;
-    }
-
     let cancelled = false;
     setIsLoading(true);
     setError(null);
 
     void (async () => {
       try {
-        const token = await session.getToken();
-        if (!token) throw new Error('Missing session token');
-
-        const response = await fetch(`/api/super-admin/acquisition?days=${days}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const payload = (await response.json()) as SuperAdminAcquisitionSummary & {
-          error?: string;
-        };
-
-        if (!response.ok) {
-          throw new Error(payload.error || 'Failed to load acquisition data');
-        }
-
+        const payload = await fetchPlatformAcquisition(days);
         if (!cancelled) setSummary(payload);
       } catch (fetchError) {
         if (!cancelled) {
@@ -65,7 +43,7 @@ export function useSuperAdminAcquisition(days = 30): UseSuperAdminAcquisitionRes
     return () => {
       cancelled = true;
     };
-  }, [days, reloadToken, session]);
+  }, [days, reloadToken]);
 
   return { summary, isLoading, error, refresh };
 }

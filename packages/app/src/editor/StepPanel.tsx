@@ -79,6 +79,7 @@ export const StepPanel = ({ step }: StepPanelProps) => {
               onChange={(event) => updateStepNotes(step.id, event.target.value)}
               rows={8}
               placeholder="Add context, tips, or warnings for this step…"
+              className="ph-mask"
             />
           </FormField>
         )}
@@ -86,7 +87,7 @@ export const StepPanel = ({ step }: StepPanelProps) => {
         <StepImageUpload step={step} />
 
         {showDescription && step.generatedDescription && (
-          <div className="rounded-lg bg-slate-100 p-3 text-sm text-slate-600">
+          <div className="ph-mask rounded-lg bg-slate-100 p-3 text-sm text-slate-600">
             <p className="mb-1 font-medium text-slate-700">
               Auto-generated description
             </p>

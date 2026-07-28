@@ -7,6 +7,7 @@
     "typecheck": "pnpm -r typecheck",
     "dev:extension": "pnpm --filter @peacock/extension dev",
     "build:extension": "pnpm --filter @peacock/extension build",
+    "package:extension": "pnpm --filter @peacock/extension package",
     "dev:app": "pnpm --filter @peacock/app dev",
     "build:app": "pnpm --filter @peacock/app build"
   },

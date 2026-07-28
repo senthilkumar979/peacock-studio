@@ -11,7 +11,7 @@ interface UseExtensionInstalledResult {
 }
 
 /**
- * Detects whether the Peacock Chrome extension is installed and reachable from
+ * Detects whether the Peacock browser extension is installed and reachable from
  * this origin. Rechecks when the tab becomes visible again so users returning
  * from the Web Store see an updated status without a full reload.
  */

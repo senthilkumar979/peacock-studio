@@ -2,16 +2,24 @@
 // Deploy with verify_jwt=false — Clerk third-party JWTs fail the legacy gateway check.
 // Auth: caller Bearer → resolve_actor_email RPC → match SUPER_ADMIN_EMAILS secret.
 // Secrets: SUPER_ADMIN_EMAILS (comma-separated), SUPABASE_URL, SUPABASE_ANON_KEY,
-//          SUPABASE_SERVICE_ROLE_KEY, APP_ORIGIN (CORS)
+//          SUPABASE_SERVICE_ROLE_KEY, APP_ORIGIN (CORS),
+//          POSTHOG_PERSONAL_API_KEY (+ optional POSTHOG_PROJECT_ID, POSTHOG_HOST) for acquisition
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { buildAcquisitionSummary } from './acquisition.ts';
 
-type Action = 'whoami' | 'overview' | 'listOrganizations' | 'getOrganization';
+type Action =
+  | 'whoami'
+  | 'overview'
+  | 'listOrganizations'
+  | 'getOrganization'
+  | 'acquisition';
 
 interface RequestBody {
   action?: Action;
   organizationId?: string;
+  days?: number;
 }
 
 interface DomainRow {
@@ -71,6 +79,19 @@ serve(async (req) => {
       return json({ organizations: await listOrganizations(admin) }, 200, cors);
     }
 
+    if (action === 'acquisition') {
+      try {
+        const summary = await buildAcquisitionSummary(body.days);
+        return json(summary as unknown as Record<string, unknown>, 200, cors);
+      } catch (acquisitionError) {
+        const message =
+          acquisitionError instanceof Error
+            ? acquisitionError.message
+            : 'Acquisition query failed';
+        return json({ error: message }, 500, cors);
+      }
+    }
+
     const organizationId = body.organizationId?.trim();
     if (!organizationId) {
       return json({ error: 'Missing organizationId' }, 400, cors);
@@ -92,7 +113,8 @@ function isAction(value: string): value is Action {
     value === 'whoami' ||
     value === 'overview' ||
     value === 'listOrganizations' ||
-    value === 'getOrganization'
+    value === 'getOrganization' ||
+    value === 'acquisition'
   );
 }
 

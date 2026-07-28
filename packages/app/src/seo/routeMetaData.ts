@@ -113,7 +113,7 @@ export function marketingStaticMeta(
     '/pricing': {
       title: titled('Pricing'),
       description:
-        'Peacock Studio is free during public beta. Explore founding-user pricing for flow docs, product tours, and interactive documentation.',
+        'Peacock Studio is free during public beta. Compare Free, Team, and Enterprise plans for flow docs, product tours, and interactive documentation.',
     },
     '/privacy': {
       title: titled('Privacy Policy'),
@@ -124,8 +124,8 @@ export function marketingStaticMeta(
       description: `Terms of use for ${PEACOCK_APP_NAME}.`,
     },
     '/install-extension': {
-      title: titled('Install Chrome extension'),
-      description: `Install the ${PEACOCK_APP_NAME} Chrome extension to capture browser workflows.`,
+      title: titled('Install browser extension'),
+      description: `Install the ${PEACOCK_APP_NAME} browser extension to capture browser workflows.`,
     },
   };
 

@@ -37,7 +37,7 @@ export async function checkExtension(): Promise<HealthCheckResult> {
   return healthResult(
     'extension',
     'connections',
-    'Chrome extension bridge',
+    'Browser extension bridge',
     installed ? 'pass' : 'warn',
     installed
       ? 'Extension content script responded on this origin.'

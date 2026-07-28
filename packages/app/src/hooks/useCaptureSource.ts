@@ -7,7 +7,7 @@ import {
   type CaptureResultHandoff,
   type ScreenshotToolMode,
 } from '@peacock/shared';
-import { getExtensionId } from '@/utils/getExtensionId';
+import { getConfiguredExtensionIds } from '@/utils/getExtensionId';
 
 export interface CaptureSource {
   captureId: string;
@@ -119,14 +119,17 @@ export function useCaptureSource(captureId: string | undefined): UseCaptureSourc
     setError(null);
 
     void (async () => {
-      const extensionId = getExtensionId();
       const bridgeHandoff = await requestCaptureViaBridge(captureId);
-      const handoff =
-        bridgeHandoff.ok
-          ? bridgeHandoff
-          : extensionId
-            ? await requestCaptureViaExtensionId(captureId, extensionId)
-            : bridgeHandoff;
+      let handoff = bridgeHandoff;
+      if (!handoff.ok) {
+        for (const extensionId of getConfiguredExtensionIds()) {
+          const viaId = await requestCaptureViaExtensionId(captureId, extensionId);
+          if (viaId.ok) {
+            handoff = viaId;
+            break;
+          }
+        }
+      }
 
       if (cancelled) return;
 

@@ -102,7 +102,7 @@ export const InviteMemberForm = ({ busy, onInvite, onCancel }: InviteMemberFormP
                   setEmail(e.target.value);
                   if (emailError) setEmailError(null);
                 }}
-                className="rounded-xl border-slate-200 bg-slate-50/80 px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-peacock-400 focus:bg-white focus:ring-peacock-500/20"
+                className="ph-mask rounded-xl border-slate-200 bg-slate-50/80 px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-peacock-400 focus:bg-white focus:ring-peacock-500/20"
                 placeholder="colleague@company.com"
                 autoComplete="email"
               />

@@ -1,5 +1,6 @@
 import posthog from 'posthog-js';
 import { getPostHogHost, getPostHogKey } from './config';
+import { isBenignAnalyticsException } from './exceptionNoise';
 import { registerPostHogFeatureFlagReader } from './featureFlags';
 import type { AnalyticsSink } from './types';
 
@@ -8,8 +9,8 @@ import type { AnalyticsSink } from './types';
  * - Autocapture: clicks/buttons, forms, inputs (consent-gated)
  * - Manual pageviews (SPA-friendly via AnalyticsTracker)
  * - Pageleave + heatmaps + web vitals
- * - Exception autocapture + manual captureException
- * - Session replay (when allowed by project settings)
+ * - Exception autocapture + manual captureException (benign noise filtered)
+ * - Session replay with input masking + sensitive CSS selectors
  *
  * Only activates when `VITE_POSTHOG_KEY` is set. Never pass secrets or
  * sensitive field values as props.
@@ -33,11 +34,36 @@ export function createPostHogSink(): AnalyticsSink {
         persistence: 'localStorage+cookie',
         disable_session_recording: false,
         person_profiles: 'identified_only',
+        session_recording: {
+          maskAllInputs: true,
+          // Mark sensitive UI with these classes (invite emails, share tokens, etc.).
+          maskTextSelector: '.ph-mask',
+          blockSelector: '.ph-no-capture',
+        },
+        before_send: (event) => {
+          if (!event) return event;
+          if (event.event === '$exception') {
+            const message =
+              (event.properties?.$exception_message as string | undefined) ??
+              (event.properties?.message as string | undefined) ??
+              '';
+            if (isBenignAnalyticsException(message)) return null;
+          }
+          return event;
+        },
       });
       if (typeof posthog.startExceptionAutocapture === 'function') {
         posthog.startExceptionAutocapture();
       }
+      posthog.register({
+        app_host: typeof window !== 'undefined' ? window.location.host : undefined,
+        app_name: 'peacock-app',
+      });
       registerPostHogFeatureFlagReader((flag) => posthog.isFeatureEnabled(flag));
+      posthog.onFeatureFlags(() => {
+        // Re-bind so subsequent reads see fresh flag state after the first load.
+        registerPostHogFeatureFlagReader((flag) => posthog.isFeatureEnabled(flag));
+      });
       started = true;
     },
     shutdown: () => {
@@ -59,11 +85,16 @@ export function createPostHogSink(): AnalyticsSink {
     },
     captureException: (error, props) => {
       if (!started) return;
+      if (isBenignAnalyticsException(error)) return;
       posthog.captureException(error, props);
     },
     identify: (userId, traits) => {
       if (!started) return;
       posthog.identify(userId, traits);
+    },
+    group: (groupType, groupKey, properties) => {
+      if (!started) return;
+      posthog.group(groupType, groupKey, properties);
     },
     registerSuperProperties: (props) => {
       if (!started) return;

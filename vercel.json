@@ -2,7 +2,12 @@
   "buildCommand": "pnpm --filter @peacock/app build",
   "outputDirectory": "packages/app/dist",
   "installCommand": "pnpm install",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "rewrites": [
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

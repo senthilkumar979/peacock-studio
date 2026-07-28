@@ -8,7 +8,7 @@ import {
   type HandoffResponse,
 } from '@peacock/shared';
 import { useFlowStore } from '@/store/flowStore';
-import { getExtensionId } from '@/utils/getExtensionId';
+import { getConfiguredExtensionIds } from '@/utils/getExtensionId';
 import { logSoftFailure, reportAppError } from '@/utils/appError';
 
 function notifyExtensionAppReady(extensionId: string): void {
@@ -18,6 +18,14 @@ function notifyExtensionAppReady(extensionId: string): void {
   runtime.sendMessage(extensionId, { type: 'APP_READY' }, () => {
     void runtime.lastError;
   });
+}
+
+async function requestHandoffViaConfiguredIds(): Promise<HandoffResponse | null> {
+  for (const extensionId of getConfiguredExtensionIds()) {
+    const handoff = await requestHandoffViaExtensionId(extensionId);
+    if (handoff?.payload) return handoff;
+  }
+  return null;
 }
 
 function requestHandoffViaBridge(timeoutMs = 12000): Promise<HandoffResponse | null> {
@@ -143,18 +151,19 @@ export function usePayload({ enabled = true }: UsePayloadOptions = {}) {
     setIsLoading(true);
     setError(null);
 
-    const extensionId = getExtensionId();
-    if (extensionId) notifyExtensionAppReady(extensionId);
+    const extensionIds = getConfiguredExtensionIds();
+    for (const extensionId of extensionIds) {
+      notifyExtensionAppReady(extensionId);
+    }
 
     void (async () => {
       const handoff =
-        (extensionId ? await requestHandoffViaExtensionId(extensionId) : null) ??
-        (await requestHandoffViaBridge());
+        (await requestHandoffViaConfiguredIds()) ?? (await requestHandoffViaBridge());
 
       if (!handoff?.payload) {
         setIsLoading(false);
         setError(
-          extensionId
+          extensionIds.length > 0
             ? 'No pending flow from the extension. Record on a website, stop recording, and wait for the editor to open.'
             : 'No pending flow from the extension. Rebuild the app with VITE_EXTENSION_ID set, or reload the extension after setting VITE_APP_URL to this site.'
         );

@@ -7,6 +7,7 @@ import {
   disableAnalytics,
   enableAnalytics,
   flushAcquisitionToAnalytics,
+  groupAnalytics,
   identifyAnalyticsUser,
   resetAnalyticsUser,
   setAnalyticsSink,
@@ -46,6 +47,8 @@ export const AnalyticsTracker = () => {
   const cloudAuth = useCloudAuthContext();
   const wasEnabledRef = useRef(false);
   const identifiedUserRef = useRef<string | null>(null);
+  const groupedOrgRef = useRef<string | null>(null);
+  const signedInTrackedRef = useRef<string | null>(null);
 
   useEffect(() => {
     captureAcquisitionContext();
@@ -61,6 +64,9 @@ export const AnalyticsTracker = () => {
         enableAnalytics();
         wasEnabledRef.current = true;
         if (firstEnable) {
+          trackEvent(AnalyticsEvents.consentAccepted, {
+            source: 'consent_gate',
+          });
           trackEvent(AnalyticsEvents.analyticsEnabled, {
             provider: isPostHogConfigured() ? 'posthog' : 'console',
           });
@@ -73,8 +79,13 @@ export const AnalyticsTracker = () => {
     }
 
     if (wasEnabledRef.current) {
+      trackEvent(AnalyticsEvents.consentRejected, {
+        source: 'consent_withdrawn',
+      });
       resetAnalyticsUser();
       identifiedUserRef.current = null;
+      groupedOrgRef.current = null;
+      signedInTrackedRef.current = null;
     }
     disableAnalytics();
     wasEnabledRef.current = false;
@@ -93,20 +104,38 @@ export const AnalyticsTracker = () => {
       if (identifiedUserRef.current) {
         resetAnalyticsUser();
         identifiedUserRef.current = null;
+        groupedOrgRef.current = null;
+        signedInTrackedRef.current = null;
       }
       return;
     }
 
-    if (identifiedUserRef.current === userId) return;
-    identifyAnalyticsUser(userId, {
-      ...toAcquisitionTraits(readAcquisitionContext()),
-      email: cloudAuth?.userEmail,
-      name: cloudAuth?.userDisplayName,
-      organization_id: cloudAuth?.organizationId ?? undefined,
-      organization_name: cloudAuth?.organizationName ?? undefined,
-      workspace_type: cloudAuth?.workspaceType ?? undefined,
-    });
-    identifiedUserRef.current = userId;
+    if (identifiedUserRef.current !== userId) {
+      identifyAnalyticsUser(userId, {
+        ...toAcquisitionTraits(readAcquisitionContext()),
+        email: cloudAuth?.userEmail,
+        name: cloudAuth?.userDisplayName,
+        organization_id: cloudAuth?.organizationId ?? undefined,
+        organization_name: cloudAuth?.organizationName ?? undefined,
+        workspace_type: cloudAuth?.workspaceType ?? undefined,
+      });
+      identifiedUserRef.current = userId;
+      if (signedInTrackedRef.current !== userId) {
+        trackEvent(AnalyticsEvents.userSignedIn, {
+          workspace_type: cloudAuth?.workspaceType ?? undefined,
+        });
+        signedInTrackedRef.current = userId;
+      }
+    }
+
+    const orgId = cloudAuth?.organizationId ?? null;
+    if (orgId && groupedOrgRef.current !== orgId) {
+      groupAnalytics('organization', orgId, {
+        name: cloudAuth?.organizationName ?? undefined,
+        workspace_type: cloudAuth?.workspaceType ?? undefined,
+      });
+      groupedOrgRef.current = orgId;
+    }
   }, [isAnalyticsAllowed, cloudAuth]);
 
   // Sentry user attribution is independent of analytics cookie consent.

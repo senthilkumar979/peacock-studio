@@ -122,7 +122,7 @@ const LIBRARY_GUIDE_CONTENT: Record<LibraryGuideId, LibraryGuideContent> = {
       {
         step: '01',
         title: 'Install the extension',
-        description: 'Add Peacock Studio from the Chrome Web Store and pin it to your toolbar.',
+        description: 'Add Peacock Studio from your browser’s extension store and pin it to your toolbar.',
         icon: Puzzle,
       },
       {

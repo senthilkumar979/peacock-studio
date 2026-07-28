@@ -6,7 +6,7 @@ import {
   type ExtensionPingResponseMessage,
   type HandoffBridgeMessage,
 } from '@peacock/shared';
-import { getExtensionId } from '@/utils/getExtensionId';
+import { getConfiguredExtensionIds } from '@/utils/getExtensionId';
 
 const DEFAULT_TIMEOUT_MS = 2000;
 
@@ -51,7 +51,6 @@ function pingViaBridge(timeoutMs: number): Promise<boolean> {
 
       if (!data?.type) return;
 
-      // Any bridge reply proves the extension content script is on this page.
       if (data.type === EXTENSION_PING_RESPONSE || data.type === HANDOFF_RESPONSE) {
         finish(true);
       }
@@ -64,14 +63,12 @@ function pingViaBridge(timeoutMs: number): Promise<boolean> {
   });
 }
 
-function pingViaRuntime(timeoutMs: number): Promise<boolean> {
+function pingOneExtensionId(
+  runtime: NonNullable<NonNullable<Window['chrome']>['runtime']>,
+  extensionId: string,
+  timeoutMs: number,
+): Promise<boolean> {
   return new Promise((resolve) => {
-    const runtime = window.chrome?.runtime;
-    if (!runtime?.sendMessage) {
-      resolve(false);
-      return;
-    }
-
     let settled = false;
     const finish = (ok: boolean) => {
       if (settled) return;
@@ -83,13 +80,12 @@ function pingViaRuntime(timeoutMs: number): Promise<boolean> {
     const timer = window.setTimeout(() => finish(false), timeoutMs);
 
     try {
-      // Prefer messages the published build may already route; PING is for newer builds.
-      runtime.sendMessage(getExtensionId(), { type: 'GET_PENDING_HANDOFF' }, () => {
+      runtime.sendMessage(extensionId, { type: 'GET_PENDING_HANDOFF' }, () => {
         if (!runtime.lastError) {
           finish(true);
           return;
         }
-        runtime.sendMessage(getExtensionId(), { type: 'PING' }, () => {
+        runtime.sendMessage(extensionId, { type: 'PING' }, () => {
           finish(!runtime.lastError);
         });
       });
@@ -99,10 +95,24 @@ function pingViaRuntime(timeoutMs: number): Promise<boolean> {
   });
 }
 
+async function pingViaRuntime(timeoutMs: number): Promise<boolean> {
+  const runtime = window.chrome?.runtime;
+  if (!runtime?.sendMessage) return false;
+
+  const ids = getConfiguredExtensionIds();
+  if (ids.length === 0) return false;
+
+  const perIdTimeout = Math.max(400, Math.floor(timeoutMs / ids.length));
+  for (const id of ids) {
+    if (await pingOneExtensionId(runtime, id, perIdTimeout)) return true;
+  }
+  return false;
+}
+
 /**
- * Probes whether the Peacock Chrome extension is available on this origin.
- * Uses the content-script bridge (including the published store build's handoff
- * protocol), then a direct runtime message as a fallback.
+ * Probes whether the Peacock browser extension is available on this origin.
+ * Uses the content-script bridge first, then direct runtime messages to every
+ * configured store / unpacked extension ID.
  */
 export async function probeExtensionInstalled(timeoutMs = DEFAULT_TIMEOUT_MS): Promise<boolean> {
   if (typeof window === 'undefined') return false;

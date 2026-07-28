@@ -2,10 +2,12 @@
 
 ## Cursor Cloud specific instructions
 
+For as-implemented system architecture (packages, data flows, cloud modes, sharing, deploy surfaces), see [`architecture.md`](architecture.md).
+
 Peacock is a pnpm workspace monorepo (`packages/*`) for a browser flow recorder + interactive documentation platform. Three packages:
 
 - `@peacock/app` — React 19 + Vite web app (visual editor, player, dashboard, PDF export). Runs fully local; the dev server is the main runnable service.
-- `@peacock/extension` — Chrome MV3 extension (records actions, captures screenshots). Build-only; there is no dev server — load `packages/extension/dist` as an unpacked extension in Chrome.
+- `@peacock/extension` — Chrome MV3 extension (records actions, captures screenshots). Build-only; there is no dev server — load `packages/extension/dist` as an unpacked extension in Chrome. Developer guide: [extension.md](extension.md).
 - `@peacock/shared` — shared TypeScript types/utils/constants. Only package with automated tests.
 
 Standard commands live in the root and per-package `package.json`. Key ones:
@@ -44,7 +46,7 @@ Phase 1 bot/abuse controls live in-app (Turnstile + Supabase Edge Functions + DB
 6. **Edge rate limiting** — Rule on `/s/*` and (if exposed) `/functions/v1/resolve-share` / `/functions/v1/send-org-invite` via the Supabase functions subdomain if you add a custom domain later.
 7. **Turnstile** — Keep `VITE_TURNSTILE_SITE_KEY` (Vercel) and `TURNSTILE_SECRET_KEY` (Supabase Edge Function secrets). Optionally add a Cloudflare Managed Challenge on suspicious `/s/*` traffic as defense in depth.
 8. **CSP** — Existing headers in `vercel.json` already allow `challenges.cloudflare.com`. If Cloudflare adds analytics beacons, extend `connect-src` accordingly.
-9. **Secrets checklist** — Vercel: `VITE_TURNSTILE_SITE_KEY`. Supabase function secrets: `TURNSTILE_SECRET_KEY`, `APP_ORIGIN` (exact SPA origin for CORS), `RESEND_*`, `SUPER_ADMIN_EMAILS` (comma-separated platform super-admin emails for `/platform/admin`). Redeploy Edge Functions after secret changes: `send-org-invite`, `resolve-share`, `platform-admin`.
+9. **Secrets checklist** — Vercel: `VITE_TURNSTILE_SITE_KEY`. Supabase function secrets: `TURNSTILE_SECRET_KEY`, `APP_ORIGIN` (exact SPA origin for CORS), `RESEND_*`, `SUPER_ADMIN_EMAILS` (comma-separated platform super-admin emails for `/super-admin`), `POSTHOG_PERSONAL_API_KEY` (Query Read key for Acquisition tab; optional `POSTHOG_PROJECT_ID`, `POSTHOG_HOST`). Redeploy Edge Functions after secret changes: `send-org-invite`, `resolve-share`, `platform-admin`.
 10. **Verify** — Public share load with Turnstile; auth-gated share requires org membership; invite email blocked without admin claim; oversized/non-JPEG-PNG uploads rejected by Storage.
 
 ## Platform super admin
@@ -56,3 +58,22 @@ Read-only console at `/super-admin` (tabs: Platform, Health, API — more tabs c
 - Local: same secret + `supabase functions serve platform-admin`
 - Auth: caller Clerk JWT → `resolve_actor_email` → allowlist match → service-role aggregates (orgs, users, doc/tour counts, domains, storage).
 - Legacy paths `/platform/admin`, `/health`, and `/api-docs` redirect into the matching Super Admin tab.
+
+## PostHog product analytics (ops)
+
+Client capture lives in `packages/app/src/analytics/` (consent-gated; requires `VITE_POSTHOG_KEY`). EU project: [Peacock Studio](https://eu.posthog.com/project/229575). Dashboards: [Acquisition](https://eu.posthog.com/project/229575/dashboard/851989), [Product Activation](https://eu.posthog.com/project/229575/dashboard/856211). Kill-switch flags (100% rollout, client runtime): `cloud_library`, `public_share`, `org_invites`.
+
+**Project settings checklist (UI — not all settable from MCP):**
+
+1. **Authorized URLs** — Add `https://peacock-studio.vercel.app` and the production custom domain (e.g. `https://peacock.mentorbridge.in`) under Project settings → Authorized URLs so toolbar / live events restrict correctly.
+2. **Session replay** — Confirm recording is enabled; app sets `maskAllInputs`, `.ph-mask` (step notes, invite emails), and `.ph-no-capture` (share tokens).
+3. **Path cleaning** — Rules for `/docs/<uuid>`, `/docs/<uuid>/edit`, `/tours/<id>`, `/tours/<id>/edit`, `/s/<token>` are applied ([path cleaning](https://eu.posthog.com/project/229575/settings/project#path-cleaning)). Enable “Apply path cleaning” on web analytics / paths insights if not already.
+4. **Reverse proxy (ad blockers)** — Point a first-party subdomain (e.g. `e.peacock…`) at `https://eu.i.posthog.com` and set `VITE_POSTHOG_HOST` / `api_host` to that origin. Do this after Cloudflare fronts the SPA if possible.
+
+**Follow-up product bugs surfaced by Error Tracking / paths (not fixed in the analytics pass):**
+
+1. **`personas` RLS** — highest-volume real DB error (~59+); investigate insert/select policies vs Clerk JWT claims.
+2. **Extension install friction** — `/install-extension` is the top page; improve detect-already-installed + CTA → `extension_detected` conversion.
+3. **Generic “Something went wrong”** — map to underlying cause; prefer specific UI copy + `error_code` props.
+4. **Turnstile reset** — empty-container reset on pricing/share; guard reset calls.
+5. **Rage clicks** — review [replays](https://eu.posthog.com/project/229575/replay) filtered by `$rageclick` after new funnel events ship.

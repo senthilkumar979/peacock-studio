@@ -1,10 +1,30 @@
-import { PUBLISHED_EXTENSION_ID } from '@/constants/extension';
+import {
+  EXTENSION_MESSAGING_FAMILY_ORDER,
+  EXTENSION_STORE_BY_FAMILY,
+  PUBLISHED_EXTENSION_ID,
+} from '@/constants/extension';
 
 /**
- * Returns the Chrome extension ID to message. Prefers `VITE_EXTENSION_ID` for
- * local unpacked builds, otherwise falls back to the published Web Store ID.
+ * All extension IDs the SPA may message: `VITE_EXTENSION_ID` (unpacked) first,
+ * then published store IDs that are configured (Chrome, Edge, Firefox, …).
+ */
+export function getConfiguredExtensionIds(): string[] {
+  const ids: string[] = [];
+  const fromEnv = import.meta.env.VITE_EXTENSION_ID?.trim();
+  if (fromEnv) ids.push(fromEnv);
+
+  for (const family of EXTENSION_MESSAGING_FAMILY_ORDER) {
+    const id = EXTENSION_STORE_BY_FAMILY[family]?.extensionId?.trim();
+    if (id && !ids.includes(id)) ids.push(id);
+  }
+
+  return ids;
+}
+
+/**
+ * Primary extension ID for messaging. Prefers `VITE_EXTENSION_ID` for local
+ * unpacked builds, otherwise the first configured published store ID.
  */
 export function getExtensionId(): string {
-  const fromEnv = import.meta.env.VITE_EXTENSION_ID?.trim();
-  return fromEnv || PUBLISHED_EXTENSION_ID;
+  return getConfiguredExtensionIds()[0] ?? PUBLISHED_EXTENSION_ID;
 }

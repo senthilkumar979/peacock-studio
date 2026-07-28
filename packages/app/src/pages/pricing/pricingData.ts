@@ -1,27 +1,40 @@
 import type { LucideIcon } from 'lucide-react';
 import { Gift, HeartHandshake, MessageSquare, Sparkles, Star, Tag } from 'lucide-react';
 
+export type PricingTierCta = 'start-free' | 'talk-to-us' | null;
+
 export interface PricingTier {
   name: string;
   audience: string;
+  priceLabel: string;
   highlight?: boolean;
+  cta: PricingTierCta;
   features: string[];
 }
 
-/** Future tiers shown as a blurred "coming soon" preview during beta. */
+/** Plans shown as a clear Free / Team / Enterprise comparison during beta. */
 export const PRICING_TIERS: PricingTier[] = [
   {
-    name: 'Personal',
+    name: 'Free',
     audience: 'Solo creators documenting their own flows',
-    features: ['Unlimited local flows', 'PDF export', 'Public share links', 'Community support',
-      'Cloud sync & workspaces'],
+    priceLabel: 'Free during beta',
+    cta: 'start-free',
+    features: [
+      'Unlimited local flows',
+      'PDF export',
+      'Public share links',
+      'Cloud sync within free limits',
+      'Community support',
+    ],
   },
   {
     name: 'Team',
     audience: 'Teams sharing living documentation',
+    priceLabel: 'Coming soon',
     highlight: true,
+    cta: 'talk-to-us',
     features: [
-      'Everything in Personal',
+      'Everything in Free',
       'Roles & permissions',
       'View analytics',
       'Priority support',
@@ -31,6 +44,8 @@ export const PRICING_TIERS: PricingTier[] = [
   {
     name: 'Enterprise',
     audience: 'Organizations with security & scale needs',
+    priceLabel: 'Coming soon',
+    cta: 'talk-to-us',
     features: [
       'Everything in Team',
       'SSO & audit logs',
@@ -54,13 +69,13 @@ export const BETA_PERKS: BetaPerk[] = [
   },
   {
     icon: HeartHandshake,
-    title: 'A personal conversation',
-    description: 'Before we ever charge, we will reach out to you individually — no surprise bills.',
+    title: 'No surprise bills',
+    description: 'Paid plans will launch with clear notice — nothing changes overnight without you seeing it here first.',
   },
   {
     icon: Tag,
     title: 'Founding-user pricing',
-    description: 'Early supporters get a discounted annual rate, below our standard pricing.',
+    description: 'Early supporters get a discounted annual rate when paid plans launch, below our standard pricing.',
   },
   {
     icon: Star,
@@ -74,6 +89,6 @@ export const BETA_HERO = {
   badge: 'Public Beta',
   title: 'Experience Peacock — free for early adopters',
   subtitle:
-    "We're in beta and inviting you to use everything Peacock offers at no cost. When we introduce pricing, we'll contact early adopters personally and honor a founding-user rate below our standard plans.",
+    "We're in beta and inviting you to use everything Peacock offers at no cost. When paid plans launch, early adopters keep founding-user pricing below our standard rates.",
   feedbackIcon: MessageSquare,
 } as const;

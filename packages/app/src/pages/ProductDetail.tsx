@@ -100,7 +100,7 @@ export const ProductDetail = () => {
           <div>
             <p className="text-sm font-semibold text-slate-900">Ready to try {product.shortName}?</p>
             <p className="mt-1 text-sm text-slate-600">
-              Install the Chrome extension, then open the app to start from your first capture.
+              Install the browser extension, then open the app to start from your first capture.
             </p>
             <ChromeWebStoreLink className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-peacock-700 hover:text-peacock-900" />
           </div>

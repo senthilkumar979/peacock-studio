@@ -31,7 +31,7 @@ export const CTASection = () => (
               Your next great demo starts with one recording
             </h2>
             <p className="mt-4 text-base leading-relaxed text-peacock-100/90">
-              Install the free Chrome extension, capture a workflow, and publish a walkthrough or
+              Install the free browser extension, capture a workflow, and publish a walkthrough or
               product tour — start locally as a guest, then sync with an account when you need
               cloud workspaces and secure sharing.
             </p>

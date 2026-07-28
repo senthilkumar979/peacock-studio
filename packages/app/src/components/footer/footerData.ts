@@ -23,7 +23,7 @@ export const PUBLIC_SOLUTION_LINKS = SOLUTION_NAV_ITEMS.slice(0, 5).map(({ label
 }));
 
 export const FOOTER_EXTENSION_LINK = {
-  label: 'Chrome extension',
+  label: 'Browser extension',
   href: CHROME_WEB_STORE_EXTENSION_URL,
 } as const;
 

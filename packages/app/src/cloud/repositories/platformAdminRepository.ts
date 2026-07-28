@@ -57,7 +57,8 @@ type PlatformAction =
   | { action: 'whoami' }
   | { action: 'overview' }
   | { action: 'listOrganizations' }
-  | { action: 'getOrganization'; organizationId: string };
+  | { action: 'getOrganization'; organizationId: string }
+  | { action: 'acquisition'; days?: number };
 
 async function invokePlatformAdmin<T>(body: PlatformAction): Promise<T> {
   const supabase = getAuthenticatedSupabaseClient();
@@ -139,6 +140,20 @@ export async function fetchPlatformOrganization(
         }))
       : [],
   };
+}
+
+export async function fetchPlatformAcquisition(days = 30): Promise<{
+  days: number;
+  signupsBySource: Array<{ source: string; signups: number }>;
+  topCampaigns: Array<{
+    source: string;
+    medium: string;
+    campaign: string;
+    signups: number;
+  }>;
+  posthogProjectUrl: string;
+}> {
+  return invokePlatformAdmin({ action: 'acquisition', days });
 }
 
 function mapOrgSummary(row: unknown): PlatformOrganizationSummary {

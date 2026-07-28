@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { trackEvent } from '@/analytics/analyticsClient';
-import { AnalyticsEvents } from '@/analytics/events';
+import { trackDocumentFirstSaved } from '@/analytics/analyticsClient';
 import { persistCurrentFlow } from '@/services/flowLibraryService';
 import { useFlowStore } from '@/store/flowStore';
 import { notifyPersistError } from '@/utils/notify';
@@ -30,8 +29,7 @@ export function usePersistDocument(enabled: boolean, routeDocumentId?: string): 
     timerRef.current = window.setTimeout(() => {
       void persistCurrentFlow(documentId)
         .then(() => {
-          trackEvent(AnalyticsEvents.documentSaved, {
-            document_id: documentId,
+          trackDocumentFirstSaved(documentId, {
             step_count: useFlowStore.getState().steps.length,
           });
         })

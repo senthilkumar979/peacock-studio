@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { trackEvent } from '@/analytics/analyticsClient';
+import { AnalyticsEvents } from '@/analytics/events';
 import { DASHBOARD_PATH } from '@/constants/routes';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { createAndSaveProductTourOnce } from '@/services/productTourLibraryService';
@@ -14,6 +16,7 @@ export const NewProductTour = () => {
     void createAndSaveProductTourOnce()
       .then((tour) => {
         if (cancelled) return;
+        trackEvent(AnalyticsEvents.tourCreated, { tour_id: tour.id });
         navigate(`/tours/${tour.id}/edit`, { replace: true });
       })
       .catch((error: unknown) => {

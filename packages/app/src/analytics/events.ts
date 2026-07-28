@@ -14,16 +14,30 @@ export const AnalyticsEvents = {
   softErrorShown: 'soft_error_shown',
   exceptionCaptured: 'exception_captured',
 
+  userSignedIn: 'user_signed_in',
+
+  extensionGateViewed: 'extension_gate_viewed',
+  extensionDetected: 'extension_detected',
+  extensionInstallCtaClicked: 'extension_install_cta_clicked',
+
+  documentCreated: 'document_created',
   documentDeleted: 'document_deleted',
   documentShared: 'document_shared',
   documentEmbedded: 'document_embedded',
   documentPdfExported: 'document_pdf_exported',
+  /** First successful persist for a document in this browser session (activation). */
+  documentFirstSaved: 'document_first_saved',
+  /** Kept for backwards compatibility; prefer documentFirstSaved for funnels. */
   documentSaved: 'document_saved',
 
+  tourCreated: 'tour_created',
   tourDeleted: 'tour_deleted',
   tourShared: 'tour_shared',
   tourEmbedded: 'tour_embedded',
   tourPdfExported: 'tour_pdf_exported',
+
+  editorOpened: 'editor_opened',
+  playerOpened: 'player_opened',
 
   routeDeleted: 'route_deleted',
   routeShared: 'route_shared',

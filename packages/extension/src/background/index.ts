@@ -156,14 +156,20 @@ function buildScrollStops(fullHeight: number, viewportHeight: number): number[] 
   return [...new Set(stops)];
 }
 
+const SCREENSHOT_UNAVAILABLE_MESSAGE = 'Screenshot capture is not available on this page';
+
 async function handleVisibleScreenshotTool(tab: chrome.tabs.Tab): Promise<void> {
+  if (!canInjectIntoUrl(tab.url)) {
+    throw new Error(SCREENSHOT_UNAVAILABLE_MESSAGE);
+  }
+
   const blob = await captureVisibleScreenshotBlob(tab.id as number, tab.windowId);
   await openCaptureResult(blob, 'visible');
 }
 
 async function handleSelectionScreenshotTool(tab: chrome.tabs.Tab): Promise<void> {
   if (!canInjectIntoUrl(tab.url)) {
-    throw new Error('Selection capture is not available on this page');
+    throw new Error(SCREENSHOT_UNAVAILABLE_MESSAGE);
   }
 
   await ensureCaptureTool(tab.id as number);
@@ -182,7 +188,7 @@ async function handleSelectionScreenshotTool(tab: chrome.tabs.Tab): Promise<void
 
 async function handleFullPageScreenshotTool(tab: chrome.tabs.Tab): Promise<void> {
   if (!canInjectIntoUrl(tab.url)) {
-    throw new Error('Full-page capture is not available on this page');
+    throw new Error(SCREENSHOT_UNAVAILABLE_MESSAGE);
   }
 
   const tabId = tab.id as number;
@@ -299,6 +305,11 @@ async function captureEnvironmentFromTab(
 }
 
 async function handleStartRecording(): Promise<void> {
+  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!activeTab?.id || !canInjectIntoUrl(activeTab.url)) {
+    throw new Error('Recording is not available on this page');
+  }
+
   await clearRecordingData();
   await clearCaptureSession();
   await clearHandoffPending();
@@ -306,20 +317,17 @@ async function handleStartRecording(): Promise<void> {
   cachedHandoff = undefined;
   await setRecordingStatus('recording');
 
-  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const state = await getRecordingState(await getEventCount());
   const startedAt = state.startedAt ?? Date.now();
 
-  if (activeTab?.id && canInjectIntoUrl(activeTab.url)) {
-    const isReady = await ensureContentScript(activeTab.id);
-    if (isReady) {
-      try {
-        await chrome.tabs.sendMessage(activeTab.id, { type: 'RECORDING_STARTED' });
-        await chrome.tabs.sendMessage(activeTab.id, { type: 'RECORDING_STATE', state });
-        await captureEnvironmentFromTab(activeTab.id, startedAt);
-      } catch (error) {
-        console.warn('[Peacock] Could not notify tab to start recording', error);
-      }
+  const isReady = await ensureContentScript(activeTab.id);
+  if (isReady) {
+    try {
+      await chrome.tabs.sendMessage(activeTab.id, { type: 'RECORDING_STARTED' });
+      await chrome.tabs.sendMessage(activeTab.id, { type: 'RECORDING_STATE', state });
+      await captureEnvironmentFromTab(activeTab.id, startedAt);
+    } catch (error) {
+      console.warn('[Peacock] Could not notify tab to start recording', error);
     }
   }
 

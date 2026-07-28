@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { flushSync } from "react-dom";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { trackEvent } from "@/analytics/analyticsClient";
+import { AnalyticsEvents } from "@/analytics/events";
 import { DASHBOARD_PATH } from "@/constants/routes";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { FirstCaptureChecklist } from "@/components/onboarding/FirstCaptureChecklist";
@@ -64,8 +67,16 @@ export const Editor = () => {
   const resetFlow = useFlowStore((state) => state.resetFlow);
   const resolvedDocumentId = documentId ?? documentIdFromStore;
   const isPendingCapture = isLoaded && !resolvedDocumentId;
+  // Keep the bar mounted while saving: saveNewFlowFromStore sets documentId
+  // synchronously, which would otherwise unmount the loader immediately.
+  const showPendingCaptureBar = isPendingCapture || isSavingPendingCapture;
 
   usePersistDocument(Boolean(documentId && isLoaded), documentId);
+
+  useEffect(() => {
+    if (!documentId || !isLoaded) return;
+    trackEvent(AnalyticsEvents.editorOpened, { document_id: documentId });
+  }, [documentId, isLoaded]);
 
   const selectedStep = useSelectedStep();
   const selectedSection = useSelectedSection();
@@ -122,13 +133,19 @@ export const Editor = () => {
   };
 
   const handleSavePendingCapture = async () => {
-    setIsSavingPendingCapture(true);
+    flushSync(() => {
+      setIsSavingPendingCapture(true);
+    });
     try {
       const savedDocumentId = await saveNewFlowFromStore();
       if (!savedDocumentId) {
         notifyPersistError(new Error("Recording had no steps to save."), "Save documentation");
         return;
       }
+      trackEvent(AnalyticsEvents.documentCreated, {
+        document_id: savedDocumentId,
+        source: "pending_capture",
+      });
       navigate(`/docs/${savedDocumentId}/edit`, {
         replace: true,
         state: { justCreated: true },
@@ -257,7 +274,7 @@ export const Editor = () => {
           editorHints={editorHints}
         />
 
-        {isPendingCapture ? (
+        {showPendingCaptureBar ? (
           <PendingCaptureBar
             isSaving={isSavingPendingCapture}
             onSave={() => {
@@ -267,7 +284,7 @@ export const Editor = () => {
           />
         ) : null}
 
-        {showFirstCaptureChecklist && !isPendingCapture ? (
+        {showFirstCaptureChecklist && !showPendingCaptureBar ? (
           <FirstCaptureChecklist onDismiss={() => setShowFirstCaptureChecklist(false)} />
         ) : null}
         <div className="grid min-h-0 flex-1 grid-cols-[280px_1fr_320px] gap-4 p-4">

@@ -66,7 +66,7 @@ export const HeroSection = () => (
 
         <dl className="mt-10 grid grid-cols-3 gap-4 border-t border-white/10 pt-8">
           {[
-            ['Capture', 'Chrome extension'],
+            ['Capture', 'Browser extension'],
             ['Structure', 'Branches & sections'],
             ['Share', 'Links, PDF & tours'],
           ].map(([term, detail]) => (

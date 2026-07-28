@@ -196,6 +196,8 @@ Chrome requires **at least one** screenshot or video.
 |-------|------|-------|
 | Screenshot (recommended) | **1280 × 800** | Best for desktop listing |
 | Screenshot (minimum acceptable) | **640 × 400** | Acceptable but less polished |
+| Small promo tile | **440 × 280** | [`store-assets/promo-small-440x280.png`](store-assets/promo-small-440x280.png) — 24-bit PNG, no alpha |
+| Marquee promo tile | **1400 × 560** | [`store-assets/promo-marquee-1400x560.png`](store-assets/promo-marquee-1400x560.png) — 24-bit PNG, no alpha |
 | Promo video | YouTube link | Optional |
 
 ### Suggested screenshots (capture these before submit)

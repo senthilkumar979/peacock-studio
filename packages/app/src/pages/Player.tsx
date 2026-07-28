@@ -1,5 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { trackEvent } from '@/analytics/analyticsClient';
+import { AnalyticsEvents } from '@/analytics/events';
 import {
   getHintStepLabel,
   getPlayerHintSequence,
@@ -43,6 +45,14 @@ export const Player = () => {
       resourceType: 'document',
       resourceId: documentId,
       metadata: { view: resolvedView },
+    });
+  }, [documentId, isLoaded, resolvedView]);
+
+  useEffect(() => {
+    if (!isLoaded || !documentId || resolvedView !== 'player') return;
+    trackEvent(AnalyticsEvents.playerOpened, {
+      document_id: documentId,
+      view: resolvedView,
     });
   }, [documentId, isLoaded, resolvedView]);
 

@@ -81,7 +81,7 @@ export const PendingInvitesSection = ({
                     {memberInitials(invite.email)}
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-slate-900">{invite.email}</p>
+                    <p className="ph-mask truncate font-medium text-slate-900">{invite.email}</p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
                       <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
                         {roleLabel(invite.role)}

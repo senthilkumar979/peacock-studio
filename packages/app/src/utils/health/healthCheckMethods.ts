@@ -61,8 +61,8 @@ export const HEALTH_CHECK_METHODS: Record<string, HealthCheckMethod> = {
       'Pass = DB open + list succeeded. Fail = IndexedDB blocked, corrupted, or upgrade error. Local counts can differ from cloud library counts.',
   },
   extension: {
-    what: 'Detects whether the Peacock Chrome extension bridge is reachable on this origin.',
-    how: 'probeExtensionInstalled(): (1) DOM marker data-peacock-extension=installed, (2) window.postMessage ping (EXTENSION_PING / HANDOFF), (3) chrome.runtime.sendMessage fallback with configured extension id. ~2s timeout.',
+    what: 'Detects whether the Peacock browser extension bridge is reachable on this origin.',
+    how: 'probeExtensionInstalled(): (1) DOM marker data-peacock-extension=installed, (2) window.postMessage ping (EXTENSION_PING / HANDOFF), (3) chrome.runtime.sendMessage fallback over all configured store / unpacked extension IDs. ~2s timeout.',
     interpret:
       'Pass = bridge answered. Warn = not detected (missing install, wrong profile, or content script not injected on this host). Does not validate recording quality.',
   },

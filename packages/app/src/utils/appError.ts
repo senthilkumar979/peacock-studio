@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/react';
 import { trackException } from '@/analytics/analyticsClient';
-import { isSentryInitialized } from '@/observability/sentry';
+import { isExpectedClientNoise, isSentryInitialized } from '@/observability/sentry';
 
 export const GENERIC_USER_ERROR_MESSAGE =
   'Something went wrong. Please try again or refresh the page.';
@@ -139,12 +139,18 @@ export function classifyAppError(error: unknown): ClassifiedAppError {
 
   if (
     status === 403 ||
-    /permission|not allowed|forbidden|do not have permission|only admins/i.test(lower)
+    code === '42501' ||
+    /permission|not allowed|forbidden|do not have permission|only admins|row-level security/i.test(
+      lower,
+    )
   ) {
     return {
       kind: 'permission',
       title: 'Permission denied',
-      userMessage: message || 'You do not have permission to do that in this workspace.',
+      userMessage:
+        /row-level security/i.test(lower)
+          ? 'Cloud could not save this row for your workspace. Refresh and try again, or check your member permissions.'
+          : message || 'You do not have permission to do that in this workspace.',
       isHard: false,
       cause: error,
     };
@@ -259,6 +265,16 @@ export function toUserFacingMessage(error: unknown): string {
 export function logAppError(context: string, error: unknown): void {
   console.error(`[Peacock] ${context}`, error);
   const classified = classifyAppError(error);
+
+  // Expected auth expiry / Turnstile / rate-limit noise — console only.
+  if (
+    classified.kind === 'auth' ||
+    classified.kind === 'session' ||
+    isExpectedClientNoise(error) ||
+    isExpectedClientNoise(classified.userMessage)
+  ) {
+    return;
+  }
 
   // PostHog exception + Sentry only (skip duplicate exceptionCaptured event).
   trackException(error instanceof Error ? error : new Error(classified.userMessage), {

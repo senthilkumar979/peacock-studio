@@ -16,7 +16,7 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     step: '01',
     title: 'Install the extension',
-    description: 'Install Peacock Studio from the Chrome Web Store and pin it to your toolbar.',
+    description: 'Install Peacock Studio from your browser\'s extension store and pin it to your toolbar.',
     icon: Puzzle,
   },
   {
@@ -68,7 +68,7 @@ export const DashboardEmptyState = ({
         isOpen={showRecordHint}
         stepLabel="Tip 3 of 3"
         title="Record your first flow"
-        description="Install the Peacock Chrome extension, click Record on any website, then stop to open the editor automatically."
+        description="Install the Peacock browser extension, click Record on any website, then stop to open the editor automatically."
         placement="bottom"
         onDismiss={() => onDismissRecordHint?.()}
       >
