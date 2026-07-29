@@ -1,14 +1,90 @@
-/**
- * Mirror of root `api/storage-images.ts` for deployments whose Vercel
- * Root Directory is `packages/app` (uses this package's vercel.json).
- */
-import {
-  assertValidScreenshotStoragePath,
-  verifyScreenshotAssetToken,
-} from '../../shared/src/utils/screenshotAssetUrl';
-
 const SCREENSHOTS_BUCKET = 'screenshots';
 
+const UUID =
+  '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+const STORAGE_PATH_RE = new RegExp(`^${UUID}/${UUID}/${UUID}\\.png$`, 'i');
+
+interface ScreenshotAssetTokenPayload {
+  v: 1;
+  p: string;
+  e: number;
+}
+
+function fromBase64Url(value: string): Uint8Array {
+  const padded = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padLength = (4 - (padded.length % 4)) % 4;
+  const binary = atob(padded + '='.repeat(padLength));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function utf8Bytes(value: string): Uint8Array {
+  return new TextEncoder().encode(value);
+}
+
+function assertValidScreenshotStoragePath(storagePath: string): string {
+  const normalized = storagePath.replace(/^\/+/, '').trim();
+  if (!STORAGE_PATH_RE.test(normalized)) {
+    throw new Error('Invalid screenshot storage path.');
+  }
+  return normalized;
+}
+
+async function verifyScreenshotAssetToken(
+  token: string,
+  secret: string,
+  nowSeconds: number = Math.floor(Date.now() / 1000),
+): Promise<{ storagePath: string; expiresAt: number }> {
+  if (!secret.trim()) throw new Error('Screenshot URL secret is not configured.');
+  const [payloadPart, signaturePart] = token.split('.');
+  if (!payloadPart || !signaturePart) {
+    throw new Error('Invalid screenshot asset token.');
+  }
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    utf8Bytes(secret).buffer as ArrayBuffer,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify'],
+  );
+  const signatureBytes = fromBase64Url(signaturePart);
+  const valid = await crypto.subtle.verify(
+    'HMAC',
+    key,
+    signatureBytes.buffer as ArrayBuffer,
+    utf8Bytes(payloadPart).buffer as ArrayBuffer,
+  );
+  if (!valid) throw new Error('Invalid screenshot asset token signature.');
+
+  let payload: ScreenshotAssetTokenPayload;
+  try {
+    payload = JSON.parse(new TextDecoder().decode(fromBase64Url(payloadPart))) as ScreenshotAssetTokenPayload;
+  } catch {
+    throw new Error('Invalid screenshot asset token payload.');
+  }
+
+  if (payload.v !== 1 || typeof payload.p !== 'string' || typeof payload.e !== 'number') {
+    throw new Error('Unsupported screenshot asset token.');
+  }
+  if (payload.e <= nowSeconds) {
+    throw new Error('Screenshot asset token expired.');
+  }
+
+  return {
+    storagePath: assertValidScreenshotStoragePath(payload.p),
+    expiresAt: payload.e,
+  };
+}
+
+/**
+ * Branded screenshot proxy.
+ * Public URL (rewrite): /storage/images/:orgId/:documentId/:filename?token=...
+ * Function URL:         /api/storage-images?orgId=&documentId=&filename=&token=
+ */
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const token = url.searchParams.get('token') ?? '';
