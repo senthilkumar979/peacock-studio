@@ -330,7 +330,7 @@ export const DocumentView = ({
           className="grid min-h-0 gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]"
           style={desktopPaneHeight ? { height: desktopPaneHeight } : undefined}
         >
-          <div className="min-h-0 h-full">
+          <div className="min-h-0 h-full [&_>span]:flex [&_>span]:h-full [&_>span]:max-w-none [&_>span_>span]:flex [&_>span_>span]:h-full [&_>span_>span]:w-full [&_>span_>span]:max-w-none">
             <HintAnchor
               hints={pageHints}
               hintId={PLAYER_HINT_IDS.docOutline}
@@ -366,14 +366,14 @@ export const DocumentView = ({
             className="min-h-0 h-full overflow-y-auto"
           >
             {!areScreenshotsReady ? (
-              <div className="flex min-h-[min(60vh,720px)] flex-col items-center justify-center gap-4 px-6 py-16">
+              <div className="flex h-full min-h-[min(60vh,720px)] flex-col items-center justify-center gap-4 px-6 py-16">
                 <PeacockStudioLoader size={120} />
                 <p className="text-sm text-slate-500">Loading screenshots…</p>
               </div>
             ) : (
             <div
               ref={contentRootRef}
-              className="flex min-w-0 flex-col gap-5 pr-1 "
+              className="flex min-h-full min-w-0 flex-col gap-5 pr-1"
             >
               {onOverview ? (
                 <DocumentGuideOverviewBanner
