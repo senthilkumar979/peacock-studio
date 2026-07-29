@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/storage/images/:orgId/:documentId/:filename",
-      "destination": "/api/storage/images/:orgId/:documentId/:filename"
+      "destination": "/api/storage-images?orgId=:orgId&documentId=:documentId&filename=:filename"
     },
     {
       "source": "/((?!api/).*)",
