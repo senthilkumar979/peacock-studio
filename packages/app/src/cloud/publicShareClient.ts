@@ -26,40 +26,14 @@ interface SharedFlowDocumentPayload {
 
 type ShareAction = 'resolve' | 'flow' | 'tour' | 'persona' | 'screenshots';
 
-interface CachedTurnstile {
-  token: string;
-  expiresAt: number;
-}
-
-let cachedTurnstile: CachedTurnstile | null = null;
-
-async function obtainShareTurnstileToken(): Promise<string> {
-  const now = Date.now();
-  if (cachedTurnstile && cachedTurnstile.expiresAt > now) {
-    return cachedTurnstile.token;
-  }
-
-  const token = await getTurnstileToken('resolve-share');
-  cachedTurnstile = {
-    token,
-    expiresAt: now + 4 * 60 * 1000,
-  };
-  return token;
-}
-
 async function invokeResolveShare<T>(input: {
   action: ShareAction;
   token: string;
   documentId?: string;
   personaId?: string;
 }): Promise<T> {
-  let turnstileToken: string;
-  try {
-    turnstileToken = await obtainShareTurnstileToken();
-  } catch (error) {
-    cachedTurnstile = null;
-    throw error;
-  }
+  // Turnstile tokens are single-use — obtain a fresh one per resolve-share call.
+  const turnstileToken = await getTurnstileToken('resolve-share');
   const accessToken = await resolveCallerAccessToken();
 
   const response = await fetch(`${getSupabaseUrl()}/functions/v1/resolve-share`, {
@@ -84,10 +58,6 @@ async function invokeResolveShare<T>(input: {
   } | null;
 
   if (!response.ok) {
-    // Stale challenge tokens should not poison the next attempt.
-    if (response.status === 403 || /turnstile|challenge|rate limit/i.test(payload?.error ?? '')) {
-      cachedTurnstile = null;
-    }
     throw new Error(payload?.error || `Share request failed (${response.status})`);
   }
 

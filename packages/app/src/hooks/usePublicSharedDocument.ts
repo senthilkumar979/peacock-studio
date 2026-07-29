@@ -4,6 +4,7 @@ import { loadFlowIntoStore } from '@/services/flowLibraryService';
 import { getFlowDocument } from '@/storage/libraryRouter';
 import { useFlowStore } from '@/store/flowStore';
 import type { ResolvedShareLink } from '@/types/shareLink';
+import { reportAppError } from '@/utils/appError';
 
 function buildViewerFilterFromShareLink(link: ResolvedShareLink): FlowViewerFilter | null {
   const shareSettings = link.settings.shareSettings;
@@ -26,14 +27,18 @@ export function usePublicSharedDocument(link: ResolvedShareLink | null) {
 
     let cancelled = false;
 
-    void getFlowDocument(link.resourceId).then((doc) => {
-      if (cancelled || !doc) return;
+    void getFlowDocument(link.resourceId)
+      .then((doc) => {
+        if (cancelled || !doc) return;
 
-      loadFlowIntoStore(doc);
+        loadFlowIntoStore(doc);
 
-      const filter = buildViewerFilterFromShareLink(link);
-      if (filter) setViewerFilter(filter);
-    });
+        const filter = buildViewerFilterFromShareLink(link);
+        if (filter) setViewerFilter(filter);
+      })
+      .catch((error) => {
+        if (!cancelled) reportAppError('Load shared document', error);
+      });
 
     return () => {
       cancelled = true;
