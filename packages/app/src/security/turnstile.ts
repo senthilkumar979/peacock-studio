@@ -5,6 +5,7 @@ interface TurnstileApi {
     container: HTMLElement,
     options: {
       sitekey: string;
+      action?: string;
       size?: 'normal' | 'flexible' | 'compact' | 'invisible';
       appearance?: 'always' | 'execute' | 'interaction-only';
       callback?: (token: string) => void;
@@ -67,7 +68,7 @@ function loadTurnstileScript(): Promise<void> {
 /**
  * Obtains a Cloudflare Turnstile token (invisible widget).
  * When the site key is unset (local/dev), returns a placeholder so Edge Functions
- * can skip verification when TURNSTILE_SECRET_KEY is also unset.
+ * can skip verification when TURNSTILE_SECRET is also unset.
  */
 export async function getTurnstileToken(action: string): Promise<string> {
   const siteKey = getTurnstileSiteKey();
@@ -108,6 +109,7 @@ export async function getTurnstileToken(action: string): Promise<string> {
     try {
       widgetId = api.render(host, {
         sitekey: siteKey,
+        action,
         size: 'invisible',
         appearance: 'execute',
         callback: (token) => {

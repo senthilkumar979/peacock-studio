@@ -1,10 +1,12 @@
 // Supabase Edge Function: public share resolve gate (Turnstile + rate limit).
 // Deploy with verify_jwt=false — public viewers and Clerk JWTs both use this path.
-// Secrets: TURNSTILE_SECRET_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
+// Secrets: TURNSTILE_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
 // Optional: APP_ORIGIN (CORS)
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { clientIp } from '../_shared/clientIp.ts';
+import { verifyTurnstile } from '../_shared/turnstile.ts';
 
 const SCREENSHOTS_BUCKET = 'screenshots';
 const SIGNED_URL_TTL_SECONDS = 3600;
@@ -175,39 +177,7 @@ function json(
   });
 }
 
-function clientIp(req: Request): string {
-  return (
-    req.headers.get('cf-connecting-ip') ||
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    req.headers.get('x-real-ip') ||
-    'unknown'
-  );
-}
-
 function bearerToken(header: string | null): string | null {
   if (!header?.startsWith('Bearer ')) return null;
   return header.slice('Bearer '.length).trim() || null;
-}
-
-async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
-  const secret = Deno.env.get('TURNSTILE_SECRET_KEY')?.trim();
-  if (!secret) {
-    // Allow local/dev without Turnstile configured; production must set the secret.
-    console.warn('TURNSTILE_SECRET_KEY not set — skipping verification');
-    return true;
-  }
-
-  const form = new URLSearchParams();
-  form.set('secret', secret);
-  form.set('response', token);
-  if (ip && ip !== 'unknown') form.set('remoteip', ip);
-
-  const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    body: form,
-  });
-
-  if (!response.ok) return false;
-  const result = (await response.json()) as { success?: boolean };
-  return Boolean(result.success);
 }

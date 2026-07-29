@@ -1,10 +1,12 @@
 // Supabase Edge Function: send organization invite emails via Resend.
 // Deploy with verify_jwt=false — Clerk third-party JWTs fail the legacy gateway check.
 // Prefer invitationId + claim_org_invite_email_send; legacy body fields still accepted.
-// Secrets: RESEND_API_KEY, APP_ORIGIN, RESEND_FROM, TURNSTILE_SECRET_KEY,
+// Secrets: RESEND_API_KEY, APP_ORIGIN, RESEND_FROM, TURNSTILE_SECRET,
 //          SUPABASE_URL, SUPABASE_ANON_KEY
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
+import { clientIp } from '../_shared/clientIp.ts';
+import { isTurnstileConfigured, verifyTurnstile } from '../_shared/turnstile.ts';
 
 interface InviteBody {
   invitationId?: string;
@@ -51,7 +53,7 @@ serve(async (req) => {
       if (!turnstileOk) {
         return json({ error: 'Bot check failed' }, 403, cors);
       }
-    } else if (Deno.env.get('TURNSTILE_SECRET_KEY')?.trim()) {
+    } else if (isTurnstileConfigured()) {
       return json({ error: 'Missing Turnstile token' }, 400, cors);
     }
 
@@ -215,40 +217,6 @@ function json(
     status,
     headers: { ...cors, 'Content-Type': 'application/json' },
   });
-}
-
-function clientIp(req: Request): string {
-  return (
-    req.headers.get('cf-connecting-ip') ||
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    req.headers.get('x-real-ip') ||
-    'unknown'
-  );
-}
-
-async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
-  const secret = Deno.env.get('TURNSTILE_SECRET_KEY')?.trim();
-  if (!secret) {
-    console.warn('TURNSTILE_SECRET_KEY not set — skipping verification');
-    return true;
-  }
-  if (token.startsWith('dev-bypass:')) {
-    return false;
-  }
-
-  const form = new URLSearchParams();
-  form.set('secret', secret);
-  form.set('response', token);
-  if (ip && ip !== 'unknown') form.set('remoteip', ip);
-
-  const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    body: form,
-  });
-
-  if (!response.ok) return false;
-  const result = (await response.json()) as { success?: boolean };
-  return Boolean(result.success);
 }
 
 function summarizeClaimError(raw: string): string {
