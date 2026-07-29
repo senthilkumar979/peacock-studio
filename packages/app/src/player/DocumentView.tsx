@@ -296,12 +296,12 @@ export const DocumentView = ({
     });
   }, []);
 
+  // Reset to top once when screenshots first become ready (content mounts).
+  // Do not re-run on later updates — that fights mid-document scrolling.
+  const didResetScrollForReadyRef = useRef(false);
   useLayoutEffect(() => {
-    resetDocumentScroll();
-  }, [resetDocumentScroll]);
-
-  useLayoutEffect(() => {
-    if (!areScreenshotsReady) return;
+    if (!areScreenshotsReady || didResetScrollForReadyRef.current) return;
+    didResetScrollForReadyRef.current = true;
     resetDocumentScroll();
   }, [areScreenshotsReady, resetDocumentScroll]);
 

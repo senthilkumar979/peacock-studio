@@ -19,8 +19,7 @@ interface ImportMetaEnv {
   readonly VITE_POSTHOG_HOST?: string;
   readonly VITE_SENTRY_DSN?: string;
   readonly VITE_SENTRY_RELEASE?: string;
-  readonly VITE_TAWK_PROPERTY_ID?: string;
-  readonly VITE_TAWK_WIDGET_ID?: string;
+  readonly VITE_FRESHCHAT_SCRIPT_SRC?: string;
 }
 
 interface ImportMeta {
@@ -40,13 +39,16 @@ interface ChromeApi {
   runtime?: ChromeRuntime;
 }
 
-interface TawkApi {
-  onLoad?: () => void;
-  hideWidget?: () => void;
-  showWidget?: () => void;
-  maximize?: () => void;
-  setAttributes?: (attributes: Record<string, string>, callback?: (error?: unknown) => void) => void;
-  visitor?: Record<string, string>;
+interface FreshchatWidget {
+  init?: (config: { token: string; host: string }) => void;
+  open: (payload?: { name?: string; replyText?: string }) => void;
+  close: () => void;
+  show: () => void;
+  hide: () => void;
+  destroy: () => void;
+  isLoaded: () => boolean;
+  isOpen: () => boolean;
+  on: (event: string, callback: (...args: unknown[]) => void) => void;
 }
 
 interface NavigatorUAData {
@@ -60,8 +62,7 @@ declare global {
 
   interface Window {
     chrome?: ChromeApi;
-    Tawk_API?: TawkApi;
-    Tawk_LoadStart?: Date;
+    fcWidget?: FreshchatWidget;
   }
 }
 

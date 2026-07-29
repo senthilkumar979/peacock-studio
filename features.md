@@ -6,12 +6,12 @@ All planned items are implemented and validated (monorepo typecheck, 38 shared t
 
 - Data classification (public/internal/sensitive/secret) + expanded sensitive-field detection in `@peacock/shared`; extension stores classification-aware values (no secret/sensitive leaks).
 - Enhanced step transcriptions: broader context hints and human-readable navigation copy.
-- Observability: PostHog sink (consent-gated), Sentry init, Tawk.to support widget (hidden on public share routes).
+- Observability: PostHog sink (consent-gated), Sentry init, Freshchat support widget (desktop landing only).
 - Analytics: `analytics_events` migration with RLS + security-definer RPCs (`record_share_event`, `record_org_event`, `get_org_analytics_summary`); repository + referrer/UTM capture; PDF-export and share-link-created events.
 - Dashboard engagement analytics: summary cards + lazy-loaded Recharts (area + bar).
 - Marketing: `/pricing` beta page (blurred tier preview, early-adopter promise, founding-user capture) and a modernized `SiteNav` (mobile drawer, active indicator) + `LibraryNav` Support button.
 
-Notable deviations from the original draft: local storage uses `idb` (not Dexie); helpdesk chosen is Tawk.to (free, unlimited agents); GA/Hotjar/DataDog intentionally skipped in favor of PostHog + Sentry; analytics aggregation runs server-side via an RPC rather than a materialized view. Env vars are documented in `packages/app/.env.example`.
+Notable deviations from the original draft: local storage uses `idb` (not Dexie); helpdesk chosen is Freshchat (free tier, live inbox); GA/Hotjar/DataDog intentionally skipped in favor of PostHog + Sentry; analytics aggregation runs server-side via an RPC rather than a materialized view. Env vars are documented in `packages/app/.env.example`.
 
 ## 1. Navigation Redesign
 
@@ -559,9 +559,9 @@ VITE_POSTHOG_HOST=https://app.posthog.com
 VITE_SENTRY_DSN=
 VITE_SENTRY_AUTH_TOKEN= # For source maps
 
-# Support (Tawk.to)
-VITE_TAWK_PROPERTY_ID=
-VITE_TAWK_WIDGET_ID=
+# Support (Freshchat)
+VITE_FRESHCHAT_TOKEN=
+# VITE_FRESHCHAT_HOST=https://wchat.freshchat.com
 ```
 
 ### Database Migrations

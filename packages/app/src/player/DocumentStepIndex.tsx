@@ -24,6 +24,21 @@ interface DocumentStepIndexProps {
   onOpenOverview?: () => void;
 }
 
+/** Scroll a child into view within its overflow parent only — never ancestors. */
+function scrollChildIntoNav(nav: HTMLElement, child: HTMLElement): void {
+  const navRect = nav.getBoundingClientRect();
+  const childRect = child.getBoundingClientRect();
+
+  if (childRect.top < navRect.top) {
+    nav.scrollTop -= navRect.top - childRect.top;
+    return;
+  }
+
+  if (childRect.bottom > navRect.bottom) {
+    nav.scrollTop += childRect.bottom - navRect.bottom;
+  }
+}
+
 export const DocumentStepIndex = ({
   items,
   activeItemId,
@@ -35,10 +50,15 @@ export const DocumentStepIndex = ({
   onOpenOverview,
 }: DocumentStepIndexProps) => {
   const activeItemRef = useRef<HTMLLIElement>(null);
+  const navRef = useRef<HTMLElement>(null);
   const entries = useMemo(() => groupDocumentStepIndexItems(items), [items]);
 
   useEffect(() => {
-    activeItemRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const nav = navRef.current;
+    const activeItem = activeItemRef.current;
+    if (!nav || !activeItem) return;
+    // Avoid scrollIntoView — it scrolls ancestor panes (doc content) when the outline is tall.
+    scrollChildIntoNav(nav, activeItem);
   }, [activeItemId]);
 
   return (
@@ -57,7 +77,7 @@ export const DocumentStepIndex = ({
             Flow overview
           </button>
         ) : null}
-        <nav className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+        <nav ref={navRef} className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
           <ol className="space-y-2 px-1 py-2">
             {entries.map((entry) => {
               if (entry.type === 'linkedPathGroup') {

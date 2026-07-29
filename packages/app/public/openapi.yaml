@@ -7,7 +7,7 @@ info:
 
     Peacock has **no first-party REST server**. Cloud traffic goes to Supabase
     (Edge Functions, PostgREST tables/RPCs, Storage) plus third-party SDKs
-    (Clerk, Turnstile, PostHog, Sentry, Tawk).
+    (Clerk, Turnstile, PostHog, Sentry, Freshchat).
 
     Server base URL is your project `VITE_SUPABASE_URL`. Try-it-out is disabled
     in the UI — calls require Clerk JWTs and often Cloudflare Turnstile tokens.
@@ -924,15 +924,15 @@ paths:
         '200':
           description: Informational only
 
-  /external/tawk:
+  /external/freshchat:
     get:
       tags: [External]
-      operationId: externalTawk
-      summary: Tawk.to support widget
+      operationId: externalFreshchat
+      summary: Freshchat support widget
       description: |
-        Embed when `VITE_TAWK_PROPERTY_ID` + `VITE_TAWK_WIDGET_ID` are set.
+        Embed when `VITE_FRESHCHAT_SCRIPT_SRC` is set (Freshworks CDN script, e.g. eu.fw-cdn.com).
       externalDocs:
-        url: https://www.tawk.to/
+        url: https://developers.freshchat.com/web-sdk/
       responses:
         '200':
           description: Informational only

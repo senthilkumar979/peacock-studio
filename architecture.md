@@ -413,7 +413,7 @@ Architecture-focused map (where code lives + which stores):
 
 | Concern | Implementation |
 |---------|----------------|
-| Security headers / CSP | [`vercel.json`](vercel.json) — allows Clerk, Supabase, PostHog, Sentry, Turnstile, Tawk |
+| Security headers / CSP | [`vercel.json`](vercel.json) — allows Clerk, Supabase, PostHog, Sentry, Turnstile, Freshchat |
 | Bot / abuse | Turnstile on share resolve + invites; `edge_rate_limits`; Storage MIME/size |
 | Authorization | RLS + capability checks in repos |
 | Secrets | Never put allowlists or private keys in `VITE_*` |

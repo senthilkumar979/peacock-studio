@@ -1,25 +1,48 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { getTawkConfig } from '@/analytics/config';
+import { getFreshchatConfig } from '@/analytics/config';
 import { LANDING_PATH } from '@/constants/routes';
 import { isMobileClient } from '@/utils/isMobileClient';
 
-const TAWK_SCRIPT_ID = 'tawk-to-embed';
-const TAWK_IDLE_TIMEOUT_MS = 4000;
+const FRESHCHAT_SCRIPT_ID = 'freshchat-widget';
+const FRESHCHAT_IDLE_TIMEOUT_MS = 4000;
 
-function injectTawkScript(propertyId: string, widgetId: string): void {
-  if (document.getElementById(TAWK_SCRIPT_ID)) return;
+function applyRouteVisibility(): void {
+  setFreshchatVisibility(shouldLoadFreshchat(window.location.pathname));
+}
 
-  window.Tawk_API = window.Tawk_API || {};
-  window.Tawk_LoadStart = new Date();
+function whenWidgetReady(onReady: () => void): void {
+  if (window.fcWidget?.isLoaded?.()) {
+    onReady();
+    return;
+  }
+  window.fcWidget?.on?.('widget:loaded', onReady);
+
+  // fw-cdn scripts sometimes expose fcWidget slightly after onload.
+  let attempts = 0;
+  const timer = window.setInterval(() => {
+    attempts += 1;
+    if (window.fcWidget?.isLoaded?.()) {
+      window.clearInterval(timer);
+      onReady();
+      return;
+    }
+    if (attempts >= 40) window.clearInterval(timer);
+  }, 250);
+}
+
+function injectFreshchatScript(scriptSrc: string): void {
+  if (document.getElementById(FRESHCHAT_SCRIPT_ID)) {
+    whenWidgetReady(applyRouteVisibility);
+    return;
+  }
 
   const script = document.createElement('script');
-  script.id = TAWK_SCRIPT_ID;
+  script.id = FRESHCHAT_SCRIPT_ID;
   script.async = true;
-  script.defer = true;
-  script.src = `https://embed.tawk.to/${propertyId}/${widgetId}`;
-  script.charset = 'UTF-8';
-  script.setAttribute('crossorigin', '*');
+  script.src = scriptSrc;
+  script.setAttribute('chat', 'true');
+  script.onload = () => whenWidgetReady(applyRouteVisibility);
   document.body.appendChild(script);
 }
 
@@ -28,18 +51,19 @@ function isSupportWidgetRoute(pathname: string): boolean {
   return pathname === LANDING_PATH;
 }
 
-function shouldLoadTawk(pathname: string): boolean {
+function shouldLoadFreshchat(pathname: string): boolean {
   return isSupportWidgetRoute(pathname) && !isMobileClient();
 }
 
-function setTawkVisibility(visible: boolean): void {
-  if (visible) window.Tawk_API?.showWidget?.();
-  else window.Tawk_API?.hideWidget?.();
+function setFreshchatVisibility(visible: boolean): void {
+  if (!window.fcWidget?.isLoaded?.()) return;
+  if (visible) window.fcWidget.show();
+  else window.fcWidget.hide();
 }
 
 function scheduleIdle(task: () => void): () => void {
   if (typeof window.requestIdleCallback === 'function') {
-    const id = window.requestIdleCallback(() => task(), { timeout: TAWK_IDLE_TIMEOUT_MS });
+    const id = window.requestIdleCallback(() => task(), { timeout: FRESHCHAT_IDLE_TIMEOUT_MS });
     return () => window.cancelIdleCallback(id);
   }
   const timer = window.setTimeout(task, 2000);
@@ -47,44 +71,37 @@ function scheduleIdle(task: () => void): () => void {
 }
 
 /**
- * Loads the Tawk.to live-chat widget on the desktop landing page only. Renders nothing.
- * Skipped on mobile viewports (UA-CH mobile, coarse pointer, or max-width ≤767px).
- * Injection is deferred until the browser is idle so it never contends with FCP/LCP.
- *
- * Remaining third-party cookies on desktop `/`: Tawk sets its own cookies after idle load.
- * Clerk/PostHog/Sentry are not booted on cold marketing loads (see DeferredCloudAuth /
- * DeferredSentry / AnalyticsTracker consent gate).
+ * Loads the Freshchat live-chat widget on the desktop landing page only. Renders nothing.
+ * Uses the Freshworks EU CDN embed (`eu.fw-cdn.com/...js`), not wchat.freshchat.com.
+ * Injection is deferred until idle so it never contends with FCP/LCP.
  */
 export const SupportWidget = () => {
-  const config = getTawkConfig();
+  // Primitive dep — getFreshchatConfig() returns a new object each call and would
+  // cancel/reschedule the idle inject forever during landing-page re-renders.
+  const scriptSrc = getFreshchatConfig()?.scriptSrc;
   const { pathname } = useLocation();
   const loadedRef = useRef(false);
-  const visible = shouldLoadTawk(pathname);
+  const visible = shouldLoadFreshchat(pathname);
 
   useEffect(() => {
-    if (!config || !visible) return;
+    if (!scriptSrc || !visible) return;
 
     if (!loadedRef.current) {
-      window.Tawk_API = window.Tawk_API || {};
-      window.Tawk_API.onLoad = () => {
-        setTawkVisibility(shouldLoadTawk(window.location.pathname));
-      };
-
       return scheduleIdle(() => {
         if (loadedRef.current) return;
-        if (!shouldLoadTawk(window.location.pathname)) return;
-        injectTawkScript(config.propertyId, config.widgetId);
+        if (!shouldLoadFreshchat(window.location.pathname)) return;
+        injectFreshchatScript(scriptSrc);
         loadedRef.current = true;
       });
     }
 
-    setTawkVisibility(true);
-  }, [config, visible]);
+    setFreshchatVisibility(true);
+  }, [scriptSrc, visible]);
 
   useEffect(() => {
-    if (!config || !loadedRef.current || visible) return;
-    setTawkVisibility(false);
-  }, [config, visible]);
+    if (!scriptSrc || !loadedRef.current || visible) return;
+    setFreshchatVisibility(false);
+  }, [scriptSrc, visible]);
 
   return null;
 };

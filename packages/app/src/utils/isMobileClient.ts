@@ -1,6 +1,6 @@
 /**
  * Best-effort mobile client detection for gating non-essential third parties
- * (e.g. Tawk). Prefer Client Hints, then coarse pointer / narrow viewport.
+ * (e.g. Freshchat). Prefer Client Hints, then coarse pointer / narrow viewport.
  */
 export function isMobileClient(): boolean {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;

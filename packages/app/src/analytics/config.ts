@@ -21,10 +21,9 @@ export function isSentryConfigured(): boolean {
   return Boolean(getSentryDsn());
 }
 
-/** Tawk.to property + widget ids for the support chat widget. */
-export function getTawkConfig(): { propertyId: string; widgetId: string } | undefined {
-  const propertyId = import.meta.env.VITE_TAWK_PROPERTY_ID?.trim();
-  const widgetId = import.meta.env.VITE_TAWK_WIDGET_ID?.trim();
-  if (!propertyId || !widgetId) return undefined;
-  return { propertyId, widgetId };
+/** Freshchat/Freshworks web chat CDN script (Admin → Channels → Web chat embed). */
+export function getFreshchatConfig(): { scriptSrc: string } | undefined {
+  const scriptSrc = import.meta.env.VITE_FRESHCHAT_SCRIPT_SRC?.trim();
+  if (!scriptSrc) return undefined;
+  return { scriptSrc };
 }
