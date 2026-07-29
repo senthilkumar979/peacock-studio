@@ -2,7 +2,7 @@
  * Canonical UTM values for Peacock marketing links.
  *
  * Template:
- * https://peacock.mentorbridge.in/?utm_source=SOURCE&utm_medium=MEDIUM&utm_campaign=CAMPAIGN
+ * https://peacockstudio.app/?utm_source=SOURCE&utm_medium=MEDIUM&utm_campaign=CAMPAIGN
  *
  * WhatsApp, Telegram, and SMS strip referrers — always use UTMs for those channels.
  */

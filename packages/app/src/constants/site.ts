@@ -5,7 +5,7 @@ import { PEACOCK_APP_NAME } from '@/constants/branding';
  * Prefer this over *.vercel.app for canonical / OG / sitemap URLs.
  * `LEGAL_ENTITY.websiteUrl` may differ until the brand domain is live.
  */
-export const SITE_ORIGIN = 'https://peacock.mentorbridge.in' as const;
+export const SITE_ORIGIN = 'https://peacockstudio.app' as const;
 
 export const SITE_NAME = PEACOCK_APP_NAME;
 

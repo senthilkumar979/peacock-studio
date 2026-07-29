@@ -10,6 +10,7 @@ import { CookiePreferencesModal } from '@/components/consent/CookiePreferencesMo
 import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker';
 import { SupportWidget } from '@/components/support/SupportWidget';
 import { DeferredSentry } from '@/observability/DeferredSentry';
+import { VercelObservability } from '@/observability/VercelObservability';
 import { getClerkPublishableKey, isCloudSyncEnabled } from '@/cloud/config';
 
 interface AppProvidersProps {
@@ -24,6 +25,7 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
     <>
       <GlobalErrorListeners />
       <DeferredSentry />
+      <VercelObservability />
       {children}
       <AnalyticsTracker />
       <SupportWidget />

@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ORIGIN = 'https://peacock.mentorbridge.in';
+const ORIGIN = 'https://peacockstudio.app';
 
 const PRODUCT_SLUGS = [
   'flow-documents',

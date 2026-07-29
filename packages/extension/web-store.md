@@ -8,10 +8,10 @@ Use this document to complete the Chrome Web Store listing for the Peacock brows
 
 | Purpose | URL |
 |---------|-----|
-| App home | `https://peacock-studio.vercel.app` |
-| Editor handoff | `https://peacock-studio.vercel.app/editor` |
-| Privacy policy | `https://peacock-studio.vercel.app/privacy` |
-| Terms | `https://peacock-studio.vercel.app/terms` |
+| App home | `https://peacockstudio.app` |
+| Editor handoff | `https://peacockstudio.app/editor` |
+| Privacy policy | `https://peacockstudio.app/privacy` |
+| Terms | `https://peacockstudio.app/terms` |
 
 ---
 
@@ -42,7 +42,7 @@ From the repo root:
 
 ```bash
 cd packages/extension
-VITE_APP_URL=https://peacock-studio.vercel.app/editor pnpm build
+VITE_APP_URL=https://peacockstudio.app/editor pnpm build
 ```
 
 This patches `manifest.json` so:
@@ -147,8 +147,8 @@ Recordings and screenshots stay in your browser until you open Peacock Studio. T
 
 Peacock Studio is built for product, QA, support, and enablement teams who need repeatable workflow guides, SOPs, onboarding docs, and release comparisons — captured from the live product, not recreated from memory.
 
-Learn more: https://peacock-studio.vercel.app
-Privacy policy: https://peacock-studio.vercel.app/privacy
+Learn more: https://peacockstudio.app
+Privacy policy: https://peacockstudio.app/privacy
 Support: support@peacock.studio
 ```
 
@@ -167,7 +167,7 @@ Add other locales later if you translate the listing.
 ### Privacy policy URL
 
 ```
-https://peacock-studio.vercel.app/privacy
+https://peacockstudio.app/privacy
 ```
 
 Must be publicly reachable before submission. Update `packages/app/src/constants/legal.ts` if your production domain differs.
@@ -175,7 +175,7 @@ Must be publicly reachable before submission. Update `packages/app/src/constants
 ### Official URL (optional but recommended)
 
 ```
-https://peacock-studio.vercel.app
+https://peacockstudio.app
 ```
 
 ### Support URL or email
@@ -320,7 +320,7 @@ Certify compliance with the [Developer Program Policies](https://developer.chrom
 - **Sensitive URL patterns** (login, payment, billing) trigger auto-pause during recording.
 - Users should review screenshots before sharing and use blur/redact tools in Peacock Studio.
 
-Check the certification box only after the privacy policy at `https://peacock-studio.vercel.app/privacy` accurately describes extension behavior.
+Check the certification box only after the privacy policy at `https://peacockstudio.app/privacy` accurately describes extension behavior.
 
 ---
 
@@ -361,9 +361,9 @@ Review usually takes from a few hours to several business days. Google may reque
 | Field | Value |
 |-------|-------|
 | Company | Peacock Studio |
-| Website | https://peacock-studio.vercel.app |
-| Privacy | https://peacock-studio.vercel.app/privacy |
-| Terms | https://peacock-studio.vercel.app/terms |
+| Website | https://peacockstudio.app |
+| Privacy | https://peacockstudio.app/privacy |
+| Terms | https://peacockstudio.app/terms |
 | Support email | support@peacock.studio |
 
 Update `packages/app/src/constants/legal.ts` if any of these change before launch.

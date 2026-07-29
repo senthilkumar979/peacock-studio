@@ -1,4 +1,4 @@
-# Peacock Studio — https://peacock.mentorbridge.in
+# Peacock Studio — https://peacockstudio.app
 # LLM context (https://llmstxt.org/): /llms.txt and /llms-full.txt
 
 User-agent: *
@@ -65,4 +65,4 @@ Disallow: /org/
 Disallow: /error
 Disallow: /s/
 
-Sitemap: https://peacock.mentorbridge.in/sitemap.xml
+Sitemap: https://peacockstudio.app/sitemap.xml

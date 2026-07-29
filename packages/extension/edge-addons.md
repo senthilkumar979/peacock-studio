@@ -10,10 +10,10 @@ Use this document with [store-listing-copy.md](../../store-listing-copy.md) and 
 
 | Purpose | URL |
 |---------|-----|
-| App home | `https://peacock-studio.vercel.app` |
-| Editor handoff | `https://peacock-studio.vercel.app/editor` |
-| Privacy policy | `https://peacock-studio.vercel.app/privacy` |
-| Terms | `https://peacock-studio.vercel.app/terms` |
+| App home | `https://peacockstudio.app` |
+| Editor handoff | `https://peacockstudio.app/editor` |
+| Privacy policy | `https://peacockstudio.app/privacy` |
+| Terms | `https://peacockstudio.app/terms` |
 
 ---
 
@@ -32,7 +32,7 @@ Or manually:
 
 ```bash
 cd packages/extension
-VITE_APP_URL=https://peacock-studio.vercel.app/editor pnpm build
+VITE_APP_URL=https://peacockstudio.app/editor pnpm build
 cd dist && zip -r ../peacock-extension.zip .
 ```
 

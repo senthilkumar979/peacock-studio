@@ -27,5 +27,14 @@ export function checkObservability(): HealthCheckResult[] {
         ? 'PostHog key configured (subject to consent).'
         : 'VITE_POSTHOG_KEY not set — product analytics disabled.',
     ),
+    healthResult(
+      'vercel-observability',
+      'connections',
+      'Vercel Web Analytics & Speed Insights',
+      import.meta.env.PROD ? 'pass' : 'skip',
+      import.meta.env.PROD
+        ? 'SDKs active in production builds on Vercel (analytics subject to consent).'
+        : 'Vercel observability SDKs load only in production builds.',
+    ),
   ];
 }

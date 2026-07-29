@@ -4,37 +4,37 @@
 
 Peacock Studio is a browser flow recorder and interactive documentation platform. Capture clicks, inputs, and screenshots with a Chrome extension, then edit and share guided docs or persona-led tours. Data stays local by default (IndexedDB); optional cloud sync is available when configured.
 
-Primary site: https://peacock.mentorbridge.in
+Primary site: https://peacockstudio.app
 
 ## Products
 
-- [Flow Documents](https://peacock.mentorbridge.in/products/flow-documents): Step-by-step workflow guides with screenshots, sections, branches, and share links
-- [Product Tours](https://peacock.mentorbridge.in/products/product-tours): Persona-led journeys that bundle flow documents into guided stories
-- [Capture Screenshot & Editor](https://peacock.mentorbridge.in/products/capture-screenshot-editor): Visible, selected, or full-page screenshots with crop, blur, and redact
+- [Flow Documents](https://peacockstudio.app/products/flow-documents): Step-by-step workflow guides with screenshots, sections, branches, and share links
+- [Product Tours](https://peacockstudio.app/products/product-tours): Persona-led journeys that bundle flow documents into guided stories
+- [Capture Screenshot & Editor](https://peacockstudio.app/products/capture-screenshot-editor): Visible, selected, or full-page screenshots with crop, blur, and redact
 
 ## Solutions
 
-- [Solutions overview](https://peacock.mentorbridge.in/solutions): Role-based guides for how teams use Peacock
-- [Developers & Engineers](https://peacock.mentorbridge.in/solutions/developers)
-- [Testers / QA](https://peacock.mentorbridge.in/solutions/testers)
-- [Product Owners](https://peacock.mentorbridge.in/solutions/product-owners)
-- [Business Analysts](https://peacock.mentorbridge.in/solutions/business-analysts)
-- [Helpdesk / Support](https://peacock.mentorbridge.in/solutions/helpdesk)
-- [New Hires](https://peacock.mentorbridge.in/solutions/new-hires)
-- [Sales](https://peacock.mentorbridge.in/solutions/sales)
-- [Customer Success](https://peacock.mentorbridge.in/solutions/customer-success)
-- [Executives](https://peacock.mentorbridge.in/solutions/executives)
-- [Security & Compliance](https://peacock.mentorbridge.in/solutions/security-compliance)
+- [Solutions overview](https://peacockstudio.app/solutions): Role-based guides for how teams use Peacock
+- [Developers & Engineers](https://peacockstudio.app/solutions/developers)
+- [Testers / QA](https://peacockstudio.app/solutions/testers)
+- [Product Owners](https://peacockstudio.app/solutions/product-owners)
+- [Business Analysts](https://peacockstudio.app/solutions/business-analysts)
+- [Helpdesk / Support](https://peacockstudio.app/solutions/helpdesk)
+- [New Hires](https://peacockstudio.app/solutions/new-hires)
+- [Sales](https://peacockstudio.app/solutions/sales)
+- [Customer Success](https://peacockstudio.app/solutions/customer-success)
+- [Executives](https://peacockstudio.app/solutions/executives)
+- [Security & Compliance](https://peacockstudio.app/solutions/security-compliance)
 
 ## Pricing & legal
 
-- [Pricing](https://peacock.mentorbridge.in/pricing): Free during public beta; founding-user pricing promised before paid plans
-- [Privacy Policy](https://peacock.mentorbridge.in/privacy)
-- [Terms of Service](https://peacock.mentorbridge.in/terms)
+- [Pricing](https://peacockstudio.app/pricing): Free during public beta; founding-user pricing promised before paid plans
+- [Privacy Policy](https://peacockstudio.app/privacy)
+- [Terms of Service](https://peacockstudio.app/terms)
 
 ## Optional
 
-- [Full LLM summary](https://peacock.mentorbridge.in/llms-full.txt): Longer product, solutions, and pricing overview
-- [Install Chrome extension](https://peacock.mentorbridge.in/install-extension): Extension install gate for capture
-- [Sitemap](https://peacock.mentorbridge.in/sitemap.xml): Indexable marketing URLs
+- [Full LLM summary](https://peacockstudio.app/llms-full.txt): Longer product, solutions, and pricing overview
+- [Install Chrome extension](https://peacockstudio.app/install-extension): Extension install gate for capture
+- [Sitemap](https://peacockstudio.app/sitemap.xml): Indexable marketing URLs
 - [Contact](mailto:support@peacock.studio): support@peacock.studio

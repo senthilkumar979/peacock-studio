@@ -203,7 +203,7 @@ After code changes: wait for watch rebuild, then click **Reload** on the extensi
 
 | Var | Package | Purpose |
 |-----|---------|---------|
-| `VITE_APP_URL` | extension | Editor URL + origin for manifest patch. Local: `http://localhost:5173/editor`. Production: `https://peacock-studio.vercel.app/editor` |
+| `VITE_APP_URL` | extension | Editor URL + origin for manifest patch. Local: `http://localhost:5173/editor`. Production: `https://peacockstudio.app/editor` |
 | `VITE_EXTENSION_ID` | app (optional) | Unpacked or alternate store ID for direct `chrome.runtime` messaging. If blank, app uses published ID + bridge fallback |
 
 Helpers: `getAppOrigin()`, `getEditorPageUrl()`, `getDashboardPageUrl()`, `getCaptureEditorPageUrl()` in [`src/utils/appUrl.ts`](packages/extension/src/utils/appUrl.ts).

@@ -44,7 +44,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   {
     heading: 'Analytics & consent',
     paragraphs: [
-      'If you opt in to analytics, Peacock may collect aggregate usage information (such as which pages are visited and which features are used) to help us improve the product. We do not use analytics to collect passwords, tokens, or the sensitive contents of your recordings. Analytics is disabled until you consent and stops when you withdraw consent.',
+      'If you opt in to analytics, Peacock may collect aggregate usage information (such as which pages are visited and which features are used) to help us improve the product. We do not use analytics to collect passwords, tokens, or the sensitive contents of your recordings. Analytics is disabled until you consent and stops when you withdraw consent. When analytics is enabled, page views may also be measured by Vercel Web Analytics; Core Web Vitals are collected separately via Vercel Speed Insights (cookieless performance monitoring).',
     ],
   },
   {

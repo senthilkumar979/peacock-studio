@@ -29,6 +29,18 @@ export async function buildAcquisitionSummary(daysInput?: number): Promise<Acqui
     throw new Error('POSTHOG_PERSONAL_API_KEY is not configured');
   }
 
+  // Project token (phc_) is for client capture only — Query API needs a personal key (phx_).
+  if (apiKey.startsWith('phc_')) {
+    throw new Error(
+      'POSTHOG_PERSONAL_API_KEY looks like a project API key (phc_). Create a Personal API key (phx_) with query:read at https://eu.posthog.com/settings/user-api-keys',
+    );
+  }
+  if (!apiKey.startsWith('phx_') && !apiKey.startsWith('phs_')) {
+    throw new Error(
+      'POSTHOG_PERSONAL_API_KEY must start with phx_ (personal) or phs_ (project secret). Check the Supabase secret value.',
+    );
+  }
+
   const signupEvents = "('workspace_created_personal', 'workspace_created_team')";
   const [bySource, byCampaign] = await Promise.all([
     runHogQlQuery(

@@ -38,14 +38,14 @@ When the user asks for "features in pipeline", surface this prioritized product 
 
 Phase 1 bot/abuse controls live in-app (Turnstile + Supabase Edge Functions + DB quotas). After cloud sync is default-on, put Cloudflare in front of the Vercel SPA. **Ops checklist (not code):** DNS orange-cloud to Vercel, SSL Full (strict), Managed WAF + OWASP, Bot Fight Mode, rate limits on `/s/*`. Full steps below.
 
-1. **DNS** — Point `peacock.mentorbridge.in` (and www if used) to Cloudflare; orange-cloud proxy to the Vercel hostname. Keep Supabase (`*.supabase.co`) on its own host (do not force the whole API through Cloudflare in this phase).
+1. **DNS** — Point `peacockstudio.app` (and www if used) to Cloudflare; orange-cloud proxy to the Vercel hostname. Keep Supabase (`*.supabase.co`) on its own host (do not force the whole API through Cloudflare in this phase).
 2. **SSL/TLS** — Full (strict) to Vercel; enable Always Use HTTPS.
 3. **WAF** — Enable Cloudflare Managed Ruleset + OWASP Core. Add custom WAF rate rules for `/s/*` (public shares) if Bot Fight alone is insufficient.
 4. **Bot Fight Mode** — Enable (Free) or Super Bot Fight (paid). Complements app-level Turnstile on invite send and `resolve-share`.
 5. **IP Access Rules / Lists** — Block known abusive ASNs or IPs from dashboard analytics; optional allowlist for admin-only tooling later. Do not allowlist the whole internet.
 6. **Edge rate limiting** — Rule on `/s/*` and (if exposed) `/functions/v1/resolve-share` / `/functions/v1/send-org-invite` via the Supabase functions subdomain if you add a custom domain later.
 7. **Turnstile** — Keep `VITE_TURNSTILE_SITE_KEY` (Vercel) and `TURNSTILE_SECRET_KEY` (Supabase Edge Function secrets). Optionally add a Cloudflare Managed Challenge on suspicious `/s/*` traffic as defense in depth.
-8. **CSP** — Existing headers in `vercel.json` already allow `challenges.cloudflare.com`. If Cloudflare adds analytics beacons, extend `connect-src` accordingly.
+8. **CSP** — Existing headers in `vercel.json` already allow `challenges.cloudflare.com`, `va.vercel-scripts.com`, and `vitals.vercel-insights.com` (Vercel Web Analytics + Speed Insights). If Cloudflare adds analytics beacons, extend `connect-src` accordingly.
 9. **Secrets checklist** — Vercel: `VITE_TURNSTILE_SITE_KEY`. Supabase function secrets: `TURNSTILE_SECRET_KEY`, `APP_ORIGIN` (exact SPA origin for CORS), `RESEND_*`, `SUPER_ADMIN_EMAILS` (comma-separated platform super-admin emails for `/super-admin`), `POSTHOG_PERSONAL_API_KEY` (Query Read key for Acquisition tab; optional `POSTHOG_PROJECT_ID`, `POSTHOG_HOST`). Redeploy Edge Functions after secret changes: `send-org-invite`, `resolve-share`, `platform-admin`.
 10. **Verify** — Public share load with Turnstile; auth-gated share requires org membership; invite email blocked without admin claim; oversized/non-JPEG-PNG uploads rejected by Storage.
 
@@ -65,7 +65,7 @@ Client capture lives in `packages/app/src/analytics/` (consent-gated; requires `
 
 **Project settings checklist (UI — not all settable from MCP):**
 
-1. **Authorized URLs** — Add `https://peacock-studio.vercel.app` and the production custom domain (e.g. `https://peacock.mentorbridge.in`) under Project settings → Authorized URLs so toolbar / live events restrict correctly.
+1. **Authorized URLs** — Add `https://peacockstudio.app` under Project settings → Authorized URLs so toolbar / live events restrict correctly.
 2. **Session replay** — Confirm recording is enabled; app sets `maskAllInputs`, `.ph-mask` (step notes, invite emails), and `.ph-no-capture` (share tokens).
 3. **Path cleaning** — Rules for `/docs/<uuid>`, `/docs/<uuid>/edit`, `/tours/<id>`, `/tours/<id>/edit`, `/s/<token>` are applied ([path cleaning](https://eu.posthog.com/project/229575/settings/project#path-cleaning)). Enable “Apply path cleaning” on web analytics / paths insights if not already.
 4. **Reverse proxy (ad blockers)** — Point a first-party subdomain (e.g. `e.peacock…`) at `https://eu.i.posthog.com` and set `VITE_POSTHOG_HOST` / `api_host` to that origin. Do this after Cloudflare fronts the SPA if possible.
