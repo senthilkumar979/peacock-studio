@@ -29,6 +29,10 @@ Disallow: /sign-up
 Disallow: /onboarding/
 Disallow: /accept-invite
 Disallow: /org/
+Disallow: /super-admin
+Disallow: /platform/
+Disallow: /health
+Disallow: /api-docs
 Disallow: /error
 
 # Tokenized share / embed pages (user content — not marketing)
@@ -62,6 +66,10 @@ Disallow: /sign-up
 Disallow: /onboarding/
 Disallow: /accept-invite
 Disallow: /org/
+Disallow: /super-admin
+Disallow: /platform/
+Disallow: /health
+Disallow: /api-docs
 Disallow: /error
 Disallow: /s/
 

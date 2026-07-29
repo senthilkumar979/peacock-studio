@@ -1,7 +1,8 @@
 import { PEACOCK_APP_NAME } from '@/constants/branding';
-import { DEFAULT_META_DESCRIPTION, absoluteUrl } from '@/constants/site';
+import { absoluteUrl, DEFAULT_META_DESCRIPTION, productHeroImagePath } from '@/constants/site';
 import { getProductBySlug } from '@/pages/products/productsData';
 import { getSolutionRoleBySlug } from '@/pages/solutions/solutionsData';
+import { listPublicMarketingPaths } from '@/seo/publicPaths';
 import {
   isNoindexPath,
   marketingStaticMeta,
@@ -10,6 +11,10 @@ import {
 } from '@/seo/routeMetaData';
 
 export type { RouteMeta } from '@/seo/routeMetaData';
+
+export function isKnownMarketingPath(pathname: string): boolean {
+  return listPublicMarketingPaths().includes(pathname);
+}
 
 export function resolveRouteMeta(pathname: string): RouteMeta {
   if (isNoindexPath(pathname)) {
@@ -36,6 +41,8 @@ export function resolveRouteMeta(pathname: string): RouteMeta {
         path: pathname,
         robots: 'index,follow',
         canonical: absoluteUrl(pathname),
+        ogImage: absoluteUrl(productHeroImagePath(product.slug)),
+        ogImageAlt: `${product.name} — ${PEACOCK_APP_NAME}`,
       };
     }
   }
@@ -50,14 +57,15 @@ export function resolveRouteMeta(pathname: string): RouteMeta {
         path: pathname,
         robots: 'index,follow',
         canonical: absoluteUrl(pathname),
+        ogImageAlt: `${role.title} — ${PEACOCK_APP_NAME}`,
       };
     }
   }
 
   return {
-    title: PEACOCK_APP_NAME,
-    description: DEFAULT_META_DESCRIPTION,
+    title: titled('Page not found'),
+    description: 'That URL does not match a Peacock Studio page.',
     path: pathname,
-    robots: 'index,follow',
+    robots: 'noindex,nofollow',
   };
 }

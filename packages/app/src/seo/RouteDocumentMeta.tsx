@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { PEACOCK_APP_NAME } from '@/constants/branding';
-import { ogImageUrl, SITE_NAME } from '@/constants/site';
 import {
   applyMetaTags,
   removeJsonLd,
@@ -10,6 +9,7 @@ import {
   upsertLink,
 } from '@/seo/applyHeadMeta';
 import { resolveRouteMeta } from '@/seo/resolveRouteMeta';
+import { buildSocialMetaTags } from '@/seo/socialMetaTags';
 
 const LANDING_JSON_LD_ID = 'peacock-landing-jsonld';
 
@@ -23,24 +23,10 @@ export const RouteDocumentMeta = () => {
   useEffect(() => {
     const meta = resolveRouteMeta(pathname);
     setDocumentTitle(meta.title);
-
-    applyMetaTags([
-      { attr: 'name', key: 'description', content: meta.description },
-      { attr: 'name', key: 'robots', content: meta.robots },
-      { attr: 'property', key: 'og:title', content: meta.title },
-      { attr: 'property', key: 'og:description', content: meta.description },
-      { attr: 'property', key: 'og:type', content: 'website' },
-      { attr: 'property', key: 'og:site_name', content: SITE_NAME },
-      { attr: 'property', key: 'og:image', content: ogImageUrl() },
-      { attr: 'name', key: 'twitter:card', content: 'summary_large_image' },
-      { attr: 'name', key: 'twitter:title', content: meta.title },
-      { attr: 'name', key: 'twitter:description', content: meta.description },
-      { attr: 'name', key: 'twitter:image', content: ogImageUrl() },
-    ]);
+    applyMetaTags(buildSocialMetaTags(meta));
 
     if (meta.canonical) {
       upsertLink('canonical', meta.canonical);
-      applyMetaTags([{ attr: 'property', key: 'og:url', content: meta.canonical }]);
     }
 
     if (meta.jsonLd) {

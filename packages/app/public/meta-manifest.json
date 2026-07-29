@@ -1,0 +1,142 @@
+{
+  "/": {
+    "title": "Peacock Studio — Flow docs & product tours from real workflows",
+    "description": "Peacock Studio turns real browser workflows into editable Flow Documents and Product Tours — interactive documentation with screenshots, branches, PDF export, cloud sync, and team workspaces.",
+    "canonical": "https://peacockstudio.app",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/products": {
+    "title": "Products · Peacock Studio",
+    "description": "Flow Documents, Product Tours, and Capture & Editor — turn real browser usage into reusable guides, demos, and screenshots.",
+    "canonical": "https://peacockstudio.app/products",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/solutions": {
+    "title": "Solutions by role · Peacock Studio",
+    "description": "See how Peacock Studio helps developers, QA, product, support, sales, and leadership capture workflows as Flow Documents and Product Tours.",
+    "canonical": "https://peacockstudio.app/solutions",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/pricing": {
+    "title": "Pricing · Peacock Studio",
+    "description": "Peacock Studio is free during public beta. Compare Free, Team, and Enterprise plans for flow docs, product tours, and interactive documentation.",
+    "canonical": "https://peacockstudio.app/pricing",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/privacy": {
+    "title": "Privacy Policy · Peacock Studio",
+    "description": "How Peacock Studio handles data for the web app and Chrome extension.",
+    "canonical": "https://peacockstudio.app/privacy",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/terms": {
+    "title": "Terms of Service · Peacock Studio",
+    "description": "Terms of use for Peacock Studio.",
+    "canonical": "https://peacockstudio.app/terms",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/install-extension": {
+    "title": "Install browser extension · Peacock Studio",
+    "description": "Install the Peacock Studio browser extension to capture browser workflows.",
+    "canonical": "https://peacockstudio.app/install-extension",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/products/flow-documents": {
+    "title": "Flow Documents · Peacock Studio",
+    "description": "Step-by-step workflow guides with screenshots, sections, branches, and share links — how teams run QA, support, and internal processes.",
+    "canonical": "https://peacockstudio.app/products/flow-documents",
+    "ogImage": "https://peacockstudio.app/products/flow-documents/hero.png",
+    "robots": "index,follow"
+  },
+  "/products/product-tours": {
+    "title": "Product Tours · Peacock Studio",
+    "description": "Persona-led journeys that bundle saved flow documents into guided stories for onboarding, sales, releases, and executive updates.",
+    "canonical": "https://peacockstudio.app/products/product-tours",
+    "ogImage": "https://peacockstudio.app/products/product-tours/hero.png",
+    "robots": "index,follow"
+  },
+  "/products/capture-screenshot-editor": {
+    "title": "Capture Screenshot & Editor · Peacock Studio",
+    "description": "Grab visible, selected, or full-page screenshots from the extension, then crop, blur, redact, and brand them for guides and leave-behinds.",
+    "canonical": "https://peacockstudio.app/products/capture-screenshot-editor",
+    "ogImage": "https://peacockstudio.app/products/capture-screenshot-editor/hero.png",
+    "robots": "index,follow"
+  },
+  "/solutions/developers": {
+    "title": "Developers & Engineers · Peacock Studio",
+    "description": "Peacock captures how internal tools and features actually work — structured flow docs for handoff, tours for the broader story your org needs.",
+    "canonical": "https://peacockstudio.app/solutions/developers",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/solutions/testers": {
+    "title": "QA & Test Engineers · Peacock Studio",
+    "description": "Peacock turns live product behavior into visual validation assets — execution-grade scenarios for QA, business-readable journeys for UAT and regression review.",
+    "canonical": "https://peacockstudio.app/solutions/testers",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/solutions/product-owners": {
+    "title": "Product Owners & Product Managers · Peacock Studio",
+    "description": "Capture accepted workflows as execution references for GTM, then compose release narratives that connect features to customer outcomes.",
+    "canonical": "https://peacockstudio.app/solutions/product-owners",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/solutions/business-analysts": {
+    "title": "Business Analysts & Stakeholders · Peacock Studio",
+    "description": "Record as-is and to-be workflows on the live system. Give cross-functional sponsors visual proof for sign-off, training, and process change.",
+    "canonical": "https://peacockstudio.app/solutions/business-analysts",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/solutions/helpdesk": {
+    "title": "IT Support & Service Desk · Peacock Studio",
+    "description": "Capture resolution workflows as execution playbooks agents run on live calls, and training journeys that ramp new hires without weeks of shadowing.",
+    "canonical": "https://peacockstudio.app/solutions/helpdesk",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/solutions/new-hires": {
+    "title": "New Hires & Onboarding · Peacock Studio",
+    "description": "Task-level flow docs for discrete internal jobs, plus structured onboarding journeys that mirror your checklist across tools and teams.",
+    "canonical": "https://peacockstudio.app/solutions/new-hires",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/solutions/sales": {
+    "title": "Sales, Pre-sales & Solution Consultants · Peacock Studio",
+    "description": "Capability-level flow docs for precise demo execution, and buyer-matched tours for live presentation and post-call momentum.",
+    "canonical": "https://peacockstudio.app/solutions/sales",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/solutions/customer-success": {
+    "title": "Customer Success & Account Management · Peacock Studio",
+    "description": "Milestone flow docs customers execute until tasks are done, plus adoption journeys mapped to purchased scope and first-value goals.",
+    "canonical": "https://peacockstudio.app/solutions/customer-success",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/solutions/executives": {
+    "title": "Executives & Leadership · Peacock Studio",
+    "description": "Curated product narratives for leadership forums. Understand strategic alignment, customer outcomes, and release direction without operational deep dives.",
+    "canonical": "https://peacockstudio.app/solutions/executives",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  },
+  "/solutions/security-compliance": {
+    "title": "Security, Compliance & Audit · Peacock Studio",
+    "description": "Capture approved workflows with built-in sensitive-data safeguards and environment metadata — then guide reviewers through control domains in structured tours.",
+    "canonical": "https://peacockstudio.app/solutions/security-compliance",
+    "ogImage": "https://peacockstudio.app/og-social.png",
+    "robots": "index,follow"
+  }
+}

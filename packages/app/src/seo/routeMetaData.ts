@@ -14,6 +14,9 @@ export interface RouteMeta {
   robots: 'index,follow' | 'noindex,nofollow';
   canonical?: string;
   jsonLd?: unknown;
+  ogImage?: string;
+  ogImageAlt?: string;
+  ogType?: 'website' | 'article';
 }
 
 export const TITLE_SUFFIX = ` · ${PEACOCK_APP_NAME}`;

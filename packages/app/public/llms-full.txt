@@ -3,7 +3,7 @@
 > Peacock Studio is a local-first platform that records real browser usage and turns it into editable Flow Documents and Product Tours for QA, support, product, sales, and leadership.
 
 Website: https://peacockstudio.app
-Contact: support@peacock.studio
+Contact: support@mentorbridge.in
 
 ## What Peacock Studio is
 

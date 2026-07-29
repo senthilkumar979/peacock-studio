@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Peacock Studio",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "Record clicks and screenshots on any site, then turn your workflow into step-by-step guides in Peacock Studio.",
   "permissions": [
     "activeTab",

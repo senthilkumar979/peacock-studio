@@ -37,4 +37,4 @@ Primary site: https://peacockstudio.app
 - [Full LLM summary](https://peacockstudio.app/llms-full.txt): Longer product, solutions, and pricing overview
 - [Install Chrome extension](https://peacockstudio.app/install-extension): Extension install gate for capture
 - [Sitemap](https://peacockstudio.app/sitemap.xml): Indexable marketing URLs
-- [Contact](mailto:support@peacock.studio): support@peacock.studio
+- [Contact](mailto:support@mentorbridge.in): support@mentorbridge.in

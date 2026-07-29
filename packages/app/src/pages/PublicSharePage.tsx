@@ -14,6 +14,7 @@ import { useFlowDocDefaultView } from '@/hooks/useFlowDocDefaultView';
 import { usePublicShare } from '@/hooks/usePublicShare';
 import { usePublicSharedDocument } from '@/hooks/usePublicSharedDocument';
 import { ProductTourLearner } from '@/pages/ProductTourLearner';
+import { ShareDocumentMeta } from '@/seo/ShareDocumentMeta';
 import { FlowDocExperienceViews } from '@/player/FlowDocExperienceViews';
 import { resolveFlowDocView } from '@/utils/resolveFlowDocView';
 import { getPublicSharePath, type SharedDocumentViewMode } from '@/utils/shareLink';
@@ -121,6 +122,11 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
       homePath={LANDING_PATH}
       homeLabel="Go home"
     >
+      <ShareDocumentMeta
+        link={link}
+        isDocumentReady={isDocumentReady}
+        sharePath={location.pathname}
+      />
       {link.resourceType === 'tour' ? (
         <EmbedChrome isEmbed={isEmbed}>
           <PublicTourShareView link={link} isEmbed={isEmbed} />

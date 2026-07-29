@@ -209,7 +209,7 @@ export const Editor = () => {
         <PeacockStudioLoader size={160} />
         <p className="text-sm text-slate-500">
           {isExtensionHandoff
-            ? "Waiting for flow from extension…"
+            ? "Waiting for flow from extensin. Please don't refresh or close this page."
             : "Loading documentation…"}
         </p>
       </div>
