@@ -64,13 +64,15 @@ export function usePublicShare(token: string | undefined, options: UsePublicShar
           return;
         }
 
-        if (resolved.requiresAuth && authSettling) {
+        const needsAuth = !isEmbed && resolved.requiresAuth;
+
+        if (needsAuth && authSettling) {
           setLink(resolved);
           setIsLoading(true);
           return;
         }
 
-        if (resolved.requiresAuth && !isSignedIn) {
+        if (needsAuth && !isSignedIn) {
           setLink(resolved);
           setRequiresSignIn(true);
           return;
@@ -107,7 +109,8 @@ export function usePublicShare(token: string | undefined, options: UsePublicShar
     };
   }, [token, isEmbed, authSettling, isSignedIn]);
 
-  const waitingForAuth = Boolean(link?.requiresAuth && authSettling && !isSignedIn);
+  const waitingForAuth =
+    !isEmbed && Boolean(link?.requiresAuth && authSettling && !isSignedIn);
 
   return {
     link,

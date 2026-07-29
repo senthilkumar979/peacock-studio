@@ -3,6 +3,7 @@ import { Navigate, useLocation, useParams, useSearchParams } from 'react-router-
 import { isPublicShareFeatureEnabled } from '@/analytics/featureFlags';
 import { shouldShowEmbedWatermark } from '@/cloud/planLimits';
 import { PeacockEmbedWatermark } from '@/components/embed/PeacockEmbedWatermark';
+import { EmbedErrorPanel } from '@/components/embed/EmbedErrorPanel';
 import { AppErrorBoundary } from '@/components/errors/AppErrorBoundary';
 import { HardErrorPage } from '@/components/errors/HardErrorPage';
 import { EditableShareRedirect } from '@/components/share/EditableShareRedirect';
@@ -47,6 +48,11 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
     const next = new URLSearchParams(searchParams);
     next.set('view', nextMode);
     setSearchParams(next, { replace: true });
+    if (nextMode === 'doc') {
+      const nextUrl = `${window.location.pathname}?${next.toString()}`;
+      window.history.replaceState(null, '', nextUrl);
+      window.scrollTo(0, 0);
+    }
   };
 
   const handleHubNavigation = () => {
@@ -57,6 +63,14 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
   };
 
   if (shareKillSwitched) {
+    if (isEmbed) {
+      return (
+        <EmbedErrorPanel
+          title="Sharing unavailable"
+          description="Public share links are temporarily disabled. Ask the owner for another way to view this guide."
+        />
+      );
+    }
     return (
       <HardErrorPage
         title="Sharing unavailable"
@@ -92,11 +106,21 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
     );
   }
 
-  if (requiresSignIn) {
+  if (requiresSignIn && !isEmbed) {
     return <ShareAuthRequiredGate returnPath={location.pathname + location.search} />;
   }
 
   if (error || !link) {
+    if (isEmbed) {
+      return (
+        <EmbedErrorPanel
+          title={errorTitle ?? 'Share link not found'}
+          description={
+            error ?? 'This link may have expired or been revoked. Ask the owner for a new link.'
+          }
+        />
+      );
+    }
     return (
       <HardErrorPage
         title={errorTitle ?? 'Share link not found'}
@@ -117,8 +141,13 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
   return (
     <AppErrorBoundary
       compact
+      embed={isEmbed}
       title="Shared view crashed"
-      description="A rendering error stopped this shared view. You can retry or return home."
+      description={
+        isEmbed
+          ? 'A rendering error stopped this embedded guide. Try refreshing the page.'
+          : 'A rendering error stopped this shared view. You can retry or return home.'
+      }
       homePath={LANDING_PATH}
       homeLabel="Go home"
     >

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
 import { trackEvent } from '@/analytics/analyticsClient';
 import { AnalyticsEvents } from '@/analytics/events';
+import { EmbedErrorPanel } from '@/components/embed/EmbedErrorPanel';
 import { DASHBOARD_PATH, LANDING_PATH } from '@/constants/routes';
 
 export interface HardErrorPageProps {
@@ -15,6 +16,8 @@ export interface HardErrorPageProps {
   homePath?: string;
   homeLabel?: string;
   compact?: boolean;
+  /** Iframe embed mode — refresh only, no app navigation. */
+  embed?: boolean;
 }
 
 export const HardErrorPage = ({
@@ -25,16 +28,29 @@ export const HardErrorPage = ({
   homePath = DASHBOARD_PATH,
   homeLabel = 'Go to dashboard',
   compact = false,
+  embed = false,
 }: HardErrorPageProps) => {
   useEffect(() => {
     trackEvent(AnalyticsEvents.hardErrorViewed, {
       title,
-      home_path: homePath,
-      compact: Boolean(compact),
+      home_path: embed ? undefined : homePath,
+      compact: Boolean(compact || embed),
       has_detail: Boolean(detail),
       path: typeof window !== 'undefined' ? window.location.pathname : undefined,
+      embed,
     });
-  }, [title, homePath, compact, detail]);
+  }, [title, homePath, compact, detail, embed]);
+
+  if (embed) {
+    return (
+      <EmbedErrorPanel
+        title={title}
+        description={description}
+        detail={detail}
+        onRetry={onRetry}
+      />
+    );
+  }
 
   return (
     <div

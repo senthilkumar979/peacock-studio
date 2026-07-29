@@ -1,4 +1,5 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { isImagePrefetched } from '@/utils/prefetchImages';
 
 export function useImageLoaded(src: string | undefined | null) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -10,6 +11,11 @@ export function useImageLoaded(src: string | undefined | null) {
   useLayoutEffect(() => {
     setIsLoaded(false);
     if (!src) return;
+
+    if (isImagePrefetched(src)) {
+      setIsLoaded(true);
+      return;
+    }
 
     const img = imgRef.current;
     if (img?.complete && img.naturalWidth > 0 && img.currentSrc === src) {

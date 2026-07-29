@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   getPlayableStepRange,
   getPlayerOutlineSegments,
+  getStepScreenshotUrl,
   sortBranchPaths,
   type FlowStep,
   type LinkedPeacockPath,
@@ -9,6 +10,7 @@ import {
 } from '@peacock/shared';
 import { getFlowDocument } from '@/services/flowLibraryService';
 import { useViewerOutline } from '@/store/flowStore';
+import { prefetchImages } from '@/utils/prefetchImages';
 
 interface LinkedPlayback {
   path: LinkedPeacockPath;
@@ -121,6 +123,11 @@ export function useBranchingPlayback(): UseBranchingPlaybackResult {
           screenshotUrls: doc.screenshotUrls,
           stepIndex: 0,
         });
+
+        const linkedUrls = slice
+          .map((linkedStep) => getStepScreenshotUrl(linkedStep, doc.screenshotUrls))
+          .filter((url): url is string => Boolean(url));
+        void prefetchImages(linkedUrls, { priorityUrl: linkedUrls[0] ?? null });
       })
       .finally(() => setIsLoadingLinked(false));
   }, []);

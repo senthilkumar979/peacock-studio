@@ -1,16 +1,17 @@
 import { Cookie } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { PRIVACY_PATH } from '@/constants/routes';
+import { Link, useLocation } from 'react-router-dom';
+import { isEmbedSharePath, PRIVACY_PATH } from '@/constants/routes';
 import { useConsent } from '@/hooks/useConsent';
 import { useConsentStore } from '@/store/consentStore';
 
 export const CookieConsentBanner = () => {
+  const { pathname } = useLocation();
   const { isBannerVisible } = useConsent();
   const acceptAll = useConsentStore((state) => state.acceptAll);
   const rejectNonEssential = useConsentStore((state) => state.rejectNonEssential);
   const openPreferences = useConsentStore((state) => state.openPreferences);
 
-  if (!isBannerVisible) return null;
+  if (isEmbedSharePath(pathname) || !isBannerVisible) return null;
 
   return (
     <div

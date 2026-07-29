@@ -227,14 +227,25 @@ export const ProductTourLearner = ({
   if (!tourId) {
     return (
       <ResourceNotFoundPage
+        isEmbed={isEmbed}
         title="Invalid tour"
-        description="Open a product tour from your dashboard."
+        description={
+          isEmbed
+            ? 'This embedded tour link is invalid.'
+            : 'Open a product tour from your dashboard.'
+        }
       />
     );
   }
 
   if (error) {
-    return <ResourceNotFoundPage title="Product tour not found" description={error} />;
+    return (
+      <ResourceNotFoundPage
+        isEmbed={isEmbed}
+        title="Product tour not found"
+        description={error}
+      />
+    );
   }
 
   if (isLoading || !isLoaded || !tour || playback.isLoading || !persona) {

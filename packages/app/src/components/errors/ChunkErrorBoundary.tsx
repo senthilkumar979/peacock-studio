@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { HardErrorPage } from '@/components/errors/HardErrorPage';
-import { DASHBOARD_PATH } from '@/constants/routes';
+import { DASHBOARD_PATH, isEmbedSharePath } from '@/constants/routes';
 import { logAppError } from '@/utils/appError';
 
 interface ChunkErrorBoundaryProps {
@@ -59,10 +59,16 @@ export class ChunkErrorBoundary extends Component<
         // Propagate to the root AppErrorBoundary.
         throw error;
       }
+      const embed = isEmbedSharePath(window.location.pathname);
       return (
         <HardErrorPage
+          embed={embed}
           title="Failed to load this page"
-          description="A required code bundle did not load. Check your connection, then retry."
+          description={
+            embed
+              ? 'A required code bundle did not load. Check your connection, then refresh.'
+              : 'A required code bundle did not load. Check your connection, then retry.'
+          }
           detail={error.message}
           onRetry={this.handleRetry}
           homePath={DASHBOARD_PATH}

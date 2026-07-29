@@ -1,12 +1,14 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { HardErrorPage } from '@/components/errors/HardErrorPage';
-import { DASHBOARD_PATH } from '@/constants/routes';
+import { DASHBOARD_PATH, isEmbedSharePath } from '@/constants/routes';
 import { logAppError } from '@/utils/appError';
 
 interface AppErrorBoundaryProps {
   children: ReactNode;
   /** Nested boundaries use a compact hard-error card so shell chrome can remain. */
   compact?: boolean;
+  /** Iframe embed mode — refresh only, no app navigation. */
+  embed?: boolean;
   title?: string;
   description?: string;
   homePath?: string;
@@ -43,9 +45,13 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
 
   render() {
     if (this.state.hasError) {
+      const embed =
+        this.props.embed ??
+        (typeof window !== 'undefined' && isEmbedSharePath(window.location.pathname));
       return (
         <HardErrorPage
           compact={this.props.compact}
+          embed={embed}
           title={this.props.title ?? 'This page crashed'}
           description={
             this.props.description ??

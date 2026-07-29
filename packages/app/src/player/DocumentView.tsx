@@ -44,6 +44,7 @@ import { useLocation } from "react-router-dom";
 import { DocumentGuideCompleteCard } from "@/player/DocumentGuideCompleteCard";
 import { DocumentGuideOverviewBanner } from "@/player/DocumentGuideOverviewBanner";
 import { FlowDocViewHeader } from "@/player/FlowDocViewHeader";
+import { PeacockStudioLoader } from "@/components/PeacockStudioLoader";
 import { DocumentSectionCard } from "./DocumentSectionCard";
 import { DocumentStepCard } from "./DocumentStepCard";
 import {
@@ -59,6 +60,7 @@ interface DocumentViewProps {
   pageHints?: PageHintControl;
   showOwnerActions?: boolean;
   isEmbed?: boolean;
+  areScreenshotsReady?: boolean;
 }
 
 export const DocumentView = ({
@@ -68,6 +70,7 @@ export const DocumentView = ({
   pageHints,
   showOwnerActions = true,
   isEmbed = false,
+  areScreenshotsReady = true,
 }: DocumentViewProps) => {
   const location = useLocation();
   const libraryBackState = location.state;
@@ -281,6 +284,27 @@ export const DocumentView = ({
     scrollToHash: (anchorId) => scrollStepsPaneToAnchor(anchorId, "auto"),
   });
 
+  const resetDocumentScroll = useCallback(() => {
+    const hash = window.location.hash.replace(/^#/, "");
+    if (hash) return;
+
+    scrollSpyPausedRef.current = true;
+    contentScrollRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    window.requestAnimationFrame(() => {
+      scrollSpyPausedRef.current = false;
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    resetDocumentScroll();
+  }, [resetDocumentScroll]);
+
+  useLayoutEffect(() => {
+    if (!areScreenshotsReady) return;
+    resetDocumentScroll();
+  }, [areScreenshotsReady, resetDocumentScroll]);
+
   return (
     <div className="flex min-h-screen[calc(100vh-128px)] flex-col bg-slate-50">
       <FlowDocViewHeader
@@ -341,6 +365,12 @@ export const DocumentView = ({
             ref={contentScrollRef}
             className="min-h-0 h-full overflow-y-auto"
           >
+            {!areScreenshotsReady ? (
+              <div className="flex min-h-[min(60vh,720px)] flex-col items-center justify-center gap-4 px-6 py-16">
+                <PeacockStudioLoader size={120} />
+                <p className="text-sm text-slate-500">Loading screenshots…</p>
+              </div>
+            ) : (
             <div
               ref={contentRootRef}
               className="flex min-w-0 flex-col gap-5 pr-1 "
@@ -458,6 +488,7 @@ export const DocumentView = ({
                 isEmbed={isEmbed}
               />
             </div>
+            )}
           </div>
         </div>
       </main>

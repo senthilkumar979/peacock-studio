@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { classifyAppError, isBenignBrowserNoise, logAppError } from '@/utils/appError';
 import { isExpectedClientNoise } from '@/observability/sentry';
+import { isEmbedSharePath } from '@/constants/routes';
 import { notifyError, notifyWarning } from '@/utils/notify';
 import { buildHardErrorPath } from '@/pages/ErrorPage';
 
@@ -13,10 +14,15 @@ import { buildHardErrorPath } from '@/pages/ErrorPage';
  */
 export const GlobalErrorListeners = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   useEffect(() => {
     const escalateOrToast = (classified: ReturnType<typeof classifyAppError>) => {
       if (classified.isHard) {
+        if (isEmbedSharePath(pathname)) {
+          notifyError(classified.title, classified.userMessage);
+          return;
+        }
         navigate(buildHardErrorPath(classified.title, classified.userMessage), { replace: true });
         return;
       }
@@ -70,7 +76,7 @@ export const GlobalErrorListeners = () => {
       window.removeEventListener('unhandledrejection', onUnhandledRejection);
       window.removeEventListener('error', onWindowError);
     };
-  }, [navigate]);
+  }, [navigate, pathname]);
 
   return null;
 };

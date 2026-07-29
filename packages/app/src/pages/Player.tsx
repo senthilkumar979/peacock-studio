@@ -60,6 +60,11 @@ export const Player = () => {
     const next = new URLSearchParams(searchParams);
     next.set('view', mode);
     setSearchParams(next, { replace: true });
+    if (mode === 'doc') {
+      const nextUrl = `${window.location.pathname}?${next.toString()}`;
+      window.history.replaceState(null, '', nextUrl);
+      window.scrollTo(0, 0);
+    }
     if (documentId) {
       void recordOrgEvent('document_mode_change', {
         resourceType: 'document',

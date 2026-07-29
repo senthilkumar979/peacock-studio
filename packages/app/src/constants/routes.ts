@@ -37,6 +37,11 @@ export const HEALTH_CHECKER_PATH = '/health' as const;
 export const API_DOCS_PATH = '/api-docs' as const;
 export const ERROR_PATH = '/error' as const;
 
+/** True when the pathname is a public share embed iframe (`/s/:token/embed`). */
+export function isEmbedSharePath(pathname: string): boolean {
+  return /^\/s\/[^/]+\/embed\/?$/.test(pathname);
+}
+
 export function getSuperAdminPath(tab?: 'platform' | 'health' | 'api'): string {
   if (!tab || tab === 'platform') return SUPER_ADMIN_PATH;
   return `${SUPER_ADMIN_PATH}?tab=${tab}`;
