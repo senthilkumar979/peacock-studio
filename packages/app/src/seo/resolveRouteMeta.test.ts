@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { absoluteUrl, productHeroImagePath } from '@/constants/site';
+import { ogImageUrl } from '@/constants/site';
 import { listPublicMarketingPaths } from '@/seo/publicPaths';
 import { isNoindexPath } from '@/seo/routeMetaData';
 import { isKnownMarketingPath, resolveRouteMeta } from '@/seo/resolveRouteMeta';
-import { buildSocialMetaTags } from '@/seo/socialMetaTags';
+import { buildSocialMetaTags, resolveOgImage } from '@/seo/socialMetaTags';
 
 describe('isNoindexPath', () => {
   it('noindexes app shells and share links', () => {
@@ -21,11 +21,11 @@ describe('isNoindexPath', () => {
 });
 
 describe('resolveRouteMeta', () => {
-  it('returns indexed marketing meta for product pages with hero OG image', () => {
+  it('returns indexed marketing meta for product pages using the app logo', () => {
     const meta = resolveRouteMeta('/products/flow-documents');
     expect(meta.robots).toBe('index,follow');
     expect(meta.title).toContain('Flow Documents');
-    expect(meta.ogImage).toBe(absoluteUrl(productHeroImagePath('flow-documents')));
+    expect(resolveOgImage(meta)).toBe(ogImageUrl());
     expect(meta.canonical).toBe('https://peacockstudio.app/products/flow-documents');
   });
 

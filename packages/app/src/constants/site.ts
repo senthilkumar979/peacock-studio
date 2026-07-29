@@ -8,7 +8,6 @@ export {
   OG_IMAGE_WIDTH,
   OG_LOCALE,
   ogImageUrl,
-  productHeroImagePath,
   SITE_NAME,
   SITE_ORIGIN,
 } from './seoDefaults';

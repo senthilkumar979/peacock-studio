@@ -10,8 +10,8 @@ const BOT_USER_AGENT =
   /bot|crawler|spider|facebookexternalhit|twitterbot|linkedinbot|slackbot|discordbot|whatsapp|telegrambot|embedly|quora link preview|vkshare|redditbot/i;
 
 const SHARE_PATH = /^\/s\/([^/]+)(?:\/(?:embed|edit))?\/?$/;
-const OG_IMAGE_WIDTH = '1200';
-const OG_IMAGE_HEIGHT = '800';
+const OG_IMAGE_WIDTH = '1000';
+const OG_IMAGE_HEIGHT = '1000';
 const OG_LOCALE = 'en_US';
 
 interface MetaManifestEntry {

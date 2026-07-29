@@ -1,5 +1,5 @@
 import { PEACOCK_APP_NAME } from '@/constants/branding';
-import { absoluteUrl, DEFAULT_META_DESCRIPTION, productHeroImagePath } from '@/constants/site';
+import { absoluteUrl, DEFAULT_META_DESCRIPTION } from '@/constants/site';
 import { getProductBySlug } from '@/pages/products/productsData';
 import { getSolutionRoleBySlug } from '@/pages/solutions/solutionsData';
 import { listPublicMarketingPaths } from '@/seo/publicPaths';
@@ -41,7 +41,6 @@ export function resolveRouteMeta(pathname: string): RouteMeta {
         path: pathname,
         robots: 'index,follow',
         canonical: absoluteUrl(pathname),
-        ogImage: absoluteUrl(productHeroImagePath(product.slug)),
         ogImageAlt: `${product.name} — ${PEACOCK_APP_NAME}`,
       };
     }

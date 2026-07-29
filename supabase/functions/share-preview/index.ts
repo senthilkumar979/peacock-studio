@@ -14,7 +14,7 @@ const PREVIEW_RATE_WINDOW_SECONDS = 60;
 const DEFAULT_TITLE = 'Peacock Studio';
 const DEFAULT_DESCRIPTION =
   'Interactive workflow documentation shared from Peacock Studio.';
-const DEFAULT_IMAGE_PATH = '/og-social.png';
+const DEFAULT_IMAGE_PATH = '/peacock-logo.png';
 
 interface ShareLinkRow {
   token: string;
