@@ -7,6 +7,10 @@ import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { clientIp } from '../_shared/clientIp.ts';
 import { verifyTurnstile } from '../_shared/turnstile.ts';
+import {
+  buildAppScreenshotUrl,
+  signScreenshotAssetToken,
+} from '../_shared/screenshotAssetUrl.ts';
 
 const SCREENSHOTS_BUCKET = 'screenshots';
 const SIGNED_URL_TTL_SECONDS = 3600;
@@ -59,6 +63,7 @@ serve(async (req) => {
     }
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
+    const screenshotUrlSecret = Deno.env.get('SCREENSHOT_URL_SECRET')?.trim();
     const rateKey = `${clientIp(req)}:${shareToken.slice(0, 8)}`;
     const { data: allowed, error: rateError } = await admin.rpc('consume_edge_rate_limit', {
       p_bucket: 'resolve_share',
@@ -135,6 +140,18 @@ serve(async (req) => {
 
       await Promise.all(
         assets.map(async (asset) => {
+          if (screenshotUrlSecret) {
+            const token = await signScreenshotAssetToken(
+              asset.storagePath,
+              screenshotUrlSecret,
+              SIGNED_URL_TTL_SECONDS,
+            );
+            const appOrigin = (Deno.env.get('APP_ORIGIN') ?? 'https://peacockstudio.app')
+              .replace(/\/$/, '');
+            urls[asset.id] = buildAppScreenshotUrl(appOrigin, asset.storagePath, token);
+            return;
+          }
+
           const { data: signed, error: signError } = await admin.storage
             .from(SCREENSHOTS_BUCKET)
             .createSignedUrl(asset.storagePath, SIGNED_URL_TTL_SECONDS);

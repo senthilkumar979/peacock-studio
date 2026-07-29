@@ -37,6 +37,7 @@ export * from './utils/flowBranch';
 export * from './utils/parseCaptureEnvironment';
 export * from './utils/collectCaptureEnvironment';
 export * from './utils/formatCaptureDuration';
+export * from './utils/screenshotAssetUrl';
 export * from './export/workflowGraph/types';
 export * from './export/workflowGraph/buildWorkflowGraph';
 export * from './export/testCases/generateTestCasesMarkdown';

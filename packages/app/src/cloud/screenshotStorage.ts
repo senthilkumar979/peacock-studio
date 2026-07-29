@@ -61,6 +61,19 @@ export async function resolveScreenshotUrls(
   const { organizationId } = requireCloudAuthContext();
   const supabase = getAuthenticatedSupabaseClient();
 
+  try {
+    const { data, error } = await supabase.functions.invoke('sign-screenshots', {
+      body: { documentId },
+    });
+    if (error) throw error;
+
+    const payload = data as { data?: Record<string, string> } | null;
+    return payload?.data ?? {};
+  } catch {
+    // Fallback for local/dev builds where SCREENSHOT_URL_SECRET or edge
+    // functions aren't deployed yet.
+  }
+
   const { data, error } = await supabase
     .from('screenshot_assets')
     .select('id, storage_path')
@@ -71,7 +84,6 @@ export async function resolveScreenshotUrls(
   if (!data?.length) return {};
 
   const urls: Record<string, string> = {};
-
   await Promise.all(
     data.map(async (row) => {
       const { data: signed, error: signError } = await supabase.storage

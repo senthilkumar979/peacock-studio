@@ -5,6 +5,10 @@
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import {
+  buildAppScreenshotUrl,
+  signScreenshotAssetToken,
+} from '../_shared/screenshotAssetUrl.ts';
 
 const SCREENSHOTS_BUCKET = 'screenshots';
 const SIGNED_URL_TTL_SECONDS = 3600;
@@ -71,6 +75,7 @@ serve(async (req) => {
     }
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
+    const screenshotUrlSecret = Deno.env.get('SCREENSHOT_URL_SECRET')?.trim();
     const rateKey = `${clientIp(req)}:share-preview`;
     const { data: allowed, error: rateError } = await admin.rpc('consume_edge_rate_limit', {
       p_bucket: 'share_preview',
@@ -176,11 +181,20 @@ serve(async (req) => {
 
       const storagePath = assetRow?.storage_path as string | undefined;
       if (storagePath) {
-        const { data: signed, error: signError } = await admin.storage
-          .from(SCREENSHOTS_BUCKET)
-          .createSignedUrl(storagePath, SIGNED_URL_TTL_SECONDS);
-        if (signError) throw signError;
-        if (signed?.signedUrl) image = signed.signedUrl;
+        if (screenshotUrlSecret) {
+          const token = await signScreenshotAssetToken(
+            storagePath,
+            screenshotUrlSecret,
+            SIGNED_URL_TTL_SECONDS,
+          );
+          image = buildAppScreenshotUrl(appOrigin, storagePath, token);
+        } else {
+          const { data: signed, error: signError } = await admin.storage
+            .from(SCREENSHOTS_BUCKET)
+            .createSignedUrl(storagePath, SIGNED_URL_TTL_SECONDS);
+          if (signError) throw signError;
+          if (signed?.signedUrl) image = signed.signedUrl;
+        }
       }
     }
 

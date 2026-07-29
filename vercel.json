@@ -4,11 +4,28 @@
   "installCommand": "pnpm install",
   "rewrites": [
     {
+      "source": "/storage/images/:orgId/:documentId/:filename",
+      "destination": "/api/storage/images/:orgId/:documentId/:filename"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/storage/images/:orgId/:documentId/:filename",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, max-age=3600"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
