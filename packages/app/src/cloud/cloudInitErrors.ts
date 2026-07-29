@@ -18,13 +18,17 @@ function isAtobDecodeError(error: unknown): boolean {
 export function getCloudInitErrorMessage(error: unknown): string {
   const record = error as SupabaseLikeError;
   const code = record?.code;
+  const status = Number((error as { status?: number; statusCode?: number })?.status
+    ?? (error as { status?: number; statusCode?: number })?.statusCode
+    ?? NaN);
+  const message = record?.message ?? (error instanceof Error ? error.message : String(error));
 
   if (isAtobDecodeError(error)) {
     return 'Could not decode an auth or API key. Check packages/app/.env.local: VITE_CLERK_PUBLISHABLE_KEY must be pk_test_… or pk_live_…, and VITE_SUPABASE_ANON_KEY must be your Supabase publishable/anon key — no quotes, no secret key. Then complete Clerk ↔ Supabase third-party auth setup.';
   }
 
-  if (code === 'PGRST301') {
-    return 'Supabase rejected the Clerk session token. Connect Clerk and Supabase: in Clerk, activate the Supabase integration (adds the role claim to tokens); in Supabase, add Clerk under Authentication → Third-party auth.';
+  if (code === 'PGRST301' || status === 401 || /jwt|invalid.*token|not authenticated/i.test(message)) {
+    return 'Supabase rejected the Clerk session token. Connect Clerk and Supabase: in Clerk, activate the Supabase integration (adds the role claim to tokens); in Supabase, add Clerk under Authentication → Third-party auth. Then sign out and sign back in.';
   }
 
   if (code === '42P01') {

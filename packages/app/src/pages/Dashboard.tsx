@@ -147,6 +147,17 @@ export const Dashboard = () => {
 
           <div className="relative z-10 mx-auto w-full max-w-8xl px-4 pb-12 sm:px-6 lg:px-8">
             <div className="-mt-14 space-y-8">
+              {cloudInitError ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 shadow-sm">
+                  <p className="font-semibold">Cloud library unavailable</p>
+                  <p className="mt-1 text-amber-900/90">{cloudInitError}</p>
+                  <p className="mt-2 text-xs text-amber-800/80">
+                    Showing your local guest library for now. Sign out from the avatar menu, then sign
+                    back in after fixing Clerk ↔ Supabase auth.
+                  </p>
+                </div>
+              ) : null}
+
               <DashboardStats stats={stats} />
 
               <DashboardAnalyticsSection documentCount={stats.totalDocuments} />

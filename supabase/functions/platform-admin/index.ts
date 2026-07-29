@@ -7,6 +7,7 @@
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { corsHeaders } from '../_shared/cors.ts';
 import { buildAcquisitionSummary } from './acquisition.ts';
 
 type Action =
@@ -378,19 +379,6 @@ function aggregateDomains(domainCountsList: unknown[]): DomainRow[] {
   return Array.from(totals.entries())
     .map(([domain, count]) => ({ domain, count }))
     .sort((a, b) => b.count - a.count || a.domain.localeCompare(b.domain));
-}
-
-function corsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get('Origin') ?? '';
-  const allowed = (Deno.env.get('APP_ORIGIN') ?? '').replace(/\/$/, '');
-  const allowOrigin = allowed && origin === allowed ? origin : allowed || '*';
-
-  return {
-    'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    Vary: 'Origin',
-  };
 }
 
 function json(

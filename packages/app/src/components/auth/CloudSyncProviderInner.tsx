@@ -21,8 +21,9 @@ import {
 import { resetSupabaseClientCache } from '@/cloud/supabaseClient';
 import { setSessionAuthState } from '@/cloud/sessionState';
 import { getCloudEnvValidationError } from '@/cloud/validateCloudEnv';
+import { getCloudInitErrorMessage } from '@/cloud/cloudInitErrors';
 import { consumeIntentionalSignOut } from '@/cloud/sessionIntent';
-import { GENERIC_USER_ERROR_MESSAGE, logAppError, reportAppError } from '@/utils/appError';
+import { GENERIC_USER_ERROR_MESSAGE, logAppError, logSoftFailure, reportAppError } from '@/utils/appError';
 import { notifyError, notifyWarning } from '@/utils/notify';
 import { ImportLocalLibraryPrompt } from '@/components/auth/ImportLocalLibraryPrompt';
 
@@ -147,13 +148,18 @@ export const CloudSyncProviderInner = ({ children }: CloudSyncProviderInnerProps
           displayName: userDisplayName,
           firstName: userFirstName,
           lastName: userLastName,
+        }).catch((profileError) => {
+          // Non-fatal: membership/workspace bootstrap can proceed; roster falls back
+          // to Clerk display fields when the profile row is missing.
+          logSoftFailure('Upsert user profile', profileError);
         });
         if (cancelled) return;
 
         try {
           await syncMyMembershipEmails();
-        } catch {
+        } catch (syncError) {
           // Non-fatal: roster still resolves emails from profiles client-side.
+          logSoftFailure('Sync membership emails', syncError);
         }
         if (cancelled) return;
 
@@ -178,10 +184,12 @@ export const CloudSyncProviderInner = ({ children }: CloudSyncProviderInnerProps
         );
         syncedUserIdRef.current = userId;
       } catch (error) {
-        const classified = reportAppError('Failed to initialize cloud library', error);
+        const detail = getCloudInitErrorMessage(error);
+        reportAppError('Failed to initialize cloud library', error);
         setCloudAuthContext(null);
-        setCloudInitError(classified.userMessage);
-        notifyError(classified.title, classified.userMessage);
+        // Unlock sessionMode away from perpetual "connecting" (see sessionState).
+        setCloudInitError(detail);
+        notifyError('Cloud library unavailable', detail);
         resetSupabaseClientCache();
       }
     };

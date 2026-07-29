@@ -1,5 +1,6 @@
 import {
   getCloudAuthContext,
+  getCloudInitError,
   isCloudLibraryActive,
   subscribeCloudAuthContext,
 } from '@/cloud/authContext';
@@ -39,6 +40,12 @@ export function getSessionModeSnapshot(): SessionMode {
   if (!authLoaded) return 'loading';
   if (!isSignedIn) return 'guest';
   const context = getCloudAuthContext();
+  // Bootstrap failed (e.g. profile upsert 401) — unlock local/guest library instead of
+  // spinning forever in "connecting", which also caused a Sign-in → dashboard loop
+  // while Clerk still had a live session.
+  if ((!context || !context.workspaceResolved) && getCloudInitError()) {
+    return 'guest';
+  }
   if (!context || !context.workspaceResolved) return 'connecting';
   if (context.needsWorkspaceOnboarding) return 'onboarding';
   if (!isCloudLibraryActive()) return 'connecting';

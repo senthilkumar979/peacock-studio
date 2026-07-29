@@ -7,6 +7,7 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { clientIp } from '../_shared/clientIp.ts';
 import { isTurnstileConfigured, verifyTurnstile } from '../_shared/turnstile.ts';
+import { corsHeaders } from '../_shared/cors.ts';
 
 interface InviteBody {
   invitationId?: string;
@@ -191,22 +192,6 @@ serve(async (req) => {
     return json({ error: 'Internal error' }, 500, cors);
   }
 });
-
-function corsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get('Origin') ?? '';
-  const appOrigin = (Deno.env.get('APP_ORIGIN') ?? '').replace(/\/$/, '');
-  const allowed = new Set(
-    [appOrigin, 'http://localhost:5173', 'http://127.0.0.1:5173'].filter(Boolean),
-  );
-  const allowOrigin = origin && allowed.has(origin) ? origin : appOrigin || '*';
-
-  return {
-    'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    Vary: 'Origin',
-  };
-}
 
 function json(
   payload: Record<string, unknown>,

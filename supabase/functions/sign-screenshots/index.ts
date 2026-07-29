@@ -5,6 +5,7 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { clientIp } from '../_shared/clientIp.ts';
+import { corsHeaders } from '../_shared/cors.ts';
 import { buildAppScreenshotUrl, signScreenshotAssetToken } from '../_shared/screenshotAssetUrl.ts';
 const SIGNED_URL_TTL_SECONDS = 3600;
 
@@ -87,18 +88,6 @@ serve(async (req) => {
     return json({ error: 'Internal error' }, 500, cors);
   }
 });
-
-function corsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get('Origin') ?? '';
-  const allowed = (Deno.env.get('APP_ORIGIN') ?? '').replace(/\/$/, '');
-  const allowOrigin = allowed && origin === allowed ? origin : allowed || '*';
-  return {
-    'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    Vary: 'Origin',
-  };
-}
 
 function json(
   payload: Record<string, unknown>,

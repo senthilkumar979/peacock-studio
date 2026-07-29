@@ -9,6 +9,7 @@ import {
   buildAppScreenshotUrl,
   signScreenshotAssetToken,
 } from '../_shared/screenshotAssetUrl.ts';
+import { corsHeaders } from '../_shared/cors.ts';
 
 const SCREENSHOTS_BUCKET = 'screenshots';
 const SIGNED_URL_TTL_SECONDS = 3600;
@@ -53,7 +54,7 @@ interface FlowStepLike {
 }
 
 serve(async (req) => {
-  const cors = corsHeaders(req);
+  const cors = corsHeaders(req, 'GET, OPTIONS');
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: cors });
   }
@@ -249,19 +250,6 @@ function stripHtml(value: string): string {
     .replace(/&nbsp;/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-}
-
-function corsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get('Origin') ?? '';
-  const allowed = (Deno.env.get('APP_ORIGIN') ?? '').replace(/\/$/, '');
-  const allowOrigin = allowed && origin === allowed ? origin : allowed || '*';
-
-  return {
-    'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    Vary: 'Origin',
-  };
 }
 
 function json(
