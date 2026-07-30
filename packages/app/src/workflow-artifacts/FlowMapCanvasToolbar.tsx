@@ -1,20 +1,68 @@
-import { Maximize2, X } from 'lucide-react';
+import {
+  Expand,
+  Maximize2,
+  Pencil,
+  RotateCcw,
+  Shrink,
+  StickyNote,
+  X,
+} from 'lucide-react';
 import type { WorkflowGraphStats } from '@/workflow-artifacts/flowMapCanvasTheme';
 import { FLOW_MAP_KIND_THEMES } from '@/workflow-artifacts/flowMapCanvasTheme';
+
+type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 interface FlowMapCanvasToolbarProps {
   flowTitle: string;
   stats: WorkflowGraphStats;
+  isEditMode: boolean;
+  isFullscreen: boolean;
+  saveState: SaveState;
   onFitView: () => void;
   onClearSelection: () => void;
+  onToggleEditMode: () => void;
+  onToggleFullscreen: () => void;
+  onResetLayout: () => void;
+  onAddStickyNote: () => void;
   hasSelection: boolean;
+}
+
+function SaveStateChip({ saveState }: { saveState: SaveState }) {
+  if (saveState === 'idle') return null;
+
+  const label =
+    saveState === 'saving'
+      ? 'Saving…'
+      : saveState === 'saved'
+        ? 'Saved'
+        : 'Save failed';
+
+  const className =
+    saveState === 'error'
+      ? 'bg-rose-500/20 text-rose-100 ring-rose-400/30'
+      : saveState === 'saved'
+        ? 'bg-emerald-500/20 text-emerald-100 ring-emerald-400/30'
+        : 'bg-white/10 text-white ring-white/15';
+
+  return (
+    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${className}`}>
+      {label}
+    </span>
+  );
 }
 
 export const FlowMapCanvasToolbar = ({
   flowTitle,
   stats,
+  isEditMode,
+  isFullscreen,
+  saveState,
   onFitView,
   onClearSelection,
+  onToggleEditMode,
+  onToggleFullscreen,
+  onResetLayout,
+  onAddStickyNote,
   hasSelection,
 }: FlowMapCanvasToolbarProps) => (
   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-gradient-to-r from-slate-950 via-slate-900 to-peacock-950 px-4 py-3 sm:px-5">
@@ -39,6 +87,39 @@ export const FlowMapCanvasToolbar = ({
           {stats.branches} branches
         </span>
       ) : null}
+      <SaveStateChip saveState={saveState} />
+      <button
+        type="button"
+        onClick={onToggleEditMode}
+        className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold ring-1 transition ${
+          isEditMode
+            ? 'bg-peacock-500 text-white ring-peacock-400 hover:bg-peacock-600'
+            : 'bg-white/10 text-white ring-white/15 hover:bg-white/20'
+        }`}
+      >
+        <Pencil className="h-3.5 w-3.5" aria-hidden />
+        {isEditMode ? 'Done editing' : 'Edit layout'}
+      </button>
+      {isEditMode ? (
+        <>
+          <button
+            type="button"
+            onClick={onAddStickyNote}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/20"
+          >
+            <StickyNote className="h-3.5 w-3.5" aria-hidden />
+            Add note
+          </button>
+          <button
+            type="button"
+            onClick={onResetLayout}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/20"
+          >
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+            Reset layout
+          </button>
+        </>
+      ) : null}
       <button
         type="button"
         onClick={onFitView}
@@ -46,6 +127,22 @@ export const FlowMapCanvasToolbar = ({
       >
         <Maximize2 className="h-3.5 w-3.5" aria-hidden />
         Fit view
+      </button>
+      <button
+        type="button"
+        onClick={onToggleFullscreen}
+        className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold ring-1 transition ${
+          isFullscreen
+            ? 'bg-white text-slate-800 shadow-sm hover:bg-slate-100'
+            : 'bg-white/10 text-white ring-white/15 hover:bg-white/20'
+        }`}
+      >
+        {isFullscreen ? (
+          <Shrink className="h-3.5 w-3.5" aria-hidden />
+        ) : (
+          <Expand className="h-3.5 w-3.5" aria-hidden />
+        )}
+        {isFullscreen ? 'Exit full screen' : 'Full screen'}
       </button>
       {hasSelection ? (
         <button
@@ -61,7 +158,13 @@ export const FlowMapCanvasToolbar = ({
   </div>
 );
 
-export const FlowMapCanvasLegend = ({ stepCount }: { stepCount: number }) => (
+export const FlowMapCanvasLegend = ({
+  stepCount,
+  isEditMode,
+}: {
+  stepCount: number;
+  isEditMode: boolean;
+}) => (
   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 bg-slate-50/90 px-4 py-2.5 sm:px-5">
     <div className="flex flex-wrap gap-2">
       {Object.entries(FLOW_MAP_KIND_THEMES).map(([kind, theme]) => {
@@ -82,9 +185,11 @@ export const FlowMapCanvasLegend = ({ stepCount }: { stepCount: number }) => (
       })}
     </div>
     <p className="text-[11px] text-slate-500">
-      {stepCount > 10
-        ? 'Large flow — starts zoomed in · pan to explore · Fit view shows all'
-        : 'Click a node to inspect · Scroll to zoom · Drag to pan'}
+      {isEditMode
+        ? 'Drag nodes to rearrange · Click the trash icon on a sticky to delete · Reset layout clears notes too'
+        : stepCount > 10
+          ? 'Large flow — starts zoomed in · pan to explore · Fit view shows all'
+          : 'Click a node to inspect · Scroll to zoom · Drag to pan'}
     </p>
   </div>
 );

@@ -307,7 +307,7 @@ const LIBRARY_GUIDE_CONTENT: Record<LibraryGuideId, LibraryGuideContent> = {
     icon: GitBranch,
     headline: 'Visualize flows at a glance',
     subheadline:
-      'Generate a Mermaid flowchart that maps sections, steps, and branches — ideal for reviews, onboarding, and gap analysis.',
+      'Generate an interactive flow map from recordings — rearrange the layout, tag review status, and add sticky notes for stakeholders.',
     stepsSectionTitle: 'How to generate',
     accent: {
       gradient: 'from-amber-500 to-orange-600',
@@ -335,9 +335,9 @@ const LIBRARY_GUIDE_CONTENT: Record<LibraryGuideId, LibraryGuideContent> = {
         icon: Users,
       },
       {
-        title: 'Reuse anywhere',
+        title: 'Review-ready canvas',
         description:
-          'Paste into Notion or Confluence, or export as PNG from the flow map editor.',
+          'Drag nodes into place, set draft / approved tags, and attach reviewer notes without changing the recorded flow.',
         icon: Sparkles,
       },
     ],

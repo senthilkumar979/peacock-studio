@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { FlowMapOverlay } from '@peacock/shared';
 import { isCloudLibraryActive } from '@/cloud/authContext';
 import {
   generateWorkflowArtifact,
   getWorkflowArtifact,
   listDocumentArtifactStatuses,
   listWorkflowArtifacts,
+  saveFlowMapOverlay,
 } from '@/services/workflowArtifactService';
 import type {
   WorkflowArtifact,
@@ -79,6 +81,31 @@ export function useWorkflowArtifactDetail(
   }, [refresh]);
 
   return { artifact, isLoading, error, refresh };
+}
+
+export function useSaveFlowMapOverlay(documentId: string | undefined) {
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const saveOverlay = useCallback(
+    async (overlay: FlowMapOverlay) => {
+      if (!documentId || !isCloudLibraryActive()) return null;
+
+      setIsSaving(true);
+      setSaveError(null);
+      try {
+        return await saveFlowMapOverlay(documentId, overlay);
+      } catch (saveErr) {
+        setSaveError(reportAppError('Failed to save flow map overlay', saveErr).userMessage);
+        throw saveErr;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [documentId],
+  );
+
+  return { saveOverlay, isSaving, saveError };
 }
 
 export function useDocumentArtifactStatuses(documentId: string | undefined) {

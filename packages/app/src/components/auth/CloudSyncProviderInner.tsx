@@ -84,8 +84,8 @@ export const CloudSyncProviderInner = ({ children }: CloudSyncProviderInnerProps
       if (!session) return;
 
       if (!userEmail) {
-        logAppError(
-          'Failed to initialize cloud library',
+        logSoftFailure(
+          'Cloud sync skipped — verified primary email required',
           new Error('A verified primary email is required for cloud sync.'),
         );
         setCloudAuthContext(null);

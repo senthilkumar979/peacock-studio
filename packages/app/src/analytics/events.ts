@@ -47,6 +47,10 @@ export const AnalyticsEvents = {
   artifactRegenerated: 'artifact_regenerated',
   artifactDownloaded: 'artifact_downloaded',
 
+  flowMapEditModeToggled: 'flow_map_edit_mode_toggled',
+  flowMapOverlaySaved: 'flow_map_overlay_saved',
+  flowMapLayoutReset: 'flow_map_layout_reset',
+
   workspaceCreatedPersonal: 'workspace_created_personal',
   workspaceCreatedTeam: 'workspace_created_team',
   workspaceInviteAccepted: 'workspace_invite_accepted',

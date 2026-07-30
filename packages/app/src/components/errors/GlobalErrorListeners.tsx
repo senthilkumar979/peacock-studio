@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { classifyAppError, isBenignBrowserNoise, logAppError } from '@/utils/appError';
-import { isExpectedClientNoise } from '@/observability/sentry';
+import { isClerkSdkNoise, isExpectedClientNoise } from '@/observability/sentry';
 import { isEmbedSharePath } from '@/constants/routes';
 import { notifyError, notifyWarning } from '@/utils/notify';
 import { buildHardErrorPath } from '@/pages/ErrorPage';
@@ -39,12 +39,8 @@ export const GlobalErrorListeners = () => {
 
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
       const reason = event.reason;
-      if (isBenignBrowserNoise(reason) || isExpectedClientNoise(reason)) {
+      if (isBenignBrowserNoise(reason) || isClerkSdkNoise(reason) || isExpectedClientNoise(reason)) {
         event.preventDefault();
-        if (isExpectedClientNoise(reason)) {
-          const classified = classifyAppError(reason);
-          notifyWarning(classified.title, classified.userMessage);
-        }
         return;
       }
 
@@ -58,7 +54,7 @@ export const GlobalErrorListeners = () => {
       // Cross-origin script errors often have no useful payload.
       if (event.message === 'Script error.' && !event.error) return;
       const payload = event.error ?? event.message;
-      if (isBenignBrowserNoise(payload) || isExpectedClientNoise(payload)) {
+      if (isBenignBrowserNoise(payload) || isClerkSdkNoise(payload) || isExpectedClientNoise(payload)) {
         event.preventDefault();
         return;
       }

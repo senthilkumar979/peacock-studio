@@ -195,6 +195,8 @@ export const ArtifactDetailPage = ({ artifactType }: ArtifactDetailPageProps) =>
               documentId={documentId}
               flowTitle={artifact.flowTitle}
               content={artifact.content}
+              flowMapOverlay={artifact.metadata}
+              onFlowMapOverlaySaved={() => void refresh()}
             />
           </div>
         ) : null}

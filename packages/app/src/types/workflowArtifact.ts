@@ -1,3 +1,5 @@
+import type { FlowMapOverlay } from '@peacock/shared';
+
 export const WORKFLOW_ARTIFACT_TYPES = {
   testCases: 'test_cases',
   playwright: 'playwright',
@@ -18,6 +20,7 @@ export interface WorkflowArtifactSummary {
 
 export interface WorkflowArtifact extends WorkflowArtifactSummary {
   content: string;
+  metadata?: FlowMapOverlay | null;
 }
 
 export interface DocumentArtifactStatus {

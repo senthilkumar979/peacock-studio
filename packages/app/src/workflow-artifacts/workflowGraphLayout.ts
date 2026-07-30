@@ -1,5 +1,12 @@
 import { MarkerType, type Edge, type Node } from '@xyflow/react';
-import type { WorkflowGraph, WorkflowGraphNode } from '@peacock/shared';
+import {
+  applyFlowMapOverlayPositions,
+  type FlowMapNodeStatus,
+  type FlowMapOverlay,
+  type FlowMapStickyNote,
+  type WorkflowGraph,
+  type WorkflowGraphNode,
+} from '@peacock/shared';
 import {
   FLOW_MAP_KIND_THEMES,
   FLOW_MAP_LAYOUT,
@@ -24,6 +31,21 @@ export interface FlowMapNodeData extends Record<string, unknown> {
   stepNumber?: number;
   description?: string;
   pathHandleCount?: number;
+  status?: FlowMapNodeStatus;
+  reviewerNote?: string;
+}
+
+export interface FlowMapStickyNoteData extends Record<string, unknown> {
+  text: string;
+  color?: string;
+  isEditMode: boolean;
+  onDelete?: (nodeId: string) => void;
+}
+
+export interface WorkflowGraphCanvasOptions {
+  overlay?: FlowMapOverlay | null;
+  isEditMode?: boolean;
+  onDeleteSticky?: (nodeId: string) => void;
 }
 
 function getMainSpineOrder(graph: WorkflowGraph, children: Map<string, string[]>): string[] {
@@ -196,11 +218,18 @@ function getEdgeStyle(fromKind: WorkflowGraphNode['kind'] | undefined): {
   };
 }
 
-export function workflowGraphToFlowCanvas(graph: WorkflowGraph): {
-  nodes: Node<FlowMapNodeData>[];
+export function workflowGraphToFlowCanvas(
+  graph: WorkflowGraph,
+  options: WorkflowGraphCanvasOptions = {},
+): {
+  nodes: Node<FlowMapNodeData | FlowMapStickyNoteData>[];
   edges: Edge[];
 } {
-  const positions = layoutGraph(graph);
+  const overlay = options.overlay ?? null;
+  const isEditMode = options.isEditMode ?? false;
+  const onDeleteSticky = options.onDeleteSticky;
+  const autoPositions = layoutGraph(graph);
+  const positions = applyFlowMapOverlayPositions(autoPositions, overlay);
   const nodeById = new Map(graph.nodes.map((node) => [node.id, node]));
 
   const branchPathCounts = new Map<string, number>();
@@ -213,7 +242,7 @@ export function workflowGraphToFlowCanvas(graph: WorkflowGraph): {
   const branchPathIndexByBranch = new Map<string, number>();
   const rowEdgeLanes = new Map<number, number>();
 
-  const nodes: Node<FlowMapNodeData>[] = graph.nodes.map((node) => {
+  const nodes: Node<FlowMapNodeData | FlowMapStickyNoteData>[] = graph.nodes.map((node) => {
     const position = positions.get(node.id) ?? { x: 0, y: 0 };
 
     return {
@@ -229,11 +258,30 @@ export function workflowGraphToFlowCanvas(graph: WorkflowGraph): {
         description: node.description,
         pathHandleCount:
           node.kind === 'branch' ? branchPathCounts.get(node.id) : undefined,
+        status: overlay?.nodeStatuses[node.id],
+        reviewerNote: overlay?.nodeNotes[node.id],
       },
-      draggable: false,
+      draggable: isEditMode,
       selectable: true,
     };
   });
+
+  for (const note of overlay?.stickyNotes ?? []) {
+    nodes.push({
+      id: `sticky-${note.id}`,
+      type: 'stickyNote',
+      position: { x: note.x, y: note.y },
+      data: {
+        text: note.text,
+        color: note.color,
+        isEditMode,
+        onDelete: onDeleteSticky,
+      },
+      draggable: isEditMode,
+      selectable: true,
+      zIndex: 10,
+    });
+  }
 
   const edges: Edge[] = graph.edges.map((edge, index) => {
     const fromNode = nodeById.get(edge.from);
@@ -308,4 +356,49 @@ export function workflowGraphToFlowCanvas(graph: WorkflowGraph): {
   });
 
   return { nodes, edges };
+}
+
+export function stickyNoteId(noteId: string): string {
+  return `sticky-${noteId}`;
+}
+
+export function parseStickyNoteId(nodeId: string): string | null {
+  return nodeId.startsWith('sticky-') ? nodeId.slice('sticky-'.length) : null;
+}
+
+export function buildOverlayFromNodes(
+  base: FlowMapOverlay,
+  graphNodes: Node<FlowMapNodeData | FlowMapStickyNoteData>[],
+): FlowMapOverlay {
+  const graphNodeIds = new Set(
+    graphNodes.filter((node) => node.type === 'flowMap').map((node) => node.id),
+  );
+
+  const nodePositions: FlowMapOverlay['nodePositions'] = {};
+  const stickyNotes: FlowMapStickyNote[] = [];
+
+  for (const node of graphNodes) {
+    if (node.type === 'flowMap' && graphNodeIds.has(node.id)) {
+      nodePositions[node.id] = { x: node.position.x, y: node.position.y };
+      continue;
+    }
+
+    if (node.type !== 'stickyNote') continue;
+    const noteId = parseStickyNoteId(node.id);
+    if (!noteId) continue;
+    const data = node.data as FlowMapStickyNoteData;
+    stickyNotes.push({
+      id: noteId,
+      x: node.position.x,
+      y: node.position.y,
+      text: data.text,
+      color: data.color,
+    });
+  }
+
+  return {
+    ...base,
+    nodePositions,
+    stickyNotes,
+  };
 }

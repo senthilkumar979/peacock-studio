@@ -1,3 +1,4 @@
+import type { FlowMapNodeStatus } from '@peacock/shared';
 import type { LucideIcon } from 'lucide-react';
 import {
   GitBranch,
@@ -59,6 +60,42 @@ export const FLOW_MAP_KIND_THEMES: Record<WorkflowGraphNode['kind'], FlowMapKind
     label: 'Path',
   },
 };
+
+export interface FlowMapStatusTheme {
+  label: string;
+  badgeClass: string;
+  dotClass: string;
+}
+
+export const FLOW_MAP_STATUS_THEMES: Record<FlowMapNodeStatus, FlowMapStatusTheme> = {
+  draft: {
+    label: 'Draft',
+    badgeClass: 'bg-slate-100 text-slate-700 ring-slate-200',
+    dotClass: 'bg-slate-400',
+  },
+  in_review: {
+    label: 'In review',
+    badgeClass: 'bg-amber-100 text-amber-800 ring-amber-200',
+    dotClass: 'bg-amber-500',
+  },
+  approved: {
+    label: 'Approved',
+    badgeClass: 'bg-emerald-100 text-emerald-800 ring-emerald-200',
+    dotClass: 'bg-emerald-500',
+  },
+  needs_work: {
+    label: 'Needs work',
+    badgeClass: 'bg-rose-100 text-rose-800 ring-rose-200',
+    dotClass: 'bg-rose-500',
+  },
+};
+
+export const FLOW_MAP_STATUS_OPTIONS = Object.entries(FLOW_MAP_STATUS_THEMES).map(
+  ([value, theme]) => ({
+    value: value as FlowMapNodeStatus,
+    label: theme.label,
+  }),
+);
 
 export interface WorkflowGraphStats {
   steps: number;

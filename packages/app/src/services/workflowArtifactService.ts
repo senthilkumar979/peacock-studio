@@ -1,13 +1,17 @@
 import {
+  buildWorkflowGraph,
   generateFlowMapMarkdown,
   generatePlaywrightSpec,
   generateTestCasesMarkdown,
+  pruneFlowMapOverlay,
+  type FlowMapOverlay,
 } from '@peacock/shared';
 import { isCloudLibraryActive } from '@/cloud/authContext';
 import {
   cloudGetWorkflowArtifact,
   cloudListDocumentArtifactStatuses,
   cloudListWorkflowArtifacts,
+  cloudPatchWorkflowArtifactMetadata,
   cloudSaveWorkflowArtifact,
 } from '@/cloud/repositories/workflowArtifactRepository';
 import { cloudSaveFlowDocument } from '@/cloud/repositories/flowDocumentRepository';
@@ -64,6 +68,18 @@ export async function listDocumentArtifactStatuses(
   return cloudListDocumentArtifactStatuses(documentId);
 }
 
+export async function saveFlowMapOverlay(
+  documentId: string,
+  overlay: FlowMapOverlay,
+): Promise<WorkflowArtifact> {
+  requireCloudArtifactsEnabled();
+  return cloudPatchWorkflowArtifactMetadata(
+    documentId,
+    WORKFLOW_ARTIFACT_TYPES.flowMap,
+    overlay,
+  );
+}
+
 export async function generateWorkflowArtifact(
   documentId: string,
   artifactType: WorkflowArtifactType,
@@ -75,15 +91,32 @@ export async function generateWorkflowArtifact(
     throw new Error('Flow document not found.');
   }
 
+  const existing =
+    artifactType === WORKFLOW_ARTIFACT_TYPES.flowMap
+      ? await cloudGetWorkflowArtifact(documentId, artifactType)
+      : undefined;
+
   await cloudSaveFlowDocument(doc);
 
   const flowTitle = doc.flow.flow.title.trim() || 'Untitled flow';
   const content = generateContent(artifactType, flowTitle, doc.steps);
 
-  return cloudSaveWorkflowArtifact({
+  const artifact = await cloudSaveWorkflowArtifact({
     documentId,
     artifactType,
     flowTitle,
     content,
   });
+
+  if (artifactType === WORKFLOW_ARTIFACT_TYPES.flowMap && existing?.metadata) {
+    const graph = buildWorkflowGraph(flowTitle, doc.steps);
+    const pruned = pruneFlowMapOverlay(existing.metadata, graph);
+    return cloudPatchWorkflowArtifactMetadata(
+      documentId,
+      WORKFLOW_ARTIFACT_TYPES.flowMap,
+      pruned,
+    );
+  }
+
+  return artifact;
 }

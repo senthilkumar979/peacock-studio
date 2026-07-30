@@ -1,3 +1,4 @@
+import { parseFlowMapOverlay, type FlowMapOverlay } from '@peacock/shared';
 import { requireCloudAuthContext } from '@/cloud/authContext';
 import { recordOrgEvent } from '@/cloud/repositories/analyticsRepository';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
@@ -13,9 +14,13 @@ interface WorkflowArtifactRow {
   artifact_type: WorkflowArtifactType;
   flow_title: string;
   content: string;
+  metadata?: unknown;
   generated_at: string;
   updated_at: string;
 }
+
+const ARTIFACT_SELECT =
+  'id, document_id, artifact_type, flow_title, content, metadata, generated_at, updated_at';
 
 function toSummary(row: WorkflowArtifactRow): WorkflowArtifactSummary {
   return {
@@ -32,6 +37,7 @@ function toArtifact(row: WorkflowArtifactRow): WorkflowArtifact {
   return {
     ...toSummary(row),
     content: row.content,
+    metadata: parseFlowMapOverlay(row.metadata),
   };
 }
 
@@ -61,7 +67,7 @@ export async function cloudGetWorkflowArtifact(
 
   const { data, error } = await supabase
     .from('workflow_artifacts')
-    .select('id, document_id, artifact_type, flow_title, content, generated_at, updated_at')
+    .select(ARTIFACT_SELECT)
     .eq('organization_id', organizationId)
     .eq('document_id', documentId)
     .eq('artifact_type', artifactType)
@@ -115,7 +121,7 @@ export async function cloudSaveWorkflowArtifact(input: {
       },
       { onConflict: 'organization_id,document_id,artifact_type' },
     )
-    .select('id, document_id, artifact_type, flow_title, content, generated_at, updated_at')
+    .select(ARTIFACT_SELECT)
     .single();
 
   if (error) throw error;
@@ -126,5 +132,31 @@ export async function cloudSaveWorkflowArtifact(input: {
     metadata: { artifactType: input.artifactType },
   });
 
+  return toArtifact(data as WorkflowArtifactRow);
+}
+
+export async function cloudPatchWorkflowArtifactMetadata(
+  documentId: string,
+  artifactType: WorkflowArtifactType,
+  metadata: FlowMapOverlay,
+): Promise<WorkflowArtifact> {
+  const { organizationId, userEmail } = requireCloudAuthContext();
+  const supabase = getAuthenticatedSupabaseClient();
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from('workflow_artifacts')
+    .update({
+      metadata,
+      updated_at: now,
+      updated_by: userEmail,
+    })
+    .eq('organization_id', organizationId)
+    .eq('document_id', documentId)
+    .eq('artifact_type', artifactType)
+    .select(ARTIFACT_SELECT)
+    .single();
+
+  if (error) throw error;
   return toArtifact(data as WorkflowArtifactRow);
 }

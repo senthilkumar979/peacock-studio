@@ -1,5 +1,9 @@
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
-import { FLOW_MAP_KIND_THEMES, FLOW_MAP_NODE_WIDTH } from '@/workflow-artifacts/flowMapCanvasTheme';
+import {
+  FLOW_MAP_KIND_THEMES,
+  FLOW_MAP_NODE_WIDTH,
+  FLOW_MAP_STATUS_THEMES,
+} from '@/workflow-artifacts/flowMapCanvasTheme';
 import type { FlowMapNodeData } from '@/workflow-artifacts/workflowGraphLayout';
 
 export type FlowMapCanvasNodeType = Node<FlowMapNodeData, 'flowMap'>;
@@ -23,9 +27,18 @@ const CARDINAL_SOURCES: Position[] = [
 export const FlowMapCanvasNode = ({ data, selected }: NodeProps<FlowMapCanvasNodeType>) => {
   const theme = FLOW_MAP_KIND_THEMES[data.kind];
   const Icon = theme.icon;
+  const statusTheme = data.status ? FLOW_MAP_STATUS_THEMES[data.status] : null;
 
   return (
     <div className="relative" style={{ width: FLOW_MAP_NODE_WIDTH }}>
+      {statusTheme ? (
+        <span
+          className={`absolute -right-2 -top-2 z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-md ring-1 ${statusTheme.badgeClass}`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${statusTheme.dotClass}`} aria-hidden />
+          {statusTheme.label}
+        </span>
+      ) : null}
       <div
         className={`overflow-hidden rounded-2xl border bg-white shadow-lg transition-all duration-200 ${
           selected

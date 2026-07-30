@@ -45,3 +45,5 @@ export * from './export/playwright/resolvePlaywrightLocator';
 export * from './export/playwright/generatePlaywrightSpec';
 export * from './export/flowMap/generateFlowMapMarkdown';
 export * from './export/flowMap/extractFlowMapMermaidSource';
+export * from './export/flowMap/overlay';
+export * from './export/workflowGraph/buildWorkflowGraphContext';

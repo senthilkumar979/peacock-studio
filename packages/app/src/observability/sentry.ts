@@ -13,7 +13,46 @@ const EXPECTED_CLIENT_NOISE: RegExp[] = [
   /Nothing to reset found for provided container/i,
   /Rate limit unavailable/i,
   /Multiple Sentry Session Replay instances are not supported/i,
+  /verified primary email is required for cloud sync/i,
 ];
+
+/** Clerk FAPI empty-body / network glitches during session.touch (PEACOCK-STUDIO-1E). */
+const CLERK_SDK_JSON_NOISE =
+  /Failed to execute 'json' on 'Response'|Unexpected end of JSON input/i;
+
+function errorStack(error: unknown): string {
+  if (error instanceof Error) return error.stack ?? '';
+  if (error && typeof error === 'object' && 'stack' in error) {
+    const stack = (error as { stack?: unknown }).stack;
+    if (typeof stack === 'string') return stack;
+  }
+  return '';
+}
+
+function stackLooksLikeClerk(stack: string): boolean {
+  return /clerk\.browser\.js|@clerk\/|clerk\.accounts\.dev/i.test(stack);
+}
+
+export function isClerkSdkNoise(error: unknown): boolean {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : error && typeof error === 'object' && 'message' in error
+          ? String((error as { message?: unknown }).message ?? '')
+          : '';
+  if (!CLERK_SDK_JSON_NOISE.test(message)) return false;
+  return stackLooksLikeClerk(errorStack(error));
+}
+
+function sentryEventLooksLikeClerk(event: Sentry.ErrorEvent): boolean {
+  const text = eventMessage(event);
+  if (!CLERK_SDK_JSON_NOISE.test(text)) return false;
+  const frames =
+    event.exception?.values?.flatMap((value) => value.stacktrace?.frames ?? []) ?? [];
+  return frames.some((frame) => stackLooksLikeClerk(frame.filename ?? ''));
+}
 
 function eventMessage(event: Sentry.ErrorEvent): string {
   const message = event.message ?? '';
@@ -73,6 +112,7 @@ export function initSentry(): void {
       ignoreErrors: EXPECTED_CLIENT_NOISE,
       beforeSend(event) {
         if (isReactRefreshNoise(event)) return null;
+        if (sentryEventLooksLikeClerk(event)) return null;
         const text = eventMessage(event);
         if (EXPECTED_CLIENT_NOISE.some((pattern) => pattern.test(text))) return null;
         return event;
@@ -97,6 +137,7 @@ export function isSentryInitialized(): boolean {
 
 /** Expected UX / bot-challenge failures — do not escalate to Sentry. */
 export function isExpectedClientNoise(error: unknown): boolean {
+  if (isClerkSdkNoise(error)) return true;
   const message =
     error instanceof Error
       ? error.message
