@@ -11,6 +11,7 @@ import { normalizePersona } from '@/utils/normalizePersona';
 import { normalizeProductTour } from '@/utils/normalizeProductTour';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
 import { getTurnstileToken } from '@/security/turnstile';
+import { isPublicShareEmbed } from '@/cloud/publicShareContext';
 
 interface SharedFlowDocumentPayload {
   id: string;
@@ -32,8 +33,10 @@ async function invokeResolveShare<T>(input: {
   documentId?: string;
   personaId?: string;
 }): Promise<T> {
-  // Turnstile tokens are single-use — obtain a fresh one per resolve-share call.
-  const turnstileToken = await getTurnstileToken('resolve-share');
+  // Embeds run inside third-party iframes where Turnstile often fails siteverify.
+  // The Edge Function skips Turnstile only when the share link's channel is `embed`.
+  const isEmbed = isPublicShareEmbed();
+  const turnstileToken = isEmbed ? undefined : await getTurnstileToken('resolve-share');
   const accessToken = await resolveCallerAccessToken();
 
   const response = await fetch(`${getSupabaseUrl()}/functions/v1/resolve-share`, {
@@ -47,6 +50,7 @@ async function invokeResolveShare<T>(input: {
       action: input.action,
       token: input.token,
       turnstileToken,
+      presentation: isEmbed ? 'embed' : 'share',
       documentId: input.documentId,
       personaId: input.personaId,
     }),

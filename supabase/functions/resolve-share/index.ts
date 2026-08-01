@@ -2,6 +2,9 @@
 // Deploy with verify_jwt=false — public viewers and Clerk JWTs both use this path.
 // Secrets: TURNSTILE_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
 // Optional: APP_ORIGIN (CORS)
+//
+// Embed-channel shares skip Turnstile: third-party iframes cannot reliably complete
+// Cloudflare challenges. Bot abuse is still limited by consume_edge_rate_limit.
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
@@ -24,6 +27,7 @@ interface ResolveShareBody {
   action?: ShareAction;
   token?: string;
   turnstileToken?: string;
+  presentation?: 'embed' | 'share';
   documentId?: string;
   personaId?: string;
 }
@@ -54,14 +58,6 @@ serve(async (req) => {
     if (!shareToken) {
       return json({ error: 'Missing share token' }, 400, cors);
     }
-    if (!turnstileToken) {
-      return json({ error: 'Missing Turnstile token' }, 400, cors);
-    }
-
-    const turnstileOk = await verifyTurnstile(turnstileToken, clientIp(req));
-    if (!turnstileOk) {
-      return json({ error: 'Bot check failed' }, 403, cors);
-    }
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
     const screenshotUrlSecret = Deno.env.get('SCREENSHOT_URL_SECRET')?.trim();
@@ -81,6 +77,29 @@ serve(async (req) => {
       return json({ error: 'Too many requests' }, 429, cors);
     }
 
+    // Peek channel with service role so we can skip Turnstile for real embed shares only
+    // (do not trust client `presentation` alone).
+    const { data: peek, error: peekError } = await admin.rpc('resolve_share_link', {
+      p_token: shareToken,
+    });
+    if (peekError) throw peekError;
+
+    const peekRow = asRecord(peek);
+    if (!peekRow) {
+      return json({ data: null }, 200, cors);
+    }
+
+    const isEmbedChannel = peekRow.channel === 'embed';
+    if (!isEmbedChannel) {
+      if (!turnstileToken) {
+        return json({ error: 'Missing Turnstile token' }, 400, cors);
+      }
+      const turnstileOk = await verifyTurnstile(turnstileToken, clientIp(req));
+      if (!turnstileOk) {
+        return json({ error: 'Bot check failed' }, 403, cors);
+      }
+    }
+
     const authHeader = req.headers.get('Authorization');
     const userJwt = bearerToken(authHeader);
     const rpcClient =
@@ -91,6 +110,10 @@ serve(async (req) => {
         : admin;
 
     if (action === 'resolve') {
+      // Prefer caller-scoped resolve (auth-gated shares); fall back to peek for anon/embed.
+      if (rpcClient === admin) {
+        return json({ data: peek }, 200, cors);
+      }
       const { data, error } = await rpcClient.rpc('resolve_share_link', { p_token: shareToken });
       if (error) throw error;
       return json({ data }, 200, cors);
@@ -185,4 +208,9 @@ function json(
 function bearerToken(header: string | null): string | null {
   if (!header?.startsWith('Bearer ')) return null;
   return header.slice('Bearer '.length).trim() || null;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
 }

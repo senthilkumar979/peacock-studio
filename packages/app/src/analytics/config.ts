@@ -23,7 +23,9 @@ export function isSentryConfigured(): boolean {
 
 /** Freshchat/Freshworks web chat CDN script (Admin → Channels → Web chat embed). */
 export function getFreshchatConfig(): { scriptSrc: string } | undefined {
-  const scriptSrc = import.meta.env.VITE_FRESHCHAT_SCRIPT_SRC?.trim();
-  if (!scriptSrc) return undefined;
+  const configured = import.meta.env.VITE_FRESHCHAT_SCRIPT_SRC?.trim();
+  // Empty string explicitly disables the widget; unset falls back to the EU embed used in production.
+  if (configured === '') return undefined;
+  const scriptSrc = configured || 'https://eu.fw-cdn.com/13649148/1552572.js';
   return { scriptSrc };
 }

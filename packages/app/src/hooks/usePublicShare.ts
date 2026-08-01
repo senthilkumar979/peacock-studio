@@ -52,7 +52,7 @@ export function usePublicShare(token: string | undefined, options: UsePublicShar
     setError(null);
     setErrorTitle(null);
     setRequiresSignIn(false);
-    setPublicShareToken(token);
+    setPublicShareToken(token, isEmbed ? 'embed' : 'share');
 
     void resolvePublicShareLink(token)
       .then((resolved) => {
