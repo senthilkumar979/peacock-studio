@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSessionMode } from '@/hooks/useSessionMode';
 import { getFlowDocument, loadFlowIntoStore } from '@/services/flowLibraryService';
 import { useFlowStore } from '@/store/flowStore';
 import type { SavedFlowDocument } from '@/types/savedFlow';
@@ -14,10 +15,19 @@ function assertReadableSavedFlowDocument(doc: SavedFlowDocument): void {
 }
 
 export function useSavedDocument(documentId: string | undefined) {
+  const sessionMode = useSessionMode();
   const isLoaded = useFlowStore((state) => state.isLoaded);
   const storeDocumentId = useFlowStore((state) => state.documentId);
   const [isLoading, setIsLoading] = useState(Boolean(documentId));
   const [error, setError] = useState<string | null>(null);
+
+  // Wait for auth/workspace settle before hitting the library router — otherwise a
+  // hard refresh races cloud init, falls back to IndexedDB, and permanently 404s
+  // cloud-only docs (see useFlowLibrary / useProductTourLibrary).
+  const canLoad =
+    sessionMode === 'local' ||
+    sessionMode === 'guest' ||
+    sessionMode === 'cloud';
 
   useEffect(() => {
     if (!documentId) {
@@ -35,6 +45,12 @@ export function useSavedDocument(documentId: string | undefined) {
     if (isLoaded && !storeDocumentId && documentId) {
       useFlowStore.getState().setDocumentId(documentId);
       setIsLoading(false);
+      setError(null);
+      return;
+    }
+
+    if (!canLoad) {
+      setIsLoading(true);
       setError(null);
       return;
     }
@@ -72,7 +88,7 @@ export function useSavedDocument(documentId: string | undefined) {
     return () => {
       cancelled = true;
     };
-  }, [documentId, isLoaded, storeDocumentId]);
+  }, [documentId, isLoaded, storeDocumentId, canLoad]);
 
   return { isLoading, isLoaded: isLoaded && storeDocumentId === documentId, error };
 }
