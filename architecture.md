@@ -313,6 +313,7 @@ Committed migrations under [`supabase/migrations/`](supabase/migrations/) are **
 | `workflow_artifacts` | `test_cases` \| `playwright` \| `flow_map` per document |
 | `analytics_events` | Org / share analytics (via RPCs) |
 | `email_send_log` | Invite email audit |
+| `welcome_email_sends` | Founder welcome email de-dupe (Clerk user id) |
 | `edge_rate_limits` | Edge Function rate limiting |
 
 ### Capabilities and RLS
@@ -378,6 +379,7 @@ AppProviders
 - `workspace_type`: `personal` | `team`
 - Roles: `admin` | `member`
 - Invites: Edge Function **`send-org-invite`** (Resend + Turnstile + admin/email guards)
+- Welcome: Edge Function **`send-welcome-email`** (Clerk `user.created` webhook → Gmail SMTP from `hello@peacockstudio.app`; idempotent via `welcome_email_sends`)
 - Org admin UI: `/org/admin`
 
 ### Super admin
@@ -431,7 +433,7 @@ Architecture-focused map (where code lives + which stores):
 |---------|-----|
 | App | Vite → `packages/app/dist`; Vercel SPA rewrite + security headers |
 | Extension | Four Vite builds → `packages/extension/dist`; store packaging: [`extension-store-deployment.md`](extension-store-deployment.md), [`packages/extension/web-store.md`](packages/extension/web-store.md) |
-| Supabase | Apply migrations; deploy Edge Functions with `verify_jwt=false` (Clerk JWTs): `resolve-share`, `send-org-invite`, `platform-admin` |
+| Supabase | Apply migrations; deploy Edge Functions with `verify_jwt=false` (Clerk JWTs / webhooks): `resolve-share`, `send-org-invite`, `send-welcome-email`, `platform-admin` |
 | API | `api/super-admin/*` on Vercel (server secrets) |
 | Sitemap | `scripts/generate-sitemap.mjs` |
 

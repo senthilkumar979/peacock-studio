@@ -13,3 +13,7 @@ verify_jwt = false
 # Clerk third-party JWTs fail the legacy gateway verify_jwt check.
 # Auth is enforced inside via resolve_actor_email + SUPER_ADMIN_EMAILS secret.
 verify_jwt = false
+
+[functions.send-welcome-email]
+# Clerk webhooks use Svix signatures (not JWTs). Auth is enforced via CLERK_WEBHOOK_SECRET.
+verify_jwt = false
