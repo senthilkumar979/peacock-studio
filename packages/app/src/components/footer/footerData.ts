@@ -3,7 +3,7 @@ import { CHROME_WEB_STORE_EXTENSION_URL } from '@/constants/extension';
 import { LANDING_PATH, PRICING_PATH } from '@/constants/routes';
 import { PRODUCT_NAV_ITEMS, SOLUTION_NAV_ITEMS } from '@/components/site/siteNavData';
 
-export const FOOTER_TAGLINE = 'Platform where developers and business work together';
+export const FOOTER_TAGLINE = 'Platform where developers and business document workflows together';
 
 export const PUBLIC_EXPLORE_LINKS = [
   { label: 'Home', href: LANDING_PATH },
