@@ -7,6 +7,13 @@ export const CHROME_WEB_STORE_EXTENSION_URL =
 /** Extension ID from the published Chrome Web Store listing. */
 export const PUBLISHED_EXTENSION_ID = 'abjglkkkjaoabboginagilnejoacnnnm' as const;
 
+/** Published Microsoft Edge Add-ons listing for Peacock Studio. */
+export const EDGE_ADDONS_EXTENSION_URL =
+  'https://microsoftedge.microsoft.com/addons/detail/peacock-studio/jehdcpioaiikjafefnbjnnigalpjikob' as const;
+
+/** Extension ID from the published Edge Add-ons listing. */
+export const PUBLISHED_EDGE_EXTENSION_ID = 'jehdcpioaiikjafefnbjnnigalpjikob' as const;
+
 export const EXTENSION_DISPLAY_NAME = 'Peacock Studio extension' as const;
 
 export interface ExtensionStoreListing {
@@ -20,7 +27,7 @@ export interface ExtensionStoreListing {
 
 /**
  * Install / messaging registry keyed by browser family.
- * Fill Edge and Firefox fields after each store publishes — no redesign needed.
+ * Fill Firefox fields after AMO publishes — no redesign needed.
  */
 export const EXTENSION_STORE_BY_FAMILY: Partial<
   Record<CaptureBrowserFamily, ExtensionStoreListing>
@@ -31,8 +38,8 @@ export const EXTENSION_STORE_BY_FAMILY: Partial<
     label: 'Chrome Web Store',
   },
   edge: {
-    storeUrl: null,
-    extensionId: null,
+    storeUrl: EDGE_ADDONS_EXTENSION_URL,
+    extensionId: PUBLISHED_EDGE_EXTENSION_ID,
     label: 'Edge Add-ons',
   },
   firefox: {

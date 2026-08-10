@@ -42,6 +42,20 @@ export function isEmbedSharePath(pathname: string): boolean {
   return /^\/s\/[^/]+\/embed\/?$/.test(pathname);
 }
 
+/** True when the URL includes `embed=true` (e.g. landing iframed with chrome suppressed). */
+export function hasEmbedQueryParam(search: string): boolean {
+  const normalized = search.startsWith('?') ? search.slice(1) : search;
+  return new URLSearchParams(normalized).get('embed') === 'true';
+}
+
+/**
+ * True for embed surfaces where host chrome (cookie banner, etc.) should stay hidden:
+ * share path `/s/:token/embed` or any route with `?embed=true`.
+ */
+export function isEmbedPresentation(pathname: string, search = ''): boolean {
+  return isEmbedSharePath(pathname) || hasEmbedQueryParam(search);
+}
+
 export function getSuperAdminPath(tab?: 'platform' | 'health' | 'api'): string {
   if (!tab || tab === 'platform') return SUPER_ADMIN_PATH;
   return `${SUPER_ADMIN_PATH}?tab=${tab}`;

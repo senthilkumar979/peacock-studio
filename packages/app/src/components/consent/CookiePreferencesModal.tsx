@@ -1,13 +1,13 @@
 import { useEffect, useId, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { ConsentCategoryId } from '@peacock/shared';
-import { isEmbedSharePath } from '@/constants/routes';
+import { isEmbedPresentation } from '@/constants/routes';
 import { CONSENT_CATEGORIES } from '@/constants/consent';
 import { useConsentStore } from '@/store/consentStore';
 import { CookieCategoryToggle } from './CookieCategoryToggle';
 
 export const CookiePreferencesModal = () => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const isOpen = useConsentStore((state) => state.isPreferencesOpen);
   const record = useConsentStore((state) => state.record);
   const savePreferences = useConsentStore((state) => state.savePreferences);
@@ -28,7 +28,7 @@ export const CookiePreferencesModal = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, closePreferences]);
 
-  if (isEmbedSharePath(pathname) || !isOpen) return null;
+  if (isEmbedPresentation(pathname, search) || !isOpen) return null;
 
   const isCategoryEnabled = (id: ConsentCategoryId) =>
     id === 'analytics' ? analyticsEnabled : true;

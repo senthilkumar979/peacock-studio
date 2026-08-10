@@ -81,20 +81,18 @@ Partner Center may require complete metadata per language if you enable multiple
 
 ## After approval
 
-1. Copy the Edge Add-ons listing URL and the published extension ID.
-2. Set them on the `edge` entry in [`packages/app/src/constants/extension.ts`](../app/src/constants/extension.ts):
+Published listing (wired in [`packages/app/src/constants/extension.ts`](../app/src/constants/extension.ts)):
 
-```ts
-edge: {
-  storeUrl: 'https://microsoftedge.microsoft.com/addons/detail/...',
-  extensionId: '<edge-extension-id>',
-  label: 'Edge Add-ons',
-},
-```
+| Field | Value |
+|-------|-------|
+| Listing URL | `https://microsoftedge.microsoft.com/addons/detail/peacock-studio/jehdcpioaiikjafefnbjnnigalpjikob` |
+| Extension ID | `jehdcpioaiikjafefnbjnnigalpjikob` |
 
-3. Redeploy the SPA so Edge users get Edge store CTAs and runtime ID probing.
-4. Leave shared production `VITE_EXTENSION_ID` unset.
-5. Smoke-test: install from Edge Add-ons → record → stop → editor handoff on the production origin.
+After changing those constants:
+
+1. Redeploy the SPA so Edge users get Edge store CTAs and runtime ID probing.
+2. Leave shared production `VITE_EXTENSION_ID` unset.
+3. Smoke-test: install from Edge Add-ons → record → stop → editor handoff on the production origin.
 
 ---
 

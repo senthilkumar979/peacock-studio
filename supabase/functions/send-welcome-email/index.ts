@@ -2,14 +2,20 @@
 // Deploy with verify_jwt=false — Clerk webhooks use Svix signatures, not JWTs.
 // Secrets: CLERK_WEBHOOK_SECRET, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS,
 //          APP_ORIGIN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+//
+// Gmail alias setup: From is always senthil@peacockstudio.app. Authenticate SMTP as
+// the underlying Gmail mailbox (e.g. mentorbridgeindia@gmail.com) via SMTP_USER /
+// SMTP_PASS. In Gmail → Settings → Accounts → "Send mail as", add the alias.
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { Webhook } from 'npm:svix@1.37.0';
 import nodemailer from 'npm:nodemailer@6.9.16';
 
-const FROM_ADDRESS = 'Senthil from Peacock Studio <hello@peacockstudio.app>';
-const REPLY_TO = 'hello@peacockstudio.app';
+/** Public From address (alias). Must be a verified "Send mail as" address on SMTP_USER. */
+const FROM_EMAIL = 'senthil@peacockstudio.app';
+const FROM_ADDRESS = `Senthil from Peacock Studio <${FROM_EMAIL}>`;
+const REPLY_TO = FROM_EMAIL;
 const LOGO_URL = 'https://peacockstudio.app/peacock-logo.png';
 const SITE_URL = 'https://peacockstudio.app';
 
@@ -159,6 +165,8 @@ async function sendWelcomeEmail(input: {
   await transporter.sendMail({
     from: FROM_ADDRESS,
     replyTo: REPLY_TO,
+    // Keep envelope aligned with the alias so Gmail does not rewrite From to SMTP_USER.
+    envelope: { from: FROM_EMAIL, to: input.toEmail },
     to: input.toEmail,
     subject: 'Welcome to Peacock Studio',
     text,

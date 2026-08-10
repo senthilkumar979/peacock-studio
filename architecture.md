@@ -379,7 +379,7 @@ AppProviders
 - `workspace_type`: `personal` | `team`
 - Roles: `admin` | `member`
 - Invites: Edge Function **`send-org-invite`** (Resend + Turnstile + admin/email guards)
-- Welcome: Edge Function **`send-welcome-email`** (Clerk `user.created` webhook → Gmail SMTP from `hello@peacockstudio.app`; idempotent via `welcome_email_sends`)
+- Welcome: Edge Function **`send-welcome-email`** (Clerk `user.created` webhook → Gmail SMTP from `senthil@peacockstudio.app`; idempotent via `welcome_email_sends`)
 - Org admin UI: `/org/admin`
 
 ### Super admin

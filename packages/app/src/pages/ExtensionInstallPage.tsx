@@ -114,8 +114,8 @@ export const ExtensionInstallPage = () => {
             className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-300"
           >
             Peacock needs the browser extension to record workflows and screenshots. Chrome and Edge
-            are supported (Firefox is planned). Install from {storeListing.label}, then come back
-            here — we&apos;ll open the app automatically.
+            are supported today (Firefox is planned). Install from {storeListing.label}, then come
+            back here — we&apos;ll open the app automatically.
           </motion.p>
 
           <motion.div
