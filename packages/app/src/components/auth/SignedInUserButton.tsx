@@ -1,4 +1,4 @@
-import { LogOut } from 'lucide-react';
+import { useEffect } from 'react';
 import { useClerk, UserButton } from '@clerk/react';
 import { markIntentionalSignOut } from '@/cloud/sessionIntent';
 import { notifyInfo } from '@/utils/notify';
@@ -10,11 +10,30 @@ interface SignedInUserButtonProps {
 /**
  * Clerk UserButton that marks intentional sign-out so CloudSyncProvider
  * does not show a false "session ended" toast.
+ *
+ * Do not add a custom "Sign out" MenuItems action — that duplicates Clerk's
+ * built-in item. Side effects run by wrapping `clerk.signOut` instead.
  */
 export const SignedInUserButton = ({
   avatarClassName = 'h-9 w-9 ring-2 ring-white/30',
 }: SignedInUserButtonProps) => {
-  const { signOut } = useClerk();
+  const clerk = useClerk();
+
+  useEffect(() => {
+    const originalSignOut = clerk.signOut.bind(clerk);
+    clerk.signOut = ((...args: Parameters<typeof clerk.signOut>) => {
+      markIntentionalSignOut();
+      notifyInfo(
+        'Signed out',
+        'Your local guest library remains on this device.',
+      );
+      return originalSignOut(...args);
+    }) as typeof clerk.signOut;
+
+    return () => {
+      clerk.signOut = originalSignOut;
+    };
+  }, [clerk]);
 
   return (
     <UserButton
@@ -23,24 +42,6 @@ export const SignedInUserButton = ({
           avatarBox: avatarClassName,
         },
       }}
-    >
-      <UserButton.MenuItems>
-        <UserButton.Action label="manageAccount" />
-        {/* Reserved `signOut` label targets the default item (avoids a duplicate).
-            labelIcon is required by Clerk types whenever onClick is set. */}
-        <UserButton.Action
-          label="signOut"
-          labelIcon={<LogOut className="h-4 w-4" aria-hidden />}
-          onClick={() => {
-            markIntentionalSignOut();
-            notifyInfo(
-              'Signed out',
-              'Your local guest library remains on this device.',
-            );
-            void signOut({ redirectUrl: '/' });
-          }}
-        />
-      </UserButton.MenuItems>
-    </UserButton>
+    />
   );
 };
