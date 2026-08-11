@@ -112,8 +112,8 @@ export function useShareMethodAccess(): ShareMethodAccess {
       canExport: true,
       canEmbed: false,
       disabledReasons: {
-        link: 'Sign in to create share links.',
-        embed: 'Sign in to publish embeds.',
+        link: 'Sign up or sign in to create share links.',
+        embed: 'Sign up or sign in to publish embeds.',
       },
     };
   }

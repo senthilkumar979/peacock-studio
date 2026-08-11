@@ -70,7 +70,15 @@ export async function getFlowDocument(id: string): Promise<SavedFlowDocument | u
     return fetchPublicFlowDocument(shareToken, id);
   }
 
-  if (useCloudLibrary()) return cloudGetFlowDocument(id);
+  if (useCloudLibrary()) {
+    const cloudDoc = await cloudGetFlowDocument(id);
+    if (cloudDoc) {
+      void dropLocalFlowDocumentMirror(id);
+      return cloudDoc;
+    }
+    return promoteLocalFlowDocumentToCloud(id);
+  }
+
   return localGetFlowDocument(id);
 }
 
@@ -212,7 +220,15 @@ export async function getProductTour(id: string): Promise<ProductTour | undefine
     return fetchPublicProductTour(shareToken);
   }
 
-  if (useCloudLibrary()) return cloudGetProductTour(id);
+  if (useCloudLibrary()) {
+    const cloudTour = await cloudGetProductTour(id);
+    if (cloudTour) {
+      void dropLocalProductTourMirror(id);
+      return cloudTour;
+    }
+    return promoteLocalProductTourToCloud(id);
+  }
+
   return localGetProductTour(id);
 }
 
@@ -242,6 +258,49 @@ export async function deleteProductTour(id: string): Promise<void> {
 export function collectProductTourDocumentIds(tour: ProductTour): string[] {
   if (useCloudLibrary()) return cloudCollectProductTourDocumentIds(tour);
   return localCollectProductTourDocumentIds(tour);
+}
+
+/** Drop IndexedDB copy once cloud is known source of truth for this id. */
+async function dropLocalFlowDocumentMirror(id: string): Promise<void> {
+  try {
+    const local = await localGetFlowDocument(id);
+    if (local) await localDeleteFlowDocument(id);
+  } catch {
+    // Non-fatal — mirror cleanup must not break reads.
+  }
+}
+
+async function dropLocalProductTourMirror(id: string): Promise<void> {
+  try {
+    const local = await localGetProductTour(id);
+    if (local) await localDeleteProductTour(id);
+  } catch {
+    // Non-fatal — mirror cleanup must not break reads.
+  }
+}
+
+/**
+ * Guest doc stranded in IndexedDB after signup: push to cloud (same UUID), then
+ * remove the local row so later reads stay cloud-only.
+ */
+async function promoteLocalFlowDocumentToCloud(
+  id: string,
+): Promise<SavedFlowDocument | undefined> {
+  const local = await localGetFlowDocument(id);
+  if (!local) return undefined;
+
+  await cloudSaveFlowDocument(local, { preserveUpdatedAt: true });
+  await localDeleteFlowDocument(id);
+  return (await cloudGetFlowDocument(id)) ?? local;
+}
+
+async function promoteLocalProductTourToCloud(id: string): Promise<ProductTour | undefined> {
+  const local = await localGetProductTour(id);
+  if (!local) return undefined;
+
+  await cloudSaveProductTour(local, { preserveUpdatedAt: true });
+  await localDeleteProductTour(id);
+  return (await cloudGetProductTour(id)) ?? local;
 }
 
 export { useCloudLibrary };

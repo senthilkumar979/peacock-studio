@@ -2,7 +2,10 @@ import {
   cloudLibraryIsEmpty,
   countLocalLibraryItems,
   dismissLocalImportPrompt,
+  hasCompletedLocalImport,
   importLocalLibraryToCloud,
+  localLibraryNeedsCloudImport,
+  markLocalImportComplete,
   type LocalLibraryImportCounts,
 } from '@/cloud/importLocalLibrary';
 import { getFreeAccountDocLimit } from '@/cloud/planLimits';
@@ -35,22 +38,29 @@ export type LocalLibraryImportOutcome =
 /**
  * Import guest IndexedDB library into the active cloud workspace.
  * Visible banner only when `showProgress` (recent signup + prior flow docs).
+ *
+ * Runs when the cloud library has no docs/tours, or when local still has
+ * document/tour ids missing from cloud (recovers stranded guest libraries).
  */
 export async function runLocalLibraryImport(options: {
   createdAt: Date | number | null | undefined;
   isCancelled?: () => boolean;
 }): Promise<LocalLibraryImportOutcome> {
   const local = await countLocalLibraryItems();
-  const hasLocalData = local.documents > 0 || local.personas > 0 || local.tours > 0;
+  const hasLocalContent = local.documents > 0 || local.tours > 0;
 
-  if (!hasLocalData) {
+  if (!hasLocalContent) {
     dismissLocalImportPrompt();
     return { status: 'skipped' };
   }
 
   const cloudEmpty = await cloudLibraryIsEmpty();
-  if (!cloudEmpty) {
-    dismissLocalImportPrompt();
+  const needsImport = cloudEmpty || (await localLibraryNeedsCloudImport());
+
+  if (!needsImport) {
+    // Local copies already exist in cloud — drop IndexedDB and mark done.
+    await clearLocalLibrary();
+    markLocalImportComplete();
     return { status: 'skipped' };
   }
 
@@ -114,4 +124,14 @@ export async function runLocalLibraryImport(options: {
     }
     return { status: 'error', showProgress };
   }
+}
+
+/** Whether the post-login runner should attempt import (including recovery). */
+export async function shouldRunLocalLibraryImport(): Promise<boolean> {
+  if (await localLibraryNeedsCloudImport()) return true;
+  if (hasCompletedLocalImport()) return false;
+
+  const local = await countLocalLibraryItems();
+  // Prior dismiss/incomplete with local docs/tours still present — reconcile or clear.
+  return local.documents > 0 || local.tours > 0;
 }

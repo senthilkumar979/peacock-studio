@@ -12,6 +12,7 @@ import { exportFlowPdf } from '@/pdf/exportFlowPdf';
 import { getFlowDocument } from '@/services/flowLibraryService';
 import { createDocumentEmbedCode, createDocumentShareUrl } from '@/services/shareLinkService';
 import { EmbedPublicAccessNote } from '@/components/share/EmbedPublicAccessNote';
+import { GuestShareAccessNotice } from '@/components/share/GuestShareAccessNotice';
 import { isCloudSyncEnabled } from '@/cloud/config';
 import type { FlowDocumentStatus, FlowShareSettings } from '@/types/savedFlow';
 import { resolveShareSettings } from '@/utils/flowShareSettings';
@@ -25,6 +26,7 @@ import {
 } from '@/utils/shareLink';
 import { expiresAtFromPreset, type ShareExpiryPreset } from '@/utils/shareExpiry';
 import { useShareMethodAccess } from '@/hooks/useOrganization';
+import { useIsGuestSession } from '@/hooks/useSessionMode';
 import { notifyError, notifyPromise } from '@/utils/notify';
 import { AnalyticsEvents } from '@/analytics/events';
 
@@ -52,6 +54,7 @@ export const ShareDocumentModal = ({
   onShareSettingsSave,
 }: ShareDocumentModalProps) => {
   const { canShare, canExport, canEmbed, disabledReasons } = useShareMethodAccess();
+  const isGuest = useIsGuestSession();
   const [method, setMethod] = useState<ShareMethod>('link');
   const [accessMode, setAccessMode] = useState<ShareLinkAccessMode>('readonly');
   const [presenterLink, setPresenterLink] = useState(false);
@@ -374,6 +377,7 @@ export const ShareDocumentModal = ({
                   </p>
                 </div>
               ) : null}
+              {isGuest ? <GuestShareAccessNotice /> : null}
               <ShareMethodPicker
                 value={method}
                 onChange={setMethod}

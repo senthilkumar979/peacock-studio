@@ -8,7 +8,6 @@ import {
 } from '@/storage/flowLibraryDb';
 import {
   listFlowSummaries,
-  listPersonas,
   listProductTourSummaries,
   saveFlowDocument,
   savePersona,
@@ -38,14 +37,47 @@ export async function countLocalLibraryItems(): Promise<LocalLibraryImportCounts
   };
 }
 
+/**
+ * True when the cloud workspace has no flow docs or product tours.
+ * Intentionally ignores personas — `listPersonas()` seeds a default persona and
+ * would otherwise make every new org look non-empty (skipping guest import).
+ */
 export async function cloudLibraryIsEmpty(): Promise<boolean> {
-  const [documents, personas, tours] = await Promise.all([
+  const [documents, tours] = await Promise.all([
     listFlowSummaries(),
-    listPersonas(),
     listProductTourSummaries(),
   ]);
 
-  return documents.length === 0 && personas.length === 0 && tours.length === 0;
+  return documents.length === 0 && tours.length === 0;
+}
+
+/** Local flow docs / tours whose ids are not yet present in the cloud library. */
+export async function listLocalIdsMissingFromCloud(): Promise<{
+  documentIds: string[];
+  tourIds: string[];
+}> {
+  const [localDocs, localTours, cloudDocs, cloudTours] = await Promise.all([
+    localListFlowSummaries(),
+    localListProductTourSummaries(),
+    listFlowSummaries(),
+    listProductTourSummaries(),
+  ]);
+
+  const cloudDocIds = new Set(cloudDocs.map((doc) => doc.id));
+  const cloudTourIds = new Set(cloudTours.map((tour) => tour.id));
+
+  return {
+    documentIds: localDocs.filter((doc) => !cloudDocIds.has(doc.id)).map((doc) => doc.id),
+    tourIds: localTours.filter((tour) => !cloudTourIds.has(tour.id)).map((tour) => tour.id),
+  };
+}
+
+export async function localLibraryNeedsCloudImport(): Promise<boolean> {
+  const local = await countLocalLibraryItems();
+  if (local.documents === 0 && local.tours === 0) return false;
+
+  const missing = await listLocalIdsMissingFromCloud();
+  return missing.documentIds.length > 0 || missing.tourIds.length > 0;
 }
 
 export async function importLocalLibraryToCloud(): Promise<LocalLibraryImportCounts> {
@@ -89,12 +121,17 @@ export async function importLocalLibraryToCloud(): Promise<LocalLibraryImportCou
     tours: localTourSummaries.length,
   };
 
-  localStorage.setItem(LOCAL_IMPORT_STORAGE_KEY, new Date().toISOString());
+  markLocalImportComplete();
   return counts;
 }
 
 export function hasCompletedLocalImport(): boolean {
-  return Boolean(localStorage.getItem(LOCAL_IMPORT_STORAGE_KEY));
+  const value = localStorage.getItem(LOCAL_IMPORT_STORAGE_KEY);
+  return Boolean(value) && value !== 'dismissed';
+}
+
+export function markLocalImportComplete(): void {
+  localStorage.setItem(LOCAL_IMPORT_STORAGE_KEY, new Date().toISOString());
 }
 
 export function dismissLocalImportPrompt(): void {
