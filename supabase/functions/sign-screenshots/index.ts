@@ -9,7 +9,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { buildAppScreenshotUrl, signScreenshotAssetToken } from '../_shared/screenshotAssetUrl.ts';
 const SIGNED_URL_TTL_SECONDS = 3600;
 
-const SHARE_RATE_LIMIT = 60;
+const SHARE_RATE_LIMIT = 1000;
 const SHARE_RATE_WINDOW_SECONDS = 60;
 
 interface SignScreenshotsBody {

@@ -65,13 +65,15 @@ export async function resolveScreenshotUrls(
     const { data, error } = await supabase.functions.invoke('sign-screenshots', {
       body: { documentId },
     });
-    if (error) throw error;
-
-    const payload = data as { data?: Record<string, string> } | null;
-    return payload?.data ?? {};
+    if (!error) {
+      const payload = data as { data?: Record<string, string>; error?: string } | null;
+      // 2xx with { error } (or empty) → fall through to Storage signed URLs
+      if (payload?.data && !payload.error && Object.keys(payload.data).length > 0) {
+        return payload.data;
+      }
+    }
   } catch {
-    // Fallback for local/dev builds where SCREENSHOT_URL_SECRET or edge
-    // functions aren't deployed yet.
+    // Fall through — Edge rate limits / misconfig should not blank the editor.
   }
 
   const { data, error } = await supabase
@@ -149,47 +151,61 @@ export async function syncDocumentScreenshots(
   documentId: string,
   screenshotUrls: Record<string, string>,
 ): Promise<void> {
-  const entries = Object.entries(screenshotUrls);
+  const entries = Object.entries(screenshotUrls).filter(([, url]) =>
+    isInlineScreenshotUrl(url),
+  );
   if (!entries.length) return;
 
   const { organizationId } = requireCloudAuthContext();
   const supabase = getAuthenticatedSupabaseClient();
+  const failures: string[] = [];
 
   for (const [screenshotId, url] of entries) {
-    if (!isInlineScreenshotUrl(url)) continue;
+    try {
+      const rawBlob = await inlineScreenshotToBlob(url);
+      if (!rawBlob) {
+        failures.push(screenshotId);
+        continue;
+      }
+      const blob = await prepareImageForCloudStorage(rawBlob);
+      const contentHash = await sha256HexFromBlob(blob);
 
-    const rawBlob = await inlineScreenshotToBlob(url);
-    if (!rawBlob) continue;
-    const blob = await prepareImageForCloudStorage(rawBlob);
-    const contentHash = await sha256HexFromBlob(blob);
+      const existing = await findExistingAssetByHash(organizationId, contentHash);
 
-    const existing = await findExistingAssetByHash(organizationId, contentHash);
+      let storagePath = existing?.storage_path;
+      let byteSize = existing?.byte_size ?? 0;
 
-    let storagePath = existing?.storage_path;
-    let byteSize = existing?.byte_size ?? 0;
+      if (!storagePath) {
+        storagePath = buildScreenshotStoragePath(organizationId, documentId, screenshotId);
+        byteSize = blob.size;
 
-    if (!storagePath) {
-      storagePath = buildScreenshotStoragePath(organizationId, documentId, screenshotId);
-      byteSize = blob.size;
+        const { error: uploadError } = await supabase.storage
+          .from(SCREENSHOTS_BUCKET)
+          .upload(storagePath, blob, {
+            contentType: 'image/jpeg',
+            upsert: true,
+          });
 
-      const { error: uploadError } = await supabase.storage
-        .from(SCREENSHOTS_BUCKET)
-        .upload(storagePath, blob, {
-          contentType: 'image/jpeg',
-          upsert: true,
-        });
+        if (uploadError) throw uploadError;
+      }
 
-      if (uploadError) throw uploadError;
+      await upsertScreenshotAsset({
+        organizationId,
+        documentId,
+        screenshotId,
+        storagePath,
+        contentHash,
+        byteSize,
+      });
+    } catch {
+      failures.push(screenshotId);
     }
+  }
 
-    await upsertScreenshotAsset({
-      organizationId,
-      documentId,
-      screenshotId,
-      storagePath,
-      contentHash,
-      byteSize,
-    });
+  if (failures.length) {
+    throw new Error(
+      `Failed to upload ${failures.length} of ${entries.length} screenshots to cloud storage.`,
+    );
   }
 }
 

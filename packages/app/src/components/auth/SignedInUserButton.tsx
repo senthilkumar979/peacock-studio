@@ -1,4 +1,3 @@
-import { LogOut } from 'lucide-react';
 import { useClerk, UserButton } from '@clerk/react';
 import { markIntentionalSignOut } from '@/cloud/sessionIntent';
 import { notifyInfo } from '@/utils/notify';
@@ -26,9 +25,10 @@ export const SignedInUserButton = ({
     >
       <UserButton.MenuItems>
         <UserButton.Action label="manageAccount" />
+        {/* Use reserved `signOut` label so we reorder the default item — a custom
+            "Sign out" string would render a duplicate next to Clerk's built-in. */}
         <UserButton.Action
-          label="Sign out"
-          labelIcon={<LogOut className="h-4 w-4" aria-hidden />}
+          label="signOut"
           onClick={() => {
             markIntentionalSignOut();
             notifyInfo(

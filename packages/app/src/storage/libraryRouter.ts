@@ -16,6 +16,8 @@ import {
   cloudSaveFlowDocument,
   cloudUpdateFlowDocumentStatus,
 } from '@/cloud/repositories/flowDocumentRepository';
+import { syncDocumentScreenshots } from '@/cloud/screenshotStorage';
+import { isInlineScreenshotUrl } from '@/cloud/screenshotUtils';
 import {
   cloudDeletePersona,
   cloudGetPersona,
@@ -73,8 +75,7 @@ export async function getFlowDocument(id: string): Promise<SavedFlowDocument | u
   if (useCloudLibrary()) {
     const cloudDoc = await cloudGetFlowDocument(id);
     if (cloudDoc) {
-      void dropLocalFlowDocumentMirror(id);
-      return cloudDoc;
+      return reconcileCloudDocumentWithLocalScreenshots(id, cloudDoc);
     }
     return promoteLocalFlowDocumentToCloud(id);
   }
@@ -279,6 +280,50 @@ async function dropLocalProductTourMirror(id: string): Promise<void> {
   }
 }
 
+/** Inline data/blob URLs on local that cloud has not resolved yet. */
+function localInlineScreenshotsMissingFromCloud(
+  local: SavedFlowDocument,
+  cloud: SavedFlowDocument,
+): Record<string, string> {
+  const missing: Record<string, string> = {};
+  for (const [screenshotId, url] of Object.entries(local.screenshotUrls)) {
+    if (!isInlineScreenshotUrl(url)) continue;
+    if (cloud.screenshotUrls[screenshotId]) continue;
+    missing[screenshotId] = url;
+  }
+  return missing;
+}
+
+/**
+ * If cloud doc exists but screenshots never finished uploading, push remaining
+ * inline images from IndexedDB before deleting the local mirror.
+ */
+async function reconcileCloudDocumentWithLocalScreenshots(
+  id: string,
+  cloudDoc: SavedFlowDocument,
+): Promise<SavedFlowDocument> {
+  const local = await localGetFlowDocument(id);
+  if (!local) return cloudDoc;
+
+  const missing = localInlineScreenshotsMissingFromCloud(local, cloudDoc);
+  if (Object.keys(missing).length === 0) {
+    await dropLocalFlowDocumentMirror(id);
+    return cloudDoc;
+  }
+
+  try {
+    await syncDocumentScreenshots(id, missing);
+    await dropLocalFlowDocumentMirror(id);
+    return (await cloudGetFlowDocument(id)) ?? cloudDoc;
+  } catch {
+    // Keep local so a later open can retry uploading the remaining images.
+    return {
+      ...cloudDoc,
+      screenshotUrls: { ...missing, ...cloudDoc.screenshotUrls },
+    };
+  }
+}
+
 /**
  * Guest doc stranded in IndexedDB after signup: push to cloud (same UUID), then
  * remove the local row so later reads stay cloud-only.
@@ -289,9 +334,27 @@ async function promoteLocalFlowDocumentToCloud(
   const local = await localGetFlowDocument(id);
   if (!local) return undefined;
 
-  await cloudSaveFlowDocument(local, { preserveUpdatedAt: true });
-  await localDeleteFlowDocument(id);
-  return (await cloudGetFlowDocument(id)) ?? local;
+  try {
+    await cloudSaveFlowDocument(local, { preserveUpdatedAt: true });
+  } catch (error) {
+    // Doc row may already exist with partial screenshots — try finishing images only.
+    const missing = Object.fromEntries(
+      Object.entries(local.screenshotUrls).filter(([, url]) => isInlineScreenshotUrl(url)),
+    );
+    if (!Object.keys(missing).length) throw error;
+    await syncDocumentScreenshots(id, missing);
+  }
+
+  const cloudDoc = await cloudGetFlowDocument(id);
+  if (cloudDoc) {
+    const stillMissing = localInlineScreenshotsMissingFromCloud(local, cloudDoc);
+    if (Object.keys(stillMissing).length === 0) {
+      await localDeleteFlowDocument(id);
+    }
+    return cloudDoc;
+  }
+
+  return local;
 }
 
 async function promoteLocalProductTourToCloud(id: string): Promise<ProductTour | undefined> {
