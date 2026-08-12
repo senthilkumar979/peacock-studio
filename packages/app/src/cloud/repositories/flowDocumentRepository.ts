@@ -189,23 +189,38 @@ export async function cloudUpdateFlowDocumentStatus(
   const supabase = getAuthenticatedSupabaseClient();
   const updatedBy = requireUserEmail();
 
-  const { data, error } = await supabase
+  // Avoid PATCH/CORS issues by upserting (POST), but `flow_documents` has NOT NULL
+  // columns. So we first fetch the current row and then upsert all required fields.
+  const { data: existingRow, error: existingError } = await supabase
     .from('flow_documents')
-    .upsert(
-      {
-        id: documentId,
-        organization_id: organizationId,
-        status: normalizeFlowStatus(status, 'draft'),
-        updated_at: msToIso(Date.now()),
-        updated_by: updatedBy,
-      },
-      { onConflict: 'id' },
-    )
+    .select('id, saved_at, flow, steps, domain_counts, share_settings')
+    .eq('organization_id', organizationId)
+    .eq('id', documentId)
+    .maybeSingle();
+
+  if (existingError) throw existingError;
+  if (!existingRow) throw new Error('Documentation not found.');
+
+  const row = {
+    id: existingRow.id,
+    organization_id: organizationId,
+    saved_at: existingRow.saved_at,
+    updated_at: msToIso(Date.now()),
+    updated_by: updatedBy,
+    status: normalizeFlowStatus(status, 'draft'),
+    flow: normalizeFlowPayload(existingRow.flow as FlowPayload),
+    steps: existingRow.steps as FlowOutlineItem[],
+    share_settings: existingRow.share_settings ?? null,
+    domain_counts: existingRow.domain_counts,
+  };
+
+  const { error } = await supabase
+    .from('flow_documents')
+    .upsert(row, { onConflict: 'id' })
     .select('id')
     .maybeSingle();
 
   if (error) throw error;
-  if (!data) throw new Error('Documentation not found.');
 }
 
 export async function cloudDeleteFlowDocument(id: string): Promise<void> {
