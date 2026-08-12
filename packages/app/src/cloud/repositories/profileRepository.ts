@@ -43,8 +43,8 @@ export async function upsertUserProfile(input: {
     email;
   const now = new Date().toISOString();
 
-  // Conflict on clerk_user_id (stable identity) so email changes update the same row
-  // instead of failing INSERT WITH CHECK / UPDATE USING email-JWT mismatches.
+  // PK is email — upsert on email so re-signup with the same address updates the row
+  // instead of failing duplicate key on user_profiles_pkey.
   const { data, error } = await supabase
     .from('user_profiles')
     .upsert(
@@ -56,7 +56,7 @@ export async function upsertUserProfile(input: {
         last_name: lastName,
         updated_at: now,
       },
-      { onConflict: 'clerk_user_id' },
+      { onConflict: 'email' },
     )
     .select('email, clerk_user_id, display_name, first_name, last_name')
     .single();

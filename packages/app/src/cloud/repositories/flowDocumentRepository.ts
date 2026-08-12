@@ -172,26 +172,9 @@ export async function cloudSaveFlowDocument(
     domain_counts: countStepDomains(doc.steps),
   };
 
-  if (existingRow) {
-    const { error } = await supabase
-      .from('flow_documents')
-      .update({
-        saved_at: row.saved_at,
-        updated_at: row.updated_at,
-        updated_by: row.updated_by,
-        status: row.status,
-        flow: row.flow,
-        steps: row.steps,
-        share_settings: row.share_settings,
-        domain_counts: row.domain_counts,
-      })
-      .eq('organization_id', organizationId)
-      .eq('id', doc.id);
-    if (error) throw error;
-  } else {
-    const { error } = await supabase.from('flow_documents').insert(row);
-    if (error) throw error;
-  }
+  // Upsert (POST) instead of update (PATCH) — some networks block PATCH on Supabase preflight.
+  const { error } = await supabase.from('flow_documents').upsert(row, { onConflict: 'id' });
+  if (error) throw error;
 
   await syncDocumentScreenshots(doc.id, doc.screenshotUrls);
 }
@@ -208,13 +191,16 @@ export async function cloudUpdateFlowDocumentStatus(
 
   const { data, error } = await supabase
     .from('flow_documents')
-    .update({
-      status: normalizeFlowStatus(status, 'draft'),
-      updated_at: msToIso(Date.now()),
-      updated_by: updatedBy,
-    })
-    .eq('organization_id', organizationId)
-    .eq('id', documentId)
+    .upsert(
+      {
+        id: documentId,
+        organization_id: organizationId,
+        status: normalizeFlowStatus(status, 'draft'),
+        updated_at: msToIso(Date.now()),
+        updated_by: updatedBy,
+      },
+      { onConflict: 'id' },
+    )
     .select('id')
     .maybeSingle();
 
