@@ -74,7 +74,7 @@ export const ShareDocumentModal = ({
   const flow = flowProp ?? loaded?.flow ?? null;
   const steps = stepsProp ?? loaded?.steps ?? [];
   const screenshotUrls = screenshotUrlsProp ?? loaded?.screenshotUrls ?? {};
-  const documentStatus = statusProp ?? loaded?.status ?? 'live';
+  const documentStatus = statusProp ?? loaded?.status ?? 'draft';
   const isDraft = documentStatus === 'draft';
   const canSharePublicly = canShare && !isDraft;
   const canEmbedPublicly = canEmbed && !isDraft;
@@ -169,7 +169,7 @@ export const ShareDocumentModal = ({
   }, [isOpen, documentId, flowProp, stepsProp]);
 
   useEffect(() => {
-    if (!isOpen || method !== 'link' || !canSharePublicly) return;
+    if (!isOpen || method !== 'link' || !canSharePublicly || isLoading) return;
 
     let cancelled = false;
     setIsShareUrlLoading(true);
@@ -217,6 +217,7 @@ export const ShareDocumentModal = ({
     expiryPreset,
     requiresAuth,
     presenterLink,
+    isLoading,
   ]);
 
   const handleClose = () => {

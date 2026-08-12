@@ -2,7 +2,7 @@ import { gooeyToast } from 'goey-toast';
 import { trackEvent } from '@/analytics/analyticsClient';
 import { AnalyticsEvents } from '@/analytics/events';
 import type { AnalyticsProps } from '@/analytics/types';
-import { reportAppError, toUserFacingMessage, type ClassifiedAppError } from '@/utils/appError';
+import { reportAppError, toUserFacingMessage, classifyAppError, logAppError, type ClassifiedAppError } from '@/utils/appError';
 
 const DEFAULT_DURATION = 4200;
 
@@ -51,15 +51,19 @@ export function notifyError(
     return null;
   }
 
-  const classified = reportAppError(descriptionOrContext ?? 'Action failed', titleOrError);
+  const classified = classifyAppError(titleOrError);
+  const context = descriptionOrContext ?? 'Action failed';
+  logAppError(context, titleOrError);
   trackEvent(AnalyticsEvents.softErrorShown, {
     title: classified.title,
     kind: classified.kind,
     context: descriptionOrContext,
   });
-  gooeyToast.error(classified.title, {
+  const toast =
+    classified.kind === 'validation' && !classified.isHard ? gooeyToast.warning : gooeyToast.error;
+  toast(classified.title, {
     description: classified.userMessage,
-    timing: { displayDuration: 5600 },
+    timing: { displayDuration: classified.kind === 'validation' ? 5000 : 5600 },
     showTimestamp: false,
     preset: 'smooth',
   });
@@ -137,7 +141,7 @@ export function notifyPersistError(error: unknown, context: string): void {
   const now = Date.now();
   const last = persistToastByContext.get(context) ?? 0;
   if (now - last < PERSIST_TOAST_COOLDOWN_MS) {
-    reportAppError(context, error);
+    logAppError(context, error);
     return;
   }
   persistToastByContext.set(context, now);

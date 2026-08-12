@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { classifyAppError } from './appError';
+import { ShareNotAllowedError } from '@/services/shareErrors';
+import { classifyAppError, shouldSkipErrorReporting } from './appError';
 
 describe('classifyAppError', () => {
   it('classifies JWT / unauthorized as auth (soft)', () => {
@@ -44,5 +45,29 @@ describe('classifyAppError', () => {
     const classified = classifyAppError(error);
     expect(classified.kind).toBe('validation');
     expect(classified.isHard).toBe(true);
+  });
+
+  it('classifies draft share attempts as validation (no Sentry)', () => {
+    const error = new ShareNotAllowedError(
+      'Publish this documentation to Live before sharing publicly.',
+    );
+    const classified = classifyAppError(error);
+    expect(classified.kind).toBe('validation');
+    expect(classified.isHard).toBe(false);
+    expect(shouldSkipErrorReporting(classified, error)).toBe(true);
+  });
+
+  it('classifies chunk load failures as network (no Sentry)', () => {
+    const error = new Error('Loading chunk 12 failed');
+    error.name = 'ChunkLoadError';
+    const classified = classifyAppError(error);
+    expect(classified.kind).toBe('network');
+    expect(shouldSkipErrorReporting(classified, error)).toBe(true);
+  });
+
+  it('skips Sentry for routine network failures', () => {
+    const classified = classifyAppError(new Error('Failed to fetch'));
+    expect(classified.kind).toBe('network');
+    expect(shouldSkipErrorReporting(classified)).toBe(true);
   });
 });

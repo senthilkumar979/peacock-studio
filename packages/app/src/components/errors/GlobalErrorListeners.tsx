@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { classifyAppError, isBenignBrowserNoise, logAppError } from '@/utils/appError';
+import { classifyAppError, isBenignBrowserNoise, logAppError, shouldSkipErrorReporting } from '@/utils/appError';
 import { isClerkSdkNoise, isExpectedClientNoise } from '@/observability/sentry';
 import { isEmbedSharePath } from '@/constants/routes';
 import { notifyError, notifyWarning } from '@/utils/notify';
@@ -30,7 +30,11 @@ export const GlobalErrorListeners = () => {
         notifyWarning(classified.title, classified.userMessage);
         return;
       }
-      if (isExpectedClientNoise(classified.cause) || isExpectedClientNoise(classified.userMessage)) {
+      if (
+        shouldSkipErrorReporting(classified, classified.cause) ||
+        isExpectedClientNoise(classified.cause) ||
+        isExpectedClientNoise(classified.userMessage)
+      ) {
         notifyWarning(classified.title, classified.userMessage);
         return;
       }
@@ -45,7 +49,9 @@ export const GlobalErrorListeners = () => {
       }
 
       const classified = classifyAppError(reason);
-      logAppError('Unhandled promise rejection', reason);
+      if (!shouldSkipErrorReporting(classified, reason)) {
+        logAppError('Unhandled promise rejection', reason);
+      }
       escalateOrToast(classified);
     };
 
@@ -61,7 +67,9 @@ export const GlobalErrorListeners = () => {
 
       const error = event.error ?? new Error(event.message || 'Unknown window error');
       const classified = classifyAppError(error);
-      logAppError('Window error', error);
+      if (!shouldSkipErrorReporting(classified, error)) {
+        logAppError('Window error', error);
+      }
       escalateOrToast(classified);
     };
 

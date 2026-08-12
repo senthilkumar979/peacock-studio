@@ -46,6 +46,7 @@ export const AppHeader = ({
   const outline = useFlowStore((state) => state.steps);
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
   const shareSettings = useFlowStore((state) => state.shareSettings);
+  const status = useFlowStore((state) => state.status);
   const updateShareSettings = useFlowStore((state) => state.updateShareSettings);
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -157,6 +158,7 @@ export const AppHeader = ({
           steps={outline}
           screenshotUrls={screenshotUrls}
           shareSettings={shareSettings ?? undefined}
+          status={status}
           onClose={() => setIsShareModalOpen(false)}
           onShareSettingsSave={(settings) => {
             updateShareSettings(settings);

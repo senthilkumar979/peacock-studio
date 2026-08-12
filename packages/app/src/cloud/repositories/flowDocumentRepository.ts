@@ -193,7 +193,9 @@ export async function cloudUpdateFlowDocumentStatus(
   // columns. So we first fetch the current row and then upsert all required fields.
   const { data: existingRow, error: existingError } = await supabase
     .from('flow_documents')
-    .select('id, saved_at, flow, steps, domain_counts, share_settings')
+    .select(
+      'id, saved_at, updated_at, created_at, created_by, flow, steps, domain_counts, share_settings',
+    )
     .eq('organization_id', organizationId)
     .eq('id', documentId)
     .maybeSingle();
@@ -201,10 +203,23 @@ export async function cloudUpdateFlowDocumentStatus(
   if (existingError) throw existingError;
   if (!existingRow) throw new Error('Documentation not found.');
 
+  const savedAt = resolveFlowDocumentTimestamp(
+    existingRow.saved_at,
+    existingRow.updated_at,
+    existingRow.created_at,
+  );
+  const createdAt = resolveFlowDocumentTimestamp(
+    existingRow.created_at,
+    existingRow.saved_at,
+    existingRow.updated_at,
+  );
+
   const row = {
     id: existingRow.id,
     organization_id: organizationId,
-    saved_at: existingRow.saved_at,
+    saved_at: savedAt,
+    created_at: createdAt,
+    created_by: existingRow.created_by ?? updatedBy,
     updated_at: msToIso(Date.now()),
     updated_by: updatedBy,
     status: normalizeFlowStatus(status, 'draft'),
@@ -237,6 +252,15 @@ export async function cloudDeleteFlowDocument(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) throw error;
+}
+
+function resolveFlowDocumentTimestamp(
+  ...candidates: Array<string | number | null | undefined>
+): string {
+  for (const value of candidates) {
+    if (value != null && value !== '') return msToIso(isoToMs(value));
+  }
+  return msToIso(Date.now());
 }
 
 function normalizeFlowPayload(flow: FlowPayload): FlowPayload {

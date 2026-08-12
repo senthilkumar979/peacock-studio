@@ -1,7 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { HardErrorPage } from '@/components/errors/HardErrorPage';
 import { DASHBOARD_PATH, isEmbedSharePath } from '@/constants/routes';
-import { logAppError } from '@/utils/appError';
+import { logSoftFailure } from '@/utils/appError';
 
 interface ChunkErrorBoundaryProps {
   children: ReactNode;
@@ -40,7 +40,7 @@ export class ChunkErrorBoundary extends Component<
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     if (!isChunkLoadError(error)) return;
-    logAppError('Route chunk load failed', {
+    logSoftFailure('Route chunk load failed', {
       message: error.message,
       name: error.name,
       stack: error.stack,

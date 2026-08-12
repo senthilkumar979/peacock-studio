@@ -14,6 +14,10 @@ const EXPECTED_CLIENT_NOISE: RegExp[] = [
   /Rate limit unavailable/i,
   /Multiple Sentry Session Replay instances are not supported/i,
   /verified primary email is required for cloud sync/i,
+  /Publish this documentation to Live/i,
+  /Bot check failed/i,
+  /Share request failed \(429\)/i,
+  /ChunkLoadError|Loading chunk [\d]+ failed|Failed to fetch dynamically imported module/i,
 ];
 
 /** Clerk FAPI empty-body / network glitches during session.touch (PEACOCK-STUDIO-1E). */

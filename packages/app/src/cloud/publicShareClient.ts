@@ -39,22 +39,31 @@ async function invokeResolveShare<T>(input: {
   const turnstileToken = isEmbed ? undefined : await getTurnstileToken('resolve-share');
   const accessToken = await resolveCallerAccessToken();
 
-  const response = await fetch(`${getSupabaseUrl()}/functions/v1/resolve-share`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: getSupabaseAnonKey(),
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
-      action: input.action,
-      token: input.token,
-      turnstileToken,
-      presentation: isEmbed ? 'embed' : 'share',
-      documentId: input.documentId,
-      personaId: input.personaId,
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${getSupabaseUrl()}/functions/v1/resolve-share`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: getSupabaseAnonKey(),
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        action: input.action,
+        token: input.token,
+        turnstileToken,
+        presentation: isEmbed ? 'embed' : 'share',
+        documentId: input.documentId,
+        personaId: input.personaId,
+      }),
+    });
+  } catch (cause) {
+    throw new Error(
+      cause instanceof Error && /failed to fetch|networkerror|load failed/i.test(cause.message)
+        ? cause.message
+        : 'Failed to fetch',
+    );
+  }
 
   const payload = (await response.json().catch(() => null)) as {
     data?: T;
@@ -62,7 +71,14 @@ async function invokeResolveShare<T>(input: {
   } | null;
 
   if (!response.ok) {
-    throw new Error(payload?.error || `Share request failed (${response.status})`);
+    const serverError = payload?.error?.trim();
+    if (response.status === 429) {
+      throw new Error(serverError || 'Share request failed (429)');
+    }
+    if (/bot check failed/i.test(serverError ?? '')) {
+      throw new Error(serverError || 'Bot check failed');
+    }
+    throw new Error(serverError || `Share request failed (${response.status})`);
   }
 
   return payload?.data as T;

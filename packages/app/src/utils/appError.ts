@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/react';
 import { trackException } from '@/analytics/analyticsClient';
 import { isExpectedClientNoise, isSentryInitialized } from '@/observability/sentry';
+import { isShareNotAllowedError } from '@/services/shareErrors';
 
 export const GENERIC_USER_ERROR_MESSAGE =
   'Something went wrong. Please try again or refresh the page.';
@@ -57,6 +58,37 @@ function rawMessage(error: unknown): string {
  */
 const BENIGN_BROWSER_NOISE_RE =
   /ResizeObserver loop(?: completed with undelivered notifications| limit exceeded)?/i;
+
+const CHUNK_LOAD_NOISE_RE =
+  /ChunkLoadError|Loading chunk [\d]+ failed|Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed/i;
+
+const SHARE_GATE_NOISE_RE =
+  /publish this documentation to live|bot check failed|share link is invalid|link unavailable|share request failed \(429\)/i;
+
+function isChunkLoadFailure(error: unknown, lower: string, name: string): boolean {
+  if (name === 'ChunkLoadError') return true;
+  return CHUNK_LOAD_NOISE_RE.test(lower);
+}
+
+/** Errors that should toast/warn but not reach Sentry or PostHog exception capture. */
+export function shouldSkipErrorReporting(
+  classified: ClassifiedAppError,
+  error?: unknown,
+): boolean {
+  if (classified.isHard) return false;
+  if (
+    classified.kind === 'auth' ||
+    classified.kind === 'session' ||
+    classified.kind === 'network' ||
+    classified.kind === 'not_found' ||
+    classified.kind === 'validation'
+  ) {
+    return true;
+  }
+  if (error && (isShareNotAllowedError(error) || isExpectedClientNoise(error))) return true;
+  if (isExpectedClientNoise(classified.userMessage)) return true;
+  return false;
+}
 
 export function isBenignBrowserNoise(error: unknown): boolean {
   return BENIGN_BROWSER_NOISE_RE.test(rawMessage(error));
@@ -115,6 +147,52 @@ export function classifyAppError(error: unknown): ClassifiedAppError {
       userMessage:
         'This documentation payload is corrupt or unreadable. Try another document, or restore from a share link if you have one.',
       isHard: true,
+      cause: error,
+    };
+  }
+
+  if (isShareNotAllowedError(error) || /publish this documentation to live/i.test(lower)) {
+    return {
+      kind: 'validation',
+      title: 'Publish to Live first',
+      userMessage:
+        message || 'Publish this documentation to Live before sharing publicly.',
+      isHard: false,
+      cause: error,
+    };
+  }
+
+  if (/bot check failed|share request failed \(429\)/i.test(lower)) {
+    return {
+      kind: 'validation',
+      title: /429/.test(lower) ? 'Too many requests' : 'Bot check failed',
+      userMessage:
+        message ||
+        (/429/.test(lower)
+          ? 'Please wait a moment and try again.'
+          : 'The bot check did not pass. Refresh the page and try again.'),
+      isHard: false,
+      cause: error,
+    };
+  }
+
+  if (isChunkLoadFailure(error, lower, name)) {
+    return {
+      kind: 'network',
+      title: 'Failed to load this page',
+      userMessage:
+        'A required code bundle did not load. Check your connection, then refresh.',
+      isHard: false,
+      cause: error,
+    };
+  }
+
+  if (SHARE_GATE_NOISE_RE.test(lower)) {
+    return {
+      kind: 'not_found',
+      title: 'Link unavailable',
+      userMessage: message || 'This share link is invalid or has expired.',
+      isHard: false,
       cause: error,
     };
   }
@@ -263,18 +341,14 @@ export function toUserFacingMessage(error: unknown): string {
 }
 
 export function logAppError(context: string, error: unknown): void {
-  console.error(`[Peacock] ${context}`, error);
   const classified = classifyAppError(error);
 
-  // Expected auth expiry / Turnstile / rate-limit noise — console only.
-  if (
-    classified.kind === 'auth' ||
-    classified.kind === 'session' ||
-    isExpectedClientNoise(error) ||
-    isExpectedClientNoise(classified.userMessage)
-  ) {
+  if (shouldSkipErrorReporting(classified, error)) {
+    console.warn(`[Peacock] ${context}`, error);
     return;
   }
+
+  console.error(`[Peacock] ${context}`, error);
 
   // PostHog exception + Sentry only (skip duplicate exceptionCaptured event).
   trackException(error instanceof Error ? error : new Error(classified.userMessage), {

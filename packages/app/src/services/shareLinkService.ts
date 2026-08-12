@@ -13,6 +13,7 @@ import {
   type ShareLinkAccessMode,
   type SharedDocumentViewMode,
 } from '@/utils/shareLink';
+import { ShareNotAllowedError } from '@/services/shareErrors';
 
 interface ShareSecurityOptions {
   expiresAt?: string | null;
@@ -101,7 +102,9 @@ async function assertDocumentShareable(documentId: string): Promise<void> {
   const doc = await getFlowDocument(documentId);
   if (!doc) throw new Error('Documentation not found.');
   if (doc.status !== 'live') {
-    throw new Error('Publish this documentation to Live before sharing publicly.');
+    throw new ShareNotAllowedError(
+      'Publish this documentation to Live before sharing publicly.',
+    );
   }
 }
 
