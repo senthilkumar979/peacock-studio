@@ -16,8 +16,10 @@ const AuthLoadError = () => (
   <div className={shellClass} role="alert">
     <h2 className="text-lg font-semibold text-slate-900">Sign-in failed to load</h2>
     <p className="mt-2 text-sm text-slate-600">
-      Clerk could not reach its servers from this browser. Disable ad blockers / privacy extensions
-      for this site, check your network, then retry.
+      Clerk could not reach its servers from this browser (clerk.peacockstudio.app). Company
+      networks often block auth providers — same issue as Firebase. Try a personal device or
+      home hotspot, or ask IT to allowlist peacockstudio.app, *.clerk.com, and
+      clerk.peacockstudio.app. Also disable ad blockers for this site, then retry.
     </p>
     <button
       type="button"

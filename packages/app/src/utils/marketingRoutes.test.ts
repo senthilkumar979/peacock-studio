@@ -6,7 +6,12 @@ import {
   PRIVACY_PATH,
   TERMS_PATH,
 } from '@/constants/routes';
-import { isMarketingPath } from './marketingRoutes';
+import {
+  isClerkForbiddenPath,
+  isClerkOptionalPath,
+  isMarketingPath,
+  isPublicSharePath,
+} from './marketingRoutes';
 
 describe('isMarketingPath', () => {
   it('treats landing as marketing', () => {
@@ -28,5 +33,31 @@ describe('isMarketingPath', () => {
     expect(isMarketingPath('/dashboard')).toBe(false);
     expect(isMarketingPath('/docs/abc')).toBe(false);
     expect(isMarketingPath('/flow-docs')).toBe(false);
+  });
+});
+
+describe('public share / Clerk path helpers', () => {
+  it('detects public share paths', () => {
+    expect(isPublicSharePath('/s')).toBe(true);
+    expect(isPublicSharePath('/s/tok')).toBe(true);
+    expect(isPublicSharePath('/s/tok/embed')).toBe(true);
+    expect(isPublicSharePath('/s/tok/edit')).toBe(true);
+    expect(isPublicSharePath('/dashboard')).toBe(false);
+    expect(isPublicSharePath('/solutions')).toBe(false);
+  });
+
+  it('treats share and marketing as Clerk-optional', () => {
+    expect(isClerkOptionalPath('/')).toBe(true);
+    expect(isClerkOptionalPath('/s/tok/embed')).toBe(true);
+    expect(isClerkOptionalPath('/s/tok')).toBe(true);
+    expect(isClerkOptionalPath('/dashboard')).toBe(false);
+  });
+
+  it('forbids Clerk only on embed iframes', () => {
+    expect(isClerkForbiddenPath('/s/tok/embed')).toBe(true);
+    expect(isClerkForbiddenPath('/s/tok/embed/')).toBe(true);
+    expect(isClerkForbiddenPath('/s/tok')).toBe(false);
+    expect(isClerkForbiddenPath('/s/tok/edit')).toBe(false);
+    expect(isClerkForbiddenPath('/')).toBe(false);
   });
 });

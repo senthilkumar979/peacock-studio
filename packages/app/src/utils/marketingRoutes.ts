@@ -4,7 +4,9 @@ import {
   PRICING_PATH,
   PRIVACY_PATH,
   TERMS_PATH,
+  isEmbedSharePath,
 } from '@/constants/routes';
+import { PUBLIC_SHARE_PATH } from '@/utils/shareLink';
 
 const MARKETING_PREFIXES = [
   '/products',
@@ -21,4 +23,25 @@ export function isMarketingPath(pathname: string): boolean {
   return MARKETING_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
+}
+
+/** Public share viewer/embed/edit routes (`/s/:token…`). */
+export function isPublicSharePath(pathname: string): boolean {
+  return (
+    pathname === PUBLIC_SHARE_PATH ||
+    pathname.startsWith(`${PUBLIC_SHARE_PATH}/`)
+  );
+}
+
+/**
+ * Routes that must paint without waiting for Clerk.
+ * Embed iframes never need Clerk; waiting blocks screenshots when corp networks block clerk.*.
+ */
+export function isClerkOptionalPath(pathname: string): boolean {
+  return isMarketingPath(pathname) || isPublicSharePath(pathname);
+}
+
+/** Embed iframe — never boot Clerk (avoids blocked clerk.peacock* on restricted networks). */
+export function isClerkForbiddenPath(pathname: string): boolean {
+  return isEmbedSharePath(pathname);
 }

@@ -1,7 +1,14 @@
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
+import { CloudInitConnectingError } from '@/components/auth/CloudNetworkBlockedNotice';
 import { setSessionAuthState } from '@/cloud/sessionState';
-import { isMarketingPath } from '@/utils/marketingRoutes';
+import { CLOUD_NETWORK_BLOCKED_WORKAROUNDS } from '@/cloud/cloudInitErrors';
+import {
+  isClerkForbiddenPath,
+  isClerkOptionalPath,
+  isMarketingPath,
+  isPublicSharePath,
+} from '@/utils/marketingRoutes';
 
 interface DeferredCloudAuthProps {
   publishableKey: string;
@@ -25,21 +32,39 @@ const ClerkBootShell = () => (
   </div>
 );
 
+const CLERK_NETWORK_BLOCKED = {
+  kind: 'network_blocked' as const,
+  title: 'Company network may be blocking sign-in',
+  message:
+    'Peacock could not load Clerk (clerk.peacockstudio.app) from this browser. Some company networks block auth providers the same way they block Firebase or Supabase.',
+  workarounds: [...CLOUD_NETWORK_BLOCKED_WORKAROUNDS],
+};
+
 /**
- * Lazy-loads Clerk after first paint. Marketing still renders immediately; cloud sync
- * stays off there. Clerk session is synced so the landing nav can show Open App for
- * signed-in users instead of Sign in / Sign up.
+ * Lazy-loads Clerk after first paint.
  *
- * Product/auth routes wait for the Clerk tree so useAuth / SignIn never mount
- * outside the provider.
+ * - Marketing: paint immediately; Clerk may warm in the background for nav.
+ * - Public share embeds (`/s/:token/embed`): never load Clerk — corp networks often
+ *   block clerk.*; embeds only need the first-party resolve-share + screenshot proxies.
+ * - Other `/s/*`: paint immediately; Clerk loads in background for auth-gated shares.
+ * - App routes: wait for Clerk; on script failure show allowlist workarounds.
  */
 export const DeferredCloudAuth = ({ publishableKey, children }: DeferredCloudAuthProps) => {
   const { pathname } = useLocation();
   const [Tree, setTree] = useState<ComponentType<ClerkTreeProps> | null>(null);
+  const [clerkLoadFailed, setClerkLoadFailed] = useState(false);
   const isMarketing = isMarketingPath(pathname);
-  const enableCloudSync = !isMarketing;
+  const isShare = isPublicSharePath(pathname);
+  const clerkOptional = isClerkOptionalPath(pathname);
+  const forbidClerk = isClerkForbiddenPath(pathname);
+  const enableCloudSync = !isMarketing && !isShare;
 
   useEffect(() => {
+    if (forbidClerk) {
+      setSessionAuthState(true, false);
+      return;
+    }
+
     if (Tree) return;
 
     let cancelled = false;
@@ -48,16 +73,30 @@ export const DeferredCloudAuth = ({ publishableKey, children }: DeferredCloudAut
         if (!cancelled) setTree(() => module.ClerkCloudAuthTree);
       })
       .catch(() => {
-        if (!cancelled) setSessionAuthState(true, false);
+        if (cancelled) return;
+        setSessionAuthState(true, false);
+        setClerkLoadFailed(true);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [Tree]);
+  }, [Tree, forbidClerk]);
+
+  if (forbidClerk) return <>{children}</>;
 
   if (!Tree) {
-    if (isMarketing) return children;
+    if (clerkOptional) return <>{children}</>;
+    if (clerkLoadFailed) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center px-6 py-16">
+          <CloudInitConnectingError
+            error={CLERK_NETWORK_BLOCKED}
+            onRetry={() => window.location.reload()}
+          />
+        </div>
+      );
+    }
     return <ClerkBootShell />;
   }
 
