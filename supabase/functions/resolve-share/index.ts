@@ -132,24 +132,30 @@ serve(async (req) => {
         .select('id, document_id, step_id, url, label, sort_order, created_at')
         .eq('document_id', documentId)
         .order('sort_order', { ascending: true });
-      if (resourcesError) throw resourcesError;
 
       const payload = asRecord(data) ?? {};
+      if (resourcesError) {
+        console.error('step_resources load failed (continuing without extras)', resourcesError);
+      }
+
+      const stepResources =
+        resources?.map((row) => ({
+          id: row.id,
+          documentId: row.document_id,
+          stepId: row.step_id,
+          url: row.url,
+          ...(typeof row.label === 'string' && row.label.trim()
+            ? { label: row.label.trim() }
+            : {}),
+          sortOrder: row.sort_order,
+          createdAt: Date.parse(row.created_at),
+        })) ?? [];
+
       return json(
         {
           data: {
             ...payload,
-            stepResources: (resources ?? []).map((row) => ({
-              id: row.id,
-              documentId: row.document_id,
-              stepId: row.step_id,
-              url: row.url,
-              ...(typeof row.label === 'string' && row.label.trim()
-                ? { label: row.label.trim() }
-                : {}),
-              sortOrder: row.sort_order,
-              createdAt: Date.parse(row.created_at),
-            })),
+            stepResources,
           },
         },
         200,

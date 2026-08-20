@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { classifyAppError, isBenignBrowserNoise, logAppError, shouldSkipErrorReporting } from '@/utils/appError';
+import { isPostgrestSessionError } from '@/cloud/postgrestErrors';
 import { isClerkSdkNoise, isExpectedClientNoise } from '@/observability/sentry';
 import { isEmbedSharePath } from '@/constants/routes';
 import { notifyError, notifyWarning } from '@/utils/notify';
@@ -43,13 +44,20 @@ export const GlobalErrorListeners = () => {
 
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
       const reason = event.reason;
-      if (isBenignBrowserNoise(reason) || isClerkSdkNoise(reason) || isExpectedClientNoise(reason)) {
+      if (
+        isBenignBrowserNoise(reason) ||
+        isClerkSdkNoise(reason) ||
+        isExpectedClientNoise(reason) ||
+        isPostgrestSessionError(reason)
+      ) {
         event.preventDefault();
         return;
       }
 
       const classified = classifyAppError(reason);
-      if (!shouldSkipErrorReporting(classified, reason)) {
+      if (shouldSkipErrorReporting(classified, reason)) {
+        event.preventDefault();
+      } else {
         logAppError('Unhandled promise rejection', reason);
       }
       escalateOrToast(classified);

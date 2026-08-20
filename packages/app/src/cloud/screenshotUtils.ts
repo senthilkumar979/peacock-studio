@@ -1,3 +1,5 @@
+import { blobToDataUrl } from '@peacock/shared';
+
 export async function sha256HexFromBlob(blob: Blob): Promise<string> {
   const buffer = await blob.arrayBuffer();
   const digest = await crypto.subtle.digest('SHA-256', buffer);
@@ -53,5 +55,42 @@ export function buildScreenshotStoragePath(
   documentId: string,
   screenshotId: string,
 ): string {
-  return `${organizationId}/${documentId}/${screenshotId}.png`;
+  return `${organizationId}/${documentId}/${screenshotId}.jpg`;
+}
+
+/**
+ * Converts revocable blob: URLs to stable data: URLs before cloud upload.
+ * Falls back to the IndexedDB doc mirror when in-memory blobs were revoked.
+ */
+export async function materializeInlineScreenshotUrls(
+  documentId: string,
+  screenshotUrls: Record<string, string>,
+): Promise<Record<string, string>> {
+  const materialized = { ...screenshotUrls };
+
+  for (const [screenshotId, url] of Object.entries(screenshotUrls)) {
+    if (!isInlineScreenshotUrl(url)) continue;
+    if (url.startsWith('data:')) continue;
+
+    let blob = await inlineScreenshotToBlob(url);
+
+    if (!blob && url.startsWith('blob:')) {
+      try {
+        const { getFlowDocument } = await import('@/storage/flowLibraryDb');
+        const local = await getFlowDocument(documentId);
+        const fallbackUrl = local?.screenshotUrls[screenshotId];
+        if (fallbackUrl && fallbackUrl !== url) {
+          blob = await inlineScreenshotToBlob(fallbackUrl);
+        }
+      } catch {
+        // Local mirror unavailable — leave URL as-is (upload will fail gracefully).
+      }
+    }
+
+    if (blob) {
+      materialized[screenshotId] = await blobToDataUrl(blob);
+    }
+  }
+
+  return materialized;
 }

@@ -70,4 +70,25 @@ describe('classifyAppError', () => {
     expect(classified.kind).toBe('network');
     expect(shouldSkipErrorReporting(classified)).toBe(true);
   });
+
+  it('classifies Failed to fetch (supabase.co) as network, not database', () => {
+    const classified = classifyAppError(
+      new Error('Failed to fetch (lbbafpzxsalfogvbodqi.supabase.co)'),
+    );
+    expect(classified.kind).toBe('network');
+    expect(shouldSkipErrorReporting(classified)).toBe(true);
+  });
+
+  it('classifies PostgREST JWT expiry objects as session', () => {
+    const classified = classifyAppError({ code: 'PGRST303', message: 'JWT expired' });
+    expect(classified.kind).toBe('session');
+    expect(shouldSkipErrorReporting(classified)).toBe(true);
+  });
+
+  it('classifies resolve-share Internal error as share unavailable', () => {
+    const classified = classifyAppError(new Error('Internal error'));
+    expect(classified.kind).toBe('not_found');
+    expect(classified.title).toMatch(/share unavailable/i);
+    expect(shouldSkipErrorReporting(classified)).toBe(true);
+  });
 });

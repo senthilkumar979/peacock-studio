@@ -6,7 +6,7 @@ const storageFrom = vi.fn();
 const functionsInvoke = vi.fn();
 
 vi.mock('@/cloud/authContext', () => ({
-  requireCloudAuthContext: () => auth,
+  requireCloudAuthContext: () => ({ ...auth, getAccessToken: vi.fn(async () => 'token') }),
 }));
 
 vi.mock('@/cloud/supabaseClient', () => ({
@@ -15,6 +15,7 @@ vi.mock('@/cloud/supabaseClient', () => ({
     storage: { from: storageFrom },
     functions: { invoke: functionsInvoke },
   }),
+  resetSupabaseClientCache: vi.fn(),
 }));
 
 vi.mock('@peacock/shared', async () => {
@@ -33,6 +34,9 @@ vi.mock('@/cloud/screenshotUtils', async () => {
   return {
     ...actual,
     inlineScreenshotToBlob: vi.fn(async () => new Blob(['img'], { type: 'image/png' })),
+    materializeInlineScreenshotUrls: vi.fn(
+      async (_docId: string, urls: Record<string, string>) => urls,
+    ),
     sha256HexFromBlob: vi.fn(async () => 'hash-1'),
     isInlineScreenshotUrl: (url: string) => url.startsWith('data:') || url.startsWith('blob:'),
     buildScreenshotStoragePath: actual.buildScreenshotStoragePath,

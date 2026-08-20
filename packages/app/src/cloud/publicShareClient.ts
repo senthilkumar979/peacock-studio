@@ -101,6 +101,9 @@ async function invokeResolveShare<T>(input: {
     if (/bot check failed/i.test(serverError ?? '')) {
       throw new Error(serverError || 'Bot check failed');
     }
+    if (response.status >= 500 && (serverError === 'Internal error' || !serverError)) {
+      throw new Error('Share unavailable');
+    }
     throw new Error(serverError || `Share request failed (${response.status})`);
   }
 

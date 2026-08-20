@@ -34,7 +34,7 @@ describe('screenshotUtils', () => {
   });
 
   it('buildScreenshotStoragePath joins org/doc/id', () => {
-    expect(buildScreenshotStoragePath('org', 'doc', 'shot')).toBe('org/doc/shot.png');
+    expect(buildScreenshotStoragePath('org', 'doc', 'shot')).toBe('org/doc/shot.jpg');
   });
 
   it('inlineScreenshotToBlob handles data, blob ok/fail, and other urls', async () => {

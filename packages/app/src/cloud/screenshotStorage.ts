@@ -4,11 +4,13 @@ import {
   SIGNED_URL_TTL_SECONDS,
 } from '@/cloud/config';
 import { requireCloudAuthContext } from '@/cloud/authContext';
-import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
+import { isPostgrestSessionError } from '@/cloud/postgrestErrors';
+import { getAuthenticatedSupabaseClient, resetSupabaseClientCache } from '@/cloud/supabaseClient';
 import {
   buildScreenshotStoragePath,
   inlineScreenshotToBlob,
   isInlineScreenshotUrl,
+  materializeInlineScreenshotUrls,
   sha256HexFromBlob,
 } from '@/cloud/screenshotUtils';
 
@@ -147,65 +149,105 @@ async function upsertScreenshotAsset(input: {
   throw upsertError;
 }
 
+async function uploadInlineScreenshot(input: {
+  organizationId: string;
+  documentId: string;
+  screenshotId: string;
+  url: string;
+}): Promise<void> {
+  const rawBlob = await inlineScreenshotToBlob(input.url);
+  if (!rawBlob) {
+    throw new Error(`Screenshot ${input.screenshotId} is no longer available in this browser session.`);
+  }
+
+  const blob = await prepareImageForCloudStorage(rawBlob);
+  const contentHash = await sha256HexFromBlob(blob);
+  const supabase = getAuthenticatedSupabaseClient();
+
+  const existing = await findExistingAssetByHash(input.organizationId, contentHash);
+
+  let storagePath = existing?.storage_path;
+  let byteSize = existing?.byte_size ?? 0;
+
+  if (!storagePath) {
+    storagePath = buildScreenshotStoragePath(
+      input.organizationId,
+      input.documentId,
+      input.screenshotId,
+    );
+    byteSize = blob.size;
+
+    const { error: uploadError } = await supabase.storage
+      .from(SCREENSHOTS_BUCKET)
+      .upload(storagePath, blob, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      });
+
+    if (uploadError) throw uploadError;
+  }
+
+  await upsertScreenshotAsset({
+    organizationId: input.organizationId,
+    documentId: input.documentId,
+    screenshotId: input.screenshotId,
+    storagePath,
+    contentHash,
+    byteSize,
+  });
+}
+
 export async function syncDocumentScreenshots(
   documentId: string,
   screenshotUrls: Record<string, string>,
 ): Promise<void> {
-  const entries = Object.entries(screenshotUrls).filter(([, url]) =>
-    isInlineScreenshotUrl(url),
+  const inlineOnly = Object.fromEntries(
+    Object.entries(screenshotUrls).filter(([, url]) => isInlineScreenshotUrl(url)),
   );
-  if (!entries.length) return;
+  if (!Object.keys(inlineOnly).length) return;
 
-  const { organizationId } = requireCloudAuthContext();
-  const supabase = getAuthenticatedSupabaseClient();
-  const failures: string[] = [];
+  const { organizationId, getAccessToken } = requireCloudAuthContext();
+  await getAccessToken();
 
-  for (const [screenshotId, url] of entries) {
-    try {
-      const rawBlob = await inlineScreenshotToBlob(url);
-      if (!rawBlob) {
+  const materialized = await materializeInlineScreenshotUrls(documentId, inlineOnly);
+  const entries = Object.entries(materialized);
+
+  const runUploadBatch = async (): Promise<void> => {
+    const failures: string[] = [];
+    let sawSessionError = false;
+
+    for (const [screenshotId, url] of entries) {
+      try {
+        await uploadInlineScreenshot({
+          organizationId,
+          documentId,
+          screenshotId,
+          url,
+        });
+      } catch (error) {
+        if (isPostgrestSessionError(error)) sawSessionError = true;
         failures.push(screenshotId);
-        continue;
       }
-      const blob = await prepareImageForCloudStorage(rawBlob);
-      const contentHash = await sha256HexFromBlob(blob);
-
-      const existing = await findExistingAssetByHash(organizationId, contentHash);
-
-      let storagePath = existing?.storage_path;
-      let byteSize = existing?.byte_size ?? 0;
-
-      if (!storagePath) {
-        storagePath = buildScreenshotStoragePath(organizationId, documentId, screenshotId);
-        byteSize = blob.size;
-
-        const { error: uploadError } = await supabase.storage
-          .from(SCREENSHOTS_BUCKET)
-          .upload(storagePath, blob, {
-            contentType: 'image/jpeg',
-            upsert: true,
-          });
-
-        if (uploadError) throw uploadError;
-      }
-
-      await upsertScreenshotAsset({
-        organizationId,
-        documentId,
-        screenshotId,
-        storagePath,
-        contentHash,
-        byteSize,
-      });
-    } catch {
-      failures.push(screenshotId);
     }
-  }
 
-  if (failures.length) {
+    if (failures.length === 0) return;
+
+    if (sawSessionError) {
+      throw new Error('JWT expired');
+    }
+
     throw new Error(
       `Failed to upload ${failures.length} of ${entries.length} screenshots to cloud storage.`,
     );
+  };
+
+  try {
+    await runUploadBatch();
+  } catch (error) {
+    if (!isPostgrestSessionError(error)) throw error;
+    await getAccessToken();
+    resetSupabaseClientCache();
+    await runUploadBatch();
   }
 }
 

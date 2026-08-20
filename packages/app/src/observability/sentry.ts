@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/react';
 import { getSentryDsn } from '@/analytics/config';
+import { isPostgrestSessionError } from '@/cloud/postgrestErrors';
 
 let initialized = false;
 
@@ -18,6 +19,8 @@ const EXPECTED_CLIENT_NOISE: RegExp[] = [
   /Bot check failed/i,
   /Share request failed \(429\)/i,
   /ChunkLoadError|Loading chunk [\d]+ failed|Failed to fetch dynamically imported module/i,
+  /JWT expired|PGRST303|exp claim timestamp check failed/i,
+  /Internal error/i,
 ];
 
 /** Clerk FAPI empty-body / network glitches during session.touch (PEACOCK-STUDIO-1E). */
@@ -114,9 +117,10 @@ export function initSentry(): void {
       replaysSessionSampleRate: 0.1,
       replaysOnErrorSampleRate: 1.0,
       ignoreErrors: EXPECTED_CLIENT_NOISE,
-      beforeSend(event) {
+      beforeSend(event, hint) {
         if (isReactRefreshNoise(event)) return null;
         if (sentryEventLooksLikeClerk(event)) return null;
+        if (isPostgrestSessionError(hint.originalException)) return null;
         const text = eventMessage(event);
         if (EXPECTED_CLIENT_NOISE.some((pattern) => pattern.test(text))) return null;
         return event;
@@ -142,6 +146,7 @@ export function isSentryInitialized(): boolean {
 /** Expected UX / bot-challenge failures — do not escalate to Sentry. */
 export function isExpectedClientNoise(error: unknown): boolean {
   if (isClerkSdkNoise(error)) return true;
+  if (isPostgrestSessionError(error)) return true;
   const message =
     error instanceof Error
       ? error.message

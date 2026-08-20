@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/react';
 import { trackException } from '@/analytics/analyticsClient';
 import { isExpectedClientNoise, isSentryInitialized } from '@/observability/sentry';
+import { isPostgrestSessionError } from '@/cloud/postgrestErrors';
 import { isShareNotAllowedError } from '@/services/shareErrors';
 
 export const GENERIC_USER_ERROR_MESSAGE =
@@ -197,9 +198,45 @@ export function classifyAppError(error: unknown): ClassifiedAppError {
     };
   }
 
+  if (isPostgrestSessionError(error)) {
+    return {
+      kind: 'session',
+      title: 'Session expired',
+      userMessage: 'Your session expired. Please sign in again to continue.',
+      isHard: false,
+      cause: error,
+    };
+  }
+
+  if (
+    status >= 500 ||
+    /failed to fetch|networkerror|network request failed|load failed|timeout|timed out|offline/i.test(
+      lower,
+    )
+  ) {
+    return {
+      kind: 'network',
+      title: 'Connection problem',
+      userMessage: 'We could not reach the server. Check your connection and try again.',
+      isHard: false,
+      cause: error,
+    };
+  }
+
+  if (/^internal error$/i.test(lower) || /^share unavailable$/i.test(lower) || /upstream unavailable/i.test(lower)) {
+    return {
+      kind: 'not_found',
+      title: 'Share unavailable',
+      userMessage: 'This share link could not be loaded right now. Refresh and try again.',
+      isHard: false,
+      cause: error,
+    };
+  }
+
   if (
     status === 401 ||
     code === 'PGRST301' ||
+    code === 'PGRST303' ||
     /jwt|unauthorized|not authenticated|invalid.*token|session.*expired|signed out/i.test(
       lower,
     )
@@ -298,7 +335,7 @@ export function classifyAppError(error: unknown): ClassifiedAppError {
     code === '42P01' ||
     code === '23505' ||
     code === '57014' ||
-    /postgres|database|relation .* does not exist|duplicate key|supabase/i.test(lower)
+    /postgres|database|relation .* does not exist|duplicate key/i.test(lower)
   ) {
     return {
       kind: 'database',
@@ -307,21 +344,6 @@ export function classifyAppError(error: unknown): ClassifiedAppError {
         code === '42P01'
           ? 'Cloud database tables are missing. Apply the latest Supabase migrations, then try again.'
           : GENERIC_USER_ERROR_MESSAGE,
-      isHard: false,
-      cause: error,
-    };
-  }
-
-  if (
-    status >= 500 ||
-    /failed to fetch|networkerror|network request failed|load failed|timeout|timed out|offline/i.test(
-      lower,
-    )
-  ) {
-    return {
-      kind: 'network',
-      title: 'Connection problem',
-      userMessage: 'We could not reach the server. Check your connection and try again.',
       isHard: false,
       cause: error,
     };
