@@ -143,7 +143,7 @@ describe('useOrganization hooks', () => {
 
     vi.mocked(useCloudInitErrorDetail).mockReturnValue({
       kind: 'network_blocked',
-      title: 'Company network may be blocking cloud sync',
+      title: 'Your organization network is blocking Peacock cloud services',
       message: 'blocked',
       workarounds: ['Try hotspot'],
     });

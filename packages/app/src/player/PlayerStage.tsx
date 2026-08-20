@@ -1,7 +1,12 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import type { FlowStep } from '@peacock/shared';
 import { getStepMarkerPosition, getStepUrl, resolveStepDescription } from '@peacock/shared';
+import { CloudNetworkBlockedNotice } from '@/components/auth/CloudNetworkBlockedNotice';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
+import {
+  getCloudNetworkBlockedError,
+  isCloudHostedScreenshotUrl,
+} from '@/cloud/cloudInitErrors';
 import { useImageLoaded } from '@/hooks/useImageLoaded';
 import { usePlayerStepDetailsVisibility } from '@/hooks/usePlayerStepDetailsVisibility';
 import { getStepScreenshotUrl } from '@/store/flowStore';
@@ -50,10 +55,14 @@ export const PlayerStage = ({
   const description = resolveStepDescription(step);
   const { isDetailsVisible, toggleDetails } = usePlayerStepDetailsVisibility(step.id);
   const stepResources = useFlowStore((state) => state.stepResources);
-  const { isLoaded: isImageLoaded, imgRef, onLoad, onError } = useImageLoaded(screenshotUrl);
+  const { isLoaded: isImageLoaded, hasError, imgRef, onLoad, onError } =
+    useImageLoaded(screenshotUrl);
 
   const showOverlays = Boolean(screenshotUrl && isImageLoaded);
-  const isScreenshotLoading = Boolean(screenshotUrl && !isImageLoaded);
+  const isScreenshotLoading = Boolean(screenshotUrl && !isImageLoaded && !hasError);
+  const showNetworkBlocked =
+    Boolean(screenshotUrl && hasError && isCloudHostedScreenshotUrl(screenshotUrl));
+  const showGenericUnavailable = Boolean(screenshotUrl && hasError && !showNetworkBlocked);
   const imageClassName = isEmbed ? embedScreenshotClassName : screenshotClassName;
 
   return (
@@ -87,6 +96,35 @@ export const PlayerStage = ({
                 className="w-full"
               >
                 <StageLoader isEmbed={isEmbed} />
+              </motion.div>
+            ) : showNetworkBlocked ? (
+              <motion.div
+                key={`${step.id}-network-blocked`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="w-full max-w-lg px-2"
+              >
+                <CloudNetworkBlockedNotice
+                  error={getCloudNetworkBlockedError()}
+                  showLocalLibraryNote={false}
+                />
+              </motion.div>
+            ) : showGenericUnavailable ? (
+              <motion.div
+                key={`${step.id}-unavailable`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="w-full"
+              >
+                <BrowserMockup url={stepUrl} isEmbed={isEmbed}>
+                  <div className="flex min-h-[200px] min-w-[min(100%,20rem)] items-center justify-center px-6 py-10 text-sm text-slate-500">
+                    Screenshot unavailable
+                  </div>
+                </BrowserMockup>
               </motion.div>
             ) : (
               <motion.div

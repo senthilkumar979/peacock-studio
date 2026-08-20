@@ -70,6 +70,22 @@ describe('useImageLoaded', () => {
       result.current.onError();
     });
     expect(result.current.isLoaded).toBe(false);
+    expect(result.current.hasError).toBe(true);
+  });
+
+  it('resets hasError when src changes', () => {
+    const { result, rerender } = renderHook(
+      ({ src }: { src: string }) => useImageLoaded(src),
+      { initialProps: { src: 'https://example.com/a.png' } },
+    );
+
+    act(() => {
+      result.current.onError();
+    });
+    expect(result.current.hasError).toBe(true);
+
+    rerender({ src: 'https://example.com/b.png' });
+    expect(result.current.hasError).toBe(false);
   });
 
   it('marks loaded from complete img with matching currentSrc', () => {

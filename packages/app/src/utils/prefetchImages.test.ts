@@ -114,8 +114,18 @@ describe('prefetchImages', () => {
   it('does not throw when an image fails to load', async () => {
     const url = 'fail://example.com/missing.png';
 
-    await expect(prefetchImage(url)).resolves.toBeUndefined();
+    await expect(prefetchImage(url)).resolves.toBe('failed');
     expect(isImagePrefetched(url)).toBe(false);
+  });
+
+  it('reports failed urls from prefetchImages', async () => {
+    const ok = 'https://example.com/storage/images/a/b/ok.png?token=1';
+    const bad = 'fail://example.com/missing.png';
+
+    const result = await prefetchImages([ok, bad]);
+
+    expect(result.loaded).toEqual([ok]);
+    expect(result.failed).toEqual([bad]);
   });
 
   it('clears prefetched images', async () => {

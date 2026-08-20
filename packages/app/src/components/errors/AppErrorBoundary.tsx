@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { HardErrorPage } from '@/components/errors/HardErrorPage';
-import { DASHBOARD_PATH, isEmbedSharePath } from '@/constants/routes';
+import { DASHBOARD_PATH, isEmbedPresentation } from '@/constants/routes';
 import { logAppError } from '@/utils/appError';
 
 interface AppErrorBoundaryProps {
@@ -47,7 +47,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
     if (this.state.hasError) {
       const embed =
         this.props.embed ??
-        (typeof window !== 'undefined' && isEmbedSharePath(window.location.pathname));
+        (typeof window !== 'undefined' && isEmbedPresentation(window.location.pathname));
       return (
         <HardErrorPage
           compact={this.props.compact}

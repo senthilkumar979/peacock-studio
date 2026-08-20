@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { HardErrorPage } from '@/components/errors/HardErrorPage';
-import { DASHBOARD_PATH, isEmbedSharePath } from '@/constants/routes';
+import { DASHBOARD_PATH, isEmbedPresentation } from '@/constants/routes';
 import { logSoftFailure } from '@/utils/appError';
 
 interface ChunkErrorBoundaryProps {
@@ -59,7 +59,7 @@ export class ChunkErrorBoundary extends Component<
         // Propagate to the root AppErrorBoundary.
         throw error;
       }
-      const embed = isEmbedSharePath(window.location.pathname);
+      const embed = isEmbedPresentation(window.location.pathname);
       return (
         <HardErrorPage
           embed={embed}

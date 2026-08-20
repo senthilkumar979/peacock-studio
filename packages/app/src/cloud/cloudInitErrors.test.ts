@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   classifyCloudInitError,
   getCloudInitErrorMessage,
+  getCloudNetworkBlockedError,
+  isCloudHostedScreenshotUrl,
   isCloudNetworkBlockedError,
 } from './cloudInitErrors';
 
@@ -9,13 +11,35 @@ describe('cloudInitErrors', () => {
   it('maps network / fetch failures to network_blocked with workarounds', () => {
     const failedFetch = classifyCloudInitError(new TypeError('Failed to fetch'));
     expect(failedFetch.kind).toBe('network_blocked');
-    expect(failedFetch.title).toMatch(/Company network/i);
+    expect(failedFetch.title).toMatch(/organization network is blocking/i);
+    expect(failedFetch.message).toMatch(/Clerk for authentication/i);
+    expect(failedFetch.message).toMatch(/Supabase for screenshots/i);
     expect(failedFetch.workarounds.length).toBeGreaterThan(0);
+    expect(failedFetch.workarounds.join(' ')).toMatch(/clerk\.peacockstudio\.app/);
 
     expect(isCloudNetworkBlockedError(new Error('NetworkError when attempting to fetch resource.'))).toBe(
       true,
     );
     expect(classifyCloudInitError({ status: 502, message: 'bad gateway' }).kind).toBe('network_blocked');
+    expect(classifyCloudInitError({ status: 403, message: 'Forbidden' }).kind).toBe('network_blocked');
+  });
+
+  it('exposes shared corporate-network blocked copy', () => {
+    const error = getCloudNetworkBlockedError();
+    expect(error).toEqual(classifyCloudInitError(new TypeError('Failed to fetch')));
+    expect(error.workarounds.some((item) => /Contact Peacock support/i.test(item))).toBe(true);
+  });
+
+  it('detects cloud-hosted screenshot URLs', () => {
+    expect(isCloudHostedScreenshotUrl('/storage/images/a/b/c.png?token=1')).toBe(true);
+    expect(
+      isCloudHostedScreenshotUrl('https://peacockstudio.app/storage/images/a/b/c.png?token=1'),
+    ).toBe(true);
+    expect(
+      isCloudHostedScreenshotUrl('https://xyz.supabase.co/storage/v1/object/sign/screenshots/x'),
+    ).toBe(true);
+    expect(isCloudHostedScreenshotUrl('data:image/png;base64,abc')).toBe(false);
+    expect(isCloudHostedScreenshotUrl('blob:https://peacockstudio.app/1')).toBe(false);
   });
 
   it('maps atob / InvalidCharacterError decode failures', () => {

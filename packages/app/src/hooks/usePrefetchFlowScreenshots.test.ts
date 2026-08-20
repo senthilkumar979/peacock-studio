@@ -29,7 +29,7 @@ vi.mock('@/utils/flowShareSettings', () => ({
 vi.mock('@/utils/prefetchImages', () => ({
   clearPrefetchedImages: vi.fn(),
   isImagePrefetched: vi.fn(() => false),
-  prefetchImages: vi.fn().mockResolvedValue(undefined),
+  prefetchImages: vi.fn().mockResolvedValue({ loaded: [], failed: [] }),
 }));
 
 vi.mock('@/store/flowStore', () => ({
@@ -60,8 +60,26 @@ describe('usePrefetchFlowScreenshots', () => {
   it('prefetches remote urls until complete', async () => {
     flowStore.steps = [{ id: 's1' }];
     flowStore.screenshotUrls = { s1: 'https://cdn/img.png' };
+    vi.mocked(prefetchImages).mockResolvedValueOnce({
+      loaded: ['https://cdn/img.png'],
+      failed: [],
+    });
     const { result } = renderHook(() => usePrefetchFlowScreenshots('doc-1', true));
     await waitFor(() => expect(prefetchImages).toHaveBeenCalled());
     await waitFor(() => expect(result.current.areScreenshotsReady).toBe(true));
+    expect(result.current.screenshotsNetworkBlocked).toBe(false);
+  });
+
+  it('flags corporate network block when cloud screenshots all fail', async () => {
+    const url = 'https://peacockstudio.app/storage/images/a/b/c.png?token=1';
+    flowStore.steps = [{ id: 's1' }];
+    flowStore.screenshotUrls = { s1: url };
+    vi.mocked(prefetchImages).mockResolvedValueOnce({
+      loaded: [],
+      failed: [url],
+    });
+    const { result } = renderHook(() => usePrefetchFlowScreenshots('doc-1', true));
+    await waitFor(() => expect(result.current.areScreenshotsReady).toBe(true));
+    expect(result.current.screenshotsNetworkBlocked).toBe(true);
   });
 });

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { classifyAppError, isBenignBrowserNoise, logAppError, shouldSkipErrorReporting } from '@/utils/appError';
 import { isPostgrestSessionError } from '@/cloud/postgrestErrors';
 import { isClerkSdkNoise, isExpectedClientNoise } from '@/observability/sentry';
-import { isEmbedSharePath } from '@/constants/routes';
+import { isEmbedPresentation } from '@/constants/routes';
 import { notifyError, notifyWarning } from '@/utils/notify';
 import { buildHardErrorPath } from '@/pages/ErrorPage';
 
@@ -20,7 +20,7 @@ export const GlobalErrorListeners = () => {
   useEffect(() => {
     const escalateOrToast = (classified: ReturnType<typeof classifyAppError>) => {
       if (classified.isHard) {
-        if (isEmbedSharePath(pathname)) {
+        if (isEmbedPresentation(pathname)) {
           notifyError(classified.title, classified.userMessage);
           return;
         }

@@ -1,42 +1,35 @@
-import { getPublicSharePath } from "@/utils/shareLink";
-
 /**
- * Paste a public share token after you publish a Live Flow Doc and create a
- * public embed (or link) share. Leave empty until then — the landing section
- * shows a safe placeholder.
+ * Static landing demo — served from packages/app/public/examples/kachabazar/
+ * (document.json + shots/). No Supabase / resolve-share / /storage/images.
  */
 
-export const LANDING_EXAMPLE_FLOW_SHARE_TOKEN = "89d4d8707ae242a288bf8a5f81b6b44d".trim();
+export const LANDING_EXAMPLE_SLUG = 'kachabazar' as const;
 
-export const LANDING_EXAMPLE_FLOW_TITLE = "KachaBazar - eCommerce".trim();
+export const LANDING_EXAMPLE_FLOW_TITLE = 'KachaBazar - eCommerce';
 
 export const LANDING_EXAMPLE_FLOW_DESCRIPTION =
-  "Try a real interactive guide — the same player your team and customers will use.".trim();
+  'Try a real interactive guide — the same player your team and customers will use.';
 
-const EXAMPLE_EMBED_PREFETCH_ATTR = "peacockExampleEmbed";
-
-export function getLandingExampleEmbedPath(): string | null {
-  const token = LANDING_EXAMPLE_FLOW_SHARE_TOKEN.trim();
-  if (!token) return null;
-  return getPublicSharePath(token, { embed: true });
+export function getLandingExampleEmbedPath(): string {
+  return `/examples/${LANDING_EXAMPLE_SLUG}`;
 }
 
-export function getLandingExampleSharePath(): string | null {
-  const token = LANDING_EXAMPLE_FLOW_SHARE_TOKEN.trim();
-  if (!token) return null;
-  return getPublicSharePath(token);
+export function getLandingExampleSharePath(): string {
+  return `/examples/${LANDING_EXAMPLE_SLUG}`;
 }
 
-/** Start fetching the example embed as soon as the landing bundle evaluates. */
+const EXAMPLE_EMBED_PREFETCH_ATTR = 'peacockExampleEmbed';
+
+/** Prefetch the static example document JSON as soon as the landing bundle evaluates. */
 export function prefetchLandingExampleEmbed(): void {
-  const href = getLandingExampleEmbedPath();
-  if (!href || typeof document === "undefined") return;
-  if (document.head.querySelector(`link[data-peacock-example-embed]`)) return;
+  if (typeof document === 'undefined') return;
+  if (document.head.querySelector('link[data-peacock-example-embed]')) return;
 
-  const link = document.createElement("link");
-  link.rel = "prefetch";
-  link.as = "document";
-  link.href = href;
-  link.dataset[EXAMPLE_EMBED_PREFETCH_ATTR] = "true";
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.as = 'fetch';
+  link.href = `/examples/${LANDING_EXAMPLE_SLUG}/document.json`;
+  link.crossOrigin = 'anonymous';
+  link.dataset[EXAMPLE_EMBED_PREFETCH_ATTR] = 'true';
   document.head.appendChild(link);
 }

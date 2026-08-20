@@ -2,7 +2,7 @@ import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { CloudInitConnectingError } from '@/components/auth/CloudNetworkBlockedNotice';
 import { setSessionAuthState } from '@/cloud/sessionState';
-import { CLOUD_NETWORK_BLOCKED_WORKAROUNDS } from '@/cloud/cloudInitErrors';
+import { getCloudNetworkBlockedError } from '@/cloud/cloudInitErrors';
 import {
   isClerkForbiddenPath,
   isClerkOptionalPath,
@@ -31,14 +31,6 @@ const ClerkBootShell = () => (
     <p className="text-sm font-medium text-slate-600">Loading…</p>
   </div>
 );
-
-const CLERK_NETWORK_BLOCKED = {
-  kind: 'network_blocked' as const,
-  title: 'Company network may be blocking sign-in',
-  message:
-    'Peacock could not load Clerk (clerk.peacockstudio.app) from this browser. Some company networks block auth providers the same way they block Firebase or Supabase.',
-  workarounds: [...CLOUD_NETWORK_BLOCKED_WORKAROUNDS],
-};
 
 /**
  * Lazy-loads Clerk after first paint.
@@ -91,7 +83,7 @@ export const DeferredCloudAuth = ({ publishableKey, children }: DeferredCloudAut
       return (
         <div className="flex min-h-screen flex-col items-center justify-center px-6 py-16">
           <CloudInitConnectingError
-            error={CLERK_NETWORK_BLOCKED}
+            error={getCloudNetworkBlockedError()}
             onRetry={() => window.location.reload()}
           />
         </div>

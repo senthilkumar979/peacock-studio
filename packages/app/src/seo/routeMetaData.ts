@@ -39,6 +39,7 @@ export const NOINDEX_PREFIXES = [
   '/tours/',
   '/compare',
   '/s/',
+  '/examples/',
   '/sign-in',
   '/sign-up',
   '/onboarding/',

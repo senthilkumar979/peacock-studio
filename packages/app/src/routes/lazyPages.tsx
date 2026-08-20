@@ -84,6 +84,11 @@ export const SignUpPage = lazy(() =>
 export const PublicSharePage = lazy(() =>
   import('@/pages/PublicSharePage').then((m) => ({ default: m.PublicSharePage })),
 );
+export const StaticExamplePlayerPage = lazy(() =>
+  import('@/pages/StaticExamplePlayerPage').then((m) => ({
+    default: m.StaticExamplePlayerPage,
+  })),
+);
 export const PrivacyPolicy = lazy(() =>
   import('@/pages/PrivacyPolicy').then((m) => ({ default: m.PrivacyPolicy })),
 );

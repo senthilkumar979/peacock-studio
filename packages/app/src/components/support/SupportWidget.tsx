@@ -1,7 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getFreshchatConfig } from '@/analytics/config';
-import { isEmbedSharePath, LANDING_PATH, PRICING_PATH } from '@/constants/routes';
+import {
+  isEmbedSharePath,
+  isStaticExamplePath,
+  LANDING_PATH,
+  PRICING_PATH,
+} from '@/constants/routes';
 import { isMobileClient } from '@/utils/isMobileClient';
 import { HIDE_SUPPORT_WIDGET_CLASS } from '@/utils/support';
 
@@ -57,7 +62,11 @@ export function isEditorRoute(pathname: string): boolean {
 
 /** Routes where the support launcher must never appear (editors, embeds). */
 export function shouldHideSupportWidget(pathname: string): boolean {
-  return isEditorRoute(pathname) || isEmbedSharePath(pathname);
+  return (
+    isEditorRoute(pathname) ||
+    isEmbedSharePath(pathname) ||
+    isStaticExamplePath(pathname)
+  );
 }
 
 /** Support chat is marketing homepage / pricing + desktop only — never inside editors, embeds, or on mobile. */

@@ -2,8 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
+const prefetchState = {
+  areScreenshotsReady: true,
+  screenshotsNetworkBlocked: false,
+};
+
 vi.mock('@/hooks/usePrefetchFlowScreenshots', () => ({
-  usePrefetchFlowScreenshots: () => ({ areScreenshotsReady: true }),
+  usePrefetchFlowScreenshots: () => prefetchState,
 }));
 
 vi.mock('@/player/FlowDocHubView', () => ({
@@ -20,6 +25,7 @@ import { FlowDocExperienceViews } from './FlowDocExperienceViews';
 
 describe('FlowDocExperienceViews', () => {
   it('renders hub view', () => {
+    prefetchState.screenshotsNetworkBlocked = false;
     render(
       <MemoryRouter>
         <FlowDocExperienceViews
@@ -34,6 +40,7 @@ describe('FlowDocExperienceViews', () => {
   });
 
   it('renders player view', () => {
+    prefetchState.screenshotsNetworkBlocked = false;
     render(
       <MemoryRouter>
         <FlowDocExperienceViews
@@ -48,6 +55,7 @@ describe('FlowDocExperienceViews', () => {
   });
 
   it('renders document view', () => {
+    prefetchState.screenshotsNetworkBlocked = false;
     render(
       <MemoryRouter>
         <FlowDocExperienceViews
@@ -59,5 +67,26 @@ describe('FlowDocExperienceViews', () => {
       </MemoryRouter>,
     );
     expect(screen.getByText('document-view')).toBeInTheDocument();
+  });
+
+  it('shows corporate network panel when screenshots are blocked', () => {
+    prefetchState.screenshotsNetworkBlocked = true;
+    render(
+      <MemoryRouter>
+        <FlowDocExperienceViews
+          documentId="doc-1"
+          resolvedView="player"
+          onModeChange={vi.fn()}
+          onOverview={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    expect(
+      screen.getByRole('heading', {
+        name: /organization network is blocking Peacock cloud services/i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Clerk for authentication/i)).toBeInTheDocument();
+    expect(screen.queryByText('player-view')).not.toBeInTheDocument();
   });
 });

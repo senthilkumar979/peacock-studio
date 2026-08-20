@@ -11,7 +11,7 @@ vi.mock('./exampleFlowDoc', async () => {
   return {
     ...actual,
     getLandingExampleEmbedPath: () => 'about:blank',
-    getLandingExampleSharePath: () => '/s/example',
+    getLandingExampleSharePath: () => '/examples/kachabazar',
     prefetchLandingExampleEmbed: () => undefined,
   };
 });

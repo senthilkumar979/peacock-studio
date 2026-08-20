@@ -61,6 +61,7 @@ describe('constants helpers', () => {
   it('route helpers', () => {
     expect(isEmbedSharePath('/s/abc/embed')).toBe(true);
     expect(isEmbedSharePath('/s/abc')).toBe(false);
+    expect(isEmbedPresentation('/examples/kachabazar')).toBe(true);
     expect(hasEmbedQueryParam('?embed=true')).toBe(true);
     expect(hasEmbedQueryParam('embed=false')).toBe(false);
     expect(isEmbedPresentation('/dashboard', '?embed=true')).toBe(true);

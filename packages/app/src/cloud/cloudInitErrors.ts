@@ -7,12 +7,27 @@ export interface ClassifiedCloudInitError {
   workarounds: string[];
 }
 
+export const CLOUD_NETWORK_BLOCKED_TITLE =
+  'Your organization network is blocking Peacock cloud services';
+
+export const CLOUD_NETWORK_BLOCKED_MESSAGE =
+  'Your organization is not allowing us to load Clerk for authentication and/or Supabase for screenshots. Please talk to us and your IT team to allowlist the required hosts.';
+
 export const CLOUD_NETWORK_BLOCKED_WORKAROUNDS = [
-  'Continue with your local guest library — recording and editing still work offline in this browser.',
-  'Try a personal device or home network (mobile hotspot) to confirm cloud sync works elsewhere.',
-  'Ask IT to allowlist peacockstudio.app, *.supabase.co, *.clerk.com, and clerk.peacockstudio.app.',
-  'Use an approved VPN if your company permits it.',
+  'Ask IT to allowlist peacockstudio.app, clerk.peacockstudio.app, *.clerk.com, and *.supabase.co.',
+  'Try a personal device or home network (mobile hotspot) to confirm Peacock works outside the corporate network.',
+  'Contact Peacock support so we can help you and your IT team allowlist the required hosts.',
 ] as const;
+
+/** Shared corporate-network block copy for Clerk, cloud init, and screenshot failures. */
+export function getCloudNetworkBlockedError(): ClassifiedCloudInitError {
+  return {
+    kind: 'network_blocked',
+    title: CLOUD_NETWORK_BLOCKED_TITLE,
+    message: CLOUD_NETWORK_BLOCKED_MESSAGE,
+    workarounds: [...CLOUD_NETWORK_BLOCKED_WORKAROUNDS],
+  };
+}
 
 interface SupabaseLikeError {
   code?: string;
@@ -33,6 +48,14 @@ function rawMessage(error: unknown): string {
   return asErrorLike(error).message ?? '';
 }
 
+function readStatus(error: unknown): number {
+  return Number(
+    (error as { status?: number; statusCode?: number })?.status
+      ?? (error as { status?: number; statusCode?: number })?.statusCode
+      ?? NaN,
+  );
+}
+
 function isAtobDecodeError(error: unknown): boolean {
   const record = asErrorLike(error);
   const message = record.message ?? rawMessage(error);
@@ -49,17 +72,13 @@ function isNetworkBlockedError(error: unknown): boolean {
   const message = rawMessage(error);
   const lower = message.toLowerCase();
   const name = record.name ?? (error instanceof Error ? error.name : '');
-  const status = Number(
-    (error as { status?: number; statusCode?: number })?.status
-      ?? (error as { status?: number; statusCode?: number })?.statusCode
-      ?? NaN,
-  );
+  const status = readStatus(error);
 
-  if (status >= 502 && status <= 504) return true;
+  if (status === 403 || (status >= 502 && status <= 504)) return true;
 
   return (
     name === 'TypeError' && /failed to fetch/i.test(message)
-  ) || /failed to fetch|networkerror|network request failed|load failed|timeout|timed out|offline|upstream unavailable|upstream fetch failed/i.test(
+  ) || /failed to fetch|networkerror|network request failed|load failed|timeout|timed out|offline|upstream unavailable|upstream fetch failed|forbidden|access denied/i.test(
     lower,
   );
 }
@@ -67,21 +86,11 @@ function isNetworkBlockedError(error: unknown): boolean {
 export function classifyCloudInitError(error: unknown): ClassifiedCloudInitError {
   const record = asErrorLike(error);
   const code = record.code;
-  const status = Number(
-    (error as { status?: number; statusCode?: number })?.status
-      ?? (error as { status?: number; statusCode?: number })?.statusCode
-      ?? NaN,
-  );
+  const status = readStatus(error);
   const message = rawMessage(error);
 
   if (isNetworkBlockedError(error)) {
-    return {
-      kind: 'network_blocked',
-      title: 'Company network may be blocking cloud sync',
-      message:
-        'Peacock could not reach its cloud servers from this browser. Some company networks block services like Supabase and Clerk (similar to Firebase).',
-      workarounds: [...CLOUD_NETWORK_BLOCKED_WORKAROUNDS],
-    };
+    return getCloudNetworkBlockedError();
   }
 
   if (isAtobDecodeError(error)) {
@@ -153,4 +162,21 @@ export function getCloudInitErrorDetailSnapshotKind(
   detail: ClassifiedCloudInitError | null,
 ): CloudInitErrorKind | null {
   return detail?.kind ?? null;
+}
+
+/** True for first-party `/storage/images` or Supabase storage hosts used for screenshots. */
+export function isCloudHostedScreenshotUrl(url: string): boolean {
+  if (!url || url.startsWith('data:') || url.startsWith('blob:')) return false;
+
+  try {
+    const parsed = new URL(
+      url,
+      typeof window !== 'undefined' ? window.location.origin : 'https://peacockstudio.app',
+    );
+    if (parsed.pathname.includes('/storage/images/')) return true;
+    const host = parsed.hostname.toLowerCase();
+    return host === 'supabase.co' || host.endsWith('.supabase.co');
+  } catch {
+    return /\/storage\/images\//i.test(url) || /\.supabase\.co/i.test(url);
+  }
 }

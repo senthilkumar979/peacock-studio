@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ClerkFailed, ClerkLoaded, ClerkLoading } from '@clerk/react';
+import { CloudInitConnectingError } from '@/components/auth/CloudNetworkBlockedNotice';
+import { getCloudNetworkBlockedError } from '@/cloud/cloudInitErrors';
 
 interface ClerkAuthWidgetProps {
   children: React.ReactNode;
@@ -13,22 +15,10 @@ const shellClass =
   'w-full max-w-md rounded-2xl border border-slate-200 bg-white px-6 py-8 text-center shadow-sm';
 
 const AuthLoadError = () => (
-  <div className={shellClass} role="alert">
-    <h2 className="text-lg font-semibold text-slate-900">Sign-in failed to load</h2>
-    <p className="mt-2 text-sm text-slate-600">
-      Clerk could not reach its servers from this browser (clerk.peacockstudio.app). Company
-      networks often block auth providers — same issue as Firebase. Try a personal device or
-      home hotspot, or ask IT to allowlist peacockstudio.app, *.clerk.com, and
-      clerk.peacockstudio.app. Also disable ad blockers for this site, then retry.
-    </p>
-    <button
-      type="button"
-      className="btn-peacock btn-peacock--sm mt-6"
-      onClick={() => window.location.reload()}
-    >
-      Retry
-    </button>
-  </div>
+  <CloudInitConnectingError
+    error={getCloudNetworkBlockedError()}
+    onRetry={() => window.location.reload()}
+  />
 );
 
 function clerkUiMounted(): boolean {

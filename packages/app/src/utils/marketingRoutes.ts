@@ -5,8 +5,11 @@ import {
   PRIVACY_PATH,
   TERMS_PATH,
   isEmbedSharePath,
+  isStaticExamplePath,
 } from '@/constants/routes';
 import { PUBLIC_SHARE_PATH } from '@/utils/shareLink';
+
+export { isStaticExamplePath };
 
 const MARKETING_PREFIXES = [
   '/products',
@@ -38,10 +41,17 @@ export function isPublicSharePath(pathname: string): boolean {
  * Embed iframes never need Clerk; waiting blocks screenshots when corp networks block clerk.*.
  */
 export function isClerkOptionalPath(pathname: string): boolean {
-  return isMarketingPath(pathname) || isPublicSharePath(pathname);
+  return (
+    isMarketingPath(pathname) ||
+    isPublicSharePath(pathname) ||
+    isStaticExamplePath(pathname)
+  );
 }
 
-/** Embed iframe — never boot Clerk (avoids blocked clerk.peacock* on restricted networks). */
+/**
+ * Never boot Clerk — avoids blocked clerk.peacock* on restricted networks.
+ * Covers share embeds and static `/examples/*` demos.
+ */
 export function isClerkForbiddenPath(pathname: string): boolean {
-  return isEmbedSharePath(pathname);
+  return isEmbedSharePath(pathname) || isStaticExamplePath(pathname);
 }

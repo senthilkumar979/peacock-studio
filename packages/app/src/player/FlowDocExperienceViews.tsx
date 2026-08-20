@@ -1,4 +1,7 @@
 import type { PageHintControl } from '@/components/onboarding/HintAnchor';
+import { CloudInitConnectingError } from '@/components/auth/CloudNetworkBlockedNotice';
+import { EmbedErrorPanel } from '@/components/embed/EmbedErrorPanel';
+import { getCloudNetworkBlockedError } from '@/cloud/cloudInitErrors';
 import { usePrefetchFlowScreenshots } from '@/hooks/usePrefetchFlowScreenshots';
 import type { FlowDocResolvedView } from '@/utils/resolveFlowDocView';
 import type { SharedDocumentViewMode } from '@/utils/shareLink';
@@ -18,6 +21,27 @@ interface FlowDocExperienceViewsProps {
   isPresenter?: boolean;
 }
 
+const ScreenshotNetworkBlocked = ({ isEmbed }: { isEmbed: boolean }) => {
+  const error = getCloudNetworkBlockedError();
+  if (isEmbed) {
+    return (
+      <EmbedErrorPanel
+        title={error.title}
+        description={error.message}
+        workarounds={error.workarounds}
+      />
+    );
+  }
+  return (
+    <div className="flex min-h-[min(70vh,720px)] flex-col items-center justify-center px-6 py-16">
+      <CloudInitConnectingError
+        error={error}
+        onRetry={() => window.location.reload()}
+      />
+    </div>
+  );
+};
+
 export const FlowDocExperienceViews = ({
   documentId,
   resolvedView,
@@ -29,7 +53,10 @@ export const FlowDocExperienceViews = ({
   isPresenter = false,
 }: FlowDocExperienceViewsProps) => {
   const shouldPrefetch = resolvedView === 'player' || resolvedView === 'doc';
-  const { areScreenshotsReady } = usePrefetchFlowScreenshots(documentId, shouldPrefetch);
+  const { areScreenshotsReady, screenshotsNetworkBlocked } = usePrefetchFlowScreenshots(
+    documentId,
+    shouldPrefetch,
+  );
 
   useLayoutEffect(() => {
     if (resolvedView !== 'doc') return;
@@ -44,6 +71,10 @@ export const FlowDocExperienceViews = ({
         showOwnerActions={showOwnerActions}
       />
     );
+  }
+
+  if (shouldPrefetch && screenshotsNetworkBlocked) {
+    return <ScreenshotNetworkBlocked isEmbed={isEmbed} />;
   }
 
   if (resolvedView === 'player') {

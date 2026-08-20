@@ -27,4 +27,16 @@ describe('EmbedErrorPanel', () => {
     await user.click(screen.getByRole('button', { name: /try again/i }));
     expect(onRetry).toHaveBeenCalledOnce();
   });
+
+  it('renders corporate-network workarounds', () => {
+    render(
+      <EmbedErrorPanel
+        title="Blocked"
+        description="Ask IT"
+        workarounds={['Allowlist *.clerk.com', 'Try a hotspot']}
+      />,
+    );
+    expect(screen.getByText('Allowlist *.clerk.com')).toBeInTheDocument();
+    expect(screen.getByText('Try a hotspot')).toBeInTheDocument();
+  });
 });

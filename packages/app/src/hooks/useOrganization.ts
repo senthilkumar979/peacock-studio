@@ -94,7 +94,7 @@ export function useShareMethodAccess(): ShareMethodAccess {
 
   if (mode === 'loading' || mode === 'connecting') {
     const reason = cloudInitErrorDetail?.kind === 'network_blocked'
-      ? 'Cloud sharing is unavailable on this network. Try a personal device or ask IT to allowlist Peacock cloud hosts.'
+      ? 'Cloud sharing is unavailable on this network. Ask IT to allowlist peacockstudio.app, clerk.peacockstudio.app, *.clerk.com, and *.supabase.co — or try a personal device / hotspot.'
       : cloudInitError
         ? 'Cloud workspace failed to connect. Refresh, or sign out and sign back in.'
         : 'Workspace is still loading…';

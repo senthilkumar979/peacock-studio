@@ -42,6 +42,11 @@ export function isEmbedSharePath(pathname: string): boolean {
   return /^\/s\/[^/]+\/embed\/?$/.test(pathname);
 }
 
+/** Static landing demos under `/examples/:slug` (same-origin JSON + shots). */
+export function isStaticExamplePath(pathname: string): boolean {
+  return pathname === '/examples' || pathname.startsWith('/examples/');
+}
+
 /** True when the URL includes `embed=true` (e.g. landing iframed with chrome suppressed). */
 export function hasEmbedQueryParam(search: string): boolean {
   const normalized = search.startsWith('?') ? search.slice(1) : search;
@@ -50,10 +55,14 @@ export function hasEmbedQueryParam(search: string): boolean {
 
 /**
  * True for embed surfaces where host chrome (cookie banner, etc.) should stay hidden:
- * share path `/s/:token/embed` or any route with `?embed=true`.
+ * share embed, static `/examples/*` demos, or any route with `?embed=true`.
  */
 export function isEmbedPresentation(pathname: string, search = ''): boolean {
-  return isEmbedSharePath(pathname) || hasEmbedQueryParam(search);
+  return (
+    isEmbedSharePath(pathname) ||
+    isStaticExamplePath(pathname) ||
+    hasEmbedQueryParam(search)
+  );
 }
 
 export function getSuperAdminPath(tab?: 'platform' | 'health' | 'api'): string {

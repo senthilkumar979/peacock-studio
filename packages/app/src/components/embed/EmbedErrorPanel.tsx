@@ -4,6 +4,7 @@ export interface EmbedErrorPanelProps {
   title?: string;
   description?: string;
   detail?: string | null;
+  workarounds?: string[];
   onRetry?: () => void;
 }
 
@@ -12,6 +13,7 @@ export const EmbedErrorPanel = ({
   title = 'This guide is unavailable',
   description = 'The embedded guide could not be loaded. Try refreshing the page.',
   detail = null,
+  workarounds = [],
   onRetry,
 }: EmbedErrorPanelProps) => (
   <div className="flex h-dvh flex-col items-center justify-center bg-slate-50 px-6 py-10 text-center">
@@ -21,6 +23,14 @@ export const EmbedErrorPanel = ({
       </div>
       <h1 className="mt-4 text-lg font-bold tracking-tight text-slate-900">{title}</h1>
       <p className="mt-2 text-sm leading-relaxed text-slate-600">{description}</p>
+
+      {workarounds.length > 0 ? (
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-left text-xs text-slate-600">
+          {workarounds.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : null}
 
       {detail ? (
         <details className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left">

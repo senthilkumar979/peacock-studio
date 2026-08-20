@@ -14,6 +14,7 @@ const sampleStep = {
 vi.mock('@/hooks/useImageLoaded', () => ({
   useImageLoaded: () => ({
     isLoaded: false,
+    hasError: false,
     imgRef: { current: null },
     onLoad: vi.fn(),
     onError: vi.fn(),

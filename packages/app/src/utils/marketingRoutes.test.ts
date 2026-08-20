@@ -11,6 +11,7 @@ import {
   isClerkOptionalPath,
   isMarketingPath,
   isPublicSharePath,
+  isStaticExamplePath,
 } from './marketingRoutes';
 
 describe('isMarketingPath', () => {
@@ -53,11 +54,22 @@ describe('public share / Clerk path helpers', () => {
     expect(isClerkOptionalPath('/dashboard')).toBe(false);
   });
 
-  it('forbids Clerk only on embed iframes', () => {
+  it('detects static example paths', () => {
+    expect(isStaticExamplePath('/examples')).toBe(true);
+    expect(isStaticExamplePath('/examples/kachabazar')).toBe(true);
+    expect(isStaticExamplePath('/dashboard')).toBe(false);
+  });
+
+  it('forbids Clerk on embed iframes and static examples', () => {
     expect(isClerkForbiddenPath('/s/tok/embed')).toBe(true);
     expect(isClerkForbiddenPath('/s/tok/embed/')).toBe(true);
+    expect(isClerkForbiddenPath('/examples/kachabazar')).toBe(true);
     expect(isClerkForbiddenPath('/s/tok')).toBe(false);
     expect(isClerkForbiddenPath('/s/tok/edit')).toBe(false);
     expect(isClerkForbiddenPath('/')).toBe(false);
+  });
+
+  it('treats static examples as Clerk-optional', () => {
+    expect(isClerkOptionalPath('/examples/kachabazar')).toBe(true);
   });
 });

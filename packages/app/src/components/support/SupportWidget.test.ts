@@ -32,6 +32,7 @@ describe('shouldHideSupportWidget', () => {
     expect(shouldHideSupportWidget('/docs/abc/edit')).toBe(true);
     expect(shouldHideSupportWidget('/s/token/embed')).toBe(true);
     expect(shouldHideSupportWidget('/s/token/embed/')).toBe(true);
+    expect(shouldHideSupportWidget('/examples/kachabazar')).toBe(true);
   });
 
   it('does not force-hide landing or normal share view', () => {
