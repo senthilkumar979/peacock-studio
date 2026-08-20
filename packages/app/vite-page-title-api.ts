@@ -1,10 +1,11 @@
-import { GET as getPageTitle } from '../api/page-title';
 import type { Plugin } from 'vite';
+import { GET as getPageTitle } from './api/page-title';
 
 /** Serves `/api/page-title` during Vite dev (Vercel serverless is not available on localhost). */
 export function pageTitleApiPlugin(): Plugin {
   return {
     name: 'peacock-page-title-api',
+    apply: 'serve',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const path = req.url?.split('?')[0] ?? '';
