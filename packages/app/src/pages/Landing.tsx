@@ -4,8 +4,12 @@ import { LandingSubNav } from "@/components/site/LandingSubNav";
 import { SiteNav } from "@/components/site/SiteNav";
 import { useLandingNavVisibility } from "@/hooks/useLandingNavVisibility";
 import { MotionConfig } from "framer-motion";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, type ReactNode } from "react";
+import { ExampleFlowDocSection } from "./landing/ExampleFlowDocSection";
+import { prefetchLandingExampleEmbed } from "./landing/exampleFlowDoc";
 import { HeroSection } from "./landing/HeroSection";
+
+prefetchLandingExampleEmbed();
 
 const ProblemSection = lazy(() =>
   import("./landing/ProblemSection").then((m) => ({
@@ -47,11 +51,6 @@ const PreviewSection = lazy(() =>
     default: m.PreviewSection,
   })),
 );
-const ExampleFlowDocSection = lazy(() =>
-  import("./landing/ExampleFlowDocSection").then((m) => ({
-    default: m.ExampleFlowDocSection,
-  })),
-);
 const FAQSection = lazy(() =>
   import("./landing/FAQSection").then((m) => ({ default: m.FAQSection })),
 );
@@ -60,6 +59,10 @@ const CTASection = lazy(() =>
 );
 
 const BelowFoldFallback = () => <div className="min-h-[40vh]" aria-hidden />;
+
+const LazyBlock = ({ children }: { children: ReactNode }) => (
+  <Suspense fallback={<BelowFoldFallback />}>{children}</Suspense>
+);
 
 export const Landing = () => {
   const { showMainNav, showSubNav } = useLandingNavVisibility();
@@ -72,11 +75,17 @@ export const Landing = () => {
         <LandingSubNav visible={showSubNav} />
         <main id="main-content">
           <HeroSection />
-          <Suspense fallback={<BelowFoldFallback />}>
+          <LazyBlock>
             <ProblemSection />
+          </LazyBlock>
+          <LazyBlock>
             <SolutionSection />
+          </LazyBlock>
+          <LazyBlock>
             <PreviewSection />
-            <ExampleFlowDocSection />
+          </LazyBlock>
+          <ExampleFlowDocSection />
+          <LazyBlock>
             <FeaturesSection />
             <WorkflowSection />
             <AutomationSection />
@@ -84,7 +93,7 @@ export const Landing = () => {
             <PlatformComparisonSection />
             <FAQSection />
             <CTASection />
-          </Suspense>
+          </LazyBlock>
         </main>
         <AppFooter />
       </div>

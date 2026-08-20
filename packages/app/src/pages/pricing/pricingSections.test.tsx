@@ -40,7 +40,9 @@ describe('pricing sections', () => {
         <PricingTiersPreview />
       </MemoryRouter>,
     );
-    screen.getAllByRole('button', { name: /talk to us/i })[0].click();
+    const talkToUs = screen.getAllByRole('button', { name: /talk to us/i })[0];
+    if (!talkToUs) throw new Error('expected Talk to us button');
+    talkToUs.click();
     expect(openSupportChat).toHaveBeenCalled();
   });
 });

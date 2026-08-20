@@ -1,24 +1,21 @@
-import { ExternalLink, FileText } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  EMBED_IFRAME_HEIGHT,
-  EMBED_IFRAME_WIDTH,
-  getPublicSharePath,
-} from "@/utils/shareLink";
+import { EMBED_IFRAME_HEIGHT, EMBED_IFRAME_WIDTH } from "@/utils/shareLink";
 import { LandingSectionShell } from "./LandingSectionShell";
 import {
+  getLandingExampleEmbedPath,
+  getLandingExampleSharePath,
   LANDING_EXAMPLE_FLOW_DESCRIPTION,
-  LANDING_EXAMPLE_FLOW_SHARE_TOKEN,
   LANDING_EXAMPLE_FLOW_TITLE,
+  prefetchLandingExampleEmbed,
 } from "./exampleFlowDoc";
 
+prefetchLandingExampleEmbed();
+
 export const ExampleFlowDocSection = () => {
-  const token = LANDING_EXAMPLE_FLOW_SHARE_TOKEN.trim();
-  const hasExample = token.length > 0;
-  const embedPath = hasExample
-    ? getPublicSharePath(token, { embed: true })
-    : null;
-  const fullPath = hasExample ? getPublicSharePath(token) : null;
+  const embedPath = getLandingExampleEmbedPath();
+  const fullPath = getLandingExampleSharePath();
+  const hasExample = Boolean(embedPath && fullPath);
 
   return (
     <LandingSectionShell
@@ -36,7 +33,7 @@ export const ExampleFlowDocSection = () => {
               src={embedPath}
               width={EMBED_IFRAME_WIDTH}
               height={EMBED_IFRAME_HEIGHT}
-              loading="lazy"
+              loading="eager"
               allowFullScreen
               className="aspect-video h-auto w-full max-w-full border-0"
             />

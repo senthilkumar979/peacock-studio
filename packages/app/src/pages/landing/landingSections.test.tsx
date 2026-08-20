@@ -6,6 +6,16 @@ vi.mock('@/components/extension/ChromeWebStoreLink', () => ({
   ChromeWebStoreLink: () => <a href="https://example.com">Chrome Web Store</a>,
 }));
 
+vi.mock('./exampleFlowDoc', async () => {
+  const actual = await vi.importActual<typeof import('./exampleFlowDoc')>('./exampleFlowDoc');
+  return {
+    ...actual,
+    getLandingExampleEmbedPath: () => 'about:blank',
+    getLandingExampleSharePath: () => '/s/example',
+    prefetchLandingExampleEmbed: () => undefined,
+  };
+});
+
 import { HeroSection } from './HeroSection';
 import { ProblemSection } from './ProblemSection';
 import { SolutionSection } from './SolutionSection';
@@ -125,6 +135,7 @@ describe('landing sections smoke', () => {
       </MemoryRouter>,
     );
     expect(screen.getByText(/try a real interactive guide/i)).toBeInTheDocument();
+    expect(screen.getByTitle('KachaBazar - eCommerce')).toHaveAttribute('loading', 'eager');
   });
 
   it('TestimonialsSection', () => {

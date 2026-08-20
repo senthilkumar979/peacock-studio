@@ -1,6 +1,22 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HIDE_SUPPORT_WIDGET_CLASS, openSupportChat } from './support';
 
+function mockFreshchatWidget(
+  overrides: Partial<NonNullable<Window['fcWidget']>> = {},
+): NonNullable<Window['fcWidget']> {
+  return {
+    open: vi.fn(),
+    close: vi.fn(),
+    show: vi.fn(),
+    hide: vi.fn(),
+    destroy: vi.fn(),
+    isLoaded: () => true,
+    isOpen: () => false,
+    on: vi.fn(),
+    ...overrides,
+  };
+}
+
 describe('openSupportChat', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -11,7 +27,7 @@ describe('openSupportChat', () => {
   it('reveals and opens Freshchat when the widget is loaded', () => {
     const open = vi.fn();
     const show = vi.fn();
-    window.fcWidget = { open, show, isLoaded: () => true } as Window['fcWidget'];
+    window.fcWidget = mockFreshchatWidget({ open, show, isLoaded: () => true });
     document.documentElement.classList.add(HIDE_SUPPORT_WIDGET_CLASS);
 
     openSupportChat();

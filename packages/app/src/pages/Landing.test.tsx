@@ -44,6 +44,9 @@ vi.mock('./landing/ExampleFlowDocSection', () => ({
 }));
 vi.mock('./landing/FAQSection', () => ({ FAQSection: () => <div>FAQ</div> }));
 vi.mock('./landing/CTASection', () => ({ CTASection: () => <div>CTA</div> }));
+vi.mock('./landing/exampleFlowDoc', () => ({
+  prefetchLandingExampleEmbed: vi.fn(),
+}));
 
 import { Landing } from './Landing';
 
@@ -55,5 +58,6 @@ describe('Landing', () => {
         name: /system of record for how work actually happens/i,
       }),
     ).toBeInTheDocument();
+    expect(screen.getByText('Example')).toBeInTheDocument();
   });
 });
