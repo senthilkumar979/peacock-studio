@@ -60,13 +60,15 @@ describe('public share / Clerk path helpers', () => {
     expect(isStaticExamplePath('/dashboard')).toBe(false);
   });
 
-  it('forbids Clerk on embed iframes and static examples', () => {
+  it('forbids Clerk on marketing, embed iframes, and static examples', () => {
+    expect(isClerkForbiddenPath('/')).toBe(true);
+    expect(isClerkForbiddenPath('/pricing')).toBe(true);
     expect(isClerkForbiddenPath('/s/tok/embed')).toBe(true);
     expect(isClerkForbiddenPath('/s/tok/embed/')).toBe(true);
     expect(isClerkForbiddenPath('/examples/kachabazar')).toBe(true);
     expect(isClerkForbiddenPath('/s/tok')).toBe(false);
     expect(isClerkForbiddenPath('/s/tok/edit')).toBe(false);
-    expect(isClerkForbiddenPath('/')).toBe(false);
+    expect(isClerkForbiddenPath('/dashboard')).toBe(false);
   });
 
   it('treats static examples as Clerk-optional', () => {

@@ -20,7 +20,7 @@ const MARKETING_PREFIXES = [
   EXTENSION_INSTALL_PATH,
 ] as const;
 
-/** Public marketing surfaces — Clerk may warm in the background, but cloud sync must stay silent. */
+/** Public marketing surfaces — no Clerk boot; cloud sync stays silent. */
 export function isMarketingPath(pathname: string): boolean {
   if (pathname === LANDING_PATH) return true;
   return MARKETING_PREFIXES.some(
@@ -49,9 +49,14 @@ export function isClerkOptionalPath(pathname: string): boolean {
 }
 
 /**
- * Never boot Clerk — avoids blocked clerk.peacock* on restricted networks.
- * Covers share embeds and static `/examples/*` demos.
+ * Never boot Clerk — avoids blocked clerk.peacock* / "Failed to load Clerk JS" on
+ * restricted networks. Marketing CTAs go to /sign-in (graceful failure UI there).
+ * Covers landing/marketing, share embeds, and static `/examples/*` demos.
  */
 export function isClerkForbiddenPath(pathname: string): boolean {
-  return isEmbedSharePath(pathname) || isStaticExamplePath(pathname);
+  return (
+    isMarketingPath(pathname) ||
+    isEmbedSharePath(pathname) ||
+    isStaticExamplePath(pathname)
+  );
 }

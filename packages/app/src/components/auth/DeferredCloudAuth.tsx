@@ -35,11 +35,10 @@ const ClerkBootShell = () => (
 /**
  * Lazy-loads Clerk after first paint.
  *
- * - Marketing: paint immediately; Clerk may warm in the background for nav.
- * - Public share embeds (`/s/:token/embed`): never load Clerk — corp networks often
- *   block clerk.*; embeds only need the first-party resolve-share + screenshot proxies.
+ * - Marketing / static examples / share embeds: never load Clerk (corp networks often
+ *   block clerk.* and spam "Failed to load Clerk JS"). Sign-in lives on /sign-in.
  * - Other `/s/*`: paint immediately; Clerk loads in background for auth-gated shares.
- * - App routes: wait for Clerk; on script failure show allowlist workarounds.
+ * - App routes: wait for Clerk; on script failure show org-network allowlist UI.
  */
 export const DeferredCloudAuth = ({ publishableKey, children }: DeferredCloudAuthProps) => {
   const { pathname } = useLocation();
@@ -62,7 +61,10 @@ export const DeferredCloudAuth = ({ publishableKey, children }: DeferredCloudAut
     let cancelled = false;
     void import('@/components/auth/ClerkCloudAuthTree')
       .then((module) => {
-        if (!cancelled) setTree(() => module.ClerkCloudAuthTree);
+        if (!cancelled) {
+          setClerkLoadFailed(false);
+          setTree(() => module.ClerkCloudAuthTree);
+        }
       })
       .catch(() => {
         if (cancelled) return;

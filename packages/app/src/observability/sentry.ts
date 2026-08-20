@@ -25,7 +25,7 @@ const EXPECTED_CLIENT_NOISE: RegExp[] = [
 
 /** Clerk FAPI empty-body / network glitches during session.touch (PEACOCK-STUDIO-1E). */
 const CLERK_SDK_JSON_NOISE =
-  /Failed to execute 'json' on 'Response'|Unexpected end of JSON input/i;
+  /Failed to execute 'json' on 'Response'|Unexpected end of JSON input|Failed to load Clerk/i;
 
 function errorStack(error: unknown): string {
   if (error instanceof Error) return error.stack ?? '';
@@ -49,12 +49,15 @@ export function isClerkSdkNoise(error: unknown): boolean {
         : error && typeof error === 'object' && 'message' in error
           ? String((error as { message?: unknown }).message ?? '')
           : '';
+  // Script CDN blocks often have no Clerk stack — still treat as expected noise.
+  if (/Failed to load Clerk/i.test(message)) return true;
   if (!CLERK_SDK_JSON_NOISE.test(message)) return false;
   return stackLooksLikeClerk(errorStack(error));
 }
 
 function sentryEventLooksLikeClerk(event: Sentry.ErrorEvent): boolean {
   const text = eventMessage(event);
+  if (/Failed to load Clerk/i.test(text)) return true;
   if (!CLERK_SDK_JSON_NOISE.test(text)) return false;
   const frames =
     event.exception?.values?.flatMap((value) => value.stacktrace?.frames ?? []) ?? [];

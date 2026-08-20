@@ -90,7 +90,8 @@ export function usePrefetchFlowScreenshots(
 
     return () => {
       controller.abort();
-      clearPrefetchedImages();
+      // Do not clearPrefetchedImages here — Strict Mode remount / abort races would
+      // drop the first-step decode and leave the player stuck on the loader.
     };
   }, [documentId, enabled, storeDocumentId, prefetchKey, outline, screenshotUrls]);
 
