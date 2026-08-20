@@ -30,6 +30,7 @@ import {
   updateRecordingUi,
 } from './recordingUi';
 import { syncRecordingStateFromBackground, watchRecordingState } from './recordingSync';
+import { isSameResolvedTarget } from './sameResolvedTarget';
 
 let recordingState: RecordingStateSnapshot = {
   status: 'idle',
@@ -76,12 +77,6 @@ function resolveRecordingTarget(event: Event): HTMLElement | null {
   if (isPeacockUiElement(resolved)) return null;
   if (resolved instanceof HTMLInputElement && isSensitiveField(resolved)) return null;
   return resolved;
-}
-
-function isSameResolvedTarget(a: EventTarget, b: EventTarget): boolean {
-  if (a === b) return true;
-  if (!(a instanceof Node) || !(b instanceof Node)) return false;
-  return a.contains(b) || b.contains(a);
 }
 
 function beginPointerScreenshot(target: EventTarget): void {

@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Check, Link2 } from "lucide-react";
 import type { FlowStep } from "@peacock/shared";
-import { getStepMarkerPosition, getStepUrl, resolveStepDescription } from "@peacock/shared";
+import { getStepMarkerPosition, getStepResourcesForStep, getStepUrl, resolveStepDescription } from "@peacock/shared";
+import { RichTextContent } from "@/components/editor/RichTextContent";
+import { StepResourceList } from "@/components/flow/StepResourceList";
 import { usePlayerStepDetailsVisibility } from "@/hooks/usePlayerStepDetailsVisibility";
 import { getDocumentAnchorShareUrl } from "@/utils/shareLink";
+import { isEmptyRichText } from "@/utils/richText";
+import { useFlowStore } from "@/store/flowStore";
 import { BrowserMockup } from "./BrowserMockup";
 import { PlayerClickMarker } from "./PlayerClickMarker";
 import { getEventTypeIcon, getEventTypeLabel } from "./eventTypeDisplay";
@@ -30,6 +34,9 @@ export const DocumentStepCard = ({
   const markerPosition = getStepMarkerPosition(step);
   const stepUrl = getStepUrl(step);
   const description = resolveStepDescription(step);
+  const stepResources = useFlowStore((state) => state.stepResources);
+  const resources = getStepResourcesForStep(stepResources, step.id);
+  const hasDetailedDescription = !isEmptyRichText(step.detailedDescription ?? "");
   const { isDetailsVisible, toggleDetails } = usePlayerStepDetailsVisibility(
     step.id,
   );
@@ -115,6 +122,18 @@ export const DocumentStepCard = ({
                 "No additional instructions were added for this step."}
             </p>
           </div>
+          {hasDetailedDescription ? (
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Detailed description
+              </p>
+              <RichTextContent
+                html={step.detailedDescription ?? ""}
+                className="prose prose-sm mt-2 max-w-none text-slate-700"
+              />
+            </div>
+          ) : null}
+          <StepResourceList resources={resources} className="mt-4" />
         </div>
 
         <div className="min-w-0">

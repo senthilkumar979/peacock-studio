@@ -12,6 +12,7 @@ import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { isCloudSyncFlagEnabled } from '@/cloud/config';
 import { LANDING_PATH } from '@/constants/routes';
 import { useFlowDocDefaultView } from '@/hooks/useFlowDocDefaultView';
+import { useHydrateResourceLabels } from '@/hooks/useHydrateResourceLabels';
 import { usePublicShare } from '@/hooks/usePublicShare';
 import { usePublicSharedDocument } from '@/hooks/usePublicSharedDocument';
 import { ProductTourLearner } from '@/pages/ProductTourLearner';
@@ -39,6 +40,7 @@ export const PublicSharePage = ({ mode }: PublicSharePageProps) => {
   const { shareLinkViewMode, isReady: isDocumentReady } = usePublicSharedDocument(
     requiresSignIn || shareKillSwitched ? null : link,
   );
+  useHydrateResourceLabels(isDocumentReady && mode !== 'edit', false);
   const resolvedView = isEmbed
     ? 'player'
     : resolveFlowDocView(searchParams, location.hash, defaultView, shareLinkViewMode);

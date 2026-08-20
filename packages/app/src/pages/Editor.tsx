@@ -28,9 +28,13 @@ import { StepList } from "@/editor/StepList";
 import { StepPanel } from "@/editor/StepPanel";
 import { Toolbar } from "@/editor/Toolbar";
 import { usePayload } from "@/hooks/usePayload";
+import { useHydrateResourceLabels } from "@/hooks/useHydrateResourceLabels";
 import { usePersistDocument } from "@/hooks/usePersistDocument";
 import { useSavedDocument } from "@/hooks/useSavedDocument";
-import { persistCurrentFlow, saveNewFlowFromStore } from "@/services/flowLibraryService";
+import {
+  persistCurrentFlow,
+  saveNewFlowFromStore,
+} from "@/services/flowLibraryService";
 import {
   useFlowStore,
   usePlayableSteps,
@@ -51,15 +55,19 @@ export const Editor = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isExtensionHandoff = !documentId;
-  const captureUnsupported =
-    isExtensionHandoff && isCaptureUnsupportedClient();
+  const captureUnsupported = isExtensionHandoff && isCaptureUnsupportedClient();
   const [showFirstCaptureChecklist, setShowFirstCaptureChecklist] = useState(
-    () => Boolean((location.state as { justCreated?: boolean } | null)?.justCreated),
+    () =>
+      Boolean(
+        (location.state as { justCreated?: boolean } | null)?.justCreated,
+      ),
   );
   const [isSavingPendingCapture, setIsSavingPendingCapture] = useState(false);
   const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
 
-  const payload = usePayload({ enabled: isExtensionHandoff && !captureUnsupported });
+  const payload = usePayload({
+    enabled: isExtensionHandoff && !captureUnsupported,
+  });
   const saved = useSavedDocument(documentId);
 
   const { isLoading, isLoaded, error } = isExtensionHandoff ? payload : saved;
@@ -72,6 +80,7 @@ export const Editor = () => {
   const showPendingCaptureBar = isPendingCapture || isSavingPendingCapture;
 
   usePersistDocument(Boolean(documentId && isLoaded), documentId);
+  useHydrateResourceLabels(isLoaded, false);
 
   useEffect(() => {
     if (!documentId || !isLoaded) return;
@@ -139,7 +148,10 @@ export const Editor = () => {
     try {
       const savedDocumentId = await saveNewFlowFromStore();
       if (!savedDocumentId) {
-        notifyPersistError(new Error("Recording had no steps to save."), "Save documentation");
+        notifyPersistError(
+          new Error("Recording had no steps to save."),
+          "Save documentation",
+        );
         return;
       }
       trackEvent(AnalyticsEvents.documentCreated, {
@@ -189,13 +201,17 @@ export const Editor = () => {
               Still waiting for the extension
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              Make sure Peacock Studio is installed and pinned, then start a recording on any site
-              and stop it to open the editor. If a recording already finished, try stopping again or
-              refresh this page.
+              Make sure Peacock Studio is installed and pinned, then start a
+              recording on any site and stop it to open the editor. If a
+              recording already finished, try stopping again or refresh this
+              page.
             </p>
             <div className="mt-5 flex flex-col items-center gap-3">
               <ChromeWebStoreLink className="inline-flex items-center gap-2 rounded-xl bg-peacock-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-peacock-800" />
-              <Link to={DASHBOARD_PATH} className="text-sm font-medium text-peacock-700 hover:text-peacock-800">
+              <Link
+                to={DASHBOARD_PATH}
+                className="text-sm font-medium text-peacock-700 hover:text-peacock-800"
+              >
                 Back to dashboard
               </Link>
             </div>
@@ -209,7 +225,7 @@ export const Editor = () => {
         <PeacockStudioLoader size={160} />
         <p className="text-sm text-slate-500">
           {isExtensionHandoff
-            ? "Waiting for flow from extensin. Please don't refresh or close this page."
+            ? "Waiting for flow from extension. Please don't refresh or close this page."
             : "Loading documentation…"}
         </p>
       </div>
@@ -285,7 +301,9 @@ export const Editor = () => {
         ) : null}
 
         {showFirstCaptureChecklist && !showPendingCaptureBar ? (
-          <FirstCaptureChecklist onDismiss={() => setShowFirstCaptureChecklist(false)} />
+          <FirstCaptureChecklist
+            onDismiss={() => setShowFirstCaptureChecklist(false)}
+          />
         ) : null}
         <div className="grid min-h-0 flex-1 grid-cols-[280px_1fr_320px] gap-4 p-4">
           <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
@@ -326,7 +344,7 @@ export const Editor = () => {
             </div>
           </main>
           <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-            <div className="min-h-0 flex-1 overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               {selectedBranch ? (
                 <BranchPanel
                   branch={selectedBranch}

@@ -8,7 +8,7 @@ import {
 } from '@/cloud/authContext';
 import { isCloudSyncFlagEnabled } from '@/cloud/config';
 import type { CapabilityKey, MemberCapabilities } from '@/cloud/types/organization';
-import { useCloudInitError } from '@/hooks/useCloudInitError';
+import { useCloudInitError, useCloudInitErrorDetail } from '@/hooks/useCloudInitError';
 import { useCanDeleteLibraryItems, useSessionMode } from '@/hooks/useSessionMode';
 
 type ShareMethodKey = 'embed' | 'pdf' | 'link';
@@ -76,6 +76,7 @@ export interface ShareMethodAccess {
 export function useShareMethodAccess(): ShareMethodAccess {
   const mode = useSessionMode();
   const cloudInitError = useCloudInitError();
+  const cloudInitErrorDetail = useCloudInitErrorDetail();
   const canShareCap = useHasCapability('share');
   const canExportCap = useHasCapability('export');
   const canEmbedCap = useHasCapability('embed');
@@ -92,9 +93,11 @@ export function useShareMethodAccess(): ShareMethodAccess {
   }
 
   if (mode === 'loading' || mode === 'connecting') {
-    const reason = cloudInitError
-      ? 'Cloud workspace failed to connect. Refresh, or sign out and sign back in.'
-      : 'Workspace is still loading…';
+    const reason = cloudInitErrorDetail?.kind === 'network_blocked'
+      ? 'Cloud sharing is unavailable on this network. Try a personal device or ask IT to allowlist Peacock cloud hosts.'
+      : cloudInitError
+        ? 'Cloud workspace failed to connect. Refresh, or sign out and sign back in.'
+        : 'Workspace is still loading…';
     return {
       canShare: false,
       canExport: true,

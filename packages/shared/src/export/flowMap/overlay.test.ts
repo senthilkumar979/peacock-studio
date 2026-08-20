@@ -95,6 +95,42 @@ describe('parseFlowMapOverlay', () => {
       stickyNotes: [{ id: 'note-1', x: 100, y: 200, text: 'Check edge case' }],
     });
   });
+
+  it('skips invalid positions, statuses, notes, and sticky notes', () => {
+    const parsed = parseFlowMapOverlay({
+      version: 1,
+      nodePositions: {
+        good: { x: 1, y: 2 },
+        bad: { x: '1', y: 2 },
+        infinite: { x: Number.POSITIVE_INFINITY, y: 1 },
+      },
+      nodeStatuses: {
+        good: 'needs_work',
+        bad: 'shipped',
+      },
+      nodeNotes: {
+        good: 'ok',
+        bad: 12,
+      },
+      stickyNotes: [
+        { id: '  ', x: 1, y: 2, text: 'x' },
+        { id: 'n1', x: 3, y: 4, text: 9 },
+        { id: 'n2', x: 5, y: 6, text: 'kept', color: '  red  ' },
+        null,
+      ],
+    });
+
+    expect(parsed).toEqual({
+      version: 1,
+      nodePositions: { good: { x: 1, y: 2 } },
+      nodeStatuses: { good: 'needs_work' },
+      nodeNotes: { good: 'ok' },
+      stickyNotes: [
+        { id: 'n1', x: 3, y: 4, text: '' },
+        { id: 'n2', x: 5, y: 6, text: 'kept', color: 'red' },
+      ],
+    });
+  });
 });
 
 describe('pruneFlowMapOverlay', () => {
@@ -112,9 +148,19 @@ describe('pruneFlowMapOverlay', () => {
       },
     };
 
-    const pruned = pruneFlowMapOverlay(overlay, graph);
+    const pruned = pruneFlowMapOverlay(
+      {
+        ...overlay,
+        nodeNotes: {
+          'step-step-1': 'keep',
+          'step-removed': 'drop',
+        },
+      },
+      graph,
+    );
     expect(pruned.nodePositions).toEqual({ 'step-step-1': { x: 1, y: 2 } });
     expect(pruned.nodeStatuses).toEqual({ 'step-step-1': 'in_review' });
+    expect(pruned.nodeNotes).toEqual({ 'step-step-1': 'keep' });
     expect(pruned.stickyNotes).toEqual([]);
   });
 });
@@ -133,5 +179,11 @@ describe('applyFlowMapOverlayPositions', () => {
 
     expect(merged.get('root')).toEqual({ x: 0, y: 0 });
     expect(merged.get('step-step-1')).toEqual({ x: 200, y: 300 });
+  });
+
+  it('returns auto positions when overlay is missing', () => {
+    const auto = new Map([['root', { x: 1, y: 2 }]]);
+    expect(applyFlowMapOverlayPositions(auto, null)).toBe(auto);
+    expect(applyFlowMapOverlayPositions(auto, undefined)).toBe(auto);
   });
 });

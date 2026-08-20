@@ -1,4 +1,4 @@
-import { collectAllBranches, type FlowOutlineItem, type FlowPayload } from '@peacock/shared';
+import { collectAllBranches, type FlowOutlineItem, type FlowPayload, type StepResource } from '@peacock/shared';
 import { buildPdfExportPages, countPdfStepPages } from './buildPdfExportPages';
 import { FlowDocument } from './FlowDocument';
 import { getPdfLogoUrl } from './pdfConstants';
@@ -15,6 +15,7 @@ interface ExportFlowPdfParams {
   flow: FlowPayload;
   steps: FlowOutlineItem[];
   screenshotUrls: Record<string, string>;
+  stepResources?: StepResource[];
   pathSelections?: PdfPathSelections;
 }
 
@@ -26,6 +27,7 @@ export async function exportFlowPdf({
   flow,
   steps,
   screenshotUrls,
+  stepResources = [],
   pathSelections: pathSelectionsInput,
 }: ExportFlowPdfParams): Promise<void> {
   if (isCloudLibraryActive()) {
@@ -36,7 +38,7 @@ export async function exportFlowPdf({
   const branches = collectAllBranches(steps);
   const pathSelections =
     pathSelectionsInput ?? buildDefaultPdfPathSelections(branches);
-  const pages = await buildPdfExportPages(steps, screenshotUrls, pathSelections);
+  const pages = await buildPdfExportPages(steps, screenshotUrls, pathSelections, stepResources);
   const stepCount = countPdfStepPages(pages);
 
   if (!stepCount) return;

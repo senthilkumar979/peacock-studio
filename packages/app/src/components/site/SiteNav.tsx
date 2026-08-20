@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Menu, X } from 'lucide-react';
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
 import { DASHBOARD_PATH, LANDING_PATH, PRICING_PATH } from '@/constants/routes';
-import { isCloudSyncEnabled } from '@/cloud/config';
+import { useShowMarketingSignInUp } from '@/hooks/useShowMarketingSignInUp';
 import { getExtensionGatePath } from '@/utils/extensionGate';
 import { SiteNavDropdown } from './SiteNavDropdown';
 import { PRODUCT_NAV_ITEMS, SOLUTION_NAV_ITEMS } from './siteNavData';
@@ -28,7 +28,7 @@ const desktopLinkClass = (active: boolean) =>
 export const SiteNav = ({ visible = true }: SiteNavProps) => {
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const showAuthLinks = isCloudSyncEnabled();
+  const showAuthLinks = useShowMarketingSignInUp();
 
   const isActive = (href: string) =>
     href === LANDING_PATH ? pathname === LANDING_PATH : pathname.startsWith(href);

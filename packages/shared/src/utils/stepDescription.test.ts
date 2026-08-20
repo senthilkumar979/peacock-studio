@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { ClickEvent, InputEvent, PageViewEvent } from '../types/events';
 import { extractElementSnapshot } from './extractElementSnapshot';
 import { enrichStepFromEvent, generateStepDescription, generateStepTitle } from './stepDescription';
+import * as stepDescriptionLabels from './stepDescriptionLabels';
 
 describe('stepDescription', () => {
   it('describes a form submit button click', () => {
@@ -386,5 +387,186 @@ describe('stepDescription', () => {
     expect(generateStepDescription(snapshot, event)).toBe(
       'On the Form page, enter Line one in the notes field.',
     );
+  });
+
+  it('describes menuitem, combobox, and generic controls', () => {
+    document.body.innerHTML = '<div role="menuitem">Delete</div>';
+    const menu = extractElementSnapshot(document.querySelector('[role="menuitem"]') as HTMLElement);
+    const menuEvent: ClickEvent = {
+      id: '1',
+      type: 'click',
+      timestamp: 1,
+      url: 'https://example.com',
+      title: 'App',
+      viewport: { width: 1, height: 1, scrollX: 0, scrollY: 0, dpr: 1 },
+      position: { x: 0, y: 0, xPercent: 0, yPercent: 0 },
+      element: menu,
+      screenshotId: 'shot',
+    };
+    expect(generateStepDescription(menu, menuEvent)).toContain('Delete');
+    expect(generateStepTitle(menu, menuEvent)).toContain('Delete');
+
+    document.body.innerHTML = '<input role="combobox" aria-label="City" value="Paris" />';
+    const combo = extractElementSnapshot(document.querySelector('input') as HTMLElement);
+    const comboEvent: InputEvent = {
+      id: '2',
+      type: 'input',
+      timestamp: 1,
+      url: 'https://example.com',
+      title: 'Form',
+      viewport: { width: 1, height: 1, scrollX: 0, scrollY: 0, dpr: 1 },
+      position: { x: 0, y: 0, xPercent: 0, yPercent: 0 },
+      element: combo,
+      valuePreview: 'Paris',
+      screenshotId: 'shot',
+    };
+    expect(generateStepDescription(combo, comboEvent)).toContain('City');
+    expect(generateStepTitle(combo, comboEvent)).toContain('City');
+
+    document.body.innerHTML = '<div id="chip">Status</div>';
+    const generic = extractElementSnapshot(document.querySelector('#chip') as HTMLElement);
+    const genericEvent: ClickEvent = {
+      id: '3',
+      type: 'click',
+      timestamp: 1,
+      url: 'https://example.com',
+      title: 'App',
+      viewport: { width: 1, height: 1, scrollX: 0, scrollY: 0, dpr: 1 },
+      position: { x: 0, y: 0, xPercent: 0, yPercent: 0 },
+      element: generic,
+      screenshotId: 'shot',
+    };
+    expect(generateStepDescription(generic, genericEvent)).toContain('Status');
+    expect(generateStepTitle(generic, genericEvent)).toContain('Status');
+  });
+
+  it('enriches navigation steps without element snapshots', () => {
+    const step = {
+      title: '',
+      notes: 'keep',
+      generatedTitle: '',
+      generatedDescription: '',
+    };
+    enrichStepFromEvent(step, {
+      id: '1',
+      type: 'navigation',
+      timestamp: 1,
+      fromUrl: 'https://a.com',
+      toUrl: 'https://b.com',
+    });
+    expect(step.generatedTitle.length).toBeGreaterThan(0);
+    expect(step.notes).toBe('');
+    expect(step.title).toBe(step.generatedTitle);
+  });
+
+  it('describes navigation with empty and invalid urls', () => {
+    expect(
+      generateStepDescription({} as never, {
+        id: '1',
+        type: 'navigation',
+        timestamp: 1,
+        fromUrl: '',
+        toUrl: 'not-a-url',
+      }),
+    ).toBe('Navigate from the previous page to not-a-url.');
+    expect(generateStepTitle({} as never, { id: '1', type: 'navigation', timestamp: 1, fromUrl: 'https://a.com', toUrl: 'https://b.com' })).toBe('Go to next page');
+  });
+
+  it('uses submit title fallbacks from form metadata', () => {
+    document.body.innerHTML = '<form aria-label="Signup"><input name="email" /></form>';
+    const form = document.querySelector('form') as HTMLFormElement;
+    const snapshot = extractElementSnapshot(form);
+    const event = {
+      id: '1',
+      type: 'submit' as const,
+      timestamp: 1,
+      url: 'https://example.com',
+      title: 'Signup',
+      viewport: { width: 1, height: 1, scrollX: 0, scrollY: 0, dpr: 1 },
+      element: snapshot,
+      trigger: 'enter-key' as const,
+      screenshotId: 'shot',
+    };
+    expect(generateStepTitle(snapshot, event)).toBe('Submit Signup');
+    expect(generateStepDescription(snapshot, event)).toContain('the form');
+  });
+
+  it('unchecks checkbox clicks when control kind is checkbox but flag is false', () => {
+    const element = extractElementSnapshot(document.createElement('div'));
+    const unchecked = {
+      ...element,
+      isCheckbox: false,
+      label: { ...element.label, text: 'Terms' },
+    };
+    vi.spyOn(stepDescriptionLabels, 'getControlKind').mockReturnValue('checkbox');
+    const event: ClickEvent = {
+      id: '1',
+      type: 'click',
+      timestamp: 1,
+      url: 'https://example.com',
+      title: 'Form',
+      viewport: { width: 1, height: 1, scrollX: 0, scrollY: 0, dpr: 1 },
+      position: { x: 0, y: 0, xPercent: 0, yPercent: 0 },
+      element: unchecked,
+      screenshotId: 'shot',
+    };
+    expect(generateStepTitle(unchecked, event)).toBe('Uncheck Terms');
+    vi.restoreAllMocks();
+  });
+
+  it('enriches click steps with element snapshots', () => {
+    document.body.innerHTML = '<button>Continue</button>';
+    const button = document.querySelector('button') as HTMLButtonElement;
+    const element = extractElementSnapshot(button);
+    const step = {
+      title: '',
+      notes: 'notes',
+      generatedTitle: '',
+      generatedDescription: '',
+    };
+    enrichStepFromEvent(step, {
+      id: '1',
+      type: 'click',
+      timestamp: 1,
+      url: 'https://example.com',
+      title: 'Home',
+      viewport: { width: 1, height: 1, scrollX: 0, scrollY: 0, dpr: 1 },
+      position: { x: 0, y: 0, xPercent: 0, yPercent: 0 },
+      element,
+      screenshotId: 'shot',
+    });
+    expect(step.generatedTitle).toContain('Continue');
+    expect(step.notes).toBe('');
+  });
+
+  it('describes page views without titles and empty selects', () => {
+    expect(
+      generateStepTitle({} as never, {
+        id: '1',
+        type: 'page-view',
+        timestamp: 1,
+        url: 'https://example.com',
+        title: '  ',
+        viewport: { width: 1, height: 1, scrollX: 0, scrollY: 0, dpr: 1 },
+        screenshotId: 'shot',
+        navigationRedirect: true,
+      }),
+    ).toBe('User navigates to the new page page');
+
+    document.body.innerHTML = '<select id="country" aria-label="Country"></select>';
+    const select = document.querySelector('select') as HTMLSelectElement;
+    const element = extractElementSnapshot(select);
+    const event: InputEvent = {
+      id: '1',
+      type: 'input',
+      timestamp: 1,
+      url: 'https://example.com',
+      title: 'Form',
+      element,
+      valuePreview: '',
+      screenshotId: 'shot',
+    };
+    expect(generateStepTitle(element, event)).toBe('Select Country');
+    expect(generateStepDescription(element, event)).toContain('choose an option');
   });
 });

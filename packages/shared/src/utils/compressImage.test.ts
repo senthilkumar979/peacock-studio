@@ -122,6 +122,78 @@ describe('compressImageToMaxBytes', () => {
     const source = new Blob([new Uint8Array(3 * 1024 * 1024)], { type: 'image/png' });
     await expect(compressImageToMaxBytes(source, 500)).rejects.toBeInstanceOf(ImageTooLargeError);
   });
+
+  it('uses HTMLCanvasElement when OffscreenCanvas is unavailable', async () => {
+    installCanvasMocks({
+      width: 200,
+      height: 100,
+      bytesPerPixelAtFullQuality: 0.2,
+    });
+    vi.stubGlobal('OffscreenCanvas', undefined);
+
+    class FakeCanvas {
+      width = 0;
+      height = 0;
+      getContext() {
+        return {
+          fillStyle: '',
+          fillRect: () => undefined,
+          drawImage: () => undefined,
+        };
+      }
+      toBlob(
+        callback: (blob: Blob | null) => void,
+        type?: string,
+        quality?: number,
+      ): void {
+        const q = quality ?? 1;
+        const size = Math.max(1, Math.floor(this.width * this.height * q * 0.2));
+        callback(new Blob([new Uint8Array(size)], { type: type ?? 'image/jpeg' }));
+      }
+    }
+
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+      if (tagName === 'canvas') return new FakeCanvas() as unknown as HTMLCanvasElement;
+      return originalCreateElement(tagName);
+    });
+
+    const source = new Blob([new Uint8Array(3 * 1024 * 1024)], { type: 'image/png' });
+    const compressed = await compressImageToMaxBytes(source, MAX_IMAGE_BYTES);
+    expect(compressed.type).toBe('image/jpeg');
+    expect(compressed.size).toBeLessThanOrEqual(MAX_IMAGE_BYTES);
+  });
+
+  it('rejects when HTML canvas toBlob returns null', async () => {
+    installCanvasMocks({ width: 100, height: 100, bytesPerPixelAtFullQuality: 0.2 });
+    vi.stubGlobal('OffscreenCanvas', undefined);
+
+    class FakeCanvas {
+      width = 0;
+      height = 0;
+      getContext() {
+        return {
+          fillStyle: '',
+          fillRect: () => undefined,
+          drawImage: () => undefined,
+        };
+      }
+      toBlob(callback: (blob: Blob | null) => void): void {
+        callback(null);
+      }
+    }
+
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+      if (tagName === 'canvas') return new FakeCanvas() as unknown as HTMLCanvasElement;
+      return originalCreateElement(tagName);
+    });
+
+    const source = new Blob([new Uint8Array(3 * 1024 * 1024)], { type: 'image/png' });
+    await expect(compressImageToMaxBytes(source, MAX_IMAGE_BYTES)).rejects.toThrow(
+      /Could not encode image/,
+    );
+  });
 });
 
 describe('prepareImageForCloudStorage', () => {

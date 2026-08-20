@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { FlowOutlineItem, FlowStep } from '../types/events';
-import { countStepDomains, extractHostname } from './stepUrl';
+import { countStepDomains, extractHostname, getFlowEventUrl, getStepUrl } from './stepUrl';
 
 function pageViewStep(url: string, id: string): FlowStep {
   return {
@@ -39,6 +39,71 @@ function navigationStep(fromUrl: string, toUrl: string, id: string): FlowStep {
     },
   };
 }
+
+describe('getFlowEventUrl / getStepUrl', () => {
+  it('reads urls from navigation, page-view, and action events', () => {
+    const nav = navigationStep('https://a.com', 'https://b.com', 'n');
+    const page = pageViewStep('https://page.example.com', 'p');
+    const click: FlowStep = {
+      ...page,
+      id: 'c',
+      event: {
+        id: 'c',
+        type: 'click',
+        timestamp: 1,
+        url: 'https://click.example.com',
+        title: 'Home',
+        viewport: { width: 1, height: 1, scrollX: 0, scrollY: 0, dpr: 1 },
+        position: { x: 0, y: 0, xPercent: 0, yPercent: 0 },
+        element: {
+          tagName: 'button',
+          type: 'button',
+          id: '',
+          name: null,
+          role: null,
+          classes: [],
+          selector: 'button',
+          xpath: '//button',
+          innerText: '',
+          innerHTML: null,
+          label: {
+            text: null,
+            htmlFor: null,
+            ariaLabel: null,
+            ariaLabelledBy: null,
+            placeholder: null,
+          },
+          valuePreview: null,
+          classification: 'public',
+          maskedValue: null,
+          dataAttributes: {},
+          ariaDescription: null,
+          parent: null,
+          grandparent: null,
+          isButton: true,
+          isLink: false,
+          isInput: false,
+          isSelect: false,
+          isCheckbox: false,
+          isRadio: false,
+          isOption: false,
+          isTab: false,
+          isMenuItem: false,
+          isCombobox: false,
+          isContentEditable: false,
+        },
+        screenshotId: 's-c',
+      },
+    };
+
+    expect(getFlowEventUrl(nav.event)).toBe('https://b.com');
+    expect(getStepUrl(nav)).toBe('https://b.com');
+    expect(getFlowEventUrl(page.event)).toBe('https://page.example.com');
+    expect(getStepUrl(page)).toBe('https://page.example.com');
+    expect(getFlowEventUrl(click.event)).toBe('https://click.example.com');
+    expect(getStepUrl(click)).toBe('https://click.example.com');
+  });
+});
 
 describe('extractHostname', () => {
   it('returns lowercase hostname', () => {

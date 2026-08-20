@@ -13,6 +13,7 @@ import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import type { PageHintControl } from '@/components/onboarding/HintAnchor';
 import { recordOrgEvent } from '@/cloud/repositories/analyticsRepository';
 import { useFirstTimeHintTour } from '@/hooks/useFirstTimeHint';
+import { useHydrateResourceLabels } from '@/hooks/useHydrateResourceLabels';
 import { useSavedDocument } from '@/hooks/useSavedDocument';
 import { useFlowDocDefaultView } from '@/hooks/useFlowDocDefaultView';
 import { FlowDocExperienceViews } from '@/player/FlowDocExperienceViews';
@@ -27,6 +28,7 @@ export const Player = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultView = useFlowDocDefaultView();
   const { isLoading, isLoaded, error } = useSavedDocument(documentId);
+  useHydrateResourceLabels(isLoaded, true);
   const rawSteps = useFlowStore((state) => state.steps);
   const shareSettings = useFlowStore((state) => state.shareSettings);
   const setViewerFilter = useFlowStore((state) => state.setViewerFilter);

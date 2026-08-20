@@ -151,6 +151,8 @@ export interface FlowStep {
   customScreenshotId?: string;
   /** When true, no description is shown in player/PDF/export (notes stays ""). */
   hideDescription?: boolean;
+  /** Rich-text detailed instructions (HTML). Max 3000 plain-text chars. */
+  detailedDescription?: string;
 }
 
 export interface FlowSection {

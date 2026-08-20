@@ -1,4 +1,4 @@
-import { prepareImageForCloudStorage } from '@peacock/shared';
+import { collectReferencedScreenshotIds, prepareImageForCloudStorage, type FlowOutlineItem } from '@peacock/shared';
 import {
   SCREENSHOTS_BUCKET,
   SIGNED_URL_TTL_SECONDS,
@@ -206,6 +206,45 @@ export async function syncDocumentScreenshots(
     throw new Error(
       `Failed to upload ${failures.length} of ${entries.length} screenshots to cloud storage.`,
     );
+  }
+}
+
+export async function pruneDocumentScreenshots(
+  documentId: string,
+  steps: FlowOutlineItem[],
+): Promise<void> {
+  const keep = collectReferencedScreenshotIds(steps);
+  const { organizationId } = requireCloudAuthContext();
+  const supabase = getAuthenticatedSupabaseClient();
+
+  const { data, error } = await supabase
+    .from('screenshot_assets')
+    .select('id, storage_path')
+    .eq('organization_id', organizationId)
+    .eq('document_id', documentId);
+
+  if (error) throw error;
+  if (!data?.length) return;
+
+  const stale = data.filter((row) => !keep.has(row.id));
+  if (!stale.length) return;
+
+  const candidatePaths = [...new Set(stale.map((row) => row.storage_path))];
+  const staleIds = stale.map((row) => row.id);
+
+  const { error: deleteError } = await supabase
+    .from('screenshot_assets')
+    .delete()
+    .in('id', staleIds);
+
+  if (deleteError) throw deleteError;
+
+  const orphanedPaths = await listOrphanedStoragePaths(organizationId, candidatePaths);
+  if (orphanedPaths.length) {
+    const { error: storageError } = await supabase.storage
+      .from(SCREENSHOTS_BUCKET)
+      .remove(orphanedPaths);
+    if (storageError) throw storageError;
   }
 }
 

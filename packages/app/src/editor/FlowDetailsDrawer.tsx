@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { FlowCaptureEnvironment } from "@peacock/shared";
 import { Loader2, X } from "lucide-react";
 import { MinimalRichTextEditor } from "@/components/editor/MinimalRichTextEditor";
+import { TagInput } from "@/components/TagInput";
 import {
   Button,
   FieldInput,
@@ -23,6 +24,7 @@ export interface FlowDetailsInput {
   title: string;
   description: string;
   version: string;
+  tags: string[];
 }
 
 interface FlowDetailsDrawerProps {
@@ -32,6 +34,8 @@ interface FlowDetailsDrawerProps {
   initialTitle: string;
   initialDescription: string;
   initialVersion: string;
+  initialTags?: string[];
+  tagSuggestions?: string[];
   captureEnvironment?: FlowCaptureEnvironment | null;
   confirmLabel?: string;
   onSave: (details: FlowDetailsInput) => void | Promise<void>;
@@ -44,6 +48,7 @@ interface FlowDetailsDraft {
   title: string;
   description: string;
   version: string;
+  tags: string[];
 }
 
 export const FlowDetailsDrawer = ({
@@ -52,6 +57,8 @@ export const FlowDetailsDrawer = ({
   initialTitle,
   initialDescription,
   initialVersion,
+  initialTags = [],
+  tagSuggestions = [],
   captureEnvironment: _captureEnvironment,
   confirmLabel = "Save",
   onSave,
@@ -65,6 +72,7 @@ export const FlowDetailsDrawer = ({
     title: initialTitle,
     description: initialDescription,
     version: initialVersion,
+    tags: initialTags,
   }));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -80,6 +88,7 @@ export const FlowDetailsDrawer = ({
         title: initialTitle,
         description: initialDescription,
         version: initialVersion,
+        tags: initialTags,
       });
       setError(null);
       setIsSaving(false);
@@ -133,6 +142,7 @@ export const FlowDetailsDrawer = ({
         title: trimmedTitle,
         description,
         version: trimmedVersion,
+        tags: draft.tags,
       });
     } finally {
       setIsSaving(false);
@@ -249,6 +259,18 @@ export const FlowDetailsDrawer = ({
                     }
                     placeholder="e.g. 1.0.0"
                     required
+                    disabled={isSaving}
+                  />
+                </FormField>
+
+                <FormField
+                  label="Tags"
+                  hint="Up to 5 tags, 30 characters each. Start with a letter; spaces become hyphens."
+                >
+                  <TagInput
+                    tags={draft.tags}
+                    suggestions={tagSuggestions}
+                    onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
                     disabled={isSaving}
                   />
                 </FormField>

@@ -21,7 +21,7 @@ import {
 import { resetSupabaseClientCache } from '@/cloud/supabaseClient';
 import { setSessionAuthState } from '@/cloud/sessionState';
 import { getCloudEnvValidationError } from '@/cloud/validateCloudEnv';
-import { getCloudInitErrorMessage } from '@/cloud/cloudInitErrors';
+import { classifyCloudInitError } from '@/cloud/cloudInitErrors';
 import { consumeIntentionalSignOut } from '@/cloud/sessionIntent';
 import { GENERIC_USER_ERROR_MESSAGE, logAppError, logSoftFailure, reportAppError } from '@/utils/appError';
 import { notifyError, notifyWarning } from '@/utils/notify';
@@ -184,12 +184,17 @@ export const CloudSyncProviderInner = ({ children }: CloudSyncProviderInnerProps
         );
         syncedUserIdRef.current = userId;
       } catch (error) {
-        const detail = getCloudInitErrorMessage(error);
+        const classified = classifyCloudInitError(error);
         reportAppError('Failed to initialize cloud library', error);
         setCloudAuthContext(null);
         // Unlock sessionMode away from perpetual "connecting" (see sessionState).
-        setCloudInitError(detail);
-        notifyError('Cloud library unavailable', detail);
+        setCloudInitError(classified);
+        notifyError(
+          classified.kind === 'network_blocked'
+            ? 'Cloud sync blocked by network'
+            : classified.title,
+          classified.message,
+        );
         resetSupabaseClientCache();
       }
     };

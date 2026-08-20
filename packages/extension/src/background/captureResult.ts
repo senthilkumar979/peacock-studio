@@ -42,7 +42,7 @@ export async function cropVisibleCapture(
     context.drawImage(bitmap, sx, sy, sw, sh, 0, 0, sw, sh);
     return canvas.convertToBlob({ type: 'image/png' });
   } finally {
-    bitmap.close();
+    bitmap?.close();
   }
 }
 
@@ -82,7 +82,9 @@ export async function stitchFullPageCaptures(
 
     return canvas.convertToBlob({ type: 'image/png' });
   } finally {
-    for (const bitmap of bitmaps) bitmap.close();
+    for (const bitmap of bitmaps) {
+      bitmap?.close();
+    }
   }
 }
 

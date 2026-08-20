@@ -3,7 +3,8 @@ import type { Persona } from '@/types/persona';
 import type { ProductTour, ProductTourSummary } from '@/types/productTour';
 import type { SavedRoute, SavedRouteSummary } from '@/types/route';
 import type { SavedFlowDocument, SavedFlowSummary } from '@/types/savedFlow';
-import { createDefaultPersona, countTourDemos } from '@/utils/createProductTour';
+import type { StepResource } from '@peacock/shared';
+import { createDefaultPersona, countTourDemos, sortTourFeatures } from '@/utils/createProductTour';
 import { convertRouteToProductTour } from '@/utils/migrateRouteToProductTour';
 import { estimateTourDurationMinutes } from '@/utils/productTourLearner';
 import { countRouteBranches, countRoutePeacocks, getChapterNodes, migrateSavedRoute, needsRouteMigration } from '@/utils/routeGraph';
@@ -12,7 +13,11 @@ import { normalizeFlowStatus, normalizeFlowVersion } from '@/utils/flowDocumentM
 import { normalizePersona } from '@/utils/normalizePersona';
 import { normalizeProductTour } from '@/utils/normalizeProductTour';
 import { DEFAULT_PERSONA_ID } from '@/constants/personaAvatars';
-import { sortTourFeatures } from '@/utils/createProductTour';
+import {
+  deleteResourcesForDocument,
+  listResourcesByDocument,
+  replaceDocumentResources,
+} from '@/storage/stepResourceDb';
 
 interface FlowLibrarySchema extends DBSchema {
   documents: {
@@ -35,10 +40,15 @@ interface FlowLibrarySchema extends DBSchema {
     value: ProductTour;
     indexes: { 'by-updated': number };
   };
+  step_resources: {
+    key: string;
+    value: StepResource;
+    indexes: { 'by-document': string; 'by-step': string };
+  };
 }
 
 const DB_NAME = 'peacock-flow-library';
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 
 let dbPromise: Promise<IDBPDatabase<FlowLibrarySchema>> | null = null;
 let migrationPromise: Promise<void> | null = null;
@@ -68,6 +78,12 @@ function getDb(): Promise<IDBPDatabase<FlowLibrarySchema>> {
             productTours.createIndex('by-updated', 'updatedAt');
           }
         }
+
+        if (oldVersion < 6 && !db.objectStoreNames.contains('step_resources')) {
+          const stepResources = db.createObjectStore('step_resources', { keyPath: 'id' });
+          stepResources.createIndex('by-document', 'documentId');
+          stepResources.createIndex('by-step', 'stepId');
+        }
       },
     }).catch((error: unknown) => {
       dbPromise = null;
@@ -81,6 +97,10 @@ function getDb(): Promise<IDBPDatabase<FlowLibrarySchema>> {
     });
   }
   return dbPromise;
+}
+
+export function getFlowLibraryDb(): Promise<IDBPDatabase<FlowLibrarySchema>> {
+  return getDb();
 }
 
 async function ensureDefaultPersona(db: IDBPDatabase<FlowLibrarySchema>): Promise<void> {
@@ -186,6 +206,7 @@ export async function getFlowDocument(id: string): Promise<SavedFlowDocument | u
   const db = await getDb();
   const doc = await db.get('documents', id);
   if (!doc) return undefined;
+  const stepResources = await listResourcesByDocument(id);
   return {
     ...doc,
     status: normalizeFlowStatus(doc.status, 'live'),
@@ -196,13 +217,15 @@ export async function getFlowDocument(id: string): Promise<SavedFlowDocument | u
         version: normalizeFlowVersion(doc.flow.flow.version),
       },
     },
+    stepResources,
   };
 }
 
 export async function saveFlowDocument(doc: SavedFlowDocument): Promise<void> {
   const db = await getDb();
+  const { stepResources, ...documentRecord } = doc;
   await db.put('documents', {
-    ...doc,
+    ...documentRecord,
     status: normalizeFlowStatus(doc.status, 'draft'),
     flow: {
       ...doc.flow,
@@ -212,10 +235,14 @@ export async function saveFlowDocument(doc: SavedFlowDocument): Promise<void> {
       },
     },
   });
+  if (stepResources) {
+    await replaceDocumentResources(doc.id, stepResources);
+  }
 }
 
 export async function deleteFlowDocument(id: string): Promise<void> {
   const db = await getDb();
+  await deleteResourcesForDocument(id);
   await db.delete('documents', id);
 }
 

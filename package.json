@@ -2,7 +2,9 @@
   "name": "peacock",
   "private": true,
   "scripts": {
-    "test": "pnpm --filter @peacock/shared test && pnpm --filter @peacock/app test",
+    "test": "pnpm --filter @peacock/shared test && pnpm --filter @peacock/app test && pnpm --filter @peacock/extension test",
+    "test:coverage": "pnpm --filter @peacock/shared test:coverage && pnpm --filter @peacock/app test:coverage && pnpm --filter @peacock/extension test:coverage && node scripts/mergeCoverage.mjs",
+    "test:coverage:check": "node scripts/checkCoverage.mjs",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "dev:extension": "pnpm --filter @peacock/extension dev",
@@ -15,6 +17,7 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "@types/node": "^26.2.0"
+    "@types/node": "^26.2.0",
+    "@vitest/coverage-v8": "^3.1.2"
   }
 }

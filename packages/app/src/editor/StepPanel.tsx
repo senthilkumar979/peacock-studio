@@ -1,8 +1,9 @@
 import { useState } from "react";
 import type { FlowStep } from "@peacock/shared";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { MinimalRichTextEditor } from "@/components/editor/MinimalRichTextEditor";
+import { StepResourceEditor } from "@/components/editor/StepResourceEditor";
 import {
-  ActionTooltip,
   Button,
   FieldInput,
   FieldTextarea,
@@ -11,6 +12,7 @@ import {
 import { StepImageUpload } from "@/editor/StepImageUpload";
 import { useFlowStore } from "@/store/flowStore";
 import { notifySuccess } from "@/utils/notify";
+import { STEP_DETAILED_DESCRIPTION_MAX_CHARS } from "@/utils/richText";
 
 interface StepPanelProps {
   step: FlowStep | null;
@@ -19,6 +21,9 @@ interface StepPanelProps {
 export const StepPanel = ({ step }: StepPanelProps) => {
   const updateStepTitle = useFlowStore((state) => state.updateStepTitle);
   const updateStepNotes = useFlowStore((state) => state.updateStepNotes);
+  const updateStepDetailedDescription = useFlowStore(
+    (state) => state.updateStepDetailedDescription,
+  );
   const setStepDescriptionHidden = useFlowStore(
     (state) => state.setStepDescriptionHidden,
   );
@@ -44,7 +49,7 @@ export const StepPanel = ({ step }: StepPanelProps) => {
 
   return (
     <>
-      <div className="flex h-full flex-col gap-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           Step details
         </h2>
@@ -84,6 +89,22 @@ export const StepPanel = ({ step }: StepPanelProps) => {
           </FormField>
         )}
 
+        <FormField
+          label="Detailed description"
+          hint={`Rich text, up to ${STEP_DETAILED_DESCRIPTION_MAX_CHARS.toLocaleString()} characters.`}
+          className="px-1"
+        >
+          <MinimalRichTextEditor
+            key={step.id}
+            value={step.detailedDescription ?? ""}
+            onChange={(html) => updateStepDetailedDescription(step.id, html)}
+            placeholder="Add expanded guidance, policies, or troubleshooting notes…"
+            maxChars={STEP_DETAILED_DESCRIPTION_MAX_CHARS}
+          />
+        </FormField>
+
+        <StepResourceEditor stepId={step.id} />
+
         <StepImageUpload step={step} />
 
         {showDescription && step.generatedDescription && (
@@ -97,7 +118,7 @@ export const StepPanel = ({ step }: StepPanelProps) => {
 
         <Button
           variant="danger"
-          className="mt-auto"
+          className="mt-2 shrink-0"
           onClick={() => setIsDeleteDialogOpen(true)}
         >
           Delete step

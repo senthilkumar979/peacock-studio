@@ -70,10 +70,9 @@ serve(async (req) => {
     });
 
     if (rateError) {
-      console.error('rate limit error', rateError);
-      return json({ error: 'Rate limit unavailable' }, 500, cors);
-    }
-    if (!allowed) {
+      // Fail open — a limiter outage must not block legitimate public shares.
+      console.error('rate limit error (continuing)', rateError);
+    } else if (allowed === false) {
       return json({ error: 'Too many requests' }, 429, cors);
     }
 
@@ -127,7 +126,35 @@ serve(async (req) => {
         p_document_id: documentId,
       });
       if (error) throw error;
-      return json({ data }, 200, cors);
+
+      const { data: resources, error: resourcesError } = await admin
+        .from('step_resources')
+        .select('id, document_id, step_id, url, label, sort_order, created_at')
+        .eq('document_id', documentId)
+        .order('sort_order', { ascending: true });
+      if (resourcesError) throw resourcesError;
+
+      const payload = asRecord(data) ?? {};
+      return json(
+        {
+          data: {
+            ...payload,
+            stepResources: (resources ?? []).map((row) => ({
+              id: row.id,
+              documentId: row.document_id,
+              stepId: row.step_id,
+              url: row.url,
+              ...(typeof row.label === 'string' && row.label.trim()
+                ? { label: row.label.trim() }
+                : {}),
+              sortOrder: row.sort_order,
+              createdAt: Date.parse(row.created_at),
+            })),
+          },
+        },
+        200,
+        cors,
+      );
     }
 
     if (action === 'tour') {

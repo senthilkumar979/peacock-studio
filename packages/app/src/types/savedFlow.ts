@@ -1,4 +1,4 @@
-import type { FlowOutlineItem, FlowPayload } from '@peacock/shared';
+import type { FlowOutlineItem, FlowPayload, StepResource } from '@peacock/shared';
 
 export type FlowDocumentStatus = 'draft' | 'live';
 
@@ -22,6 +22,8 @@ export interface SavedFlowDocument {
   steps: FlowOutlineItem[];
   screenshotUrls: Record<string, string>;
   shareSettings?: FlowShareSettings;
+  /** Loaded from step_resources store; not persisted inside documents JSON. */
+  stepResources?: StepResource[];
 }
 
 export interface SavedFlowSummary {

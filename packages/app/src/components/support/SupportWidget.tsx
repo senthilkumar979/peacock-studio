@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getFreshchatConfig } from '@/analytics/config';
-import { isEmbedSharePath, LANDING_PATH } from '@/constants/routes';
+import { isEmbedSharePath, LANDING_PATH, PRICING_PATH } from '@/constants/routes';
 import { isMobileClient } from '@/utils/isMobileClient';
+import { HIDE_SUPPORT_WIDGET_CLASS } from '@/utils/support';
 
 const FRESHCHAT_SCRIPT_ID = 'freshchat-widget';
 const FRESHCHAT_IDLE_TIMEOUT_MS = 4000;
-const HIDE_SUPPORT_WIDGET_CLASS = 'peacock-hide-support-widget';
 
 function applyRouteVisibility(): void {
   setFreshchatVisibility(shouldShowFreshchat(window.location.pathname));
@@ -60,10 +60,10 @@ export function shouldHideSupportWidget(pathname: string): boolean {
   return isEditorRoute(pathname) || isEmbedSharePath(pathname);
 }
 
-/** Support chat is marketing homepage + desktop only — never inside editors, embeds, or on mobile. */
-function isSupportWidgetRoute(pathname: string): boolean {
+/** Support chat is marketing homepage / pricing + desktop only — never inside editors, embeds, or on mobile. */
+export function isSupportWidgetRoute(pathname: string): boolean {
   if (shouldHideSupportWidget(pathname)) return false;
-  return pathname === LANDING_PATH;
+  return pathname === LANDING_PATH || pathname === PRICING_PATH;
 }
 
 function shouldShowFreshchat(pathname: string): boolean {
@@ -94,10 +94,10 @@ function scheduleIdle(task: () => void): () => void {
 }
 
 /**
- * Loads the Freshchat live-chat widget on the desktop landing page only. Renders nothing.
+ * Loads the Freshchat live-chat widget on desktop landing and pricing. Renders nothing.
  * Uses the Freshworks EU CDN embed (`eu.fw-cdn.com/...js`), not wchat.freshchat.com.
  * Injection is deferred until idle so it never contends with FCP/LCP.
- * Hidden on all editor pages (and every non-landing route) so it never covers Save / toolbars.
+ * Hidden on all editor pages (and every non-marketing chat route) so it never covers Save / toolbars.
  */
 export const SupportWidget = () => {
   // Primitive dep — getFreshchatConfig() returns a new object each call and would

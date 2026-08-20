@@ -103,7 +103,7 @@
   overflow: visible;
 }
 
-/* Freshchat launcher — hide on editors / non-landing so it never covers Save & toolbars */
+/* Freshchat launcher — hide on editors / non-chat routes so it never covers Save & toolbars */
 html.peacock-hide-support-widget #fc_frame,
 html.peacock-hide-support-widget #fc_frame.fc-widget-normal,
 html.peacock-hide-support-widget #fc_frame.fc-widget-small,

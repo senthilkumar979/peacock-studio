@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, X } from 'lucide-react';
-import { collectAllBranches, type FlowOutlineItem, type FlowPayload } from '@peacock/shared';
+import { collectAllBranches, type FlowOutlineItem, type FlowPayload, type StepResource } from '@peacock/shared';
 import { ShareLinkPanel } from '@/components/share/ShareLinkPanel';
 import { ShareLinkManagePanel } from '@/components/share/ShareLinkManagePanel';
 import { ShareMethodPicker, type ShareMethod } from '@/components/share/ShareMethodPicker';
@@ -37,6 +37,7 @@ interface ShareDocumentModalProps {
   flow?: FlowPayload | null;
   steps?: FlowOutlineItem[];
   screenshotUrls?: Record<string, string>;
+  stepResources?: StepResource[];
   shareSettings?: FlowShareSettings;
   status?: FlowDocumentStatus;
   onShareSettingsSave?: (settings: FlowShareSettings) => void;
@@ -49,6 +50,7 @@ export const ShareDocumentModal = ({
   flow: flowProp,
   steps: stepsProp,
   screenshotUrls: screenshotUrlsProp,
+  stepResources: stepResourcesProp,
   shareSettings: shareSettingsProp,
   status: statusProp,
   onShareSettingsSave,
@@ -67,6 +69,7 @@ export const ShareDocumentModal = ({
     flow: FlowPayload;
     steps: FlowOutlineItem[];
     screenshotUrls: Record<string, string>;
+    stepResources?: StepResource[];
     shareSettings?: FlowShareSettings;
     status: FlowDocumentStatus;
   } | null>(null);
@@ -74,6 +77,7 @@ export const ShareDocumentModal = ({
   const flow = flowProp ?? loaded?.flow ?? null;
   const steps = stepsProp ?? loaded?.steps ?? [];
   const screenshotUrls = screenshotUrlsProp ?? loaded?.screenshotUrls ?? {};
+  const stepResources = stepResourcesProp ?? loaded?.stepResources ?? [];
   const documentStatus = statusProp ?? loaded?.status ?? 'draft';
   const isDraft = documentStatus === 'draft';
   const canSharePublicly = canShare && !isDraft;
@@ -156,6 +160,7 @@ export const ShareDocumentModal = ({
           flow: doc.flow,
           steps: doc.steps,
           screenshotUrls: doc.screenshotUrls,
+          stepResources: doc.stepResources ?? [],
           shareSettings: doc.shareSettings,
           status: doc.status,
         });
@@ -267,6 +272,7 @@ export const ShareDocumentModal = ({
             flow,
             steps,
             screenshotUrls,
+            stepResources,
             pathSelections: hasBranches ? pdfPathSelections : undefined,
           }),
           {

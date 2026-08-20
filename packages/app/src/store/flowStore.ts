@@ -10,6 +10,9 @@ import {
   isFlowSection,
   isFlowStep,
   MANUAL_STEP_PLACEHOLDER_SCREENSHOT,
+  normalizeFlowTags,
+  normalizeStepResource,
+  pruneScreenshotUrls,
   sortBranchPaths,
   type FlowBranch,
   type FlowBranchPresentation,
@@ -17,9 +20,11 @@ import {
   type FlowPayload,
   type FlowStep,
   type LinkedPeacockPath,
+  type StepResource,
 } from '@peacock/shared';
 import type { FlowDocumentStatus, FlowShareSettings, SavedFlowDocument } from '@/types/savedFlow';
 import { normalizeFlowStatus, normalizeFlowVersion } from '@/utils/flowDocumentMeta';
+import { normalizeRichText, STEP_DETAILED_DESCRIPTION_MAX_CHARS, richTextPlainLength } from '@/utils/richText';
 import {
   buildDefaultShareSettings,
   filterOutlineForViewer,
@@ -36,6 +41,7 @@ interface FlowStore {
   status: FlowDocumentStatus;
   shareSettings: FlowShareSettings | null;
   viewerFilter: FlowViewerFilter | null;
+  stepResources: StepResource[];
 
   setFlow: (flow: FlowPayload, screenshotUrls: Record<string, string>) => void;
   setDocumentId: (id: string | null) => void;
@@ -54,7 +60,13 @@ interface FlowStore {
   updateSectionDescription: (id: string, description: string) => void;
   setStepCustomScreenshot: (id: string, dataUrl: string) => void;
   resetStepScreenshot: (id: string) => void;
-  updateFlowDetails: (title: string, description: string, version: string) => void;
+  updateFlowDetails: (title: string, description: string, version: string, tags?: string[]) => void;
+  updateFlowTags: (tags: string[]) => void;
+  addStepResource: (stepId: string, url: string) => string | undefined;
+  updateStepResource: (resourceId: string, url: string) => void;
+  setStepResourceLabel: (resourceId: string, label: string) => void;
+  removeStepResource: (resourceId: string) => void;
+  updateStepDetailedDescription: (stepId: string, html: string) => void;
   addBranch: (afterItemId?: string | null) => void;
   addBranchWithPath: (
     path: Omit<LinkedPeacockPath, 'id' | 'order'>,
@@ -84,13 +96,26 @@ const initialState = {
   status: 'draft' as FlowDocumentStatus,
   shareSettings: null as FlowShareSettings | null,
   viewerFilter: null as FlowViewerFilter | null,
+  stepResources: [] as StepResource[],
 };
 
-function removeCustomScreenshot(
+function removeStepScreenshots(
   state: { screenshotUrls: Record<string, string> },
-  customId: string
+  step: FlowStep,
 ): void {
-  delete state.screenshotUrls[customId];
+  if (step.customScreenshotId) {
+    delete state.screenshotUrls[step.customScreenshotId];
+  }
+  if (step.screenshotId) {
+    delete state.screenshotUrls[step.screenshotId];
+  }
+}
+
+function pruneStoreScreenshots(state: {
+  screenshotUrls: Record<string, string>;
+  steps: FlowOutlineItem[];
+}): void {
+  state.screenshotUrls = pruneScreenshotUrls(state.screenshotUrls, state.steps);
 }
 
 function syncFlowSteps(state: { flow: FlowPayload | null; steps: FlowOutlineItem[] }): void {
@@ -114,7 +139,7 @@ function pickSelectionAfterDelete(items: FlowOutlineItem[], deletedIndex: number
 }
 
 export const useFlowStore = create<FlowStore>()(
-  immer((set) => ({
+  immer((set, get) => ({
     ...initialState,
 
     setFlow: (flow, screenshotUrls) =>
@@ -133,6 +158,7 @@ export const useFlowStore = create<FlowStore>()(
         status: 'draft',
         shareSettings: buildDefaultShareSettings(flow.steps),
         viewerFilter: null,
+        stepResources: [],
       }),
 
     setDocumentId: (id) => set({ documentId: id }),
@@ -147,6 +173,7 @@ export const useFlowStore = create<FlowStore>()(
           flow: {
             ...doc.flow.flow,
             version: normalizeFlowVersion(doc.flow.flow.version),
+            tags: normalizeFlowTags(doc.flow.flow.tags ?? []),
           },
         },
         screenshotUrls: doc.screenshotUrls,
@@ -156,6 +183,7 @@ export const useFlowStore = create<FlowStore>()(
         status: normalizeFlowStatus(doc.status, 'live'),
         shareSettings: doc.shareSettings ?? buildDefaultShareSettings(doc.steps),
         viewerFilter: null,
+        stepResources: doc.stepResources ?? [],
       }),
 
     resetFlow: () => set({ ...initialState }),
@@ -192,10 +220,14 @@ export const useFlowStore = create<FlowStore>()(
       set((state) => {
         const deletedIndex = state.steps.findIndex((item) => item.id === id);
         const removed = state.steps.find((item) => item.id === id);
-        if (removed && isFlowStep(removed) && removed.customScreenshotId) {
-          removeCustomScreenshot(state, removed.customScreenshotId);
+        if (removed && isFlowStep(removed)) {
+          removeStepScreenshots(state, removed);
         }
+        state.stepResources = state.stepResources.filter(
+          (resource) => resource.stepId !== id,
+        );
         state.steps = state.steps.filter((item) => item.id !== id);
+        pruneStoreScreenshots(state);
         if (state.selectedOutlineId === id) {
           state.selectedOutlineId = pickSelectionAfterDelete(state.steps, deletedIndex);
         }
@@ -243,7 +275,7 @@ export const useFlowStore = create<FlowStore>()(
         if (!step || !isFlowStep(step)) return;
 
         if (step.customScreenshotId) {
-          removeCustomScreenshot(state, step.customScreenshotId);
+          delete state.screenshotUrls[step.customScreenshotId];
         }
 
         const customId = createId();
@@ -256,16 +288,80 @@ export const useFlowStore = create<FlowStore>()(
         const step = state.steps.find((item) => item.id === id);
         if (!step || !isFlowStep(step) || !step.customScreenshotId) return;
 
-        removeCustomScreenshot(state, step.customScreenshotId);
+        delete state.screenshotUrls[step.customScreenshotId];
         delete step.customScreenshotId;
       }),
 
-    updateFlowDetails: (title, description, version) =>
+    updateFlowDetails: (title, description, version, tags) =>
       set((state) => {
         if (!state.flow) return;
         state.flow.flow.title = title;
         state.flow.flow.description = description;
         state.flow.flow.version = normalizeFlowVersion(version);
+        if (tags !== undefined) {
+          state.flow.flow.tags = normalizeFlowTags(tags);
+        }
+      }),
+
+    updateFlowTags: (tags) =>
+      set((state) => {
+        if (!state.flow) return;
+        state.flow.flow.tags = normalizeFlowTags(tags);
+      }),
+
+    addStepResource: (stepId, url) => {
+      const documentId = get().documentId;
+      if (!documentId) return undefined;
+      const sortOrder = get().stepResources.filter((resource) => resource.stepId === stepId).length;
+      const resource = normalizeStepResource({
+        documentId,
+        stepId,
+        url,
+        sortOrder,
+      });
+      set((state) => {
+        state.stepResources.push(resource);
+      });
+      return resource.id;
+    },
+
+    updateStepResource: (resourceId, url) =>
+      set((state) => {
+        const resource = state.stepResources.find((item) => item.id === resourceId);
+        if (!resource) return;
+        const normalized = normalizeStepResource({
+          ...resource,
+          url,
+          label: undefined,
+        });
+        resource.url = normalized.url;
+        delete resource.label;
+      }),
+
+    setStepResourceLabel: (resourceId, label) =>
+      set((state) => {
+        const resource = state.stepResources.find((item) => item.id === resourceId);
+        if (!resource) return;
+        const normalized = normalizeStepResource({
+          ...resource,
+          label,
+        });
+        if (normalized.label) resource.label = normalized.label;
+        else delete resource.label;
+      }),
+
+    removeStepResource: (resourceId) =>
+      set((state) => {
+        state.stepResources = state.stepResources.filter((item) => item.id !== resourceId);
+      }),
+
+    updateStepDetailedDescription: (stepId, html) =>
+      set((state) => {
+        const step = state.steps.find((item) => item.id === stepId);
+        if (!step || !isFlowStep(step)) return;
+        const normalized = normalizeRichText(html);
+        if (richTextPlainLength(normalized) > STEP_DETAILED_DESCRIPTION_MAX_CHARS) return;
+        step.detailedDescription = normalized;
       }),
 
     addBranch: (afterItemId) =>

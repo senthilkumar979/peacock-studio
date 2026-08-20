@@ -26,14 +26,12 @@ const ClerkBootShell = () => (
 );
 
 /**
- * Loads Clerk + cloud sync only on product/auth routes.
+ * Lazy-loads Clerk after first paint. Marketing still renders immediately; cloud sync
+ * stays off there. Clerk session is synced so the landing nav can show Open App for
+ * signed-in users instead of Sign in / Sign up.
  *
- * Marketing routes never mount Clerk — CTAs use plain `/sign-in` / `/sign-up` links
- * (see PublicAppFooter / CloudAuthActions). This avoids Clerk third-party cookies and
- * SDK console noise on cold landing-page loads.
- *
- * If the user later returns to marketing after Clerk already loaded, the tree stays
- * mounted with cloud sync disabled so navigation stays snappy.
+ * Product/auth routes wait for the Clerk tree so useAuth / SignIn never mount
+ * outside the provider.
  */
 export const DeferredCloudAuth = ({ publishableKey, children }: DeferredCloudAuthProps) => {
   const { pathname } = useLocation();
@@ -42,26 +40,23 @@ export const DeferredCloudAuth = ({ publishableKey, children }: DeferredCloudAut
   const enableCloudSync = !isMarketing;
 
   useEffect(() => {
-    // Cold marketing: treat as signed-out guest without booting Clerk.
-    if (isMarketing && !Tree) setSessionAuthState(true, false);
-  }, [isMarketing, Tree]);
-
-  useEffect(() => {
-    if (Tree || isMarketing) return;
+    if (Tree) return;
 
     let cancelled = false;
-    void import('@/components/auth/ClerkCloudAuthTree').then((module) => {
-      if (!cancelled) setTree(() => module.ClerkCloudAuthTree);
-    });
+    void import('@/components/auth/ClerkCloudAuthTree')
+      .then((module) => {
+        if (!cancelled) setTree(() => module.ClerkCloudAuthTree);
+      })
+      .catch(() => {
+        if (!cancelled) setSessionAuthState(true, false);
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [Tree, isMarketing]);
+  }, [Tree]);
 
   if (!Tree) {
-    // Marketing never needs ClerkProvider. Product/auth routes must wait so
-    // useAuth / <SignIn> do not mount outside the provider (console errors).
     if (isMarketing) return children;
     return <ClerkBootShell />;
   }

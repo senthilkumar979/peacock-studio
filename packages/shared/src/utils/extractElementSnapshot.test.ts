@@ -100,4 +100,24 @@ describe('extractElementSnapshot', () => {
     expect(snapshot.isButton).toBe(true);
     expect(snapshot.isInput).toBe(false);
   });
+
+  it('truncates long values and resolves aria-labelledby', () => {
+    const long = 'x'.repeat(250);
+    document.body.innerHTML = `
+      <span id="lbl">${long}</span>
+      <button aria-labelledby="lbl missing">Go</button>
+    `;
+    const snapshot = extractElementSnapshot(document.querySelector('button') as HTMLElement);
+    expect(snapshot.label.ariaLabelledBy?.endsWith('…')).toBe(true);
+    expect(snapshot.label.ariaLabelledBy!.length).toBeLessThanOrEqual(201);
+  });
+
+  it('caps data attributes and returns null labelledby when empty', () => {
+    const attrs = Array.from({ length: 25 }, (_, i) => `data-k${i}="${'v'.repeat(120)}"`).join(' ');
+    document.body.innerHTML = `<button aria-labelledby="missing" ${attrs}>Go</button>`;
+    const snapshot = extractElementSnapshot(document.querySelector('button') as HTMLElement);
+    expect(Object.keys(snapshot.dataAttributes).length).toBeLessThanOrEqual(20);
+    expect(snapshot.label.ariaLabelledBy).toBeNull();
+    expect(Object.values(snapshot.dataAttributes)[0]?.endsWith('…')).toBe(true);
+  });
 });

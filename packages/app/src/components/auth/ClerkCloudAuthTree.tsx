@@ -1,14 +1,15 @@
 import { ClerkProvider } from '@clerk/react';
 import { CloudSyncProviderInner } from '@/components/auth/CloudSyncProviderInner';
+import { ClerkSessionAuthBridge } from '@/components/auth/ClerkSessionAuthBridge';
 
 interface ClerkCloudAuthTreeProps {
   publishableKey: string;
-  /** False when returning to marketing after Clerk already loaded — no cloud sync/toasts. */
+  /** False on marketing — Clerk session only, no cloud sync/toasts. */
   enableCloudSync: boolean;
   children: React.ReactNode;
 }
 
-/** Clerk + optional cloud sync — separate chunk; marketing cold loads never import this. */
+/** Clerk + optional cloud sync — separate chunk; marketing still paints immediately. */
 export const ClerkCloudAuthTree = ({
   publishableKey,
   enableCloudSync,
@@ -18,7 +19,10 @@ export const ClerkCloudAuthTree = ({
     {enableCloudSync ? (
       <CloudSyncProviderInner>{children}</CloudSyncProviderInner>
     ) : (
-      children
+      <>
+        <ClerkSessionAuthBridge />
+        {children}
+      </>
     )}
   </ClerkProvider>
 );

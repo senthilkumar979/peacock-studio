@@ -6,6 +6,7 @@ import {
   updateFlowDocumentStatus,
   findTitleVersionConflict,
 } from '@/storage/libraryRouter';
+import { copyResources } from '@/storage/stepResourceDb';
 import { buildSavedFlowDocument, createNewDocumentId } from '@/utils/flowDocumentSnapshot';
 import {
   nextCandidateVersion,
@@ -29,6 +30,7 @@ function getSnapshotSource() {
     screenshotUrls: state.screenshotUrls,
     shareSettings: state.shareSettings,
     status: state.status,
+    stepResources: state.stepResources,
   };
 }
 
@@ -157,6 +159,9 @@ export async function duplicateFlowDocument(id: string): Promise<string | null> 
   };
 
   await saveFlowDocument(doc);
+  if (source.stepResources?.length) {
+    await copyResources(id, documentId);
+  }
   return documentId;
 }
 

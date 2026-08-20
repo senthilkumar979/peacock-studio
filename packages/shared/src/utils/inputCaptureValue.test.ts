@@ -75,4 +75,47 @@ describe('inputCaptureValue', () => {
 
     expect(resolveCapturedInputValue(snapshot, 'jane@example.com')).toBe('jan***');
   });
+
+  it('reads checked and contenteditable raw values', () => {
+    expect(
+      getInputRawValueFromSource({
+        isContentEditable: false,
+        isCheckbox: true,
+        isRadio: false,
+        checked: true,
+      }),
+    ).toBe('checked');
+    expect(
+      getInputRawValueFromSource({
+        isContentEditable: true,
+        isCheckbox: false,
+        isRadio: false,
+        innerText: '  Hello  ',
+      }),
+    ).toBe('Hello');
+    expect(
+      getInputRawValueFromSource({
+        isContentEditable: false,
+        isCheckbox: false,
+        isRadio: false,
+      }),
+    ).toBe('');
+  });
+
+  it('clears secrets and resolves checked values', () => {
+    expect(resolveCapturedInputValue(baseSnapshot({ classification: 'secret' }), 'x')).toBe('');
+    expect(
+      resolveCapturedInputValue(
+        baseSnapshot({
+          isCheckbox: true,
+          isInput: false,
+          valuePreview: 'on',
+        }),
+        'checked',
+      ),
+    ).toBe('on');
+    expect(resolveCapturedInputValue(baseSnapshot({ valuePreview: null }), 'fallback')).toBe(
+      'fallback',
+    );
+  });
 });

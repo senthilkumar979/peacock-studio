@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { extractElementSnapshot } from './extractElementSnapshot';
+import { resolveDisplayValue } from './classifyField';
 
 function snapshotFor(html: string) {
   document.body.innerHTML = html;
@@ -51,5 +52,21 @@ describe('classification via extractElementSnapshot', () => {
     expect(snapshot.classification).toBe('public');
     expect(snapshot.valuePreview).toBe('Jonathan');
     expect(snapshot.maskedValue).toBeNull();
+  });
+});
+
+describe('resolveDisplayValue', () => {
+  it('returns secret placeholder for secrets', () => {
+    expect(resolveDisplayValue('secret', 'x', 'y', '••••')).toBe('••••');
+  });
+
+  it('prefers masked value for sensitive fields', () => {
+    expect(resolveDisplayValue('sensitive', 'jane@x.com', 'jan***', '••••')).toBe('jan***');
+    expect(resolveDisplayValue('sensitive', 'jane@x.com', null, '••••')).toBe('jane@x.com');
+  });
+
+  it('returns preview for public and internal', () => {
+    expect(resolveDisplayValue('public', 'hello', null, '••••')).toBe('hello');
+    expect(resolveDisplayValue('internal', 'hello', null, '••••')).toBe('hello');
   });
 });

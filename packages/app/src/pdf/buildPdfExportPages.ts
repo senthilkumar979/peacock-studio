@@ -1,19 +1,47 @@
 import {
   getPlayableStepRange,
+  getStepResourcesForStep,
   isFlowBranch,
   isFlowStep,
+  resolveStepDescription,
   sortBranchPaths,
   type FlowBranch,
   type FlowOutlineItem,
   type FlowStep,
   type LinkedPeacockPath,
+  type StepResource,
 } from '@peacock/shared';
 import { getFlowDocument } from '@/services/flowLibraryService';
 import type { PdfPathSelections } from '@/utils/pdfPathSelection';
+import { buildPdfStepContentSlices, type PdfStepContentSlice } from './pdfStepLayout';
 
 export type PdfExportPage =
-  | { kind: 'step'; step: FlowStep; screenshotUrls: Record<string, string> }
+  | {
+      kind: 'step';
+      step: FlowStep;
+      screenshotUrls: Record<string, string>;
+      slice: PdfStepContentSlice;
+      resources: StepResource[];
+    }
   | { kind: 'branch'; branch: FlowBranch; selectedPath: LinkedPeacockPath };
+
+function pushStepPages(
+  pages: PdfExportPage[],
+  step: FlowStep,
+  screenshotUrls: Record<string, string>,
+  stepResources: StepResource[],
+): void {
+  const resources = getStepResourcesForStep(stepResources, step.id);
+  const slices = buildPdfStepContentSlices({
+    step,
+    resources,
+    resolveInstructions: resolveStepDescription,
+  });
+
+  for (const slice of slices) {
+    pages.push({ kind: 'step', step, screenshotUrls, slice, resources });
+  }
+}
 
 function resolveSelectedPath(
   branch: FlowBranch,
@@ -30,12 +58,13 @@ export async function buildPdfExportPages(
   steps: FlowOutlineItem[],
   hostScreenshotUrls: Record<string, string>,
   pathSelections: PdfPathSelections,
+  hostStepResources: StepResource[] = [],
 ): Promise<PdfExportPage[]> {
   const pages: PdfExportPage[] = [];
 
   for (const item of steps) {
     if (isFlowStep(item)) {
-      pages.push({ kind: 'step', step: item, screenshotUrls: hostScreenshotUrls });
+      pushStepPages(pages, item, hostScreenshotUrls, hostStepResources);
       continue;
     }
 
@@ -53,7 +82,7 @@ export async function buildPdfExportPages(
     if (!slice?.length) continue;
 
     for (const step of slice) {
-      pages.push({ kind: 'step', step, screenshotUrls: doc.screenshotUrls });
+      pushStepPages(pages, step, doc.screenshotUrls, doc.stepResources ?? []);
     }
   }
 
@@ -61,5 +90,11 @@ export async function buildPdfExportPages(
 }
 
 export function countPdfStepPages(pages: PdfExportPage[]): number {
-  return pages.filter((page) => page.kind === 'step').length;
+  const stepIds = new Set<string>();
+  for (const page of pages) {
+    if (page.kind === 'step' && page.slice.pageIndex === 0) {
+      stepIds.add(page.step.id);
+    }
+  }
+  return stepIds.size;
 }

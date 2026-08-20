@@ -12,6 +12,7 @@ export function usePersistDocument(enabled: boolean, routeDocumentId?: string): 
   const flow = useFlowStore((state) => state.flow);
   const steps = useFlowStore((state) => state.steps);
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
+  const stepResources = useFlowStore((state) => state.stepResources);
   const documentId = storeDocumentId ?? routeDocumentId ?? null;
 
   const timerRef = useRef<number | null>(null);
@@ -42,5 +43,5 @@ export function usePersistDocument(enabled: boolean, routeDocumentId?: string): 
       if (timerRef.current) window.clearTimeout(timerRef.current);
     };
     // Status is persisted via persistDocumentStatus — do not full-save on status toggles.
-  }, [enabled, documentId, isLoaded, flow, steps, screenshotUrls]);
+  }, [enabled, documentId, isLoaded, flow, steps, screenshotUrls, stepResources]);
 }

@@ -4,6 +4,7 @@ import type {
   OrgMembership,
 } from '@/cloud/types/organization';
 import { ALL_CAPABILITIES_TRUE } from '@/cloud/types/organization';
+import type { ClassifiedCloudInitError } from '@/cloud/cloudInitErrors';
 
 export interface CloudAuthContext {
   clerkUserId: string;
@@ -29,6 +30,7 @@ export interface CloudAuthContext {
 
 let activeContext: CloudAuthContext | null = null;
 let cloudInitError: string | null = null;
+let cloudInitErrorDetail: ClassifiedCloudInitError | null = null;
 const listeners = new Set<() => void>();
 
 function notifyListeners(): void {
@@ -39,17 +41,36 @@ export function setCloudAuthContext(context: CloudAuthContext | null): void {
   activeContext = context;
   if (context) {
     cloudInitError = null;
+    cloudInitErrorDetail = null;
   }
   notifyListeners();
 }
 
-export function setCloudInitError(message: string | null): void {
-  cloudInitError = message;
+export function setCloudInitError(error: ClassifiedCloudInitError | string | null): void {
+  if (error === null) {
+    cloudInitError = null;
+    cloudInitErrorDetail = null;
+  } else if (typeof error === 'string') {
+    cloudInitError = error;
+    cloudInitErrorDetail = {
+      kind: 'unknown',
+      title: 'Cloud library unavailable',
+      message: error,
+      workarounds: [],
+    };
+  } else {
+    cloudInitErrorDetail = error;
+    cloudInitError = error.message;
+  }
   notifyListeners();
 }
 
 export function getCloudInitError(): string | null {
   return cloudInitError;
+}
+
+export function getCloudInitErrorDetail(): ClassifiedCloudInitError | null {
+  return cloudInitErrorDetail;
 }
 
 export function getCloudAuthContext(): CloudAuthContext | null {
@@ -97,6 +118,10 @@ export function getCloudLibraryActiveSnapshot(): boolean {
 
 export function getCloudInitErrorSnapshot(): string | null {
   return cloudInitError;
+}
+
+export function getCloudInitErrorDetailSnapshot(): ClassifiedCloudInitError | null {
+  return cloudInitErrorDetail;
 }
 
 export function hasCapability(capability: keyof MemberCapabilities): boolean {

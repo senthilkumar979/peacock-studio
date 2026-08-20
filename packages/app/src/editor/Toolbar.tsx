@@ -10,7 +10,9 @@ import {
 } from '@/components/flow/FlowDocChromeHeader';
 import { FlowDocumentStatusSwitch } from '@/components/flow/FlowDocumentStatusSwitch';
 import { ActionTooltip } from '@/components/ui/ActionTooltip';
-import { persistCurrentFlow, persistDocumentStatus, suggestUniqueTitleVersion } from '@/services/flowLibraryService';
+import { persistCurrentFlow, persistDocumentStatus, suggestUniqueTitleVersion, listFlowSummaries } from '@/services/flowLibraryService';
+import { getFlowDocument } from '@/storage/libraryRouter';
+import { collectTagsFromFlowDocuments } from '@/utils/flowTags';
 import { useFlowStore, usePlayableSteps } from '@/store/flowStore';
 import type { FlowDocumentStatus } from '@/types/savedFlow';
 import { getDocumentPath } from '@/utils/shareLink';
@@ -66,7 +68,18 @@ export const Toolbar = ({
   const [isSavingVersionBump, setIsSavingVersionBump] = useState(false);
   const [pendingVersionBump, setPendingVersionBump] =
     useState<PendingVersionBump | null>(null);
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
   const { openShare, shareModal } = useDocumentShareModal(documentId ?? '');
+
+  useEffect(() => {
+    void (async () => {
+      const summaries = await listFlowSummaries();
+      const docs = await Promise.all(summaries.map((summary) => getFlowDocument(summary.id)));
+      setTagSuggestions(
+        collectTagsFromFlowDocuments(docs.filter((doc): doc is NonNullable<typeof doc> => Boolean(doc))),
+      );
+    })();
+  }, [documentId]);
 
   useEffect(() => {
     if (!isLoaded || !flow) {
@@ -96,8 +109,9 @@ export const Toolbar = ({
       title: flow?.flow.title ?? 'Untitled Flow',
       description: flow?.flow.description ?? '',
       version: flow?.flow.version || DEFAULT_FLOW_VERSION,
+      tags: flow?.flow.tags ?? [],
     };
-    updateFlowDetails(details.title, details.description, details.version);
+    updateFlowDetails(details.title, details.description, details.version, details.tags);
 
     if (!documentId) {
       setIsFlowDetailsOpen(false);
@@ -124,12 +138,12 @@ export const Toolbar = ({
             previous,
           });
         } catch (suggestError) {
-          updateFlowDetails(previous.title, previous.description, previous.version);
+          updateFlowDetails(previous.title, previous.description, previous.version, previous.tags);
           notifyPersistError(suggestError, 'Save flow details');
         }
         return;
       }
-      updateFlowDetails(previous.title, previous.description, previous.version);
+      updateFlowDetails(previous.title, previous.description, previous.version, previous.tags);
       notifyPersistError(error, 'Save flow details');
     }
   };
@@ -152,7 +166,7 @@ export const Toolbar = ({
   const handleVersionBumpCancel = () => {
     if (pendingVersionBump) {
       const { previous } = pendingVersionBump;
-      updateFlowDetails(previous.title, previous.description, previous.version);
+      updateFlowDetails(previous.title, previous.description, previous.version, previous.tags);
     }
     setPendingVersionBump(null);
   };
@@ -184,6 +198,7 @@ export const Toolbar = ({
   const flowTitle = flow?.flow.title ?? 'Untitled Flow';
   const flowDescription = flow?.flow.description ?? '';
   const flowVersion = flow?.flow.version || DEFAULT_FLOW_VERSION;
+  const flowTags = flow?.flow.tags ?? [];
   const captureEnvironment = flow?.metadata.captureEnvironment ?? null;
   const playerPath = documentId ? getDocumentPath(documentId, 'player') : '/';
   const showActions = isLoaded && playableSteps.length > 0;
@@ -290,6 +305,8 @@ export const Toolbar = ({
         initialTitle={flowTitle}
         initialDescription={flowDescription}
         initialVersion={flowVersion}
+        initialTags={flowTags}
+        tagSuggestions={tagSuggestions}
         captureEnvironment={captureEnvironment}
         confirmLabel="Save"
         onSave={handleFlowDetailsSave}

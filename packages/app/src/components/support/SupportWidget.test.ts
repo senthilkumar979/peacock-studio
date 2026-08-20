@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { isEditorRoute, shouldHideSupportWidget } from '@/components/support/SupportWidget';
+import {
+  isEditorRoute,
+  isSupportWidgetRoute,
+  shouldHideSupportWidget,
+} from '@/components/support/SupportWidget';
 
 describe('isEditorRoute', () => {
   it('matches flow doc, tour, capture, route, and share editors', () => {
@@ -34,5 +38,18 @@ describe('shouldHideSupportWidget', () => {
     expect(shouldHideSupportWidget('/')).toBe(false);
     expect(shouldHideSupportWidget('/s/token')).toBe(false);
     expect(shouldHideSupportWidget('/dashboard')).toBe(false);
+  });
+});
+
+describe('isSupportWidgetRoute', () => {
+  it('loads chat on landing and pricing', () => {
+    expect(isSupportWidgetRoute('/')).toBe(true);
+    expect(isSupportWidgetRoute('/pricing')).toBe(true);
+  });
+
+  it('does not load chat on app, editor, or embed routes', () => {
+    expect(isSupportWidgetRoute('/dashboard')).toBe(false);
+    expect(isSupportWidgetRoute('/docs/abc/edit')).toBe(false);
+    expect(isSupportWidgetRoute('/s/token/embed')).toBe(false);
   });
 });

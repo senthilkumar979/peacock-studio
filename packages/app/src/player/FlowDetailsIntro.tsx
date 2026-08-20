@@ -1,6 +1,7 @@
-import { CalendarDays, GitBranch, Layers3, LayoutList, Sparkles } from 'lucide-react';
+import { CalendarDays, GitBranch, Layers3, LayoutList, Link2, Sparkles } from 'lucide-react';
 import { FlowVersionBadge } from '@/components/dashboard/FlowVersionBadge';
 import { RichTextContent } from '@/components/editor/RichTextContent';
+import { FlowTagList } from '@/components/flow/FlowTagList';
 import { formatFlowDate } from '@/utils/formatFlowDate';
 import { isEmptyRichText } from '@/utils/richText';
 import { FlowDetailsGuideHints } from '@/player/FlowDetailsGuideHints';
@@ -14,6 +15,8 @@ interface FlowDetailsIntroProps {
   stepCount?: number;
   sectionCount?: number;
   branchCount?: number;
+  resourceCount?: number;
+  tags?: string[];
   variant: 'doc' | 'player' | 'hub';
   fillHeight?: boolean;
   isActive?: boolean;
@@ -27,6 +30,8 @@ export const FlowDetailsIntro = ({
   stepCount,
   sectionCount,
   branchCount,
+  resourceCount,
+  tags = [],
   variant,
   fillHeight = false,
   isActive = false,
@@ -78,6 +83,8 @@ export const FlowDetailsIntro = ({
           <p className="mt-3 text-sm italic text-slate-500">No description provided.</p>
         )}
 
+        {tags.length > 0 ? <FlowTagList tags={tags} className="mt-4" /> : null}
+
         <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
           {typeof stepCount === 'number' ? (
             <FlowDetailsStatChip
@@ -98,6 +105,13 @@ export const FlowDetailsIntro = ({
               icon={GitBranch}
               label="Branches"
               value={`${branchCount} ${branchCount === 1 ? 'branch' : 'branches'}`}
+            />
+          ) : null}
+          {typeof resourceCount === 'number' && resourceCount > 0 ? (
+            <FlowDetailsStatChip
+              icon={Link2}
+              label="Resources"
+              value={`${resourceCount} ${resourceCount === 1 ? 'link' : 'links'}`}
             />
           ) : null}
           {createdAt ? (

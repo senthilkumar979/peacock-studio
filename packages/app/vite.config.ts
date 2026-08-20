@@ -2,12 +2,13 @@ import { resolve } from 'path';
 import react from '@vitejs/plugin-react';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { defineConfig, loadEnv } from 'vite';
+import { pageTitleApiPlugin } from './vite-page-title-api';
 import { seoIndexHtmlPlugin } from './vite-seo-index-html';
 
 const DEFERRED_CHUNK = /(^|\/)(sentry|clerk|posthog|pdf|xyflow|editor|charts|swagger)(-|$)/;
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, resolve(__dirname, '../..'), '');
+  const env = loadEnv(mode, __dirname, '');
   const sentryAuthToken = env.SENTRY_AUTH_TOKEN || process.env.SENTRY_AUTH_TOKEN;
   const release =
     env.VITE_SENTRY_RELEASE ||
@@ -20,6 +21,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       seoIndexHtmlPlugin(),
+      pageTitleApiPlugin(),
       uploadSourceMaps
         ? sentryVitePlugin({
             org: env.SENTRY_ORG || process.env.SENTRY_ORG || 'mentorbridge',
@@ -44,6 +46,15 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 5173,
+      proxy: env.VITE_SUPABASE_URL
+        ? {
+            '/api/resolve-share': {
+              target: env.VITE_SUPABASE_URL.replace(/\/$/, ''),
+              changeOrigin: true,
+              rewrite: () => '/functions/v1/resolve-share',
+            },
+          }
+        : undefined,
     },
     build: {
       // Hidden maps when uploading to Sentry; public maps otherwise for local debugging.

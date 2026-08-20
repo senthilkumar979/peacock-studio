@@ -5,8 +5,9 @@ import { useFlowStore } from '@/store/flowStore';
 import type { SharedDocumentViewMode } from '@/utils/shareLink';
 import { FlowDocHubHeader } from '@/player/FlowDocHubHeader';
 import { FlowDocJourneyStrip } from '@/player/FlowDocJourneyStrip';
-import { FlowDocModeChooser } from '@/player/FlowDocModeChooser';
+import { FlowDocResourcesOverview, countResourcesForOutline } from '@/player/FlowDocResourcesOverview';
 import { FlowDocQuickGlance } from '@/player/FlowDocQuickGlance';
+import { FlowDocModeChooser } from '@/player/FlowDocModeChooser';
 
 interface FlowDocHubViewProps {
   documentId: string;
@@ -22,8 +23,11 @@ export const FlowDocHubView = ({
   const location = useLocation();
   const libraryBackState = location.state;
   const flow = useFlowStore((state) => state.flow);
+  const steps = useFlowStore((state) => state.steps);
+  const stepResources = useFlowStore((state) => state.stepResources);
   const playback = useBranchingPlayback();
   const title = flow?.flow.title ?? 'Untitled Flow';
+  const resourceCount = countResourcesForOutline(steps, stepResources);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
@@ -49,6 +53,14 @@ export const FlowDocHubView = ({
             stepCount={playback.playableStepCount}
             sectionCount={playback.sectionCount}
             branchCount={playback.branchCount}
+            resourceCount={resourceCount}
+            tags={flow?.flow.tags ?? []}
+          />
+
+          <FlowDocResourcesOverview
+            documentId={documentId}
+            steps={steps}
+            stepResources={stepResources}
           />
 
           <FlowDocJourneyStrip

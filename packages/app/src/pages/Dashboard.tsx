@@ -16,6 +16,7 @@ import { LibraryEmptyCta } from '@/components/dashboard/LibraryEmptyCta';
 import { ProductTourLibraryCards } from '@/components/dashboard/ProductTourLibraryCards';
 import { ViewModeToggle } from '@/components/dashboard/ViewModeToggle';
 import { GenericErrorPage } from '@/components/errors/GenericErrorPage';
+import { CloudInitConnectingError, CloudInitErrorNotice } from '@/components/auth/CloudNetworkBlockedNotice';
 import { DashboardRecentSection } from '@/components/library/LibraryPageHeader';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import { isCloudSyncEnabled } from '@/cloud/config';
@@ -34,7 +35,7 @@ import {
   isGuestLibraryIntroDismissed,
 } from '@/constants/guestLibraryIntro';
 import { FLOW_DOCS_PATH, PRODUCT_TOURS_PATH } from '@/constants/routes';
-import { useCloudInitError } from '@/hooks/useCloudInitError';
+import { useCloudInitError, useCloudInitErrorDetail } from '@/hooks/useCloudInitError';
 import { useDashboardFirstTimeHint } from '@/hooks/useFirstTimeHint';
 import { useIsGuestSession, useSessionMode } from '@/hooks/useSessionMode';
 import { useFlowLibrary } from '@/hooks/useFlowLibrary';
@@ -53,6 +54,7 @@ export const Dashboard = () => {
   const sessionMode = useSessionMode();
   const isGuest = useIsGuestSession();
   const cloudInitError = useCloudInitError();
+  const cloudInitErrorDetail = useCloudInitErrorDetail();
   const { summaries: allSummaries, isLoading, error, deleteDocument, duplicateDocument } =
     useFlowLibrary();
   const {
@@ -131,7 +133,12 @@ export const Dashboard = () => {
         isLoading={sessionMode === 'connecting'}
         loading={
           <div className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
-            {cloudInitError ? (
+            {cloudInitErrorDetail ? (
+              <CloudInitConnectingError
+                error={cloudInitErrorDetail}
+                onRetry={() => window.location.reload()}
+              />
+            ) : cloudInitError ? (
               <GenericErrorPage compact onRetry={() => window.location.reload()} />
             ) : (
               <>
@@ -147,7 +154,9 @@ export const Dashboard = () => {
 
           <div className="relative z-10 mx-auto w-full max-w-8xl px-4 pb-12 sm:px-6 lg:px-8">
             <div className="-mt-14 space-y-8">
-              {cloudInitError ? (
+              {cloudInitErrorDetail ? (
+                <CloudInitErrorNotice error={cloudInitErrorDetail} />
+              ) : cloudInitError ? (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 shadow-sm">
                   <p className="font-semibold">Cloud library unavailable</p>
                   <p className="mt-1 text-amber-900/90">{cloudInitError}</p>

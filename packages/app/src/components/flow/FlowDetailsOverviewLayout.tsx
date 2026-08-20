@@ -14,6 +14,8 @@ interface FlowDetailsOverviewLayoutProps {
   stepCount?: number;
   sectionCount?: number;
   branchCount?: number;
+  resourceCount?: number;
+  tags?: string[];
   variant: 'doc' | 'player' | 'hub';
   anchorId?: string;
   isActive?: boolean;
@@ -29,6 +31,8 @@ export const FlowDetailsOverviewLayout = ({
   stepCount,
   sectionCount,
   branchCount,
+  resourceCount,
+  tags,
   variant,
   anchorId,
   isActive = false,
@@ -56,6 +60,8 @@ export const FlowDetailsOverviewLayout = ({
         stepCount={stepCount}
         sectionCount={sectionCount}
         branchCount={branchCount}
+        resourceCount={resourceCount}
+        tags={tags}
         fillHeight={hasMetadata}
         isActive={isActive}
       />

@@ -8,7 +8,9 @@ import { getStepScreenshotUrl } from '@/store/flowStore';
 import { BrowserMockup } from './BrowserMockup';
 import { PlayerClickMarker } from './PlayerClickMarker';
 import { PlayerStepDetailsToggle } from './PlayerStepDetailsToggle';
+import { PlayerStepMoreInfo } from './PlayerStepMoreInfo';
 import { StepDetailPopover } from './StepDetailPopover';
+import { useFlowStore } from '@/store/flowStore';
 
 interface PlayerStageProps {
   step: FlowStep;
@@ -47,6 +49,7 @@ export const PlayerStage = ({
   const stepUrl = getStepUrl(step);
   const description = resolveStepDescription(step);
   const { isDetailsVisible, toggleDetails } = usePlayerStepDetailsVisibility(step.id);
+  const stepResources = useFlowStore((state) => state.stepResources);
   const { isLoaded: isImageLoaded, imgRef, onLoad, onError } = useImageLoaded(screenshotUrl);
 
   const showOverlays = Boolean(screenshotUrl && isImageLoaded);
@@ -59,6 +62,7 @@ export const PlayerStage = ({
         isEmbed ? 'gap-3' : 'gap-5'
       }`}
     >
+      <PlayerStepMoreInfo step={step} stepResources={stepResources} isEmbed={isEmbed} />
       {screenshotUrl ? (
         <>
           <img

@@ -14,6 +14,7 @@ export function createFlowStep(event: FlowEvent, screenshotId: string): FlowStep
     generatedTitle: '',
     generatedDescription: '',
     screenshotId,
+    detailedDescription: '',
   };
 
   enrichStepFromEvent(step, event);

@@ -18,6 +18,9 @@ const ALLOWED_TAGS = new Set([
 /** Plain-text character limit for flow descriptions (HTML tags do not count). */
 export const FLOW_DESCRIPTION_MAX_CHARS = 500;
 
+/** Plain-text character limit for step detailed descriptions. */
+export const STEP_DETAILED_DESCRIPTION_MAX_CHARS = 3000;
+
 /** Strip tags for plain-text previews, search, and PDF. */
 export function stripHtmlTags(html: string): string {
   if (!html) return '';

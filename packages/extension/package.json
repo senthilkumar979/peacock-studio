@@ -7,7 +7,9 @@
     "dev": "pnpm build --watch",
     "build": "vite build && vite build -c vite.content.config.ts && vite build -c vite.bridge.config.ts && vite build -c vite.capture-tool.config.ts",
     "package": "node ./scripts/packageDist.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@peacock/shared": "workspace:*",
@@ -15,8 +17,12 @@
   },
   "devDependencies": {
     "@types/chrome": "^0.0.304",
+    "@vitest/coverage-v8": "^3.1.2",
+    "fake-indexeddb": "^6.2.5",
+    "happy-dom": "^17.4.4",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
-    "vite-plugin-static-copy": "^2.3.0"
+    "vite-plugin-static-copy": "^2.3.0",
+    "vitest": "^3.1.2"
   }
 }

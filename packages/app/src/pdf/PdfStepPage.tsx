@@ -1,6 +1,6 @@
 import { Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import type { FlowStep } from '@peacock/shared';
-import { getStepMarkerPosition, getStepScreenshotUrl, getStepUrl, getStepViewport, resolveStepDescription } from '@peacock/shared';
+import { getStepMarkerPosition, getStepScreenshotUrl, getStepUrl, getStepViewport, resolveResourceLabel } from '@peacock/shared';
 import { PdfPageFooter, PdfPageHeader } from './PdfPageChrome';
 import { PDF_COLORS, PDF_FONT_FAMILY } from './pdfTheme';
 
@@ -116,6 +116,8 @@ interface PdfStepPageProps {
   flowTitle: string;
   screenshotUrls: Record<string, string>;
   logoSrc: string;
+  slice: import('./pdfStepLayout').PdfStepContentSlice;
+  resources: import('@peacock/shared').StepResource[];
 }
 
 export const PdfStepPage = ({
@@ -124,10 +126,13 @@ export const PdfStepPage = ({
   flowTitle,
   screenshotUrls,
   logoSrc,
+  slice,
+  resources,
 }: PdfStepPageProps) => {
-  const screenshotSrc = getStepScreenshotUrl(step, screenshotUrls);
+  const screenshotSrc = slice.showScreenshot ? getStepScreenshotUrl(step, screenshotUrls) : null;
   const stepUrl = getStepUrl(step);
-  const description = resolveStepDescription(step);
+  const description = slice.instructions;
+  const detailedDescription = slice.detailedDescription;
   const screenshotLayout = getPdfScreenshotLayout(step);
   const marker = getStepMarkerPosition(step);
   const markerPosition =
@@ -143,7 +148,10 @@ export const PdfStepPage = ({
       <PdfPageHeader flowTitle={flowTitle} />
       <PdfPageFooter logoSrc={logoSrc} />
 
-      <Text style={styles.stepBadge}>Step {stepNumber}</Text>
+      <Text style={styles.stepBadge}>
+        Step {stepNumber}
+        {slice.pageCount > 1 ? ` (${slice.pageIndex + 1}/${slice.pageCount})` : ''}
+      </Text>
       <Text style={styles.stepTitle}>{step.title}</Text>
       {stepUrl ? <Text style={styles.stepUrl}>{stepUrl}</Text> : null}
 
@@ -151,6 +159,24 @@ export const PdfStepPage = ({
         <View style={styles.detailsBox}>
           <Text style={styles.detailsLabel}>Instruction</Text>
           <Text style={styles.detailsText}>{description}</Text>
+        </View>
+      ) : null}
+
+      {detailedDescription ? (
+        <View style={styles.detailsBox}>
+          <Text style={styles.detailsLabel}>Detailed description</Text>
+          <Text style={styles.detailsText}>{detailedDescription}</Text>
+        </View>
+      ) : null}
+
+      {resources.length > 0 && slice.pageIndex === 0 ? (
+        <View style={styles.detailsBox}>
+          <Text style={styles.detailsLabel}>Resources</Text>
+          {resources.map((resource) => (
+            <Text key={resource.id} style={styles.detailsText}>
+              {resolveResourceLabel(resource)}
+            </Text>
+          ))}
         </View>
       ) : null}
 

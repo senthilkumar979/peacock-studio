@@ -1,4 +1,9 @@
 import type { RecordingStateSnapshot } from '@peacock/shared';
+import {
+  formatFabAriaLabel,
+  formatFabCount,
+  formatRecordingStatus,
+} from './recordingUiLabels';
 
 export const UI_HOST_ID = 'peacock-recording-ui';
 
@@ -9,20 +14,6 @@ let panelEl: HTMLDivElement | null = null;
 let captureHideDepth = 0;
 let isPanelExpanded = false;
 let lastState: RecordingStateSnapshot | null = null;
-
-function formatFabCount(eventCount: number): string {
-  return String(eventCount);
-}
-
-function formatRecordingStatus(state: RecordingStateSnapshot): string {
-  const label = state.status === 'paused' ? 'Paused' : 'Recording';
-  return `${label} · ${state.eventCount} steps`;
-}
-
-function formatFabAriaLabel(state: RecordingStateSnapshot): string {
-  const label = state.status === 'paused' ? 'Paused' : 'Recording';
-  return `${label}: ${state.eventCount} steps captured`;
-}
 
 function createActionButton(label: string, background: string, onClick: () => void): HTMLButtonElement {
   const button = document.createElement('button');

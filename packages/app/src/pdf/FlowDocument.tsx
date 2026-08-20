@@ -48,7 +48,7 @@ export const FlowDocument = ({ flow, pages, stepCount, logoSrc }: FlowDocumentPr
       continue;
     }
 
-    stepNumber += 1;
+    if (page.slice.pageIndex === 0) stepNumber += 1;
     documentPages.push(
       <PdfStepPage
         key={`step-${page.step.id}-${index}`}
@@ -57,6 +57,8 @@ export const FlowDocument = ({ flow, pages, stepCount, logoSrc }: FlowDocumentPr
         flowTitle={flowTitle}
         screenshotUrls={page.screenshotUrls}
         logoSrc={logoSrc}
+        slice={page.slice}
+        resources={page.resources}
       />,
     );
   }

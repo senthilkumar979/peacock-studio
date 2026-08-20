@@ -67,4 +67,21 @@ describe('coalesceInputEvents', () => {
 
     expect(shouldCoalesceInputEvents(previous, incoming)).toBe(false);
   });
+
+  it('does not coalesce when previous is null or non-input', () => {
+    const incoming = inputEvent('#email', 'hello');
+    expect(shouldCoalesceInputEvents(null, incoming)).toBe(false);
+    expect(
+      shouldCoalesceInputEvents(
+        {
+          id: '1',
+          type: 'navigation',
+          timestamp: 1,
+          fromUrl: 'https://a.com',
+          toUrl: 'https://b.com',
+        },
+        incoming,
+      ),
+    ).toBe(false);
+  });
 });

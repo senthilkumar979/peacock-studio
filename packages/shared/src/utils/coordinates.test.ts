@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { denormalizePosition, normalizePosition } from './coordinates';
+import { denormalizePosition, getViewport, normalizePosition } from './coordinates';
 
 describe('coordinates', () => {
   it('normalizes position to 0–1 range', () => {
@@ -21,5 +21,12 @@ describe('coordinates', () => {
 
     expect(result.xPercent).toBe(0);
     expect(result.yPercent).toBe(0);
+  });
+
+  it('reads viewport metrics from window', () => {
+    const viewport = getViewport();
+    expect(viewport.width).toBe(window.innerWidth);
+    expect(viewport.height).toBe(window.innerHeight);
+    expect(viewport.dpr).toBe(window.devicePixelRatio);
   });
 });

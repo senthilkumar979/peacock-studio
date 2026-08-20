@@ -7,6 +7,7 @@ export function useDocumentShareModal(documentId: string) {
   const flow = useFlowStore((state) => state.flow);
   const outline = useFlowStore((state) => state.steps);
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
+  const stepResources = useFlowStore((state) => state.stepResources);
   const shareSettings = useFlowStore((state) => state.shareSettings);
   const status = useFlowStore((state) => state.status);
   const updateShareSettings = useFlowStore((state) => state.updateShareSettings);
@@ -19,6 +20,7 @@ export function useDocumentShareModal(documentId: string) {
       flow={flow}
       steps={outline}
       screenshotUrls={screenshotUrls}
+      stepResources={stepResources}
       shareSettings={shareSettings ?? undefined}
       status={status}
       onClose={() => setIsOpen(false)}

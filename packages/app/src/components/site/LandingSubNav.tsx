@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Menu, X } from 'lucide-react';
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from '@/constants/branding';
 import { DASHBOARD_PATH, LANDING_PATH, PRICING_PATH } from '@/constants/routes';
-import { isCloudSyncEnabled } from '@/cloud/config';
+import { useShowMarketingSignInUp } from '@/hooks/useShowMarketingSignInUp';
 import { useActiveSection } from '@/pages/solutions/useActiveSection';
 import { getExtensionGatePath } from '@/utils/extensionGate';
 import { LANDING_SUB_NAV_ITEMS } from './siteNavData';
@@ -28,7 +28,7 @@ export const LandingSubNav = ({ visible = false }: LandingSubNavProps) => {
   const sectionIds = LANDING_SUB_NAV_ITEMS.map((item) => item.id);
   const activeId = useActiveSection(sectionIds, 120);
   const [menuOpen, setMenuOpen] = useState(false);
-  const showAuthLinks = isCloudSyncEnabled();
+  const showAuthLinks = useShowMarketingSignInUp();
 
   useEffect(() => {
     if (!visible) setMenuOpen(false);

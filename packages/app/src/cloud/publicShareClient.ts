@@ -1,5 +1,5 @@
 import { isoToMs } from '@/cloud/audit';
-import type { FlowOutlineItem, FlowPayload } from '@peacock/shared';
+import type { FlowOutlineItem, FlowPayload, StepResource } from '@peacock/shared';
 import { getCloudAuthContext } from '@/cloud/authContext';
 import { getSupabaseAnonKey, getSupabaseUrl } from '@/cloud/config';
 import type { Persona } from '@/types/persona';
@@ -27,6 +27,29 @@ interface SharedFlowDocumentPayload {
 
 type ShareAction = 'resolve' | 'flow' | 'tour' | 'persona' | 'screenshots';
 
+/** True when the SPA is served from Vite or another local dev host (no Vercel /api routes). */
+function isLocalDevOrigin(origin: string): boolean {
+  try {
+    const { hostname } = new URL(origin);
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+  } catch {
+    return false;
+  }
+}
+
+/** Browser-facing share gate — first-party proxy avoids corporate blocks on *.supabase.co. */
+export function getResolveShareUrl(): string {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    const origin = window.location.origin;
+    // Vite dev has no Vercel serverless /api/* — call Supabase directly on localhost.
+    if (isLocalDevOrigin(origin)) {
+      return `${getSupabaseUrl()}/functions/v1/resolve-share`;
+    }
+    return `${origin}/api/resolve-share`;
+  }
+  return `${getSupabaseUrl()}/functions/v1/resolve-share`;
+}
+
 async function invokeResolveShare<T>(input: {
   action: ShareAction;
   token: string;
@@ -41,7 +64,7 @@ async function invokeResolveShare<T>(input: {
 
   let response: Response;
   try {
-    response = await fetch(`${getSupabaseUrl()}/functions/v1/resolve-share`, {
+    response = await fetch(getResolveShareUrl(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -131,6 +154,9 @@ export async function fetchPublicFlowDocument(
     steps: payload.steps,
     shareSettings: payload.shareSettings,
     screenshotUrls,
+    stepResources: Array.isArray((data as { stepResources?: StepResource[] }).stepResources)
+      ? (data as { stepResources: StepResource[] }).stepResources
+      : [],
   };
 }
 

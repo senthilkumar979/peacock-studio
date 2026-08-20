@@ -4,9 +4,15 @@ import { isoToMs, msToIso, requireUserEmail, stampAuditForCloudWrite } from '@/c
 import { requireCapability, requireCloudAuthContext } from '@/cloud/authContext';
 import {
   deleteDocumentScreenshots,
+  pruneDocumentScreenshots,
   resolveScreenshotUrls,
   syncDocumentScreenshots,
 } from '@/cloud/screenshotStorage';
+import {
+  deleteResourcesForDocument,
+  fetchDocumentResources,
+  syncDocumentResources,
+} from '@/cloud/repositories/stepResourceRepository';
 import { getAuthenticatedSupabaseClient } from '@/cloud/supabaseClient';
 import type {
   FlowDocumentStatus,
@@ -66,6 +72,7 @@ export async function cloudGetFlowDocument(id: string): Promise<SavedFlowDocumen
   if (!data) return undefined;
 
   const screenshotUrls = await resolveScreenshotUrls(id);
+  const stepResources = await fetchDocumentResources(id);
   const row = data as FlowDocumentRow;
 
   return {
@@ -79,6 +86,7 @@ export async function cloudGetFlowDocument(id: string): Promise<SavedFlowDocumen
     steps: row.steps as FlowOutlineItem[],
     shareSettings: row.share_settings ?? undefined,
     screenshotUrls,
+    stepResources,
   };
 }
 
@@ -177,6 +185,8 @@ export async function cloudSaveFlowDocument(
   if (error) throw error;
 
   await syncDocumentScreenshots(doc.id, doc.screenshotUrls);
+  await pruneDocumentScreenshots(doc.id, doc.steps);
+  await syncDocumentResources(doc.id, doc.stepResources ?? []);
 }
 
 /** Status-only write — never inserts, so it cannot hit the document quota. */
@@ -241,6 +251,7 @@ export async function cloudUpdateFlowDocumentStatus(
 export async function cloudDeleteFlowDocument(id: string): Promise<void> {
   requireCapability('delete');
   await deleteDocumentScreenshots(id);
+  await deleteResourcesForDocument(id);
 
   const { organizationId } = requireCloudAuthContext();
   const supabase = getAuthenticatedSupabaseClient();

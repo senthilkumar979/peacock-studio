@@ -141,6 +141,7 @@ export const PlayerView = ({
           viewMode="player"
           onViewModeChange={onModeChange}
           onOverview={onOverview}
+          guideProgressPercent={progressPercent}
           editHref={`/docs/${documentId}/edit`}
           editLinkState={libraryBackState}
           pageHints={pageHints}
