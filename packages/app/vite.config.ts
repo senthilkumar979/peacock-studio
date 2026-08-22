@@ -5,7 +5,7 @@ import { defineConfig, loadEnv } from 'vite';
 import { pageTitleApiPlugin } from './vite-page-title-api';
 import { seoIndexHtmlPlugin } from './vite-seo-index-html';
 
-const DEFERRED_CHUNK = /(^|\/)(sentry|clerk|posthog|pdf|xyflow|editor|charts|swagger)(-|$)/;
+const DEFERRED_CHUNK = /(^|\/)(sentry|clerk|posthog|pdf|xyflow|editor|charts|swagger|remotion)(-|$)/;
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, '');
@@ -77,6 +77,7 @@ export default defineConfig(({ mode }) => {
             if (id.includes('@tiptap') || id.includes('prosemirror')) return 'editor';
             if (id.includes('recharts')) return 'charts';
             if (id.includes('swagger-ui')) return 'swagger';
+            if (id.includes('@remotion') || id.includes('/remotion/')) return 'remotion';
             if (id.includes('framer-motion')) return 'motion';
           },
         },

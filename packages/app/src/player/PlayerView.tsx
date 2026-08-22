@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { FlowSectionCard } from '@/components/FlowSectionCard';
 import type { PageHintControl } from '@/components/onboarding/HintAnchor';
@@ -19,6 +19,12 @@ import { PlayerFinale } from './PlayerFinale';
 import { PlayerStep } from './PlayerStep';
 
 const AUTO_PLAY_MS = 2500;
+
+const CinematicPlayerView = lazy(() =>
+  import('@/video/CinematicPlayerView').then((module) => ({
+    default: module.CinematicPlayerView,
+  })),
+);
 
 interface PlayerViewProps {
   documentId: string;
@@ -45,6 +51,7 @@ export const PlayerView = ({
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
   const playback = useBranchingPlayback();
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isCinematic, setIsCinematic] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const {
     rootRef,
@@ -52,6 +59,7 @@ export const PlayerView = ({
     enterPresenter,
     exitPresenter,
   } = usePresenterMode({ forcedPresenter: isPresenterProp });
+  const showCinematic = isCinematic && !isEmbed && !isPresenter;
 
   const linkedStep = playback.linkedPlayback?.steps[playback.linkedPlayback.stepIndex];
   const atBranch =
@@ -69,6 +77,11 @@ export const PlayerView = ({
   ]);
 
   useEffect(() => {
+    if (showCinematic) setIsPlaying(false);
+  }, [showCinematic]);
+
+  useEffect(() => {
+    if (showCinematic) return;
     if (!isPlaying || playback.linkedPlayback || playback.isAtFinale) return;
     if (playback.currentSegment?.type === 'branch') return;
     if (playback.currentIndex >= playback.totalNavigableSegments - 2) {
@@ -85,7 +98,7 @@ export const PlayerView = ({
     }, AUTO_PLAY_MS);
 
     return () => window.clearTimeout(timer);
-  }, [isPlaying, playback]);
+  }, [isPlaying, playback, showCinematic]);
 
   useEffect(() => {
     if (playback.currentIndex >= playback.totalNavigableSegments - 2) {
@@ -93,8 +106,15 @@ export const PlayerView = ({
     }
   }, [playback.currentIndex, playback.totalNavigableSegments]);
 
-  const keyboardHandlers = useMemo(
-    () => ({
+  const keyboardHandlers = useMemo((): Record<string, () => void> => {
+    if (showCinematic) {
+      return {
+        Escape: () => {
+          if (isPresenter && !isPresenterProp) exitPresenter();
+        },
+      };
+    }
+    return {
       ArrowRight: () => playback.goNext(),
       ArrowLeft: () => playback.goPrevious(),
       Space: () => {
@@ -104,9 +124,8 @@ export const PlayerView = ({
       Escape: () => {
         if (isPresenter && !isPresenterProp) exitPresenter();
       },
-    }),
-    [playback, isPresenter, isPresenterProp, exitPresenter],
-  );
+    };
+  }, [playback, isPresenter, isPresenterProp, exitPresenter, showCinematic]);
 
   useKeyboard(keyboardHandlers);
 
@@ -147,6 +166,8 @@ export const PlayerView = ({
           pageHints={pageHints}
           showOwnerActions={showOwnerActions}
           isEmbed={isEmbed}
+          isCinematic={showCinematic}
+          onToggleCinematic={isEmbed ? undefined : () => setIsCinematic((value) => !value)}
           onEnterPresenter={isEmbed ? undefined : enterPresenter}
         />
       ) : null}
@@ -156,7 +177,9 @@ export const PlayerView = ({
         className={`flex min-h-0 flex-1 ${
           isEmbed || isPresenter ? 'px-4 py-5 sm:px-6 sm:py-6' : 'px-3 py-3 md:px-6 md:py-4'
         } ${
-          isScrollableMain
+          showCinematic
+            ? 'items-center justify-center overflow-hidden'
+            : isScrollableMain
             ? 'items-start overflow-y-auto overscroll-contain'
             : isCenteredPlayerContent
               ? 'items-center justify-center overflow-y-auto overscroll-contain'
@@ -165,7 +188,15 @@ export const PlayerView = ({
                 : 'items-start justify-center overflow-hidden'
         }`}
       >
-        {playback.isAtFinale ? (
+        {showCinematic ? (
+          <Suspense
+            fallback={
+              <p className="text-sm text-slate-500">Loading cinematic walkthrough…</p>
+            }
+          >
+            <CinematicPlayerView pathSelections={playback.selectedPathByBranchId} />
+          </Suspense>
+        ) : playback.isAtFinale ? (
           <PlayerFinale
             title={flow?.flow.title ?? 'Untitled Flow'}
             description={(flow?.flow.description ?? '').trim()}
@@ -213,7 +244,7 @@ export const PlayerView = ({
         ) : null}
       </main>
 
-      {showChrome ? (
+      {showCinematic ? null : showChrome ? (
         <PlayerControls
           position={position}
           progressLabel={progressLabel}

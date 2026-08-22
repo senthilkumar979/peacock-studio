@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { LayoutGrid, Link2, Maximize2, Pencil } from 'lucide-react';
+import { LayoutGrid, Link2, Maximize2, Pencil, Clapperboard } from 'lucide-react';
 import { DASHBOARD_PATH, LANDING_PATH } from '@/constants/routes';
 import {
   FLOW_DOC_ACTION_CLASS,
@@ -26,6 +26,8 @@ interface FlowDocViewHeaderProps {
   showOwnerActions?: boolean;
   guideProgressPercent?: number;
   isEmbed?: boolean;
+  isCinematic?: boolean;
+  onToggleCinematic?: () => void;
   onEnterPresenter?: () => void;
 }
 
@@ -42,10 +44,12 @@ export const FlowDocViewHeader = ({
   showOwnerActions = true,
   guideProgressPercent,
   isEmbed = false,
+  isCinematic = false,
+  onToggleCinematic,
   onEnterPresenter,
 }: FlowDocViewHeaderProps) => {
   const { openShare, shareModal } = useDocumentShareModal(documentId);
-  const modeLabel = viewMode === 'player' ? 'Player' : 'Guide';
+  const modeLabel = isCinematic ? 'Cinematic' : viewMode === 'player' ? 'Player' : 'Guide';
   const showChromeNav = showOwnerActions && !isEmbed;
 
   return (
@@ -70,6 +74,21 @@ export const FlowDocViewHeader = ({
                 >
                   <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
                   <span className="hidden sm:inline">Overview</span>
+                </button>
+              </ActionTooltip>
+            ) : null}
+
+            {viewMode === 'player' && onToggleCinematic ? (
+              <ActionTooltip label={isCinematic ? 'Exit cinematic' : 'Cinematic walkthrough'}>
+                <button
+                  type="button"
+                  onClick={onToggleCinematic}
+                  className={isCinematic ? FLOW_DOC_PRIMARY_ACTION_CLASS : FLOW_DOC_ACTION_CLASS}
+                  aria-label={isCinematic ? 'Exit cinematic' : 'Cinematic walkthrough'}
+                  aria-pressed={isCinematic}
+                >
+                  <Clapperboard className="h-4 w-4 shrink-0" aria-hidden />
+                  <span className="hidden sm:inline">Cinematic</span>
                 </button>
               </ActionTooltip>
             ) : null}
