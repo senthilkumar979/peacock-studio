@@ -8,6 +8,7 @@ import { buildSocialMetaTags, resolveOgImage } from '@/seo/socialMetaTags';
 describe('isNoindexPath', () => {
   it('noindexes app shells and share links', () => {
     expect(isNoindexPath('/dashboard')).toBe(true);
+    expect(isNoindexPath('/edit/new-image')).toBe(true);
     expect(isNoindexPath('/s/abc123')).toBe(true);
     expect(isNoindexPath('/docs/uuid')).toBe(true);
     expect(isNoindexPath('/super-admin')).toBe(true);

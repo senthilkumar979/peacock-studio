@@ -1,6 +1,9 @@
 import { useRef } from 'react';
 import type { FlowStep } from '@peacock/shared';
-import { getStepMarkerPosition, getStepUrl, resolveStepDescription } from '@peacock/shared';
+import { getStepUrl, resolveStepDescription } from '@peacock/shared';
+import { getDisplayedStepMarkerPosition } from '@/capture-editor/displayedStepMarker';
+import { Button } from '@/components/ui';
+import { useStepScreenshotEditor } from '@/editor/StepScreenshotEditorProvider';
 import { getStepScreenshotUrl, useFlowStore } from '@/store/flowStore';
 import { ClickMarker } from './ClickMarker';
 
@@ -11,6 +14,7 @@ interface CanvasProps {
 export const Canvas = ({ step }: CanvasProps) => {
   const imageRef = useRef<HTMLImageElement>(null);
   const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
+  const { openEditor } = useStepScreenshotEditor();
 
   if (!step) {
     return (
@@ -21,7 +25,7 @@ export const Canvas = ({ step }: CanvasProps) => {
   }
 
   const screenshotUrl = getStepScreenshotUrl(step, screenshotUrls);
-  const markerPosition = getStepMarkerPosition(step);
+  const markerPosition = getDisplayedStepMarkerPosition(step);
   const stepUrl = getStepUrl(step);
   const description = resolveStepDescription(step);
 
@@ -53,6 +57,11 @@ export const Canvas = ({ step }: CanvasProps) => {
                 imageRef={imageRef}
               />
             )}
+            <div className="absolute right-2 top-2">
+              <Button variant="secondary" onClick={() => openEditor(step.id)}>
+                Edit screenshot
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex h-48 w-full items-center justify-center rounded-lg bg-white text-sm text-slate-500">

@@ -34,6 +34,7 @@ export const NOINDEX_PREFIXES = [
   '/playwright-tests',
   '/flow-maps',
   '/editor',
+  '/edit',
   '/docs/',
   '/capture/',
   '/tours/',

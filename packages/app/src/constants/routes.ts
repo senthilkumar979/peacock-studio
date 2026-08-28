@@ -4,6 +4,9 @@ export const LANDING_PATH = '/' as const;
 /** App library dashboard */
 export const DASHBOARD_PATH = '/dashboard' as const;
 
+/** Session-only image editor (upload is not persisted). */
+export const NEW_IMAGE_EDIT_PATH = '/edit/new-image' as const;
+
 /** Library listing pages */
 export const FLOW_DOCS_PATH = '/flow-docs' as const;
 export const PRODUCT_TOURS_PATH = '/product-tours' as const;

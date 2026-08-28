@@ -55,6 +55,7 @@ function injectFreshchatScript(scriptSrc: string): void {
 /** Immersive authoring surfaces where the launcher covers primary actions (e.g. Save). */
 export function isEditorRoute(pathname: string): boolean {
   if (pathname === '/editor' || pathname === '/tours/new') return true;
+  if (pathname.startsWith('/edit/')) return true;
   if (pathname.endsWith('/edit')) return true;
   if (pathname.startsWith('/editor/')) return true;
   return false;

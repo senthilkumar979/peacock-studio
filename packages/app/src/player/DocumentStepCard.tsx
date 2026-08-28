@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Check, Link2 } from "lucide-react";
 import type { FlowStep } from "@peacock/shared";
-import { getStepMarkerPosition, getStepResourcesForStep, getStepUrl, resolveStepDescription } from "@peacock/shared";
+import { getStepResourcesForStep, getStepUrl, resolveStepDescription } from "@peacock/shared";
+import { getDisplayedStepMarkerPosition } from "@/capture-editor/displayedStepMarker";
 import { RichTextContent } from "@/components/editor/RichTextContent";
 import { StepResourceList } from "@/components/flow/StepResourceList";
 import { usePlayerStepDetailsVisibility } from "@/hooks/usePlayerStepDetailsVisibility";
@@ -31,7 +32,7 @@ export const DocumentStepCard = ({
   screenshotUrls,
 }: DocumentStepCardProps) => {
   const screenshotUrl = getStepScreenshotUrl(step, screenshotUrls);
-  const markerPosition = getStepMarkerPosition(step);
+  const markerPosition = getDisplayedStepMarkerPosition(step);
   const stepUrl = getStepUrl(step);
   const description = resolveStepDescription(step);
   const stepResources = useFlowStore((state) => state.stepResources);

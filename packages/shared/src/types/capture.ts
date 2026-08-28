@@ -67,6 +67,25 @@ export const DEFAULT_CAPTURE_EDITOR_SETTINGS: CaptureEditorSettings = {
   description: '',
 };
 
+/** Flow-doc editor defaults: no marketing frame until the user opts in. */
+export const FLOW_STEP_CAPTURE_EDITOR_SETTINGS: CaptureEditorSettings = {
+  backgroundPresetId: 'none',
+  padding: 0,
+  cornerRadius: 0,
+  frameCornerRadius: 0,
+  crop: { ...DEFAULT_CAPTURE_CROP },
+  privacyRegions: [],
+  title: '',
+  description: '',
+};
+
+export interface FlowStepScreenshotEdit {
+  sourceScreenshotId: string;
+  sourceWidth: number;
+  sourceHeight: number;
+  settings: CaptureEditorSettings;
+}
+
 export interface CaptureResultHandoff {
   ok: boolean;
   captureId?: string;

@@ -4,6 +4,7 @@ import {
   getCaptureEditorPageUrl,
   getDashboardPageUrl,
   getEditorPageUrl,
+  getNewImageEditorPageUrl,
 } from './appUrl';
 
 describe('appUrl', () => {
@@ -56,5 +57,10 @@ describe('appUrl', () => {
     expect(getCaptureEditorPageUrl('abc/123')).toBe(
       'https://example.com/capture/abc%2F123/edit',
     );
+  });
+
+  it('builds the session image editor url from app origin', () => {
+    vi.stubEnv('VITE_APP_URL', 'https://peacockstudio.app/editor');
+    expect(getNewImageEditorPageUrl()).toBe('https://peacockstudio.app/edit/new-image');
   });
 });

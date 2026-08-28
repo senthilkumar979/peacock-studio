@@ -3,10 +3,12 @@ import { Info } from "lucide-react";
 import type { FlowStep } from "@peacock/shared";
 import {
   getCapturedScreenshotId,
+  getStepScreenshotEditSourceId,
   hasCustomStepScreenshot,
 } from "@peacock/shared";
 import { Button, ActionTooltip } from "@/components/ui";
 import { STEP_IMAGE_ACCEPT } from "@/constants/stepImageUpload";
+import { useStepScreenshotEditor } from "@/editor/StepScreenshotEditorProvider";
 import { readStepImageDataUrl } from "@/utils/stepImageFile";
 import { useFlowStore } from "@/store/flowStore";
 
@@ -27,10 +29,17 @@ export const StepImageUpload = ({ step }: StepImageUploadProps) => {
   const resetStepScreenshot = useFlowStore(
     (state) => state.resetStepScreenshot,
   );
+  const screenshotUrls = useFlowStore((state) => state.screenshotUrls);
+  const { openEditor } = useStepScreenshotEditor();
 
   const capturedScreenshotId = getCapturedScreenshotId(step);
   const hasCapturedImage = Boolean(capturedScreenshotId);
   const hasCustomImage = hasCustomStepScreenshot(step);
+  const canEditScreenshot = Boolean(
+    screenshotUrls[getStepScreenshotEditSourceId(step)] ||
+      screenshotUrls[getCapturedScreenshotId(step)] ||
+      screenshotUrls[step.customScreenshotId ?? ""],
+  );
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -93,6 +102,16 @@ export const StepImageUpload = ({ step }: StepImageUploadProps) => {
       />
 
       <div className="flex flex-wrap gap-2">
+        {canEditScreenshot && (
+          <Button
+            variant="secondary"
+            disabled={isUploading}
+            onClick={() => openEditor(step.id)}
+            className="disabled:opacity-60"
+          >
+            Edit screenshot
+          </Button>
+        )}
         {hasCustomImage && hasCapturedImage && (
           <Button
             variant="secondary"

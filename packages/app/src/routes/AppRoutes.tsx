@@ -13,6 +13,7 @@ import {
   FLOW_MAPS_PATH,
   HEALTH_CHECKER_PATH,
   LANDING_PATH,
+  NEW_IMAGE_EDIT_PATH,
   EXTENSION_INSTALL_PATH,
   ORG_ADMIN_PATH,
   PLATFORM_ADMIN_PATH,
@@ -43,6 +44,7 @@ import {
   HealthCheckerPage,
   LegacyRouteRedirect,
   LibraryLayout,
+  NewImageEditor,
   NewProductTour,
   NotFoundPage,
   OrgAdminPage,
@@ -176,6 +178,7 @@ export const App = () => {
             <Route path="/docs/:documentId" element={<Player />} />
             <Route path="/docs/:documentId/edit" element={<Editor />} />
             <Route path="/capture/:captureId/edit" element={<CaptureEditor />} />
+            <Route path={NEW_IMAGE_EDIT_PATH} element={<NewImageEditor />} />
             <Route
               path="/editor/capture/:captureId/edit"
               element={<CaptureEditorLegacyRedirect />}

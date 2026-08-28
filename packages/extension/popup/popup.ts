@@ -1,7 +1,7 @@
 import type { RecordingStateSnapshot } from '@peacock/shared';
 import { canInjectIntoUrl } from '../src/background/injectContentScript';
 import { sendExtensionMessage } from '../src/messaging/sendExtensionMessage';
-import { getDashboardPageUrl } from '../src/utils/appUrl';
+import { getDashboardPageUrl, getNewImageEditorPageUrl } from '../src/utils/appUrl';
 import {
   runStartRecordingCountdown,
   type StartRecordingCountdownUi,
@@ -21,7 +21,7 @@ const stopBtn = document.getElementById('stop-btn') as HTMLButtonElement | null;
 const quickScreenshotsPanel = document.getElementById('quick-screenshots-panel') as HTMLElement | null;
 const screenshotModeEl = document.getElementById('screenshot-mode') as HTMLSelectElement | null;
 const openDashboardBtn = document.getElementById('open-dashboard-btn') as HTMLButtonElement | null;
-const openEditorBtn = document.getElementById('open-editor-btn') as HTMLButtonElement | null;
+const editImageBtn = document.getElementById('edit-image-btn') as HTMLButtonElement | null;
 const countdownPanel = document.getElementById('countdown-panel') as HTMLElement | null;
 const countdownValueEl = document.getElementById('countdown-value') as HTMLParagraphElement | null;
 const popupRoot = document.querySelector('.popup') as HTMLElement | null;
@@ -40,8 +40,8 @@ interface ActivePageInfo {
   allowed: boolean;
 }
 
-const editorUrl = import.meta.env.VITE_APP_URL;
 const dashboardUrl = getDashboardPageUrl();
+const editImageUrl = getNewImageEditorPageUrl();
 const RESTRICTED_PAGE_TITLE = "This page can't be recorded.";
 const RESTRICTED_PAGE_DETAIL = 'Open a normal website tab, then start from the popup.';
 
@@ -275,7 +275,7 @@ screenshotModeEl?.addEventListener('change', () => {
   void runScreenshotTool(mode);
 });
 openDashboardBtn?.addEventListener('click', () => void openUrl(dashboardUrl));
-openEditorBtn?.addEventListener('click', () => void openUrl(editorUrl));
+editImageBtn?.addEventListener('click', () => void openUrl(editImageUrl));
 
 void refreshState();
 window.setInterval(() => {

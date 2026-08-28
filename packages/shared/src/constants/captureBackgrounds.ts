@@ -1,8 +1,7 @@
 import type { CaptureBackgroundPreset } from '../types/capture';
 
 export const CAPTURE_BACKGROUND_PRESETS: CaptureBackgroundPreset[] = [
-  // { id: 'white', label: 'White', kind: 'solid', solidColor: '#ffffff' },
-  // { id: 'slate', label: 'Slate', kind: 'solid', solidColor: '#f1f5f9' },
+  { id: 'none', label: 'None', kind: 'solid', solidColor: 'transparent' },
   { id: 'charcoal', label: 'Charcoal', kind: 'solid', solidColor: '#1e293b', imageShadow: true, lightHeaderText: true },
   {
     id: 'peacock-soft',
@@ -191,6 +190,9 @@ export function captureBackgroundUsesLightHeaderText(presetId: string): boolean 
 }
 
 export function getPresetSwatchCss(preset: CaptureBackgroundPreset): string {
+  if (preset.id === 'none' || preset.solidColor === 'transparent') {
+    return 'repeating-conic-gradient(#e2e8f0 0% 25%, #ffffff 0% 50%) 50% / 12px 12px';
+  }
   if (preset.kind === 'solid' && preset.solidColor) return preset.solidColor;
   const stops = (preset.gradientStops ?? [])
     .map((stop) => `${stop.color} ${stop.offset * 100}%`)

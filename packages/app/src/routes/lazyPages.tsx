@@ -60,6 +60,9 @@ export const CaptureEditorLegacyRedirect = lazy(() =>
     default: m.CaptureEditorLegacyRedirect,
   })),
 );
+export const NewImageEditor = lazy(() =>
+  import('@/pages/NewImageEditor').then((m) => ({ default: m.NewImageEditor })),
+);
 export const Products = lazy(() =>
   import('@/pages/Products').then((m) => ({ default: m.Products })),
 );

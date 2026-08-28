@@ -94,6 +94,7 @@ describe('library smoke', () => {
   it('LibraryNav shows nav landmark', () => {
     renderWithProviders(<LibraryNav />, { routerEntries: ['/dashboard'] });
     expect(screen.getByRole('navigation', { name: 'Library' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Edit image' })).toBeInTheDocument();
   });
 
   it('FlowDocsLibraryToolbar renders search', () => {

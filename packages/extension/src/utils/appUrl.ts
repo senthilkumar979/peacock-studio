@@ -19,3 +19,7 @@ export function getDashboardPageUrl(): string {
 export function getCaptureEditorPageUrl(captureId: string): string {
   return `${getAppOrigin()}/capture/${encodeURIComponent(captureId)}/edit`;
 }
+
+export function getNewImageEditorPageUrl(): string {
+  return `${getAppOrigin()}/edit/new-image`;
+}

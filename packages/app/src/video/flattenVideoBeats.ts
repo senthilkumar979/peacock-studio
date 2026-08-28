@@ -1,6 +1,5 @@
 import {
   getPlayableStepRange,
-  getStepMarkerPosition,
   getStepScreenshotUrl,
   getStepUrl,
   isFlowBranch,
@@ -12,6 +11,7 @@ import {
   type FlowStep,
   type LinkedPeacockPath,
 } from '@peacock/shared';
+import { getDisplayedStepMarkerPosition } from '@/capture-editor/displayedStepMarker';
 import { getFlowDocument } from '@/services/flowLibraryService';
 import type { PdfPathSelections } from '@/utils/pdfPathSelection';
 import { clampZoomOrigin } from './clampZoomOrigin';
@@ -39,7 +39,7 @@ function toBeat(
   screenshotUrls: Record<string, string>,
 ): VideoBeat {
   const screenshotUrl = getStepScreenshotUrl(step, screenshotUrls);
-  const marker = getStepMarkerPosition(step);
+  const marker = getDisplayedStepMarkerPosition(step);
   const url = getStepUrl(step);
   const title = step.title.trim() || `Step ${stepNumber}`;
   const description = resolveStepDescription(step);

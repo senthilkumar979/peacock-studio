@@ -37,6 +37,7 @@ interface CaptureEditorState {
   canUndo: () => boolean;
   canRedo: () => boolean;
   setStatusMessage: (message: string) => void;
+  hydrateSettings: (settings: CaptureEditorSettings) => void;
   resetSettings: () => void;
 }
 
@@ -161,8 +162,8 @@ export const useCaptureEditorStore = create<CaptureEditorState>((set, get) => ({
   canRedo: () => get().historyIndex < get().history.length - 1,
   setStatusMessage: (statusMessage) => set({ statusMessage }),
 
-  resetSettings: () => {
-    const initial = cloneCaptureSettings(DEFAULT_CAPTURE_EDITOR_SETTINGS);
+  hydrateSettings: (settings) => {
+    const initial = cloneCaptureSettings(settings);
     set({
       settings: initial,
       history: [initial],
@@ -171,5 +172,9 @@ export const useCaptureEditorStore = create<CaptureEditorState>((set, get) => ({
       selectedId: null,
       statusMessage: '',
     });
+  },
+
+  resetSettings: () => {
+    get().hydrateSettings(DEFAULT_CAPTURE_EDITOR_SETTINGS);
   },
 }));

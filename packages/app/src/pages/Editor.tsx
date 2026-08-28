@@ -23,6 +23,7 @@ import { GuestDocumentGate } from "@/components/auth/GuestDocumentGate";
 import { CaptureDesktopRequired } from "@/components/extension/CaptureDesktopRequired";
 import { ChromeWebStoreLink } from "@/components/extension/ChromeWebStoreLink";
 import { AppErrorBoundary } from "@/components/errors/AppErrorBoundary";
+import { StepScreenshotEditorProvider } from "@/editor/StepScreenshotEditorProvider";
 import { ResourceNotFoundPage } from "@/components/errors/ResourceNotFoundPage";
 import { StepList } from "@/editor/StepList";
 import { StepPanel } from "@/editor/StepPanel";
@@ -278,6 +279,7 @@ export const Editor = () => {
   };
 
   const editorBody = (
+    <StepScreenshotEditorProvider>
     <AppErrorBoundary
       compact
       title="Editor crashed"
@@ -380,6 +382,7 @@ export const Editor = () => {
         />
       </div>
     </AppErrorBoundary>
+    </StepScreenshotEditorProvider>
   );
 
   if (documentId) {

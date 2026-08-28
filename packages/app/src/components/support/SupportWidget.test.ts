@@ -11,6 +11,7 @@ describe('isEditorRoute', () => {
     expect(isEditorRoute('/tours/abc/edit')).toBe(true);
     expect(isEditorRoute('/tours/new')).toBe(true);
     expect(isEditorRoute('/capture/abc/edit')).toBe(true);
+    expect(isEditorRoute('/edit/new-image')).toBe(true);
     expect(isEditorRoute('/editor')).toBe(true);
     expect(isEditorRoute('/editor/capture/abc/edit')).toBe(true);
     expect(isEditorRoute('/routes/abc/edit')).toBe(true);

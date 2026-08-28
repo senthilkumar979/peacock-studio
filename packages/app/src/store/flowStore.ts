@@ -19,6 +19,7 @@ import {
   type FlowOutlineItem,
   type FlowPayload,
   type FlowStep,
+  type FlowStepScreenshotEdit,
   type LinkedPeacockPath,
   type StepResource,
 } from '@peacock/shared';
@@ -59,6 +60,7 @@ interface FlowStore {
   updateSectionTitle: (id: string, title: string) => void;
   updateSectionDescription: (id: string, description: string) => void;
   setStepCustomScreenshot: (id: string, dataUrl: string) => void;
+  applyStepScreenshotEdit: (id: string, dataUrl: string, edit: FlowStepScreenshotEdit) => void;
   resetStepScreenshot: (id: string) => void;
   updateFlowDetails: (title: string, description: string, version: string, tags?: string[]) => void;
   updateFlowTags: (tags: string[]) => void;
@@ -281,6 +283,25 @@ export const useFlowStore = create<FlowStore>()(
         const customId = createId();
         state.screenshotUrls[customId] = dataUrl;
         step.customScreenshotId = customId;
+        delete step.screenshotEdit;
+      }),
+
+    applyStepScreenshotEdit: (id, dataUrl, edit) =>
+      set((state) => {
+        const step = state.steps.find((item) => item.id === id);
+        if (!step || !isFlowStep(step)) return;
+
+        if (
+          step.customScreenshotId &&
+          step.customScreenshotId !== edit.sourceScreenshotId
+        ) {
+          delete state.screenshotUrls[step.customScreenshotId];
+        }
+
+        const customId = createId();
+        state.screenshotUrls[customId] = dataUrl;
+        step.customScreenshotId = customId;
+        step.screenshotEdit = edit;
       }),
 
     resetStepScreenshot: (id) =>
@@ -290,6 +311,7 @@ export const useFlowStore = create<FlowStore>()(
 
         delete state.screenshotUrls[step.customScreenshotId];
         delete step.customScreenshotId;
+        delete step.screenshotEdit;
       }),
 
     updateFlowDetails: (title, description, version, tags) =>

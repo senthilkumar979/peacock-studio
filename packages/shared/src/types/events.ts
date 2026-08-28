@@ -1,5 +1,8 @@
+import type { FlowStepScreenshotEdit } from './capture';
 import type { FlowCaptureEnvironment } from './captureEnvironment';
 import type { DataClassification } from './dataClassification';
+
+export type { FlowStepScreenshotEdit };
 
 export type EventType = 'click' | 'input' | 'navigation' | 'tab-switch' | 'scroll';
 
@@ -149,6 +152,8 @@ export interface FlowStep {
   screenshotId: string;
   /** When set, display and export use this id in screenshotUrls instead of the captured screenshot. */
   customScreenshotId?: string;
+  /** Last Capture Editor session for this step; re-edit starts from sourceScreenshotId. */
+  screenshotEdit?: FlowStepScreenshotEdit;
   /** When true, no description is shown in player/PDF/export (notes stays ""). */
   hideDescription?: boolean;
   /** Rich-text detailed instructions (HTML). Max 3000 plain-text chars. */

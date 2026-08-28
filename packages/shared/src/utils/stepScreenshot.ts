@@ -23,3 +23,17 @@ export function getStepScreenshotUrl(
   const id = getStepScreenshotId(step);
   return id ? screenshotUrls[id] ?? null : null;
 }
+
+export function getStepScreenshotEditSourceId(step: FlowStep): string {
+  if (step.screenshotEdit?.sourceScreenshotId) return step.screenshotEdit.sourceScreenshotId;
+  if (step.customScreenshotId && !step.screenshotEdit) return step.customScreenshotId;
+  return getCapturedScreenshotId(step);
+}
+
+export function getStepScreenshotEditSourceUrl(
+  step: FlowStep,
+  screenshotUrls: Record<string, string>,
+): string | null {
+  const id = getStepScreenshotEditSourceId(step);
+  return id ? screenshotUrls[id] ?? null : null;
+}

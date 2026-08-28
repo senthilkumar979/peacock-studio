@@ -2,7 +2,7 @@ import type { FlowOutlineItem } from '../types/events';
 import type { StepResource, StepResourceInput } from '../types/stepResource';
 import { isFlowStep } from '../types/events';
 import { createId } from './createFlowStep';
-import { getStepScreenshotId } from './stepScreenshot';
+import { getCapturedScreenshotId } from './stepScreenshot';
 
 export const STEP_DETAILED_DESCRIPTION_MAX_CHARS = 3000;
 
@@ -67,9 +67,10 @@ export function collectReferencedScreenshotIds(steps: FlowOutlineItem[]): Set<st
   const ids = new Set<string>();
   for (const item of steps) {
     if (!isFlowStep(item)) continue;
-    const primary = getStepScreenshotId(item);
-    if (primary) ids.add(primary);
+    const captured = getCapturedScreenshotId(item);
+    if (captured) ids.add(captured);
     if (item.customScreenshotId) ids.add(item.customScreenshotId);
+    if (item.screenshotEdit?.sourceScreenshotId) ids.add(item.screenshotEdit.sourceScreenshotId);
   }
   return ids;
 }

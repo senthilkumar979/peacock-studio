@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { NavLink, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Settings2, Shield } from "lucide-react";
+import { Image as ImageIcon, Settings2, Shield } from "lucide-react";
 import { SignInButton, SignUpButton, useAuth } from "@clerk/react";
 import { SignedInUserButton } from "@/components/auth/SignedInUserButton";
 import { PEACOCK_APP_NAME, PEACOCK_LOGO_SRC } from "@/constants/branding";
@@ -9,6 +9,7 @@ import { isCloudSyncEnabled } from "@/cloud/config";
 import { LIBRARY_NAV_ITEMS } from "@/constants/libraryNav";
 import {
   DASHBOARD_PATH,
+  NEW_IMAGE_EDIT_PATH,
   ORG_ADMIN_PATH,
   SUPER_ADMIN_PATH,
 } from "@/constants/routes";
@@ -109,6 +110,14 @@ export const LibraryNav = () => {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2 border-l border-slate-200/80 pl-2 sm:pl-3">
+          <Link
+            to={NEW_IMAGE_EDIT_PATH}
+            className={navActionClass}
+            aria-label="Edit image"
+          >
+            <ImageIcon className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+            <span className="hidden lg:inline">Edit image</span>
+          </Link>
           {/* {sessionMode === "cloud" ? <OrgSwitcher /> : null} */}
 
           {sessionMode === "cloud" && isPlatformSuperAdmin ? (

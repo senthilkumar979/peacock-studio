@@ -1,10 +1,10 @@
 import {
   getPlayableSteps,
-  getStepMarkerPosition,
   getStepScreenshotUrl,
   getStepUrl,
   resolveStepDescription,
 } from '@peacock/shared';
+import { getDisplayedStepMarkerPosition } from '@/capture-editor/displayedStepMarker';
 import type { SavedFlowDocument, SavedFlowSummary } from '@/types/savedFlow';
 import { BrowserMockup } from './BrowserMockup';
 import { PlayerClickMarker } from './PlayerClickMarker';
@@ -31,7 +31,7 @@ export const CompareDocumentPane = ({
   const playableSteps = document ? getPlayableSteps(document.steps) : [];
   const step = playableSteps[currentIndex] ?? null;
   const screenshotUrl = step ? getStepScreenshotUrl(step, document?.screenshotUrls ?? {}) : null;
-  const markerPosition = step ? getStepMarkerPosition(step) : null;
+  const markerPosition = step ? getDisplayedStepMarkerPosition(step) : null;
   const stepUrl = step ? getStepUrl(step) : '';
   const description = step ? resolveStepDescription(step) : '';
 

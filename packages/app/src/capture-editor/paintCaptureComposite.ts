@@ -74,22 +74,24 @@ export async function paintCaptureComposite(
   const layout = computeCaptureLayout(input.naturalWidth, input.naturalHeight, input.settings, {
     cropPreview: input.cropPreview,
   });
-  const preset =
-    getCaptureBackgroundPreset(input.settings.backgroundPresetId) ??
-    getCaptureBackgroundPreset('rose-gold')!;
+  const preset = getCaptureBackgroundPreset(input.settings.backgroundPresetId);
+  const skipBackground = !preset || preset.id === 'none' || preset.solidColor === 'transparent';
+  const framePreset = preset ?? getCaptureBackgroundPreset('rose-gold')!;
   const frameCornerRadius = Math.max(0, Math.round(input.settings.frameCornerRadius));
 
   context.clearRect(0, 0, layout.canvasWidth, layout.canvasHeight);
-  drawCaptureBackground(
-    context,
-    layout.canvasWidth,
-    layout.canvasHeight,
-    preset,
-    frameCornerRadius,
-  );
+  if (!skipBackground) {
+    drawCaptureBackground(
+      context,
+      layout.canvasWidth,
+      layout.canvasHeight,
+      framePreset,
+      frameCornerRadius,
+    );
+  }
 
   drawCaptureHeader(context, layout, input.settings);
 
-  await paintScreenshot(context, input, layout, Boolean(preset.imageShadow));
+  await paintScreenshot(context, input, layout, Boolean(preset?.imageShadow));
   return layout;
 }

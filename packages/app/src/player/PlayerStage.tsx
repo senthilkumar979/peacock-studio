@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import type { FlowStep } from '@peacock/shared';
-import { getStepMarkerPosition, getStepUrl, resolveStepDescription } from '@peacock/shared';
+import { getStepUrl, resolveStepDescription } from '@peacock/shared';
+import { getDisplayedStepMarkerPosition } from '@/capture-editor/displayedStepMarker';
 import { CloudNetworkBlockedNotice } from '@/components/auth/CloudNetworkBlockedNotice';
 import { PeacockStudioLoader } from '@/components/PeacockStudioLoader';
 import {
@@ -50,7 +51,7 @@ export const PlayerStage = ({
   isEmbed = false,
 }: PlayerStageProps) => {
   const screenshotUrl = getStepScreenshotUrl(step, screenshotUrls);
-  const markerPosition = getStepMarkerPosition(step);
+  const markerPosition = getDisplayedStepMarkerPosition(step);
   const stepUrl = getStepUrl(step);
   const description = resolveStepDescription(step);
   const { isDetailsVisible, toggleDetails } = usePlayerStepDetailsVisibility(step.id);
