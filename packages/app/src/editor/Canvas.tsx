@@ -41,34 +41,38 @@ export const Canvas = ({ step }: CanvasProps) => {
         </p>
       </div>
 
-      <div className="relative flex flex-1 items-start justify-center overflow-auto rounded-xl bg-slate-100 p-4">
-        {screenshotUrl ? (
-          <div className="relative inline-block max-w-full">
-            <img
-              ref={imageRef}
-              src={screenshotUrl}
-              alt={step.title}
-              className="max-h-[70vh] w-auto max-w-full rounded-lg shadow-md"
-            />
-            {markerPosition && (
-              <ClickMarker
-                xPercent={markerPosition.xPercent}
-                yPercent={markerPosition.yPercent}
-                imageRef={imageRef}
+      {screenshotUrl ? (
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
+          <div className="flex justify-end">
+            <Button variant="secondary" onClick={() => openEditor(step.id)}>
+              Edit screenshot
+            </Button>
+          </div>
+          <div className="relative flex flex-1 items-start justify-center overflow-auto rounded-xl bg-slate-100 p-4">
+            <div className="relative inline-block max-w-full">
+              <img
+                ref={imageRef}
+                src={screenshotUrl}
+                alt={step.title}
+                className="max-h-[70vh] w-auto max-w-full rounded-lg shadow-md"
               />
-            )}
-            <div className="absolute right-2 top-2">
-              <Button variant="secondary" onClick={() => openEditor(step.id)}>
-                Edit screenshot
-              </Button>
+              {markerPosition && (
+                <ClickMarker
+                  xPercent={markerPosition.xPercent}
+                  yPercent={markerPosition.yPercent}
+                  imageRef={imageRef}
+                />
+              )}
             </div>
           </div>
-        ) : (
+        </div>
+      ) : (
+        <div className="relative flex flex-1 items-start justify-center overflow-auto rounded-xl bg-slate-100 p-4">
           <div className="flex h-48 w-full items-center justify-center rounded-lg bg-white text-sm text-slate-500">
             {step.event.type === 'navigation' ? 'Navigation step (no screenshot)' : 'Screenshot unavailable'}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

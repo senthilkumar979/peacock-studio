@@ -8,12 +8,14 @@ interface CaptureEditorWorkspaceProps {
   imageDataUrl: string;
   naturalWidth: number;
   naturalHeight: number;
+  showBackgroundPresets?: boolean;
 }
 
 export const CaptureEditorWorkspace = ({
   imageDataUrl,
   naturalWidth,
   naturalHeight,
+  showBackgroundPresets = true,
 }: CaptureEditorWorkspaceProps) => {
   const statusMessage = useCaptureEditorStore((state) => state.statusMessage);
   const setStatusMessage = useCaptureEditorStore((state) => state.setStatusMessage);
@@ -34,7 +36,7 @@ export const CaptureEditorWorkspace = ({
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <CaptureEditorToolbar />
         <div className="flex min-h-0 flex-1 gap-0">
-          <CaptureEditorSidebar />
+          <CaptureEditorSidebar showBackgroundPresets={showBackgroundPresets} />
           <CaptureEditorCanvas
             imageDataUrl={imageDataUrl}
             naturalWidth={naturalWidth}

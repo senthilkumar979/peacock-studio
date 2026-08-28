@@ -6,7 +6,13 @@ import { FieldInput, FieldTextarea, FormField } from '@/components/ui';
 import { useCaptureEditorStore } from '@/store/captureEditorStore';
 import { CaptureEditorInspector } from './CaptureEditorInspector';
 
-export const CaptureEditorSidebar = () => {
+interface CaptureEditorSidebarProps {
+  showBackgroundPresets?: boolean;
+}
+
+export const CaptureEditorSidebar = ({
+  showBackgroundPresets = true,
+}: CaptureEditorSidebarProps) => {
   const settings = useCaptureEditorStore((state) => state.settings);
   const setBackgroundPresetId = useCaptureEditorStore(
     (state) => state.setBackgroundPresetId,
@@ -52,39 +58,41 @@ export const CaptureEditorSidebar = () => {
         </FormField>
       </div>
 
-      <div className="flex min-h-0 flex-col gap-3 p-4 py-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-          Backgrounds
-        </p>
-        <div className="max-h-52 overflow-y-auto pr-1">
-          <div className="grid grid-cols-2 gap-2">
-            {CAPTURE_BACKGROUND_PRESETS.map((preset) => {
-              const isActive = settings.backgroundPresetId === preset.id;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => setBackgroundPresetId(preset.id)}
-                  className={`rounded-xl border p-2 text-left transition ${
-                    isActive
-                      ? 'border-peacock-500 ring-2 ring-peacock-100'
-                      : 'border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  <span
-                    className="mb-2 block h-10 w-full rounded-lg border border-slate-200/80"
-                    style={{ background: getPresetSwatchCss(preset) }}
-                    aria-hidden
-                  />
-                  <span className="text-xs font-medium text-slate-700">
-                    {preset.label}
-                  </span>
-                </button>
-              );
-            })}
+      {showBackgroundPresets ? (
+        <div className="flex min-h-0 flex-col gap-3 p-4 py-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Backgrounds
+          </p>
+          <div className="max-h-52 overflow-y-auto pr-1">
+            <div className="grid grid-cols-2 gap-2">
+              {CAPTURE_BACKGROUND_PRESETS.map((preset) => {
+                const isActive = settings.backgroundPresetId === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => setBackgroundPresetId(preset.id)}
+                    className={`rounded-xl border p-2 text-left transition ${
+                      isActive
+                        ? 'border-peacock-500 ring-2 ring-peacock-100'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <span
+                      className="mb-2 block h-10 w-full rounded-lg border border-slate-200/80"
+                      style={{ background: getPresetSwatchCss(preset) }}
+                      aria-hidden
+                    />
+                    <span className="text-xs font-medium text-slate-700">
+                      {preset.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="space-y-4 border-t border-slate-100 px-4 py-4">
         <label className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">

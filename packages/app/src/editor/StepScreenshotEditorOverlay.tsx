@@ -139,6 +139,7 @@ export const StepScreenshotEditorOverlay = ({
             imageDataUrl={source.dataUrl}
             naturalWidth={source.width}
             naturalHeight={source.height}
+            showBackgroundPresets={false}
           />
         </div>
       ) : (

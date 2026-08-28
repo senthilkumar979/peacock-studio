@@ -47,5 +47,6 @@ describe('Canvas', () => {
     expect(screen.getByRole('heading', { name: 'Open dashboard' })).toBeInTheDocument();
     expect(screen.getByAltText('Open dashboard')).toHaveAttribute('src', 'blob:shot');
     expect(screen.getByText('https://example.com/app')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit screenshot' })).toBeInTheDocument();
   });
 });
