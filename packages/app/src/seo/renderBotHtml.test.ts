@@ -7,7 +7,7 @@ describe('renderBotHtml', () => {
     const meta = resolveRouteMeta('/pricing');
     const html = renderBotHtml(meta);
 
-    expect(html).toContain('<title>Pricing');
+    expect(html).toContain('<title>Free');
     expect(html).toContain('property="og:title"');
     expect(html).toContain('name="twitter:card"');
     expect(html).not.toContain('<script');

@@ -11,38 +11,27 @@ vi.mock('@/analytics/analyticsClient', () => ({
   identifyUser: vi.fn(),
 }));
 
-import { openSupportChat } from '@/utils/support';
-import { BetaPromiseSection } from './BetaPromiseSection';
-import { PricingTiersPreview } from './PricingTiersPreview';
+import { FreePromiseSection } from './BetaPromiseSection';
+import { FreeFeaturesSection } from './PricingTiersPreview';
 
 describe('pricing sections', () => {
-  it('BetaPromiseSection renders early-adopter promise', () => {
-    render(<BetaPromiseSection />);
+  it('FreePromiseSection renders the free-product promise', () => {
+    render(<FreePromiseSection />);
     expect(
-      screen.getByRole('heading', { name: /you supported us first/i }),
+      screen.getByRole('heading', { name: /build useful documentation/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/free during beta/i)).toBeInTheDocument();
+    expect(screen.getByText(/no subscription fee/i)).toBeInTheDocument();
   });
 
-  it('PricingTiersPreview renders Free tier', () => {
+  it('FreeFeaturesSection renders feature groups instead of tiers', () => {
     render(
       <MemoryRouter>
-        <PricingTiersPreview />
+        <FreeFeaturesSection />
       </MemoryRouter>,
     );
-    expect(screen.getByRole('heading', { name: /^free$/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /^team$/i })).toBeInTheDocument();
-  });
-
-  it('Talk to us opens support chat', () => {
-    render(
-      <MemoryRouter>
-        <PricingTiersPreview />
-      </MemoryRouter>,
-    );
-    const talkToUs = screen.getAllByRole('button', { name: /talk to us/i })[0];
-    if (!talkToUs) throw new Error('expected Talk to us button');
-    talkToUs.click();
-    expect(openSupportChat).toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: /^create$/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^share$/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^understand$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /^team$/i })).not.toBeInTheDocument();
   });
 });

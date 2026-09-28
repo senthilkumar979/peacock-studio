@@ -8,7 +8,7 @@ const LEARN_HREF = `${PRICING_PATH}?utm_source=embed&utm_medium=iframe&utm_campa
 
 interface EmbedGrowthCtaProps {
   compact?: boolean;
-  /** Org plan; paid plans (pro/team) hide the growth CTA. Defaults to free. */
+  /** Retained for compatibility with existing organization records. */
   plan?: string | null;
 }
 

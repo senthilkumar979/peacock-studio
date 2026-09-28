@@ -30,7 +30,7 @@ describe('RouteDocumentMeta', () => {
       </MemoryRouter>,
     );
 
-    expect(setDocumentTitle).toHaveBeenCalledWith(expect.stringContaining('Pricing'));
+    expect(setDocumentTitle).toHaveBeenCalledWith(expect.stringContaining('Free'));
     expect(applyMetaTags).toHaveBeenCalled();
     expect(upsertLink).toHaveBeenCalledWith(
       'canonical',

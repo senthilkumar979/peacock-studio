@@ -1,3 +1,5 @@
+import { copyImageBlobToClipboard } from '@peacock/shared';
+
 export async function downloadCaptureBlob(blob: Blob, filenamePrefix = 'peacock-capture'): Promise<void> {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -8,9 +10,5 @@ export async function downloadCaptureBlob(blob: Blob, filenamePrefix = 'peacock-
 }
 
 export async function copyCaptureBlobToClipboard(blob: Blob): Promise<void> {
-  await navigator.clipboard.write([
-    new ClipboardItem({
-      [blob.type || 'image/png']: blob,
-    }),
-  ]);
+  await copyImageBlobToClipboard(blob);
 }

@@ -16,10 +16,6 @@ vi.mock('@/cloud/cloudSyncState', () => ({
   setCloudSyncState: vi.fn(),
 }));
 
-vi.mock('@/components/auth/UpgradeAccountModal', () => ({
-  UpgradeAccountModal: () => null,
-}));
-
 import { CloudSyncBanner } from './CloudSyncBanner';
 
 describe('CloudSyncBanner', () => {

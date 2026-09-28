@@ -3,11 +3,6 @@ import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { buildAcquisitionUrl, ACQUISITION_UTM_CHANNELS } from './acquisition';
 import {
-  getFoundingUserInterest,
-  hasFoundingUserInterest,
-  markFoundingUserInterest,
-} from './foundingUser';
-import {
   FLOW_DOC_DEFAULT_VIEW,
   readFlowDocDefaultView,
   writeFlowDocDefaultView,
@@ -41,13 +36,6 @@ describe('constants helpers', () => {
     );
     expect(url).toContain('utm_source=linkedin');
     expect(url).toContain('utm_content=hero');
-  });
-
-  it('founding user interest storage', () => {
-    expect(hasFoundingUserInterest()).toBe(false);
-    markFoundingUserInterest('founder@example.com');
-    expect(hasFoundingUserInterest()).toBe(true);
-    expect(getFoundingUserInterest()?.email).toBe('founder@example.com');
   });
 
   it('flow doc default view storage', () => {

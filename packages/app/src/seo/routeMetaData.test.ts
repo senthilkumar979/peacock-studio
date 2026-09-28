@@ -36,7 +36,7 @@ describe('routeMetaData', () => {
     expect(home?.jsonLd).toBeDefined();
 
     const pricing = marketingStaticMeta('/pricing');
-    expect(pricing?.title).toContain('Pricing');
+    expect(pricing?.title).toContain('Free');
     expect(pricing?.jsonLd).toBeUndefined();
 
     expect(marketingStaticMeta('/not-a-page')).toBeNull();

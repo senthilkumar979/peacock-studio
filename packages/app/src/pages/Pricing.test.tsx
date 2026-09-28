@@ -32,10 +32,11 @@ vi.mock('@/utils/support', () => ({
 import { Pricing } from './Pricing';
 
 describe('Pricing', () => {
-  it('renders pricing hero title', () => {
+  it('presents Peacock as free without paid-plan messaging', () => {
     renderWithRouter(<Pricing />);
     expect(
-      screen.getByRole('heading', { name: /experience peacock — free for early adopters/i }),
+      screen.getByRole('heading', { name: /everything you need. free of cost./i }),
     ).toBeInTheDocument();
+    expect(screen.queryByText(/coming soon|founding-user pricing/i)).not.toBeInTheDocument();
   });
 });

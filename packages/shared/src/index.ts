@@ -15,6 +15,7 @@ export * from './constants/limits';
 export * from './constants/manualStep';
 export * from './constants/privacy';
 export * from './utils/compressImage';
+export * from './utils/clipboardImage';
 export * from './utils/coordinates';
 export * from './utils/masking';
 export * from './utils/inputCaptureValue';

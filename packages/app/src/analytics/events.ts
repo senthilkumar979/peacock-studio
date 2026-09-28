@@ -63,7 +63,7 @@ export const AnalyticsEvents = {
   memberStatusUpdated: 'member_status_updated',
 
   localLibraryImported: 'local_library_imported',
-  betaPricingInterest: 'beta_pricing_interest',
+  freeProductCta: 'free_product_cta',
   captureBlockedMobile: 'capture_blocked_mobile',
 
   actionSucceeded: 'action_succeeded',

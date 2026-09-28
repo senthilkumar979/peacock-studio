@@ -1,3 +1,4 @@
+import { copyImageBlobToClipboard } from '@peacock/shared';
 import { getCaptureResult } from '../src/storage/db';
 import { getCaptureEditorPageUrl } from '../src/utils/appUrl';
 
@@ -73,11 +74,7 @@ copyBtn.addEventListener('click', async () => {
   if (!captureBlob) return;
 
   try {
-    await navigator.clipboard.write([
-      new ClipboardItem({
-        [captureBlob.type || 'image/png']: captureBlob,
-      }),
-    ]);
+    await copyImageBlobToClipboard(captureBlob);
     statusEl.textContent = 'Copied to clipboard.';
   } catch (error) {
     statusEl.textContent =

@@ -17,7 +17,7 @@ const MOBILE_LINKS = [
   { label: 'Home', href: LANDING_PATH },
   { label: 'Products', href: '/products' },
   { label: 'Solutions', href: '/solutions' },
-  { label: 'Pricing', href: PRICING_PATH },
+  { label: 'Free', href: PRICING_PATH },
 ] as const;
 
 const desktopLinkClass = (active: boolean) =>
@@ -67,7 +67,7 @@ export const SiteNav = ({ visible = true }: SiteNavProps) => {
           <SiteNavDropdown label="Products" href="/products" items={productItems} isActive={isActive('/products')} />
           <SiteNavDropdown label="Solutions" href="/solutions" items={solutionItems} isActive={isActive('/solutions')} />
           <Link to={PRICING_PATH} className={desktopLinkClass(isActive(PRICING_PATH))}>
-            Pricing
+            Free
             {isActive(PRICING_PATH) ? <NavUnderline /> : null}
           </Link>
         </div>

@@ -13,11 +13,6 @@ vi.mock('@clerk/react', () => ({
   ClerkFailed: () => null,
 }));
 
-vi.mock('@/cloud/planLimits', () => ({
-  getFreeAccountDocLimit: () => 5,
-  getFreeAccountStorageBytesLimit: () => 1024 * 1024,
-}));
-
 vi.mock('@/cloud/config', () => ({
   isCloudSyncEnabled: () => false,
   getClerkPublishableKey: () => '',
@@ -103,7 +98,6 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 import { ProtectedRoute } from './ProtectedRoute';
 import { GuestDocumentGate } from './GuestDocumentGate';
-import { UpgradeAccountModal } from './UpgradeAccountModal';
 import { CloudSignInCallout } from './CloudSignInCallout';
 import { RequirePlatformSuperAdmin } from './RequirePlatformSuperAdmin';
 import { WorkspaceOnboardingGate } from './WorkspaceOnboardingGate';
@@ -130,13 +124,6 @@ describe('auth smoke', () => {
       </GuestDocumentGate>,
     );
     expect(screen.getByText('Doc body')).toBeInTheDocument();
-  });
-
-  it('UpgradeAccountModal opens', () => {
-    renderWithProviders(
-      <UpgradeAccountModal isOpen importedCount={3} onClose={vi.fn()} />,
-    );
-    expect(screen.getByText(/Upgrade to keep your full library/i)).toBeInTheDocument();
   });
 
   it('CloudSignInCallout shows message', () => {

@@ -7,7 +7,6 @@ const dismissLocalImportPrompt = vi.fn();
 const markLocalImportComplete = vi.fn();
 const hasCompletedLocalImport = vi.fn();
 const importLocalLibraryToCloud = vi.fn();
-const getFreeAccountDocLimit = vi.fn(() => 10);
 const setCloudSyncState = vi.fn();
 const queueCloudSyncSuccessForReload = vi.fn();
 const resetCloudSyncState = vi.fn();
@@ -27,10 +26,6 @@ vi.mock('@/cloud/importLocalLibrary', () => ({
   markLocalImportComplete: (...args: any[]) => (markLocalImportComplete as any)(...args),
   hasCompletedLocalImport: (...args: any[]) => (hasCompletedLocalImport as any)(...args),
   importLocalLibraryToCloud: (...args: any[]) => (importLocalLibraryToCloud as any)(...args),
-}));
-
-vi.mock('@/cloud/planLimits', () => ({
-  getFreeAccountDocLimit: () => getFreeAccountDocLimit(),
 }));
 
 vi.mock('@/cloud/cloudSyncState', () => ({
@@ -73,7 +68,6 @@ describe('runLocalLibraryImport', () => {
     localLibraryNeedsCloudImport.mockResolvedValue(true);
     importLocalLibraryToCloud.mockResolvedValue({ documents: 2, personas: 1, tours: 1 });
     clearLocalLibrary.mockResolvedValue(undefined);
-    getFreeAccountDocLimit.mockReturnValue(10);
   });
 
   it('isRecentSignup checks window', () => {
@@ -117,15 +111,12 @@ describe('runLocalLibraryImport', () => {
     expect(trackEvent).toHaveBeenCalled();
   });
 
-  it('queues silent exceed limit when not showing progress', async () => {
+  it('does not queue a hidden upgrade prompt after import', async () => {
     countLocalLibraryItems.mockResolvedValue({ documents: 0, personas: 0, tours: 1 });
     importLocalLibraryToCloud.mockResolvedValue({ documents: 12, personas: 0, tours: 1 });
-    getFreeAccountDocLimit.mockReturnValue(10);
 
     await runLocalLibraryImport({ createdAt: Date.now() - 31 * 60 * 1000 });
-    expect(queueCloudSyncSuccessForReload).toHaveBeenCalledWith(
-      expect.objectContaining({ exceedsFreeLimit: true, visible: false }),
-    );
+    expect(queueCloudSyncSuccessForReload).not.toHaveBeenCalled();
   });
 
   it('handles cancel mid-run and import errors', async () => {

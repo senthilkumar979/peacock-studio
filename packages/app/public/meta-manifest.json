@@ -21,8 +21,8 @@
     "robots": "index,follow"
   },
   "/pricing": {
-    "title": "Pricing · Peacock Studio",
-    "description": "Peacock Studio is free during public beta. Compare Free, Team, and Enterprise plans for flow docs, product tours, and interactive documentation.",
+    "title": "Free · Peacock Studio",
+    "description": "Peacock Studio is free to use. Create flow docs and product tours with sharing, embeds, exports, and analytics—no paid tier or credit card.",
     "canonical": "https://peacockstudio.app/pricing",
     "ogImage": "https://peacockstudio.app/peacock-logo.png",
     "robots": "index,follow"

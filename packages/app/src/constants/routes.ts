@@ -11,7 +11,7 @@ export const NEW_IMAGE_EDIT_PATH = '/edit/new-image' as const;
 export const FLOW_DOCS_PATH = '/flow-docs' as const;
 export const PRODUCT_TOURS_PATH = '/product-tours' as const;
 
-/** Marketing pricing / beta page */
+/** Marketing page explaining the free product */
 export const PRICING_PATH = '/pricing' as const;
 
 /** Browser extension install gate (redirects to next when installed) */

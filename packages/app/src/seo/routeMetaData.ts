@@ -116,9 +116,9 @@ export function marketingStaticMeta(
         'See how Peacock Studio helps developers, QA, product, support, sales, and leadership capture workflows as Flow Documents and Product Tours.',
     },
     '/pricing': {
-      title: titled('Pricing'),
+      title: titled('Free'),
       description:
-        'Peacock Studio is free during public beta. Compare Free, Team, and Enterprise plans for flow docs, product tours, and interactive documentation.',
+        'Peacock Studio is free to use. Create flow docs and product tours with sharing, embeds, exports, and analytics—no paid tier or credit card.',
     },
     '/privacy': {
       title: titled('Privacy Policy'),

@@ -20,7 +20,7 @@ const BENEFITS = [
   'Record clicks, inputs, and screenshots on any website',
   'Capture visible, selected, or full-page screenshots',
   'Stop recording to open a polished Flow Document in the editor',
-  'Free during beta — install from your browser\'s extension store',
+  'Free to use — install from your browser\'s extension store',
 ] as const;
 
 export const ExtensionInstallPage = () => {

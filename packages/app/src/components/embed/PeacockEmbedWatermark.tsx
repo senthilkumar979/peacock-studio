@@ -3,7 +3,7 @@ import { LANDING_PATH } from '@/constants/routes';
 import { shouldShowEmbedWatermark } from '@/cloud/planLimits';
 
 interface PeacockEmbedWatermarkProps {
-  /** Org plan; paid plans (pro/team) hide the watermark. Defaults to free. */
+  /** Retained for compatibility with existing organization records. */
   plan?: string | null;
 }
 

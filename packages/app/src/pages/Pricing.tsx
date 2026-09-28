@@ -6,17 +6,17 @@ import { AnalyticsEvents } from '@/analytics/events';
 import { AppFooter } from '@/components/AppFooter';
 import { SiteNav } from '@/components/site/SiteNav';
 import { DASHBOARD_PATH } from '@/constants/routes';
-import { BetaPromiseSection } from '@/pages/pricing/BetaPromiseSection';
-import { PricingTiersPreview } from '@/pages/pricing/PricingTiersPreview';
-import { BETA_HERO } from '@/pages/pricing/pricingData';
+import { FreePromiseSection } from '@/pages/pricing/BetaPromiseSection';
+import { FreeFeaturesSection } from '@/pages/pricing/PricingTiersPreview';
+import { FREE_HERO } from '@/pages/pricing/pricingData';
 import { getExtensionGatePath } from '@/utils/extensionGate';
 
-function trackPricingInterest(surface: string): void {
-  trackEvent(AnalyticsEvents.betaPricingInterest, { surface });
+function trackFreeProductCta(surface: string): void {
+  trackEvent(AnalyticsEvents.freeProductCta, { surface });
 }
 
 export const Pricing = () => {
-  const EyebrowIcon = BETA_HERO.eyebrowIcon;
+  const EyebrowIcon = FREE_HERO.eyebrowIcon;
 
   return (
     <div className="landing-page min-h-screen">
@@ -34,7 +34,7 @@ export const Pricing = () => {
             className="inline-flex items-center gap-2 rounded-full border border-brand-cyan/40 bg-brand-cyan/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-brand-cyan"
           >
             <EyebrowIcon className="h-3.5 w-3.5" aria-hidden />
-            {BETA_HERO.badge}
+            {FREE_HERO.badge}
           </motion.span>
 
           <motion.h1
@@ -43,7 +43,7 @@ export const Pricing = () => {
             transition={{ delay: 0.05 }}
             className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl"
           >
-            {BETA_HERO.title}
+            {FREE_HERO.title}
           </motion.h1>
 
           <motion.p
@@ -52,7 +52,7 @@ export const Pricing = () => {
             transition={{ delay: 0.1 }}
             className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-300"
           >
-            {BETA_HERO.subtitle}
+            {FREE_HERO.subtitle}
           </motion.p>
 
           <motion.div
@@ -63,27 +63,27 @@ export const Pricing = () => {
           >
             <Link
               to={getExtensionGatePath(DASHBOARD_PATH)}
-              onClick={() => trackPricingInterest('pricing_hero_start_free')}
+              onClick={() => trackFreeProductCta('free_page_hero_start')}
               className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-peacock-800 shadow-sm transition hover:bg-slate-100"
             >
-              Start using Peacock free
+              Start using Peacock
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
             <a
-              href="#beta-promise"
-              onClick={() => trackPricingInterest('pricing_hero_early_adopter')}
+              href="#free-promise"
+              onClick={() => trackFreeProductCta('free_page_hero_promise')}
               className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
             >
-              Early-adopter promise
+              Why it&apos;s free
             </a>
           </motion.div>
         </div>
       </section>
 
-      <PricingTiersPreview />
+      <FreeFeaturesSection />
 
-      <div id="beta-promise">
-        <BetaPromiseSection />
+      <div id="free-promise">
+        <FreePromiseSection />
       </div>
 
       <AppFooter />

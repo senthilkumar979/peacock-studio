@@ -8,7 +8,6 @@ import {
   markLocalImportComplete,
   type LocalLibraryImportCounts,
 } from '@/cloud/importLocalLibrary';
-import { getFreeAccountDocLimit } from '@/cloud/planLimits';
 import {
   queueCloudSyncSuccessForReload,
   resetCloudSyncState,
@@ -83,7 +82,6 @@ export async function runLocalLibraryImport(options: {
     await clearLocalLibrary();
     if (options.isCancelled?.()) return { status: 'skipped' };
 
-    const exceedsFreeLimit = counts.documents > getFreeAccountDocLimit();
     trackEvent(AnalyticsEvents.localLibraryImported, {
       documents: counts.documents,
       personas: counts.personas,
@@ -95,15 +93,8 @@ export async function runLocalLibraryImport(options: {
       queueCloudSyncSuccessForReload({
         message: `Synced ${counts.documents} document${counts.documents === 1 ? '' : 's'} to your cloud library.`,
         importedDocuments: counts.documents,
-        exceedsFreeLimit,
+        exceedsFreeLimit: false,
         visible: true,
-      });
-    } else if (exceedsFreeLimit) {
-      queueCloudSyncSuccessForReload({
-        message: null,
-        importedDocuments: counts.documents,
-        exceedsFreeLimit: true,
-        visible: false,
       });
     }
 

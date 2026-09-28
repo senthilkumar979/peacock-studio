@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { BETA_HERO, BETA_PERKS, PRICING_TIERS } from './pricingData';
+import { FREE_FEATURE_GROUPS, FREE_HERO, FREE_PROMISES } from './pricingData';
 
 describe('pricingData', () => {
-  it('exports beta hero and perks', () => {
-    expect(BETA_HERO.title).toMatch(/peacock/i);
-    expect(BETA_PERKS.length).toBeGreaterThan(0);
+  it('exports free-product hero and promises', () => {
+    expect(FREE_HERO.title).toMatch(/free/i);
+    expect(FREE_PROMISES.length).toBeGreaterThan(0);
   });
 
-  it('exports three pricing tiers', () => {
-    expect(PRICING_TIERS).toHaveLength(3);
-    expect(PRICING_TIERS.map((t) => t.name)).toEqual(['Free', 'Team', 'Enterprise']);
+  it('groups included features without pricing tiers', () => {
+    expect(FREE_FEATURE_GROUPS).toHaveLength(3);
+    expect(FREE_FEATURE_GROUPS.map((group) => group.name)).toEqual([
+      'Create',
+      'Share',
+      'Understand',
+    ]);
   });
 });

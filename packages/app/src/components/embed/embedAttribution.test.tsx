@@ -4,27 +4,24 @@ import { EmbedGrowthCta } from './EmbedGrowthCta';
 import { PeacockEmbedWatermark } from './PeacockEmbedWatermark';
 
 vi.mock('@/cloud/planLimits', () => ({
-  shouldShowEmbedWatermark: vi.fn((plan?: string | null) => {
-    const normalized = (plan ?? 'free').trim().toLowerCase();
-    return normalized !== 'pro' && normalized !== 'team';
-  }),
+  shouldShowEmbedWatermark: vi.fn(() => true),
 }));
 
 describe('embed attribution', () => {
-  it('EmbedGrowthCta shows for free plans and hides for paid', () => {
+  it('EmbedGrowthCta is the same for every account', () => {
     const { rerender } = render(<EmbedGrowthCta />);
     expect(screen.getByText(/Would you like to create a flow doc like this/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Start free/i })).toBeInTheDocument();
 
     rerender(<EmbedGrowthCta plan="pro" />);
-    expect(screen.queryByText(/Would you like to create a flow doc like this/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Would you like to create a flow doc like this/i)).toBeInTheDocument();
   });
 
-  it('PeacockEmbedWatermark shows attribution for free plans', () => {
+  it('PeacockEmbedWatermark shows attribution for every account', () => {
     const { rerender } = render(<PeacockEmbedWatermark />);
     expect(screen.getByRole('link', { name: /Loaded from Peacock Studio/i })).toBeInTheDocument();
 
     rerender(<PeacockEmbedWatermark plan="team" />);
-    expect(screen.queryByRole('link', { name: /Loaded from Peacock Studio/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Loaded from Peacock Studio/i })).toBeInTheDocument();
   });
 });
